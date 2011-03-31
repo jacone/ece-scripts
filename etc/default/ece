@@ -1,13 +1,10 @@
 # configuration of the /etc/init.d/ece script     -*- sh -*-
 
-engine_instance_list="
-editor1
-web1
-"
-
-search_instance_list="
-search-web1
-search-editorial1"
-
+ece_script=/home/torstein/src/ece-scripts/usr/bin/ece
+ece_unix_group=torstein
+ece_unix_user=torstein
+engine_instance_list="default"
+search_instance_list="search-editorial1"
 start_rmi_hub=0
+
 
