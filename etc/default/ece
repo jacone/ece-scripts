@@ -1,0 +1,13 @@
+# configuration of the /etc/init.d/ece script     -*- sh -*-
+
+engine_instance_list="
+editor1
+web1
+"
+
+search_instance_list="
+search-web1
+search-editorial1"
+
+start_rmi_hub=0
+
