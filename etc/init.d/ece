@@ -1,0 +1,73 @@
+#! /usr/bin/env bash
+
+
+#          version: $Revision: #1 $ $Date: 2011/02/18 $
+#           author: torstein@escenic.com
+#   last update by: $Author: shud $
+
+####################################################################
+# Default values
+####################################################################
+start_rmi_hub=0
+engine_instance_list=default
+indexer_instance_list=""
+ece_unix_user=torstein
+ece_unix_group=torstein
+ece_script=/home/torstein/tmp/ece2
+
+dir_list="
+/var/log/escenic
+/var/run/escenic
+/var/cache/escenic
+"
+
+# may be overidden a file named the same as this init.d script,
+# located in:
+conf_file_location_list="
+/etc/default
+"
+
+function read_conf_file()
+{
+    for el in $conf_file_location_list; do
+        if [ -r $el/$1 ]; then
+            debug "found $1 in $el, reading it"
+            source $el/$1
+            break
+        fi
+        
+    done
+}
+
+function ensure_dirs_are_ok()
+{
+    for el in $dir_list; do
+        if [ ! -d $el ]; then
+            mkdir -p $el
+        fi
+        chown -R $ece_unix_user:$ece_unix_group $el
+    done
+}
+
+function execute_command()
+{
+    if [ $start_rmi_hub -eq 1 ]; then
+        $ece_script rmi-hub $2
+    fi
+    
+    for el in $engine_instance_list; do
+        $ece_script $el $2
+    done
+    
+    for el in $indexer_instance_list; do
+        $ece_script $el $2
+    done
+}
+
+if [ $2 ]; then
+    read_conf_file
+    ensure_dirs_are_ok
+    execute_command
+else
+    echo "Usage: `basename $0` <start|stop|restart|status>"
+done
