@@ -16,7 +16,7 @@ verbose=0
 # /etc/default/escenic
 type=engine
 instance=default
-command=help
+command=""
 
 type_list="
 engine
@@ -502,10 +502,10 @@ function stop_type()
             if [ $ece_pid -ne `cat $pid_file` ]; then
                 print "is running, but was not started with `basename $0`"
                 print "system PID $ece_id differs from the PID in $pid_file"
-                print "removing dangling PID file $pid_file. In future, be "
-                print "sure to use `basename $0` to start and stop your $type"
+                print "removing dangling PID file $pid_file. In future, "
+                print "be sure to use `basename $0` to start and stop your $type"
                 kill $ece_pid 1>>$log_file 2>>$log_file
-                rm $ece_pid
+                rm $pid_file
                 return
             fi
         fi
@@ -516,12 +516,28 @@ function stop_type()
         rm $pid_file \
             1>>$log_file \
             2>>$log_file
-        echo " done"
     else
         print "$instance instance of $type on $HOSTNAME is NOT running"
     fi
     
     exit_on_error "stop_type"
+}
+
+function kill_type()
+{
+    if [ $ece_pid ]; then
+        message="using force to stop the $instance instance of $type on $HOSTNAME ..."
+        print `date` "$message" >> $log_file
+        print $message
+        kill -9 $ece_pid
+        if [ -w $pid_file ]; then
+            rm $pid_file
+        fi
+    else
+        print "no $instance instance of $type on $HOSTNAME to be killed"
+    fi
+    
+    exit_on_error "kill_type"
 }
 
 function assemble()
@@ -602,7 +618,7 @@ function set_type_command_and_instance()
         fi
         
         # the only thing left at this point, is the command
-        command=$el
+        command="$command $el"
     done
 }
 
@@ -690,12 +706,12 @@ for el in $command; do
             ;;
         restart)
             print "Restarting Escenic Content Engine: ece"
-            stop_ece
+            stop_type
             # I've tested this with various values, 8 seconds seems to
             # guarantee that the previous JVM process has stopped
             # properly before starting the new one.
             sleep 8 
-            start_ece
+            start_type
             ;;
         log)
             tail_messages_log
@@ -707,7 +723,7 @@ for el in $command; do
             tail_app_log
             ;;
         kill)
-            kill_ece
+            kill_type
             ;;
         threaddump)
             make_thread_dump
