@@ -46,7 +46,9 @@ pid_dir
 "
 
 hub_required_fields="
-rmi_server_hostname
+ece_server_hostname
+rmi_hub_conf
+rmi_hub_home
 "
 
 engine_required_fields="
@@ -179,16 +181,24 @@ function set_type_settings()
         ensure_that_required_fields_are_set $engine_required_fields
     fi
 
+    ###############################################################
+    # comment treatment for type=engine & search
+    ###############################################################
+    if [ $type = "rmi-hub" ]; then
+        # we need to be able to differentiate between an ECE instance
+        # and an rmi hub, for this we use java.security.policy which
+        # the hub doesn't have.
+        type_pid=`ps -ef | grep -v java.security.policy | \
+            awk "/Djava.rmi.server.hostname=$ece_server_hostname / && !/awk/"' {print $2}'`
+    else
+        type_pid=`ps -ef | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
+    fi
+    
     # if type is rmi-hub, we don't' need more configuration.
     if [ $type = "rmi-hub" ]; then
         return
     fi
 
-    ###############################################################
-    # comment treatment for type=engine & search
-    ###############################################################
-    ece_pid=`ps -ef | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
-    
     # Common options for all ECE installations
     #
     # * escenic.server is to identify the ECE instance, if
@@ -243,7 +253,7 @@ function set_type_settings()
     fi
 
     if [ $enable_remote_debugging -eq 1 ]; then
-        ece_args=$ece_args" -Xdebug -Xnoagent -Djava.compiler=NONE\
+        ece_args=$ece_args" -Xdebug -Xnoagent -Djava.compiler=NONE \
                             -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=$remote_debugging_port"
     fi          
 
@@ -286,12 +296,12 @@ function set_type_settings()
     
     if [ ! -x $JAVA_HOME/bin/java ] ; then
         echo $id "$JAVA_HOME/bin/java is not executable"
-        exit 1;
+        exit 1
     fi
 
     debug ECE_HOME=$ECE_HOME
     debug JAVA_HOME=$JAVA_HOME
-    debug "JAVA_OPTS=$JAVA_OPTS"
+    debug JAVA_OPTS=$JAVA_OPTS
 }
 
 function set_instance_settings()
@@ -408,20 +418,34 @@ function deploy()
 function start_type()
 {
     unset CLASSPATH
-    print "starting the $instance instance of $type on $HOSTNAME ..."
-
+    message="starting the $instance instance of $type on $HOSTNAME ..."
+    print $message
+    echo $message >> $log_file
+    
     if [ $type = "rmi-hub" ]; then
         ensure_that_required_fields_are_set $hub_required_fields
+
+        if [ -r $rmi_hub_conf ]; then
+            export CLASSPATH=$rmi_hub_conf:$CLASSPATH
+        else
+            print $rmi_hub_conf "must point to a valid Nursery configuration"
+            print "for the rmi-hub, you may copy the one found in"
+            print "$ece_home/contrib/rmi-hub/config."
+            print "Exiting :-("
+        fi
         
         for el in $rmi_hub_home/lib/*.jar; do
-            CLASSPATH=$el:$CLASPATH
+            export CLASSPATH=$el:$CLASSPATH
         done
-        
+
         $java_home/bin/java \
-            -Djava.rmi.server.hostname=${rmi_server_hostname} \
+            -Djava.rmi.server.hostname=${ece_server_hostname} \
             neo.nursery.GlobalBus /Initial \
             1>>$log_file \
             2>>$log_file & pid=$!
+        
+        echo $pid > $pid_file
+        exit 0
 
     elif [ $type = "indexer" ]; then
         print TODO
@@ -489,22 +513,27 @@ function start_type()
     if [ $pid ]; then
         echo $pid > $pid_file
     fi
+    
+    exit_on_error $message
 }
 
 function stop_type()
 {
-    if [ $ece_pid ]; then
-        print `date` "stopping the $instance instance of $type on $HOSTNAME ..." \
-            >> $log_file
-        print "stopping the $instance instance of $type on $HOSTNAME ..." \
+    message="stopping the $instance instance of $type on $HOSTNAME ..."
+    echo $type_pid
+    
+    if [ -n "$type_pid" ]; then
+        print `date` $message >> $log_file
+        print $message
 
         if [ -r $pid_file ]; then
-            if [ $ece_pid -ne `cat $pid_file` ]; then
+            if [ "$type_pid" != "`cat $pid_file`" ]; then
                 print "is running, but was not started with `basename $0`"
                 print "system PID $ece_id differs from the PID in $pid_file"
-                print "removing dangling PID file $pid_file. In future, "
-                print "be sure to use `basename $0` to start and stop your $type"
-                kill $ece_pid 1>>$log_file 2>>$log_file
+                print "removing dangling PID file $pid_file. "
+                print "In future, be sure to use `basename $0` to start "
+                print "and stop your $type"
+                kill $type_pid 1>>$log_file 2>>$log_file
                 rm $pid_file
                 return
             fi
@@ -520,16 +549,16 @@ function stop_type()
         print "$instance instance of $type on $HOSTNAME is NOT running"
     fi
     
-    exit_on_error "stop_type"
+    exit_on_error $message
 }
 
 function kill_type()
 {
-    if [ $ece_pid ]; then
+    if [ -n "$type_pid" ]; then
         message="using force to stop the $instance instance of $type on $HOSTNAME ..."
         print `date` "$message" >> $log_file
         print $message
-        kill -9 $ece_pid
+        kill -9 $type_pid
         if [ -w $pid_file ]; then
             rm $pid_file
         fi
@@ -660,18 +689,20 @@ function set_id()
 
 function get_status()
 {
-    if [ -z $ece_pid ]; then
-        print "DOWN"
+    if [ -z "$type_pid" ]; then
+        print "down"
         exit 0
-    fi
-    
-    if [ -r $pid_file ]; then
-        if [ $ece_pid -ne `cat $pid_file` ]; then
+    elif [ -r $pid_file ]; then
+        
+        if [ $type_pid -ne `cat $pid_file` ]; then
             print "is running, but was not started with `basename $0`"
             print "system PID $ece_id differs from the PID in $pid_file"
             exit 1
         fi
-        
+    else
+        print $pid_file "did not exist, the ${instance} instance "
+        print "of ${type} hasn't been started properly with `basename $0`"
+        exit 1
     fi
 
     now=`date +%s`
@@ -684,7 +715,7 @@ function get_status()
     minutes=$(( seconds_left / 60 ))
     seconds_left=$(( seconds_left - $minutes * 60 ))
 
-    print "UP" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    print "up" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 }
 
 set_type_command_and_instance $@
@@ -765,8 +796,6 @@ for el in $command; do
             exit 1
     esac
 done
-
-    
 
 exit 0
 
