@@ -8,35 +8,35 @@
 ####################################################################
 # Default values
 ####################################################################
-start_rmi_hub=0
-engine_instance_list=default
-indexer_instance_list=""
-ece_unix_user=torstein
-ece_unix_group=torstein
-ece_script=/home/torstein/tmp/ece2
-
 dir_list="
 /var/log/escenic
 /var/run/escenic
 /var/cache/escenic
 "
 
-# may be overidden a file named the same as this init.d script,
-# located in:
+ece_script=/usr/bin/ece
+
+# the values above may be overidden a file named the same as this
+# init.d script, located in:
 conf_file_location_list="
 /etc/default
+/tmp
 "
 
 function read_conf_file()
 {
     for el in $conf_file_location_list; do
-        if [ -r $el/$1 ]; then
-            debug "found $1 in $el, reading it"
-            source $el/$1
+        if [ -r $el/`basename $0` ]; then
+            source $el/`basename $0`
+            found_conf=1
             break
         fi
-        
     done
+
+    if [ -z $found_conf ]; then
+        echo "Couldn't find configuration for $0, exiting :-("
+        exit 1
+    fi
 }
 
 function ensure_dirs_are_ok()
@@ -49,25 +49,38 @@ function ensure_dirs_are_ok()
     done
 }
 
+function ensure_ece_script_is_ok()
+{
+    if [ ! -r $ece_script ]; then
+        echo "Couldn't read $ece_script"
+        exit 1
+    elif [ ! -x $ece_script ]; then
+        echo "$ece_script needs to be executable (do: chmod +x $ece_script)"
+        exit 1
+    fi
+    
+}
+
 function execute_command()
 {
-    if [ $start_rmi_hub -eq 1 ]; then
-        $ece_script rmi-hub $2
+    if [ $enable_rmi_hub = "true" ]; then
+        $ece_script -t rmi-hub $1
     fi
     
     for el in $engine_instance_list; do
-        $ece_script $el $2
+        $ece_script -t engine -i $el $1
     done
     
-    for el in $indexer_instance_list; do
-        $ece_script $el $2
+    for el in $search_instance_list; do
+        $ece_script -t search -i $el $1
     done
 }
 
-if [ $2 ]; then
+if [ $1 ]; then
     read_conf_file
+    ensure_ece_script_is_ok
     ensure_dirs_are_ok
-    execute_command
+    execute_command $1
 else
     echo "Usage: `basename $0` <start|stop|restart|status>"
-done
+fi

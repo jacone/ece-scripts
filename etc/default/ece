@@ -1,10 +1,20 @@
-# configuration of the /etc/init.d/ece script     -*- sh -*-
+# Configuration for the /etc/init.d/ece script     -*- conf -*-
 
+# Space separated lists of instance names for ECE instances and search
+# instances. If you only have one # instance, use "default" as its
+# name. If you don't have any instances of that type on this host,
+# then just set the variable to an empty string.
+engine_instance_list="rolling"
+search_instance_list=""
+
+# You only need one hub in an ECE cluster, so only set this one to
+# true on one host.
+enable_rmi_hub=true
+
+# The location of the ece script, default is /usr/bin/ece
 ece_script=/home/torstein/src/ece-scripts/usr/bin/ece
+
+# Default Unix user that will run the processes, default is escenic
+# for both of these.
 ece_unix_group=torstein
 ece_unix_user=torstein
-engine_instance_list="default"
-search_instance_list="search-editorial1"
-start_rmi_hub=0
-
-

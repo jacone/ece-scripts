@@ -156,7 +156,6 @@ function set_common_settings()
         log_file=$log_dir/$type.out
         pid_file=$pid_dir/$type.pid
     else
-        log_dir=$log_dir/$instance
         log_file=$log_dir/$type-$instance.out
         pid_file=$pid_dir/$type-$instance.pid
     fi
@@ -520,8 +519,7 @@ function start_type()
 function stop_type()
 {
     message="stopping the $instance instance of $type on $HOSTNAME ..."
-    echo $type_pid
-    
+
     if [ -n "$type_pid" ]; then
         print `date` $message >> $log_file
         print $message
@@ -529,7 +527,7 @@ function stop_type()
         if [ -r $pid_file ]; then
             if [ "$type_pid" != "`cat $pid_file`" ]; then
                 print "is running, but was not started with `basename $0`"
-                print "system PID $ece_id differs from the PID in $pid_file"
+                print "system PID $ece_pid differs from the PID in $pid_file"
                 print "removing dangling PID file $pid_file. "
                 print "In future, be sure to use `basename $0` to start "
                 print "and stop your $type"
@@ -539,7 +537,7 @@ function stop_type()
             fi
         fi
         
-        kill `cat $pid_file` \
+        kill $type_pid \
             1>>$log_file \
             2>>$log_file
         rm $pid_file \
@@ -677,7 +675,7 @@ function clean_up()
 function set_id()
 {
     if [ $instance = "default" ]; then
-        id="["`basename $0`"${self_id}#${type}]"
+        id="["`basename $0`"#${type}]"
     else
         id="["`basename $0`"#${type}-${instance}]"
     fi
@@ -694,7 +692,7 @@ function get_status()
         exit 0
     elif [ -r $pid_file ]; then
         
-        if [ $type_pid -ne `cat $pid_file` ]; then
+        if [ "$type_pid" != `cat $pid_file` ]; then
             print "is running, but was not started with `basename $0`"
             print "system PID $ece_id differs from the PID in $pid_file"
             exit 1
