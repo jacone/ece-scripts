@@ -1,19 +1,23 @@
 #! /usr/bin/env bash
 
 # Script for doing various operations on the Escenic Content Engine,
-# the RMI hub and the indexer standalone instances.  Type "ece help"
+# the RMI hub and the indexer standalone instances. Type "ece help"
 # for a complete list of supported operations.
 
 #          version: $Revision: #1 $ $Date: 2011/02/18 $
 #           author: torstein@escenic.com
 #   last update by: $Author: shud $
 
-####################################################################
-# Is overridden by the verbose setting in ece.conf
-####################################################################
+######################################################################
+# Script defaults, my be overriden in any of the configration files
+######################################################################
 verbose=0
+force_ipv4=0
 
-# /etc/default/escenic
+######################################################################
+# Dear user, don't touch anyting in this script, especially below this
+# line :-)
+######################################################################
 type=engine
 instance=default
 command=""
@@ -23,6 +27,7 @@ engine
 search
 rmi-hub
 "
+
 command_list="
 applog
 assemble
@@ -60,7 +65,6 @@ ece_security_configuration_dir
 enable_heap_dump
 enable_remote_debugging
 enable_remote_monitoring
-force_ipv4
 extract_webapps
 is_production
 java_home
@@ -71,7 +75,6 @@ indexer_required_fields="
 solr_home
 appserver
 "
-
 ####################################################################
 # Will exit the ece execution if the last operation failed. While
 # failing, it will print the message passed to the function.
@@ -97,6 +100,11 @@ function debug()
 function print()
 {
     echo "$id" $@
+}
+
+function log()
+{
+    echo "$id" `date` $@ >> $log_file
 }
 
 ####################################################################
@@ -171,7 +179,18 @@ function set_type_settings()
     # optional: possible to have type specific conf file,
     # will take precedences over the common one.
     read_conf_file `basename $0`-$type.conf
+}
 
+function set_instance_settings()
+{
+    # optional: possible to have instance specific conf files,
+    # these will take precedence over the other two
+    read_conf_file `basename $0`-$instance.conf
+    read_conf_file `basename $0`-$type-$instance.conf
+
+    # at this point in the script flow, we have now read all the
+    # possible combinations of conf files (common, type and instance)
+    # and can now ensure that required fields are set and apply them.
     if [ $type = "rmi-hub" ]; then
         ensure_that_required_fields_are_set $hub_required_fields
     elif [ $type = "indexer" ]; then
@@ -180,24 +199,21 @@ function set_type_settings()
         ensure_that_required_fields_are_set $engine_required_fields
     fi
 
-    ###############################################################
-    # comment treatment for type=engine & search
-    ###############################################################
-    if [ $type = "rmi-hub" ]; then
-        # we need to be able to differentiate between an ECE instance
-        # and an rmi hub, for this we use java.security.policy which
-        # the hub doesn't have.
-        type_pid=`ps -ef | grep -v java.security.policy | \
-            awk "/Djava.rmi.server.hostname=$ece_server_hostname / && !/awk/"' {print $2}'`
-    else
-        type_pid=`ps -ef | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
-    fi
-    
     # if type is rmi-hub, we don't' need more configuration.
     if [ $type = "rmi-hub" ]; then
         return
     fi
 
+    # We respect ece_server if it's set in any of the configuration
+    # files. If it's not set there, it sets some sensible defaults.
+    if [ -z $ece_server ]; then
+        if [ $instance = "default" ]; then
+            ece_server=${HOSTNAME}
+        else
+            ece_server=${HOSTNAME}-${instance}
+        fi
+    fi
+    
     # Common options for all ECE installations
     #
     # * escenic.server is to identify the ECE instance, if
@@ -281,44 +297,39 @@ function set_type_settings()
            -Djavax.xml.parsers.DocumentBuilderFactory=org.apache.xerces.jaxp.DocumentBuilderFactoryImpl
            -Djavax.xml.parsers.SAXParserFactory=org.apache.xerces.jaxp.SAXParserFactoryImpl
            -Djavax.xml.transform.TransformerFactory=org.apache.xalan.processor.TransformerFactoryImpl"
+        debug "resin_home=$resin_home"
+
     elif [ $appserver = "tomcat" ]; then
         if [ -z $tomcat_base ]; then
             tomcat_base=$tomcat_home
         else
             export CATALINA_BASE=$tomcat_base
         fi
+        debug "CATALINA_BASE=$CATALINA_BASE"
     fi
-    
+
+    # TODO do we need to export ECE_HOME?
     export ECE_HOME=$ece_home
     export JAVA_OPTS="$JAVA_OPTS $ece_args"
     export JAVA_HOME=$java_home
     
-    if [ ! -x $JAVA_HOME/bin/java ] ; then
-        echo $id "$JAVA_HOME/bin/java is not executable"
-        exit 1
-    fi
-
     debug ECE_HOME=$ECE_HOME
     debug JAVA_HOME=$JAVA_HOME
     debug JAVA_OPTS=$JAVA_OPTS
-}
 
-function set_instance_settings()
-{
-    # optional: possible to have instance specific conf files,
-    # these will take precedence over the other two
-    read_conf_file `basename $0`-$instance.conf
-    read_conf_file `basename $0`-$type-$instance.conf
-
-    # respects ece_server if set in any of the configuration files.
-    if [ -z $ece_server ]; then
-        if [ $instance = "default" ]; then
-            ece_server=${HOSTNAME}
-        else
-            ece_server=${HOSTNAME}-${instance}
-        fi
-        
+    # Get a hold of the PID of the process. Although we've got the PID
+    # file, we stil get the PID from the OS here as we used it for
+    # sanity checking later on, see stop_type().
+    if [ $type = "rmi-hub" ]; then
+        # we need to be able to differentiate between an ECE instance
+        # and an rmi hub, for this we use java.security.policy which
+        # the hub doesn't have.
+        type_pid=`ps -ef | grep -v java.security.policy | \
+            awk "/Djava.rmi.server.hostname=$ece_server_hostname / && !/awk/"' {print $2}'`
+    else
+        type_pid=`ps -ef | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
     fi
+    
 }
 
 function deploy()
@@ -330,7 +341,7 @@ function deploy()
     fi
     
     # extract EAR to a temporary area
-    dir=/tmp/`basename $0`-`date +%s`
+    dir=$tmp_dir/`basename $0`-`date +%s`
     (mkdir -p $dir && cd $dir && jar xf $ear)
     exit_on_error "extracting $ear to $dir"
 
@@ -419,7 +430,7 @@ function start_type()
     unset CLASSPATH
     message="starting the $instance instance of $type on $HOSTNAME ..."
     print $message
-    echo $message >> $log_file
+    log $message
     
     if [ $type = "rmi-hub" ]; then
         ensure_that_required_fields_are_set $hub_required_fields
@@ -521,7 +532,7 @@ function stop_type()
     message="stopping the $instance instance of $type on $HOSTNAME ..."
 
     if [ -n "$type_pid" ]; then
-        print `date` $message >> $log_file
+        log $message
         print $message
 
         if [ -r $pid_file ]; then
@@ -554,7 +565,7 @@ function kill_type()
 {
     if [ -n "$type_pid" ]; then
         message="using force to stop the $instance instance of $type on $HOSTNAME ..."
-        print `date` "$message" >> $log_file
+        log $message
         print $message
         kill -9 $type_pid
         if [ -w $pid_file ]; then
@@ -574,12 +585,15 @@ function assemble()
         exit 1
     fi
 
-    print "Assembling your EAR file ..."
+    message="Assembling your EAR file ..."
+    print $message
+    log $message >> $log_file
+    
     cd $assemblytool_home && \
         ant -q ear -DskipRedundancyCheck=true \
         1>>$log_file \
         2>>$log_file
-    exit_on_error "assemblytool"
+    exit_on_error "$message"
 
     mkdir -p $ear_cache_dir/
     exit_on_error "creating $ear_cache_dir"
@@ -604,6 +618,28 @@ function tail_messages_log()
 function tail_out_log()
 {
     print "tailing the system out log $log_file"
+    tail -f $log_file
+}
+
+function tail_app_log()
+{
+    if [ $type = "rmi-hub" ]; then
+        print "there is no application server log for the $type"
+        exit 1
+    fi
+    
+    if [ $appserver = "tomcat" ]; then
+        log_file=$tomcat_base/logs/localhost.`date +%F`.log
+    elif [ $appserver = "resin" -a -e $resin_home/log/jvm-default.log ]; then
+        log_file=$resin_home/log/jvm-default.log
+    else
+        print "I don't know where the logs for $appserver are."
+        print "Ask support@escenic.com to add support for $appserver in "
+        print "tail_app_log()"
+        exit 1
+    fi
+    
+    print "tailing the application server log $log_file"
     tail -f $log_file
 }
 
@@ -652,16 +688,17 @@ function set_type_command_and_instance()
 function clean_up()
 {
     if [ $type = "engine" ]; then
-        print "Cleaning up "`basename $0`" files in $assemblytool_home ..." 
+        print "Cleaning up generated files in $assemblytool_home ..." 
         cd $assemblytool_home
         ant clean \
             1>>$log_file \
             2>>$log_file
     fi
 
-    if [ `ls  /tmp | grep ece- | wc -l` -gt 0 ]; then
-        print "Cleaning up "`basename $0`" files in /tmp/ ..." 
-        rm -r /tmp/ece-*
+    tmp_dir_prefix="`basename $0`-"
+    if [ `ls  $tmp_dir | grep $tmp_dir_prefix | wc -l` -gt 0 ]; then
+        print "Cleaning up $tmp_dir_prefix* files in $tmp_dir ..." 
+        rm -r $tmp_dir/$tmp_dir_prefix*
     fi
     
     if [ -e /var/cache/escenic/ -a \
