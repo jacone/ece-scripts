@@ -1,13 +1,33 @@
 #! /usr/bin/env bash
 
-
 #          version: $Revision: #1 $ $Date: 2011/02/18 $
 #           author: torstein@escenic.com
 #   last update by: $Author: shud $
 
-####################################################################
+### BEGIN INIT INFO
+# Provides:          ece
+# Required-Start:    $remote_fs $network $syslog
+# Required-Stop:     $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Escenic Content Engine
+### END INIT INFO
+
+#################################################################
+# Usage:
+# * copy this script to /etc/init.d/ece
+# 
+# * copy its configuration file to /etc/default/ece
+#
+# * make sure it's executable, chmod +x /etc/init.d/ece
+#
+# * add it to the desired runlevels, e.g. on Debian based systems this
+#  would be: update-rc.d ece defaults
+#######################################################################
+
+#######################################################################
 # Default values
-####################################################################
+#######################################################################
 dir_list="
 /var/log/escenic
 /var/run/escenic
