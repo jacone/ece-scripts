@@ -120,7 +120,7 @@ function ensure_that_required_fields_are_set()
             continue
         fi
         
-        print "you need to specifiy '$el' in your `basename $0`.conf"
+        print "You need to specifiy '$el' in your `basename $0`.conf"
         requirements_failed=1
     done
 
@@ -428,7 +428,7 @@ function deploy()
 function start_type()
 {
     unset CLASSPATH
-    message="starting the $instance instance of $type on $HOSTNAME ..."
+    message="Starting the $instance instance of $type on $HOSTNAME ..."
     print $message
     log $message
     
@@ -537,7 +537,7 @@ function stop_type()
 
         if [ -r $pid_file ]; then
             if [ "$type_pid" != "`cat $pid_file`" ]; then
-                print "is running, but was not started with `basename $0`"
+                print "Is running, but was not started with `basename $0`"
                 print "system PID $ece_pid differs from the PID in $pid_file"
                 print "removing dangling PID file $pid_file. "
                 print "In future, be sure to use `basename $0` to start "
@@ -572,7 +572,7 @@ function kill_type()
             rm $pid_file
         fi
     else
-        print "no $instance instance of $type on $HOSTNAME to be killed"
+        print "No $instance instance of $type on $HOSTNAME to be killed"
     fi
     
     exit_on_error "kill_type"
@@ -617,14 +617,14 @@ function tail_messages_log()
 
 function tail_out_log()
 {
-    print "tailing the system out log $log_file"
+    print "Tailing the system out log $log_file"
     tail -f $log_file
 }
 
 function tail_app_log()
 {
     if [ $type = "rmi-hub" ]; then
-        print "there is no application server log for the $type"
+        print "There is no application server log for $type"
         exit 1
     fi
     
@@ -639,7 +639,7 @@ function tail_app_log()
         exit 1
     fi
     
-    print "tailing the application server log $log_file"
+    print "Tailing the application server log $log_file"
     tail -f $log_file
 }
 
@@ -725,12 +725,12 @@ function set_id()
 function get_status()
 {
     if [ -z "$type_pid" ]; then
-        print "down"
+        print "DOWN"
         exit 0
     elif [ -r $pid_file ]; then
         
         if [ "$type_pid" != `cat $pid_file` ]; then
-            print "is running, but was not started with `basename $0`"
+            print "Is running, but was not started with `basename $0`"
             print "system PID $ece_id differs from the PID in $pid_file"
             exit 1
         fi
@@ -750,7 +750,7 @@ function get_status()
     minutes=$(( seconds_left / 60 ))
     seconds_left=$(( seconds_left - $minutes * 60 ))
 
-    print "up" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    print "UP" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 }
 
 set_type_command_and_instance $@
@@ -771,7 +771,6 @@ for el in $command; do
             stop_type
             ;;
         restart)
-            print "Restarting Escenic Content Engine: ece"
             stop_type
             # I've tested this with various values, 8 seconds seems to
             # guarantee that the previous JVM process has stopped
