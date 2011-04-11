@@ -1,6 +1,16 @@
+Overview
+========
+These are scripts to help template developers and administrators
+manage various components of the Escenic Content Engine. The scripts
+are experimental and not yet a part of the official distribution of
+Escenic Content Engine from Vizrt Online.
+
+Project directory layout
+========================
 The file structure ressembles where you'd typically put the various
 scripts and configuration files. That's all it is, only for
 documentational purposes :-)
+
 
 -torstein@escenic.com
 
