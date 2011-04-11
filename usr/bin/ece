@@ -336,7 +336,7 @@ function deploy()
 {
     ear=$cache_dir/engine.ear
     if [ ! -e $ear ]; then
-        print "$ear does not exist. Did you run assemblytool?"
+        print "$ear does not exist. Did you run '"`basename $0`" assemble'?"
         exit 1
     fi
     
@@ -529,7 +529,7 @@ function start_type()
 
 function stop_type()
 {
-    message="stopping the $instance instance of $type on $HOSTNAME ..."
+    message="Stopping the $instance instance of $type on $HOSTNAME ..."
 
     if [ -n "$type_pid" ]; then
         log $message
@@ -644,6 +644,24 @@ function tail_app_log()
     
     print "Tailing the application server log $log_file"
     tail -f $log_file
+}
+
+function make_thread_dump()
+{
+
+    if [ -n "$type_pid" ]; then
+        print "Thread dump (PID" $type_pid") written to system out log."
+        print "Type 'ece -t $type -i default outlog' to see it or view"
+        print $log_file "directly."
+
+        if [ -x $java_home/bin/jstack ]; then
+            jstack -l $type_pid >> $log_file
+        else
+            kill -QUIT $type_pid >> $log_file
+        fi
+    else
+        get_status
+    fi
 }
 
 function set_type_command_and_instance()
