@@ -540,7 +540,7 @@ function stop_type()
                 print "Is running, but was not started with `basename $0`"
                 print "system PID $ece_pid differs from the PID in $pid_file"
                 print "removing dangling PID file $pid_file. "
-                print "In future, be sure to use `basename $0` to start "
+                print "In future, be sure to use $0 to start "
                 print "and stop your $type"
                 kill $type_pid 1>>$log_file 2>>$log_file
                 rm $pid_file
@@ -551,9 +551,12 @@ function stop_type()
         kill $type_pid \
             1>>$log_file \
             2>>$log_file
-        rm $pid_file \
-            1>>$log_file \
-            2>>$log_file
+
+        if [ -e $pid_file ]; then
+            rm $pid_file \
+                1>>$log_file \
+                2>>$log_file
+        fi
     else
         print "$instance instance of $type on $HOSTNAME is NOT running"
     fi
@@ -651,6 +654,10 @@ function set_type_command_and_instance()
     for el in $@; do
         if [ $el = "-v" -o $el = "--verbose" ]; then
             verbose=1
+            continue
+        fi
+        if [ $el = "--help" ]; then
+            command=help
             continue
         fi
 
@@ -759,6 +766,41 @@ set_common_settings
 set_type_settings
 set_instance_settings
 
+function print_help()
+{
+    echo "Usage: $0 [-t <type>] [-i <instance>] <command>"
+    echo ""
+    echo "DESCRIPTION"
+    echo " -t --type <type>"
+    echo "      The following types are available:"
+    echo "      engine  - The Escenic Content Engine, this is the default"
+    echo "                and is the assumed type if none is specified."
+    echo "      search  - A standalone search indexer and solr instance"
+    echo "      rmi-hub - The RMI hub responsible for the internal "
+    echo "                communication between the ECE instances."
+    echo " -i --instance <instance>" 
+    echo "      The type instance, such as editor1, web1 or search1"
+    echo " -v --verbose"
+    echo "      Prints out debug statements, useful for debugging."
+    echo ""
+    echo "The following commands are available:"
+    echo "   applog     the type's app server log"
+    echo "   assemble   runs the Assembly Tool *)"
+    echo "   clean      removes temporary files created by $0 *)"
+    echo "   deploy     deploys the assembled EAR *)"
+    echo "   help       prints this help screen"
+    echo "   kill       uses force to stop the type"
+    echo "   log        the type's Log4J log"
+    echo "   outlog     the $id script log (system out log)"
+    echo "   restart    restarts the type"
+    echo "   start      starts the type"
+    echo "   status     checks if the type is running"
+    echo "   stop       stops the type"
+    echo "   threaddump write a thread dump to standard out (system out log)"
+    echo ""
+    echo "*) only applicable if type is 'engine'"
+}    
+
 for el in $command; do
     case "$el" in
         start)
@@ -802,31 +844,12 @@ for el in $command; do
         clean)
             clean_up
             ;;
+        help)
+            print_help
+            ;;
         *)
-            echo "Usage: $0 [-t <type>] [-i <instance>] <command>"
-            echo ""
-            echo "DESCRIPTION"
-            echo " -t --type <type>         Can be: engine, rmi-hub and search"
-            echo "                          If none is specificed, 'engine' is"
-            echo "                          is assumed."
-            echo " -i --instance <instance> The type instance. If none is "
-            echo "                          specifed, 'default' is assumed."
-            echo ""
-            echo "The following commands are available:"
-            echo "   applog     the type's app server log"
-            echo "   assemble   runs the Assembly Tool *)"
-            echo "   clean      removes temporary files created by "`basename $0` "*)"
-            echo "   deploy     deploys the assembled EAR *)"
-            echo "   kill       uses force to stop the type"
-            echo "   log        the type's Log4J log"
-            echo "   outlog     the $id script log (system out log)"
-            echo "   restart    restarts the type"
-            echo "   start      starts the type"
-            echo "   status     checks if the type is running"
-            echo "   stop       stops the type"
-            echo "   threaddump write a thread dump to standard out (system out log)"
-            echo ""
-            echo "*) only applicable if type is 'engine'"
+            print "Invalid command: $el :-("
+            print_help
             exit 1
     esac
 done
