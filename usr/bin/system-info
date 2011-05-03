@@ -1,0 +1,96 @@
+#! /usr/bin/env bash
+
+# Getting system info, especially useful before reporting to Escenic
+# select Support.
+
+on_debian_or_derivate=0
+on_redhat_or_derivate=0
+on_linux=0
+
+important_packages_on_debian="
+ant
+libapr1
+libmysql-java
+libtcnative-1
+maven2
+mysql-server
+percona-server-server
+slapd
+sun-java6-jdk
+sun-java6-jre
+tomcat6
+tomcat6-user
+"
+
+if [ `uname -s` = "Linux" ]; then
+    on_linux=1
+fi
+
+
+if [ -x /usr/bin/dpkg -a -e /etc/debian_version ]; then
+    on_debian_or_derivate=1
+fi
+
+function list_useful_package_info()
+{
+    echo "h2. Important packages"
+    echo "{code}"
+
+    if [ $on_debian_or_derivate -eq 1 ]; then
+        for el in $important_packages_on_debian; do
+            dpkg -l $el 2>/dev/null | grep ^ii | sed 's/ii\ \ //g'
+        done
+    fi
+
+    echo "{code}"
+}
+
+function list_os_info()
+{
+    echo "h2. Kernel version"
+    uname -a
+
+    echo "h2. Distribution information"
+    if [ $on_debian_or_derivate -eq 1 ]; then
+        echo "Debian or derivate, version "`cat /etc/debian_version`
+    fi
+}
+
+function list_db_information()
+{
+    echo "h2. Database details"
+    echo "{code}"
+    mysql -V
+    echo "{code}"
+}
+
+function list_java_information()
+{
+    echo "h2. Java version"
+    echo "{code}"
+    java -version
+    echo "{code}"
+}
+
+function list_hardware_information()
+{
+    if [ $on_linux -eq 1 ]; then
+        echo "h2. Processors"
+        echo "{code}"
+        echo "Processor type: " `grep "model name" /proc/cpuinfo | head -1 | cut -d':' -f2`
+        echo "Number of processors/cores:" `grep processor /proc/cpuinfo | wc -l`
+        echo "{code}"
+
+        echo "h2. Memory"
+        echo "{code}"
+        echo "Total memory: " `grep MemTotal /proc/meminfo | cut -d':' -f2`
+        echo " Free memory: " `grep MemFree /proc/meminfo | cut -d':' -f2`
+        echo "{code}"
+    fi
+}
+
+list_os_info
+list_db_information
+list_java_information
+list_useful_package_info
+list_hardware_information
