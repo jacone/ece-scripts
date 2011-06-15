@@ -104,7 +104,15 @@ function print()
 
 function log()
 {
-    echo "$id" `date` $@ >> $log_file
+    if [ ! -d $log_dir ]; then
+        print "FAILED. $log_dir must exist."
+        exit 1
+    elif [ ! -w $log_dir ]; then
+        print "FAILED $log_dir must be write-able by user $USER"
+        exit 1
+    fi
+    
+    echo "$id" `date` $@ 2>/dev/null >> $log_file 
 }
 
 ####################################################################
