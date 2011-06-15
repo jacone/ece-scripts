@@ -104,15 +104,28 @@ function print()
 
 function log()
 {
-    if [ ! -d $log_dir ]; then
-        print "FAILED. $log_dir must exist."
-        exit 1
-    elif [ ! -w $log_dir ]; then
-        print "FAILED $log_dir must be write-able by user $USER"
+    echo "$id" `date` $@ 2>/dev/null >> $log_file 
+}
+
+function verify_that_directory_and_file_are_writeable()
+{
+    dir=`dirname $1`
+    if [ ! -e $dir ]; then
+        print $dir " doesn't exist"
         exit 1
     fi
-    
-    echo "$id" `date` $@ 2>/dev/null >> $log_file 
+    if [ ! -w $dir ]; then
+        print $dir " isn't writable for user $USER"
+        exit 1
+    fi
+
+    if [ -e $1 ]; then
+        if [ ! -w $1 ]; then
+            print $1 "exists, but isn't write-able for usre $USER"
+            print "check the permissions and that $USER is the correct one"
+            print "to run "`basename $0`
+        fi
+    fi
 }
 
 ####################################################################
@@ -337,7 +350,12 @@ function set_instance_settings()
     else
         type_pid=`ps -ef | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
     fi
-    
+}
+
+function sanity_check()
+{
+    verify_that_directory_and_file_are_writeable $log_file
+    verify_that_directory_and_file_are_writeable $pid_file
 }
 
 function deploy()
@@ -433,6 +451,7 @@ function deploy()
     esac
 }
 
+
 function start_type()
 {
     unset CLASSPATH
@@ -476,15 +495,30 @@ function start_type()
         tomcat)
             # Tomcat respects JAVA_OPTS set in configure(), so no need
             # to set them here.
+
             if [ ! -x $tomcat_home/bin/catalina.sh ]; then
-                print "$tomcat_home/bin/catalina.sh was not executable"
-                print "unable to start tomcat"
-                exit 1
+                # If using the tomcat6-user Debian package,
+                # tomcat_home will only have startup.sh and
+                # shutdown.sh
+                if [ -x $tomcat_home/bin/startup.sh ]; then
+                    tomcat_user_package=true
+                else
+                    print "$tomcat_home/bin/catalina.sh was not executable"
+                    print "unable to start tomcat"
+                    exit 1
+                fi
             fi
-            # We call run here to get the log output to the stdout log
-            $tomcat_home/bin/catalina.sh run \
-                1>>$log_file \
-                2>>$log_file & pid=$!
+
+            if [ ${tomcat_user_package}no = "no" ]; then
+              # We call run here to get the log output to the stdout log
+              $tomcat_home/bin/catalina.sh run \
+                  1>>$log_file \
+                  2>>$log_file & pid=$!
+            else
+                $tomcat_home/bin/startup.sh \
+                    1>>$log_file \
+                    2>>$log_file & pid=$!
+            fi
             ;;
         oc4j)
             export OC4J_JVM_ARGS=$ece_args
@@ -499,27 +533,27 @@ function start_type()
             
             # works for Resin 3.0
             if [ -e $resin_home/bin/wrapper.pl ]; then
-                exec perl $resin_home/bin/wrapper.pl\
-                   -chdir\
-                   -name httpd\
-                   -class com.caucho.server.resin.Resin\
-                   $resin_ece_args ${1+"$@"}\
-                   1>>$log_file\
-                   2>>$log_file & pid=$!
+                exec perl $resin_home/bin/wrapper.pl \
+                    -chdir \
+                    -name httpd \
+                    -class com.caucho.server.resin.Resin \
+                    $resin_ece_args ${1+"$@"} \
+                    1>>$log_file \
+                    2>>$log_file & pid=$!
             else
                 # works for Resin 3.1
-                $java_home/bin/java $ece_args\
-                -jar $resin_home/lib/resin.jar\
-                start\
-                1>>$log_file\
-                2>>$log_file & pid=$!
+                $java_home/bin/java $ece_args \
+                    -jar $resin_home/lib/resin.jar \
+                    start \
+                    1>>$log_file \
+                    2>>$log_file & pid=$!
             fi
             ;;
         jboss)
-            $jboss_home/bin/run.sh\
-                -b 0.0.0.0\
-                -c $jboss_conf\
-                1>>$log_file\
+            $jboss_home/bin/run.sh \
+                -b 0.0.0.0 \
+                -c $jboss_conf \
+                1>>$log_file \
                 2>>$log_file & pid=$!
             ;;
         *)
@@ -529,6 +563,7 @@ function start_type()
     esac
     
     if [ $pid ]; then
+        verify_that_directory_and_file_are_writeable $pid_file
         echo $pid > $pid_file
     fi
     
@@ -791,6 +826,7 @@ set_id
 set_common_settings
 set_type_settings
 set_instance_settings
+sanity_check
 
 function print_help()
 {
