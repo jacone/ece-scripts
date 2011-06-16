@@ -3,24 +3,31 @@
 # Getting system info, especially useful before reporting to Escenic
 # select Support.
 
+# can be: ascii, confluence
+output_format=ascii
 on_debian_or_derivate=0
 on_redhat_or_derivate=0
 on_linux=0
 
 important_packages_on_debian="
 ant
+apache2
 libapr1
 libmysql-java
 libtcnative-1
 maven2
 mysql-server
+nginx
 percona-server-server
 slapd
 sun-java6-jdk
 sun-java6-jre
 tomcat6
 tomcat6-user
+varnish
 "
+
+column_width=72
 
 if [ `uname -s` = "Linux" ]; then
     on_linux=1
@@ -31,10 +38,55 @@ if [ -x /usr/bin/dpkg -a -e /etc/debian_version ]; then
     on_debian_or_derivate=1
 fi
 
+
+function print_ruler()
+{
+    if [ $output_format = "ascii" ]; then
+        for i in $(seq $column_width); do
+            echo -n $1
+        done
+    fi
+}
+
+function print_pre_start()
+{
+    if [ $output_format = "confluence" ]; then
+        echo "{code}"
+    elif [ $output_format = "ascii" ]; then
+        echo ""
+        print_ruler "-"
+        echo ""
+    fi
+}
+
+function print_pre_end()
+{
+    if [ $output_format = "confluence" ]; then
+        echo "{code}"
+    elif [ $output_format = "ascii" ]; then
+        print_ruler "-"
+        echo ""
+    fi
+}
+
+function print_header()
+{
+    if [ $output_format = "confluence" ]; then
+        echo "h2. $1"
+    elif [ $output_format = "ascii" ]; then
+        echo ""
+        print_ruler "#"
+        echo ""
+        echo $1
+        print_ruler "#"
+        echo ""
+    fi
+}
+
 function list_useful_package_info()
 {
-    echo "h2. Important packages"
-    echo "{code}"
+    print_header "Important packages"
+    print_pre_start
 
     if [ $on_debian_or_derivate -eq 1 ]; then
         for el in $important_packages_on_debian; do
@@ -42,15 +94,15 @@ function list_useful_package_info()
         done
     fi
 
-    echo "{code}"
+    print_pre_end
 }
 
 function list_os_info()
 {
-    echo "h2. Kernel version"
+    print_header "Kernel version"
     uname -a
 
-    echo "h2. Distribution information"
+    print_header "Distribution information"
     if [ $on_debian_or_derivate -eq 1 ]; then
         echo "Debian or derivate, version "`cat /etc/debian_version`
     fi
@@ -58,39 +110,40 @@ function list_os_info()
 
 function list_db_information()
 {
-    echo "h2. Database details"
-    echo "{code}"
+    print_header "Database details"
     mysql -V
-    echo "{code}"
 }
 
 function list_java_information()
 {
-    echo "h2. Java version"
-    echo "{code}"
+    print_header "Java version"
     java -version
-    echo "{code}"
 }
 
 function list_hardware_information()
 {
     if [ $on_linux -eq 1 ]; then
-        echo "h2. Processors"
-        echo "{code}"
+        print_header "Processors"
         echo "Processor type: " `grep "model name" /proc/cpuinfo | head -1 | cut -d':' -f2`
         echo "Number of processors/cores:" `grep processor /proc/cpuinfo | wc -l`
-        echo "{code}"
 
-        echo "h2. Memory"
-        echo "{code}"
+        print_header "Memory"
         echo "Total memory: " `grep MemTotal /proc/meminfo | cut -d':' -f2`
-        echo " Free memory: " `grep MemFree /proc/meminfo | cut -d':' -f2`
-        echo "{code}"
+        echo "Free memory: " `grep MemFree /proc/meminfo | cut -d':' -f2`
     fi
 }
+
+for el in $@; do
+    if [ $el = "-c" -o $el = "--confluence" ]; then
+        output_format=confluence
+    fi
+done
 
 list_os_info
 list_db_information
 list_java_information
 list_useful_package_info
 list_hardware_information
+
+   
+    
