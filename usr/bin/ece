@@ -673,14 +673,14 @@ function tail_messages_log()
 
 function tail_out_log()
 {
-    file=$log_file
+    tail_list=$log_file
     
     if [ $appserver = "tomcat" -a -n $tomcat_user_package ]; then
-        file=$tomcat_home/logs/catalina.out
+        tail_list=${tail_list}" "${tomcat_home}/logs/catalina.out
     fi
     
-    print "Tailing the system out log $file"
-    tail -f $file
+    print "Tailing the system out log $tail_list"
+    tail -f $tail_list
 }
 
 function tail_app_log()
