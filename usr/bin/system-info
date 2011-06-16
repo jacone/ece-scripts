@@ -109,7 +109,8 @@ function list_os_info()
 function list_db_information()
 {
     print_header "Database details"
-    mysql -V
+    mysql -V 2>/dev/null
+    mysql5 -V 2>/dev/null
 }
 
 function list_java_information()
