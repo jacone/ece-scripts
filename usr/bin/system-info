@@ -27,8 +27,6 @@ tomcat6-user
 varnish
 "
 
-column_width=72
-
 if [ `uname -s` = "Linux" ]; then
     on_linux=1
 fi
@@ -42,7 +40,7 @@ fi
 function print_ruler()
 {
     if [ $output_format = "ascii" ]; then
-        for i in $(seq $column_width); do
+        for i in {0..72}; do
             echo -n $1
         done
     fi
