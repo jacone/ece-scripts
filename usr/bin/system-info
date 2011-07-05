@@ -103,14 +103,20 @@ function list_os_info()
     print_header "Distribution information"
     if [ $on_debian_or_derivate -eq 1 ]; then
         echo "Debian or derivate, version "`cat /etc/debian_version`
+    elif [ -r /etc/gentoo-release ]; then
+        cat /etc/gentoo-release
     fi
 }
 
 function list_db_information()
 {
     print_header "Database details"
-    mysql -V 2>/dev/null
-    mysql5 -V 2>/dev/null
+    if [ -x /usr/sbin/mysqld ]; then
+        /usr/sbin/mysqld -V
+    else
+        mysql -V 2>/dev/null
+        mysql5 -V 2>/dev/null
+    fi
 }
 
 function list_java_information()
