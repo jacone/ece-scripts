@@ -429,7 +429,7 @@ function deploy()
             # instances of tomcat and some of these are not properly
             # initialised.
             if [ ! -d $tomcat_base/webapps ]; then
-                print $tomcat_base/webapps "doesn't exist. I will exit."
+                print $tomcat_base/webapps "doesn't exist, exiting."
                 exit 1
             fi
             
