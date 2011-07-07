@@ -393,6 +393,7 @@ function deploy()
             if [ -d $tomcat_base/escenic/lib ]; then
                 if [ `ls $tomcat_base/escenic/lib | grep .jar | wc -l` -gt 0 ]; then
                     rm $tomcat_base/escenic/lib/*.jar
+                    exit_on_error "removing previous deployed libraries"
                 fi
                 cp $dir/lib/*.jar \
                     $tomcat_base/escenic/lib  \
