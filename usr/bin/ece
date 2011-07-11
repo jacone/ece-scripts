@@ -500,7 +500,7 @@ function start_type()
         fi
         
         for el in $rmi_hub_home/lib/*.jar; do
-            export CLASSPATH=$el:$CLASSPATH
+            export CLASSPATH=$CLASSPATH:$el
         done
 
         $java_home/bin/java \
