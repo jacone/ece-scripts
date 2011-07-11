@@ -3,10 +3,9 @@
 # Script for doing various operations on the Escenic Content Engine,
 # the RMI hub and the indexer standalone instances. Type "ece help"
 # for a complete list of supported operations.
+#
+# echo comments and suggestions > tkj@vizrt.com
 
-#          version: $Revision: #1 $ $Date: 2011/02/18 $
-#           author: torstein@escenic.com
-#   last update by: $Author: shud $
 
 ######################################################################
 # Script defaults, my be overriden in any of the configration files
@@ -172,6 +171,7 @@ function set_common_settings()
           `dirname $0`
           /etc/escenic/$type/instance/$instance
           /etc/escenic/engine/host/`echo $HOSTNAME | tr '[A-Z]' '[a-z]'`
+          /etc/escenic/engine/common
           /etc/escenic/engine
           `dirname $0`/../etc
         "
@@ -393,6 +393,7 @@ function deploy()
             if [ -d $tomcat_base/escenic/lib ]; then
                 if [ `ls $tomcat_base/escenic/lib | grep .jar | wc -l` -gt 0 ]; then
                     rm $tomcat_base/escenic/lib/*.jar
+                    exit_on_error "removing previous deployed libraries"
                 fi
                 cp $dir/lib/*.jar \
                     $tomcat_base/escenic/lib  \
@@ -425,6 +426,14 @@ function deploy()
                 fi
             done
 
+            # this scenario is likely when running many minimal
+            # instances of tomcat and some of these are not properly
+            # initialised.
+            if [ ! -d $tomcat_base/webapps ]; then
+                print $tomcat_base/webapps "doesn't exist, exiting."
+                exit 1
+            fi
+            
             if [ $extract_webapps ] ; then
                 for war in $dir/*.war ; do
                     name=`basename $war .war`
