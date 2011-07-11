@@ -172,8 +172,8 @@ function set_common_settings()
         conf_file_location_list="
           `dirname $0`
           /etc/escenic/$type/instance/$instance
-          /etc/escenic/engine/host/`echo $HOSTNAME | tr '[A-Z]' '[a-z]'`
-          /etc/escenic/engine/common
+          /etc/escenic/$type/host/`echo $HOSTNAME | tr '[A-Z]' '[a-z]'`
+          /etc/escenic/$type/common
           /etc/escenic/$type
           /etc/escenic
           `dirname $0`/../etc
