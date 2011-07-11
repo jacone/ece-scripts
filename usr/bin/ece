@@ -233,8 +233,6 @@ function set_instance_settings()
         type_pid=`ps -ef | grep -v java.security.policy | \
             awk "/Djava.rmi.server.hostname=$ece_server_hostname / && \
             !/awk/"' {print $2}'`
-    else
-        type_pid=`ps -ef | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
     fi
     
     # if type is rmi-hub, we don't' need more configuration.
@@ -251,6 +249,11 @@ function set_instance_settings()
             ece_server=${HOSTNAME}-${instance}
         fi
     fi
+    
+    # Get a hold of the PID of the process. Although we've got the PID
+    # file, we stil get the PID from the OS here as we used it for
+    # sanity checking later on, see stop_type().
+    type_pid=`ps -ef | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
     
     # Common options for all ECE installations
     #
