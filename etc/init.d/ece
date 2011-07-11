@@ -2,7 +2,6 @@
 
 #          version: $Revision: #1 $ $Date: 2011/02/18 $
 #           author: torstein@escenic.com
-#   last update by: $Author: shud $
 
 ### BEGIN INIT INFO
 # Provides:          ece
@@ -17,11 +16,12 @@
 # Usage:
 # * copy this script to /etc/init.d/ece
 # 
-# * copy its configuration file to /etc/default/ece
+# * copy its configuration file to /etc/default/ece (or
+# * /etc/conf.d/ece on Gentoo based disitributions)
 #
 # * make sure it's executable, chmod +x /etc/init.d/ece
 #
-# * add it to the desired runlevels, e.g. on Debian based systems this
+# * add it to the desired runlevels. On Debian based systems this
 #  would be: update-rc.d ece defaults
 #######################################################################
 
@@ -29,9 +29,10 @@
 # Default values
 #######################################################################
 dir_list="
+/var/cache/escenic
+/var/crash/escenic
 /var/log/escenic
 /var/run/escenic
-/var/cache/escenic
 "
 
 ece_script=/usr/bin/ece
@@ -40,6 +41,7 @@ ece_script=/usr/bin/ece
 # init.d script, located in:
 conf_file_location_list="
 /etc/default
+/etc/conf.d
 /tmp
 "
 
