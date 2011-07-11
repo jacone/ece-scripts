@@ -494,8 +494,10 @@ function start_type()
         echo $pid > $pid_file
         exit 0
 
-    elif [ $type = "indexer" ]; then
-        print TODO
+    elif [ $type = "search" ]; then
+        # TODO trim & tun the default parameters for the search
+        # instance.
+        ensure_that_required_fields_are_set $engine_required_fields
     elif [ $type = "engine" ]; then
         ensure_that_required_fields_are_set $engine_required_fields
     fi
