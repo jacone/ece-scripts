@@ -174,7 +174,8 @@ function set_common_settings()
           /etc/escenic/$type/instance/$instance
           /etc/escenic/engine/host/`echo $HOSTNAME | tr '[A-Z]' '[a-z]'`
           /etc/escenic/engine/common
-          /etc/escenic/engine
+          /etc/escenic/$type
+          /etc/escenic
           `dirname $0`/../etc
         "
     fi
