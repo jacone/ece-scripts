@@ -491,6 +491,7 @@ function start_type()
             print "for the rmi-hub, you may copy the one found in"
             print "$ece_home/contrib/rmi-hub/config."
             print "Exiting :-("
+            exit 1
         fi
         
         for el in $rmi_hub_home/lib/*.jar; do
