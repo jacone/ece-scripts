@@ -120,9 +120,11 @@ function verify_that_directory_and_file_are_writeable()
 
     if [ -e $1 ]; then
         if [ ! -w $1 ]; then
-            print $1 "exists, but isn't write-able for usre $USER"
+            print $1 "exists, "
+            print "but isn't write-able for user $USER"
             print "check the permissions and that $USER is the correct one"
             print "to run "`basename $0`
+            exit 1
         fi
     fi
 }
@@ -830,8 +832,9 @@ function get_status()
             exit 1
         fi
     else
-        print $pid_file "did not exist, the ${instance} instance "
-        print "of ${type} hasn't been started properly with `basename $0`"
+        print $pid_file "did not exist, "
+        print "the ${instance} instance  of ${type} "
+        print "hasn't been started properly with `basename $0`"
         exit 1
     fi
 
