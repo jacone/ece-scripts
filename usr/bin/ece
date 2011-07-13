@@ -858,6 +858,32 @@ function get_status()
     print "UP" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 }
 
+function list_versions()
+{
+    if [ -z "$type_pid" ]; then
+        print "$instance instance of $type on $HOSTNAME is NOT running"
+        exit 1
+    fi
+    
+    # TODO read the server & port from the instance at hand via its
+    # settings files.
+    url=http://localhost:8080/escenic-admin/browser/Global/neo/io/managers/VersionManager
+    print "Querying $instance instance of $type on $HOSTNAME"
+    print "for its versions (this may take some time) ..."
+    wget -O - $url  2>/dev/null | \
+        grep "\[\[" | \
+        sed 's/\[//g' | \
+        sed 's/\]//g' | \
+        sed 's/Name\=//g' | \
+        sed 's/\;\ Version\=/\ /g' | \
+        awk -F',' '{for (i = 1; i <= NF; i++) print "   * " $i;}' | \
+        # This is a hack since that for some reason, cannot get
+        # sub(/^[ \t]+/, "") to work inside the loop for $i, it seems
+        # to always operate on the incoming line.
+        sed 's/\ \ \ c/c/g' | \
+        sort
+}
+
 set_type_command_and_instance $@
 set_id
 set_common_settings
@@ -942,6 +968,9 @@ for el in $command; do
             ;;
         clean)
             clean_up
+            ;;
+        versions)
+            list_versions
             ;;
         help)
             print_help
