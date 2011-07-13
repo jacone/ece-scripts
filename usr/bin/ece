@@ -894,6 +894,7 @@ function list_versions()
         grep "\[\[" | \
         sed 's/\[//g' | \
         sed 's/\]//g' | \
+        sed 's/Name\=io/Name\=content-engine/g' | \
         sed 's/Name\=//g' | \
         sed 's/\;\ Version\=/\ /g' | \
         awk -F',' '{for (i = 1; i <= NF; i++) print "   * " $i;}' | \
