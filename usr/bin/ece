@@ -868,7 +868,7 @@ function list_versions()
     # TODO read the server & port from the instance at hand via its
     # settings files.
     url=http://localhost:8080/escenic-admin/browser/Global/neo/io/managers/VersionManager
-    print "Querying $instance instance of $type on $HOSTNAME"
+    print "Querying the $instance instance of $type on $HOSTNAME"
     print "for its versions (this may take some time) ..."
     wget -O - $url  2>/dev/null | \
         grep "\[\[" | \
