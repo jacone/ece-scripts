@@ -922,6 +922,7 @@ function print_help()
     echo "   status     checks if the type is running"
     echo "   stop       stops the type"
     echo "   threaddump write a thread dump to standard out (system out log)"
+    echo "   versions   lists the ECE component versions"
     echo ""
     echo "*) only applicable if type is 'engine'"
 }    
