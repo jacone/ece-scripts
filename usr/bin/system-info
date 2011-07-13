@@ -6,6 +6,7 @@
 # can be: ascii, confluence
 output_format=ascii
 on_debian_or_derivate=0
+on_gentoo_or_derivate=0
 on_redhat_or_derivate=0
 on_linux=0
 
@@ -26,14 +27,28 @@ tomcat6
 tomcat6-user
 varnish
 "
+important_packages_on_gentoo="
+dev-db/percona-server
+dev-java/ant-contrib
+dev-java/ant-nodeps
+dev-java/maven-bin
+dev-libs/apr
+net-misc/memcached
+net-nds/openldap
+virtual/jre-1.6.0
+www-servers/apache
+www-servers/nginx
+www-servers/varnish
+"
 
 if [ `uname -s` = "Linux" ]; then
     on_linux=1
 fi
 
-
 if [ -x /usr/bin/dpkg -a -e /etc/debian_version ]; then
     on_debian_or_derivate=1
+elif [ -x /usr/bin/emerge -a -e /etc/gentoo-release ]; then
+    on_gentoo_or_derivate=1
 fi
 
 
@@ -50,10 +65,6 @@ function print_pre_start()
 {
     if [ $output_format = "confluence" ]; then
         echo "{code}"
-    elif [ $output_format = "ascii" ]; then
-        echo ""
-        print_ruler "-"
-        echo ""
     fi
 }
 
@@ -61,9 +72,6 @@ function print_pre_end()
 {
     if [ $output_format = "confluence" ]; then
         echo "{code}"
-    elif [ $output_format = "ascii" ]; then
-        print_ruler "-"
-        echo ""
     fi
 }
 
@@ -89,6 +97,12 @@ function list_useful_package_info()
     if [ $on_debian_or_derivate -eq 1 ]; then
         for el in $important_packages_on_debian; do
             dpkg -l $el 2>/dev/null | grep ^ii | sed 's/ii\ \ //g'
+        done
+    elif [ $on_gentoo_or_derivate -eq 1 ]; then
+        for el in $important_packages_on_gentoo; do
+	    equery  --no-color --no-pipe list $el 2>/dev/null | \
+		grep -v "Searching for" | \
+		cut -d']' -f3- 2>/dev/null
         done
     fi
 
@@ -136,6 +150,30 @@ function list_hardware_information()
         echo "Total memory: " `grep MemTotal /proc/meminfo | cut -d':' -f2`
         echo "Free memory: " `grep MemFree /proc/meminfo | cut -d':' -f2`
     fi
+
+    print_header "Disk Storage"
+    print_pre_start
+    if [ $(df --version | grep GNU | wc -l) -gt 0 ]; then
+	df -hT
+    else
+	df
+    fi
+    print_pre_end
+}
+
+function print_report_header()
+{
+    if [ $output_format = "confluence" ]; then
+	echo "h1. System details for $HOSTNAME"
+    elif [ $output_format = "ascii" ]; then
+        echo ""
+        print_ruler "#"
+        echo ""
+        echo "System details for $HOSTNAME"
+        print_ruler "#"
+        echo ""
+    fi
+
 }
 
 for el in $@; do
@@ -144,6 +182,7 @@ for el in $@; do
     fi
 done
 
+print_report_header
 list_os_info
 list_db_information
 list_java_information
