@@ -888,8 +888,7 @@ function list_versions()
     
     url=http://$host:$port/$version_manager
 
-    print "Querying the $instance instance of $type on $HOSTNAME"
-    print "for its versions (this may take some time) ..."
+    print "Installed on the $instance instance of $type on $HOSTNAME are ..."
     wget -O - $url  2>/dev/null | \
         grep "\[\[" | \
         sed 's/\[//g' | \
