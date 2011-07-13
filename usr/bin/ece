@@ -880,7 +880,7 @@ function list_versions()
         # This is a hack since that for some reason, cannot get
         # sub(/^[ \t]+/, "") to work inside the loop for $i, it seems
         # to always operate on the incoming line.
-        sed 's/\ \ \ c/c/g' | \
+        sed 's/\*\ \ \ /\*/g' | \
         sort
 }
 
