@@ -865,9 +865,29 @@ function list_versions()
         exit 1
     fi
     
-    # TODO read the server & port from the instance at hand via its
-    # settings files.
-    url=http://localhost:8080/escenic-admin/browser/Global/neo/io/managers/VersionManager
+    host=localhost
+    version_manager=escenic-admin/browser/Global/neo/io/managers/VersionManager
+    if [ $appserver != "tomcat" ]; then
+        print "Only tomcat is supported right now, "
+        print "trying to make an educted guess"
+        url=http://$host:8080/$version_manager
+    else
+        if [ -r $tomcat_base/logs/catalina.out ]; then
+            # for tomcat6-user packaged tomcats (and perhaps others)
+            out_log=$tomcat_base/logs/catalina.out
+        else
+            out_log=$log_file
+        fi
+        
+        port=$(grep "INFO: Starting Coyote HTTP/1.1 on http-" \
+            $out_log | \
+            tail -1 | \
+            cut -d'-' -f2
+            )
+    fi
+    
+    url=http://$host:$port/$version_manager
+
     print "Querying the $instance instance of $type on $HOSTNAME"
     print "for its versions (this may take some time) ..."
     wget -O - $url  2>/dev/null | \
