@@ -4,17 +4,19 @@
 # instances. If you only have one # instance, use "default" as its
 # name. If you don't have any instances of that type on this host,
 # then just set the variable to an empty string.
-engine_instance_list="rolling"
-search_instance_list=""
+engine_instance_list="app1 app2"
+search_instance_list="search1"
+analysis_instance_list="analysis1"
 
 # You only need one hub in an ECE cluster, so only set this one to
 # true on one host.
 enable_rmi_hub=true
 
 # The location of the ece script, default is /usr/bin/ece
-ece_script=/home/torstein/src/ece-scripts/usr/bin/ece
+ece_script=/usr/bin/ece
 
 # Default Unix user that will run the processes, default is escenic
 # for both of these.
-ece_unix_group=torstein
-ece_unix_user=torstein
+ece_unix_group=escenic
+ece_unix_user=escenic
+
