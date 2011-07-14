@@ -96,6 +96,10 @@ function execute_command()
     for el in $search_instance_list; do
         su - $ece_unix_user -c "$ece_script -t search -i $el $1"
     done
+
+    for el in $analysis_instance_list; do
+        su - $ece_unix_user -c "$ece_script -t analysis -i $el $1"
+    done
 }
 
 if [ $1 ]; then
