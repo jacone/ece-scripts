@@ -877,7 +877,7 @@ function list_versions()
     version_manager=escenic-admin/browser/Global/neo/io/managers/VersionManager
     if [ $appserver != "tomcat" ]; then
         print "Only tomcat is supported right now, "
-        print "trying to make an educted guess"
+        print "trying to make an educated guess"
         url=http://$host:8080/$version_manager
     else
         if [ -r $tomcat_base/logs/catalina.out ]; then
@@ -896,7 +896,7 @@ function list_versions()
     
     url=http://$host:$port/$version_manager
 
-    print "Installed on the $instance instance of $type on $HOSTNAME are ..."
+    print "The ${type} running on ${host}:${port} has installed:"
     wget -O - $url  2>/dev/null | \
         grep "\[\[" | \
         sed 's/\[//g' | \
