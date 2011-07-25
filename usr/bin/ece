@@ -896,7 +896,7 @@ function list_versions()
     
     url=http://$host:$port/$version_manager
 
-    print "The ${type} running on ${host}:${port} has installed:"
+    print "Installed on the ${type} running on ${host}:${port} is:"
     wget -O - $url  2>/dev/null | \
         grep "\[\[" | \
         sed 's/\[//g' | \
