@@ -202,6 +202,27 @@ function set_common_settings()
       $log_dir/messages
       $log_dir/Escenic-error.log
     "
+
+    host=localhost
+    if [ $appserver != "tomcat" ]; then
+        debug "Only tomcat is supported for reading host/port right now, "
+        debug "trying to make an educated guess"
+        port=8080
+    else
+        if [ -r $tomcat_base/logs/catalina.out ]; then
+            # for tomcat6-user packaged tomcats (and perhaps others)
+            out_log=$tomcat_base/logs/catalina.out
+        else
+            out_log=$log_file
+        fi
+        
+        port=$(grep "INFO: Starting Coyote HTTP/1.1 on http-" \
+            $out_log | \
+            tail -1 | \
+            cut -d'-' -f2
+            )
+    fi
+    
 }
 
 function set_type_settings()
@@ -755,6 +776,8 @@ function set_type_command_and_instance()
 {
     next_is_type=0
     next_is_instance=0
+    next_is_publication=0
+    next_is_resource=0
     
     for el in $@; do
         if [ $el = "-v" -o $el = "--verbose" ]; then
@@ -778,6 +801,18 @@ function set_type_command_and_instance()
             continue
         fi
         
+        if [ $next_is_publication -eq 1 ]; then
+            publication=$el
+            next_is_publication=0
+            continue
+        fi
+        
+        if [ $next_is_resource -eq 1 ]; then
+            resource=$el
+            next_is_resource=0
+            continue
+        fi
+        
         if [ $el = "-t" -o $el  = "--type" ]; then
             next_is_type=1
             continue
@@ -790,6 +825,20 @@ function set_type_command_and_instance()
             continue
         else
             next_is_instance=0
+        fi
+
+        if [ $el = "-p" -o $el = "--publication" ]; then
+            next_is_publication=1
+            continue
+        else
+            next_is_publication=0
+        fi
+        
+        if [ $el = "-r" -o $el = "--publication-resource" ]; then
+            next_is_resource=1
+            continue
+        else
+            next_is_resource=0
         fi
         
         # the only thing left at this point, is the command
@@ -873,29 +922,9 @@ function list_versions()
         exit 1
     fi
     
-    host=localhost
     version_manager=escenic-admin/browser/Global/neo/io/managers/VersionManager
-    if [ $appserver != "tomcat" ]; then
-        print "Only tomcat is supported right now, "
-        print "trying to make an educated guess"
-        url=http://$host:8080/$version_manager
-    else
-        if [ -r $tomcat_base/logs/catalina.out ]; then
-            # for tomcat6-user packaged tomcats (and perhaps others)
-            out_log=$tomcat_base/logs/catalina.out
-        else
-            out_log=$log_file
-        fi
-        
-        port=$(grep "INFO: Starting Coyote HTTP/1.1 on http-" \
-            $out_log | \
-            tail -1 | \
-            cut -d'-' -f2
-            )
-    fi
-    
     url=http://$host:$port/$version_manager
-
+        
     print "Installed on the ${type} running on ${host}:${port} is:"
     wget -O - $url  2>/dev/null | \
         grep "\[\[" | \
@@ -910,6 +939,57 @@ function list_versions()
         # to always operate on the incoming line.
         sed 's/\*\ \ \ /\*/g' | \
         sort
+}
+
+function update_publication_resources()
+{
+    url=http://${host}:${port}/escenic-admin/publication-resources
+
+    if [ ! -r $resource ]; then
+        print $resource "doesn't exist. I will exit :-("
+        exit 1
+    fi
+
+    if [ -x $publication ]; then
+        print "You must specify which publication to update (-p <publication>)"
+        exit 1
+    fi
+    
+    case "$(basename $resource)" in
+        content-type)
+            url=${url}/${publication}/escenic/content-type
+            ;;
+        feature)
+            url=${url}/${publication}/escenic/feature
+            ;;
+        layout)
+            url=${url}/${publication}/escenic/layout
+            ;;
+        layout-group)
+            url=${url}/${publication}/escenic/layout-group
+            ;;
+        image-version)
+            url=${url}/${publication}/escenic/image-version
+            ;;
+        menu)
+            url=${url}/${publication}/escenic/plugin/menu
+            ;;
+        
+        *)
+            print "Invalid resource: $(basename $resource) :-("
+            exit 1
+        
+    esac        
+
+    print "Updating the $(basename $resource) resource for the $publication" \
+        "publication"
+    
+    debug POSTing $resource to $url
+    wget -O - \
+        --post-file ${resource} \
+        $url \
+        1>>$log_file 2>>$log_file
+        
 }
 
 set_type_command_and_instance $@
@@ -933,6 +1013,12 @@ function print_help()
     echo "                communication between the ECE instances."
     echo " -i --instance <instance>" 
     echo "      The type instance, such as editor1, web1 or search1"
+    echo " -p --publication <publication>" 
+    echo "      Needed only for updating publication resources"
+    echo " -r --resource <resource>" 
+    echo "      Needed only for updating publication resources."
+    echo "      Must be one of: content-type, feature, layout, layout-group"
+    echo "                      image-version, menu"
     echo " -v --verbose"
     echo "      Prints out debug statements, useful for debugging."
     echo ""
@@ -950,6 +1036,7 @@ function print_help()
     echo "   status     checks if the type is running"
     echo "   stop       stops the type"
     echo "   threaddump write a thread dump to standard out (system out log)"
+    echo "   update     update publication resources"
     echo "   versions   lists the ECE component versions"
     echo ""
     echo "*) only applicable if type is 'engine'"
@@ -1000,6 +1087,9 @@ for el in $command; do
             ;;
         versions)
             list_versions
+            ;;
+        update)
+            update_publication_resources
             ;;
         help)
             print_help
