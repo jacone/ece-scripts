@@ -374,16 +374,6 @@ function set_instance_settings()
             export CATALINA_BASE=$tomcat_base
         fi
         debug "CATALINA_BASE=$CATALINA_BASE"
-
-        # check for the tomcat6-user Debian package, popular on
-        # Debian, Ubuntu and other derivatives to set up multiple
-        # tomcat instances , see
-        # http://packages.debian.org/stable/tomcat6-user
-        if [ ! -x $tomcat_home/bin/catalina.sh ]; then
-            if [ -x $tomcat_home/bin/startup.sh ]; then
-                tomcat_user_package=true
-            fi
-        fi
     fi
 
     # TODO do we need to export ECE_HOME?
@@ -556,28 +546,15 @@ function start_type()
             # to set them here.
 
             if [ ! -x $tomcat_home/bin/catalina.sh ]; then
-                # If using the tomcat6-user Debian package,
-                # tomcat_home will only have startup.sh and
-                # shutdown.sh
-                if [ -x $tomcat_home/bin/startup.sh ]; then
-                    tomcat_user_package=true
-                else
-                    print "$tomcat_home/bin/catalina.sh was not executable"
-                    print "unable to start tomcat"
-                    exit 1
-                fi
+                print "$tomcat_home/bin/catalina.sh was not executable"
+                print "unable to start tomcat"
+                exit 1
             fi
 
-            if [ -z $tomcat_user_package ]; then
-              # We call run here to get the log output to the stdout log
-              $tomcat_home/bin/catalina.sh run \
-                  1>>$log_file \
-                  2>>$log_file & pid=$!
-            else
-                $tomcat_home/bin/startup.sh \
-                    1>>$log_file \
-                    2>>$log_file & pid=$!
-            fi
+            # We call run here to get the log output to the stdout log
+            $tomcat_home/bin/catalina.sh run \
+                1>>$log_file \
+                2>>$log_file & pid=$!
             ;;
         oc4j)
             export OC4J_JVM_ARGS=$ece_args
@@ -723,10 +700,9 @@ function tail_messages_log()
 function tail_out_log()
 {
     tail_list=$log_file
-    
-    if [ $appserver = "tomcat" -a -n $tomcat_user_package ]; then
-        tail_list=${tail_list}" "${tomcat_home}/logs/catalina.out
-    fi
+
+    # if needs be, we can add more system out logs here. For now,
+    # we're sticking with the default one.
     
     print "Tailing the system out log $tail_list"
     tail -f $tail_list
