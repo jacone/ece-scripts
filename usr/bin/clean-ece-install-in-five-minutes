@@ -1,0 +1,302 @@
+#! /usr/bin/env bash
+
+# The goal of this script, is to have an ECE up and running within
+# five minutes. The setup the user is getting is suitable for a
+# production environment, except for the fact that with this script,
+# all ECE components are set up on the same host.
+
+# by tkj@vizrt.com
+
+# run this script as the root user
+
+ece_user=torstein
+ece_group=torstein
+technet_user=escenic
+technet_password=documentation
+technet_download_list="
+"
+download_dir=/tmp/ece-downloads/
+
+ece_directories="/var/{run,lib,cache,log,crash}/escenic \
+/opt/escenic /etc/escenic/engine/common"
+
+tomcat_download=http://ftp.nsysu.edu.tw/Apache/tomcat/tomcat-6/v6.0.32/bin/apache-tomcat-6.0.32.tar.gz
+tomcat_port=8080
+
+
+function download_all()
+{
+    mkdir -p $download_dir
+    cd $download_dir
+    for el in $technet_download_list; do
+        wget \
+            --http-user $technet_user \
+            --http-password $technet_password \
+            $el
+    done
+
+    wget $tomcat_download
+}
+
+function install_debian_packages()
+{
+    echo "deb http://repo.percona.com/apt squeeze main" \
+        >> /etc/apt/sources.list
+    
+    apt-get install \
+        ant \
+        ant-contrib \
+        libapr1 \
+        libmysql-java \
+        memcached \
+        sun-java6-jdk \
+        tomcat6 \
+        ""
+    
+}
+
+mkdir -p $ece_directories
+
+function set_up_engine_plugins_and_assembly_tool()
+{
+    cd /opt/escenic/
+    unzip /tmp/engine*.zip
+    ln -s engine-* engine
+    mv /tmp/engine*.zip /tmp
+    
+    mkdir /opt/escenic/assemblytool/
+    cd /opt/escenic/assemblytool/
+    unzip $download_dir/assemblytool*zip
+    mv $download_dir/assemblytool*zip /tmp/
+    mkdir plugins
+    cd plugins
+    find ../../ -type d -depth 0 | \
+        grep -v engine | \
+        grep -v assemblytool | \
+        while read directory; do
+        ln -s $directory
+    done
+
+    cd /opt/escenic/
+    for el in $download_dir/*.zip; do
+        unzip $el
+    done
+}
+
+function set_up_ece_scripts()
+{
+    git@github.com:skybert/ece-scripts.git
+    cp ece-scripts/usr/bin/ece /usr/bin/
+    cp ece-scripts/etc/* /etc/
+}
+
+function set_up_ecedb()
+{
+    mkdir -p /opt/escenic/engine/plugins
+    cd /opt/escenic/engine/plugins
+    ln -s /opt/escenic/forum*
+    ln -s /opt/escenic/community-engine*
+    bash /opt/escenic/ece-scripts/usr/bin/drop-and-create-ecedb
+    rm -rf /opt/escenic/engine/plugins
+}
+
+function set_up_basic_nursery_configuration()
+{
+    cp -r /opt/escenic/engine/siteconfig/config-skeleton/* \
+        /etc/escenic/engine/common/
+
+    echo > /etc/escenic/engine/common/ServerConfig.properties <<EOF
+databaseProductName=MySQL
+filePublicationRoot=/var/lib/escenic/engine/
+webPublicationRoot=http://$HOSTNAME:${tomcat_port}/
+EOF
+    echo > /etc/escenic/engine/common/neo/io/managers/ContentManager.properties <<EOF
+readConnector=/connector/ReadConnector
+updateConnector=/connector/UpdateConnector
+EOF
+}
+
+function set_up_proper_log4j_configuration()
+{
+    echo > /etc/escenic/engine/common/trace.properties <<EOF
+log4j.rootLogger=ERROR, ECELOG
+log4j.appender.ECELOG=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.ECELOG.File=/var/log/escenic/${escenic.server}-messages
+log4j.appender.ECELOG.layout=org.apache.log4j.PatternLayout
+log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
+EOF
+}
+
+function set_up_app_server
+{
+    cd /opt/
+    tar xzf $download_dir/apache-*.tar.gz
+    ln -s apache-tomcat* tomcat
+    mkdir -p tomcat/escenic/lib
+
+    echo > tomcat/conf/server.xml <<EOF
+<?xml version='1.0' encoding='utf-8'?>
+<Server port="8105" shutdown="SHUTDOWN">
+  <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
+  <Listener className="org.apache.catalina.core.JasperListener" />
+  <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+  <Listener className="org.apache.catalina.mbeans.ServerLifecycleListener" />
+  <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
+
+  <GlobalNamingResources>
+    <Resource name="UserDatabase"
+              auth="Container"
+              type="org.apache.catalina.UserDatabase"
+              description="User database that can be updated and saved"
+              factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
+              pathname="conf/tomcat-users.xml" />
+    <Resource
+        name="jdbc/ECE_READ_DS"
+        auth="Container"
+        type="javax.sql.DataSource"
+        maxActive="400"
+        maxIdle="8"
+        maxWait="2000"
+        initialSize="20"
+        username="ece5user"
+        password="ece5password"
+        driverClassName="com.mysql.jdbc.Driver"
+
+url="jdbc:mysql://localhost:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
+        removeAbandoned="true"
+        removeAbandonedTimeout="120"
+        logAbandoned="true"
+        testOnBorrow="false"
+        testOnReturn="false"
+        timeBetweenEvictionRunsMillis="60000"
+        numTestsPerEvictionRun="5"
+        minEvictableIdleTimeMillis="30000"
+        testWhileIdle="true"
+        validationQuery="select now()"
+        />
+    <Resource
+        name="jdbc/ECE_UPDATE_DS"
+        auth="Container"
+        type="javax.sql.DataSource"
+        maxActive="100"
+        maxIdle="8"
+        maxWait="2000"
+        initialSize="20"
+        username="ece5user"
+        password="ece5password"
+        driverClassName="com.mysql.jdbc.Driver"
+        url="jdbc:mysql://localhost:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
+        removeAbandoned="true"
+        removeAbandonedTimeout="120"
+        logAbandoned="true"
+        testOnBorrow="false"
+        testOnReturn="false"
+        timeBetweenEvictionRunsMillis="60000"
+        numTestsPerEvictionRun="5"
+        minEvictableIdleTimeMillis="30000"
+        testWhileIdle="true"
+        validationQuery="select now()"
+        />
+  </GlobalNamingResources>
+
+  <Service name="Catalina">
+    <Connector port="${tomcat_port}"
+               protocol="HTTP/1.1" 
+               connectionTimeout="20000" 
+               URIEncoding="UTF-8"
+               redirectPort="8543" />
+    <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
+      <Valve className="org.apache.catalina.valves.AccessLogValve"
+             prefix="access."
+             suffix=".log"
+             pattern="common"/>
+      <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+             resourceName="UserDatabase"/>
+      <Host name="localhost"
+            appBase="webapps"
+            unpackWARs="true"
+            autoDeploy="true"
+            xmlValidation="false"
+            xmlNamespaceAware="false">
+      </Host>
+    </Engine>
+  </Service>
+</Server>
+
+EOF
+    echo > /opt/tomcat/conf/context.xml <<EOF
+<?xml version='1.0' encoding='utf-8'?>
+<Context>
+
+  <WatchedResource>WEB-INF/web.xml</WatchedResource>
+
+  <ResourceLink
+      global="jdbc/ECE_READ_DS"
+      name="jdbc/ECE_READ_DS"
+      type="javax.sql.DataSource"/>
+  
+  <ResourceLink
+      global="jdbc/ECE_UPDATE_DS"
+      name="jdbc/ECE_UPDATE_DS"
+      type="javax.sql.DataSource"/>
+  
+  <Environment
+      name="escenic/indexer-webservice"
+      value="http://localhost:${tomcat_port}/indexer-webservice/index/"
+      type="java.lang.String"
+      override="false"/>
+
+  <Environment
+      name="escenic/index-update-uri"
+      value="http://localhost:${tomcat_port}/solr/update/"
+      type="java.lang.String"
+      override="false"/>
+
+  <Environment
+      name="escenic/solr-base-uri"
+      value="http://localhost:${tomcat_port}/solr/"
+      type="java.lang.String"
+      override="false"/>
+
+  <Environment
+      name="escenic/head-tail-storage-file"
+      value="/var/lib/escenic/engine/head-tail.index"
+      type="java.lang.String"
+      override="false"/>
+
+  <Environment
+      name="escenic/failing-documents-storage-file"
+      value="/var/lib/escenic/engine/failures.index"
+      type="java.lang.String"
+      override="false"/>
+
+</Context>
+EOF
+    
+}
+
+# last, give the control back to the ECE user & group 
+function set_correct_permissions()
+{
+    chown -R ${ece_user}:${ece_group} $ece_directories
+}
+
+function print_next_steps()
+{
+    echo " You must now do: \
+* add /opt/tomcat/escenic/lib to common.loader
+  in /opt/tomcat/conf/catalina.properties
+
+* add 
+
+"
+}
+
+download_all
+set_up_engine_plugins_and_assembly_tool
+set_up_ece_scripts
+set_up_ecedb
+set_correct_permissions
+set_up_app_server
+
+print_next_steps
