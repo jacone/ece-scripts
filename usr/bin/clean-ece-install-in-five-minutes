@@ -9,8 +9,8 @@
 
 # run this script as the root user
 
-ece_user=torstein
-ece_group=torstein
+ece_user=escenic
+ece_group=escenic
 technet_user=escenic
 technet_password=documentation
 technet_download_list="
@@ -22,27 +22,38 @@ ece_directories="/var/{run,lib,cache,log,crash}/escenic \
 
 tomcat_download=http://ftp.nsysu.edu.tw/Apache/tomcat/tomcat-6/v6.0.32/bin/apache-tomcat-6.0.32.tar.gz
 tomcat_port=8080
+jdbc_driver=/usr/share/java/mysql.jar
 
+function make_dir()
+{
+    if [ ! -d $1 ]; then
+        mkdir -p $1
+    fi
+}
 
 function download_all()
 {
-    mkdir -p $download_dir
+    make_dir $download_dir
     cd $download_dir
     for el in $technet_download_list; do
-        wget \
+        wget --continue \
             --http-user $technet_user \
             --http-password $technet_password \
             $el
     done
 
-    wget $tomcat_download
+    wget --continue $tomcat_download
 }
 
 function install_debian_packages()
 {
     echo "deb http://repo.percona.com/apt squeeze main" \
-        >> /etc/apt/sources.list
-    
+        >> /etc/apt/sources.list.d/escenic.list
+    curl http://repo.varnish-cache.org/debian/GPG-key.txt | apt-key add -
+    echo "deb http://repo.varnish-cache.org/debian/ $(lsb_release -s -c) varnish-3.0" >> \
+        /etc/apt/sources.list.d/escenic.list
+
+    apt-get update
     apt-get install \
         ant \
         ant-contrib \
@@ -51,11 +62,12 @@ function install_debian_packages()
         memcached \
         sun-java6-jdk \
         tomcat6 \
-        ""
-    
+        varnish \
+        wget
+»    
 }
 
-mkdir -p $ece_directories
+make_dir $ece_directories
 
 function set_up_engine_plugins_and_assembly_tool()
 {
@@ -64,11 +76,11 @@ function set_up_engine_plugins_and_assembly_tool()
     ln -s engine-* engine
     mv /tmp/engine*.zip /tmp
     
-    mkdir /opt/escenic/assemblytool/
+    make_dir /opt/escenic/assemblytool/
     cd /opt/escenic/assemblytool/
     unzip $download_dir/assemblytool*zip
     mv $download_dir/assemblytool*zip /tmp/
-    mkdir plugins
+    make_dir plugins
     cd plugins
     find ../../ -type d -depth 0 | \
         grep -v engine | \
@@ -85,14 +97,15 @@ function set_up_engine_plugins_and_assembly_tool()
 
 function set_up_ece_scripts()
 {
-    git@github.com:skybert/ece-scripts.git
+    cd $download_dir
+    git clone git://github.com/skybert/ece-scripts.git
     cp ece-scripts/usr/bin/ece /usr/bin/
     cp ece-scripts/etc/* /etc/
 }
 
 function set_up_ecedb()
 {
-    mkdir -p /opt/escenic/engine/plugins
+    make_dir /opt/escenic/engine/plugins
     cd /opt/escenic/engine/plugins
     ln -s /opt/escenic/forum*
     ln -s /opt/escenic/community-engine*
@@ -132,7 +145,11 @@ function set_up_app_server
     cd /opt/
     tar xzf $download_dir/apache-*.tar.gz
     ln -s apache-tomcat* tomcat
-    mkdir -p tomcat/escenic/lib
+    make_dir tomcat/escenic/lib
+    
+    make_dir /opt/tomcat/lib
+    cd /opt/tomcat/lib
+    ln -s $jdbc_driver
 
     echo > tomcat/conf/server.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
@@ -278,7 +295,15 @@ EOF
 # last, give the control back to the ECE user & group 
 function set_correct_permissions()
 {
+    adduser $ece_user
+    addgroup $ece_group
+    
     chown -R ${ece_user}:${ece_group} $ece_directories
+}
+
+function print_status()
+{
+    ece versions
 }
 
 function print_next_steps()
@@ -292,11 +317,30 @@ function print_next_steps()
 "
 }
 
-download_all
-set_up_engine_plugins_and_assembly_tool
-set_up_ece_scripts
-set_up_ecedb
-set_correct_permissions
-set_up_app_server
+function set_up_test_publication()
+{
+    make_dir /opt/escenic/assemblytool/publications/
+    cp /opt/escenic/engine/contrib/wars/demo-clean.war mypub.war
+    echo > /opt/escenic/assemblytool/publications/mypub.properties <<EOF
+name: mypub
+source-webapp: mypub.war
+context-root: mypub
+EOF
 
-print_next_steps
+}
+
+if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
+    install_debian_packages
+fi
+
+# download_all
+# set_up_engine_plugins_and_assembly_tool
+# set_up_ece_scripts
+# set_up_ecedb
+# set_correct_permissions
+# set_up_app_server
+# set_up_test_publication
+
+# print_status
+# print_next_steps
+
