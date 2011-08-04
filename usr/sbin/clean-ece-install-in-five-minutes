@@ -13,6 +13,7 @@ ece_user=escenic
 ece_group=escenic
 
 id="[ece-install]"
+log=/tmp/$(basename $0).log
 
 function print()
 {
@@ -43,20 +44,30 @@ http://technet.escenic.com/downloads/release/53/poll-2.1.3.0.zip
 http://technet.escenic.com/downloads/release/53/xml-editor-dist-2.1.0.0.zip
 "
 download_dir=/tmp/ece-downloads/
-ece_directories="/var/{run,lib,cache,log,crash}/escenic \
-/opt/escenic \
-/etc/escenic/engine/common"
 
 tomcat_download=http://ftp.nsysu.edu.tw/Apache/tomcat/tomcat-6/v6.0.32/bin/apache-tomcat-6.0.32.tar.gz
 tomcat_port=8080
 jdbc_driver=/usr/share/java/mysql.jar
 
+dir_list="
+/etc/escenic/engine/common
+/opt/escenic
+/var/cache/escenic
+/var/crash/escenic
+/var/lib/escenic
+/var/log/escenic
+/var/run/escenic
+"
 function make_dir()
 {
     if [ ! -d $1 ]; then
         mkdir -p $1
     fi
 }
+
+for el in $dir_list; do
+    make_dir $el
+done
 
 # TODO download documentation to
 # /usr/share/doc/escenic/content-engine-<version>/
@@ -92,6 +103,7 @@ function install_debian_packages()
     apt-get install \
         ant \
         ant-contrib \
+        ant-optional \
         libapr1 \
         libmysql-java \
         memcached \
@@ -138,14 +150,40 @@ function set_up_engine_plugins_and_assembly_tool()
         while read directory; do
         ln -s $directory
     done
+
+    cd /opt/escenic/assemblytool/
+    ant initialize
+    cat assemble.properties | \
+        sed 's/#\ engine.root\ =\ \./engine.root=\/opt\/escenic\/engine/g' \
+        > assemble.properties.tmp
+    mv assemble.properties.tmp assemble.properties
+
+    cat assemble.properties | \
+        sed 's/\#\# plugins\ =\ \/path\/to\/plugins/plugins=\/opt\/escenic\/assemblytool\/plugins/g' \
+        > assemble.properties.tmp
+    mv assemble.properties.tmp assemble.properties
 }
+
 
 function set_up_ece_scripts()
 {
     cd $download_dir
-    git clone git://github.com/skybert/ece-scripts.git
+    if [ -d ece-scripts ]; then
+        (cd ece-scripts
+            git pull)
+    else
+        git clone git://github.com/skybert/ece-scripts.git
+    fi
+    
     cp -r ece-scripts/usr/* /usr/
     cp -r ece-scripts/etc/* /etc/
+
+    file=/etc/escenic/ece.conf
+    cat $file | \
+        sed 's/tomcat_home=\/usr\/share\/tomcat6/tomcat_home=\/opt\/tomcat/g' \
+        > ${file}.tmp
+    mv ${file}.tmp ${file}
+
 
     # add init.d to the default runlevels, support at least
     # RedHat/chekcconfig and Debian/update-rc.d
@@ -165,6 +203,8 @@ function set_up_basic_nursery_configuration()
 {
     cp -r /opt/escenic/engine/siteconfig/config-skeleton/* \
         /etc/escenic/engine/common/
+    cp -r /opt/escenic/engine/security/ \
+        /etc/escenic/engine/
 
     cat > /etc/escenic/engine/common/ServerConfig.properties <<EOF
 databaseProductName=MySQL
@@ -355,8 +395,12 @@ function set_correct_permissions()
     if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
         addgroup $ece_group
     fi
+
+    for el in $dir_list; do
+        chown -R ${ece_user}:${ece_group} $el
+    done
     
-    chown -R ${ece_user}:${ece_group} $ece_directories
+    chown -R ${ece_user}:${ece_group} /opt/tomcat/
 }
 
 function print_status()
@@ -378,13 +422,15 @@ function print_next_steps()
 function set_up_test_publication()
 {
     make_dir /opt/escenic/assemblytool/publications/
+    cd /opt/escenic/assemblytool/publications/
     cp /opt/escenic/engine/contrib/wars/demo-clean.war mypub.war
     cat > /opt/escenic/assemblytool/publications/mypub.properties <<EOF
 name: mypub
-source-webapp: mypub.war
+source-war: mypub.war
 context-root: mypub
 EOF
 
+    su - $ece_user -c "ece assemble deploy start"
 }
 
 
@@ -414,20 +460,45 @@ mysql
     fi
 }
 
-# if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
-#     install_debian_packages
-# fi
+function start_components()
+{
+    # TODO might be a hub and indexer too
+    su - $ece_user -c "ece start"
+}
 
-# check_for_pre_requisites
-# download_all
-# set_up_engine_plugins_and_assembly_tool
-# set_up_basic_nursery_configuration
+function set_up_user_enviornment()
+{
+    # TODO get this from ece.conf and other magic
+    if [ $(grep JAVA_HOME /home/$ece_user/.bashrc | wc -l) -lt 1 ]; then
+        echo JAVA_HOME=/usr/lib/jvm/java-6-sun >> /home/$ece_user/.bashrc
+    fi
+}
+
+function set_up_solr()
+{
+    cp -r  /opt/escenic/engine/solr/conf /etc/escenic/solr
+    mkdir -p /var/lib/escenic/solr/
+    cd /var/lib/escenic/solr/
+    ln -s /etc/escenic/solr conf
+}
+    
+
+if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
+    install_debian_packages
+fi
+
+check_for_pre_requisites
+download_all
+set_up_engine_plugins_and_assembly_tool
+set_up_basic_nursery_configuration
 set_up_ece_scripts
 set_up_ecedb
-# set_correct_permissions
-# set_up_app_server
-# set_up_test_publication
+set_up_app_server
+set_correct_permissions
+set_up_user_enviornment
+start_components
+set_up_test_publication
 
-# print_status
-# print_next_steps
+print_status
+print_next_steps
 
