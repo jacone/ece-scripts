@@ -11,14 +11,41 @@
 
 ece_user=escenic
 ece_group=escenic
-technet_user=escenic
-technet_password=documentation
+
+id="[ece-install]"
+
+function print()
+{
+    echo $id $@
+}
+
+technet_user=`grep technet_user $HOME/.escenicrc 2>/dev/null | cut -d'=' -f2`
+technet_password=`grep technet_password $HOME/.escenicrc 2>/dev/null | cut -d'=' -f2`
+
+if [ -z $technet_user -o -z $technet_password ]; then
+    print "Be sure to set technet_user and technet_password "
+    print "in $HOME/.escenicrc"
+    exit 1
+fi
+
+
 technet_download_list="
+http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
+http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.6.0.zip
+http://technet.escenic.com/downloads/release/53/community-engine-3.6.1.0.zip
+http://technet.escenic.com/downloads/release/53/dashboard-1.0.0.0.zip
+http://technet.escenic.com/downloads/release/53/engine-5.3.1.3.zip
+http://technet.escenic.com/downloads/release/53/forum-3.0.0.0.zip
+http://technet.escenic.com/downloads/release/53/inpage-1.3.0.0.zip
+http://technet.escenic.com/downloads/release/53/lucy-dist-4.1.6.0.zip
+http://technet.escenic.com/downloads/release/53/menu-editor-dist-2.0.6.0.zip
+http://technet.escenic.com/downloads/release/53/poll-2.1.3.0.zip
+http://technet.escenic.com/downloads/release/53/xml-editor-dist-2.1.0.0.zip
 "
 download_dir=/tmp/ece-downloads/
-
 ece_directories="/var/{run,lib,cache,log,crash}/escenic \
-/opt/escenic /etc/escenic/engine/common"
+/opt/escenic \
+/etc/escenic/engine/common"
 
 tomcat_download=http://ftp.nsysu.edu.tw/Apache/tomcat/tomcat-6/v6.0.32/bin/apache-tomcat-6.0.32.tar.gz
 tomcat_port=8080
@@ -47,24 +74,31 @@ function download_all()
 
 function install_debian_packages()
 {
+    apt-get install curl
+    
     echo "deb http://repo.percona.com/apt squeeze main" \
         >> /etc/apt/sources.list.d/escenic.list
     curl http://repo.varnish-cache.org/debian/GPG-key.txt | apt-key add -
     echo "deb http://repo.varnish-cache.org/debian/ $(lsb_release -s -c) varnish-3.0" >> \
         /etc/apt/sources.list.d/escenic.list
 
-    apt-get update
+    gpg --keyserver  hkp://keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A
+    gpg -a --export CD2EFD2A | apt-key add -
+    
+    # apt-get update
     apt-get install \
         ant \
         ant-contrib \
         libapr1 \
         libmysql-java \
         memcached \
+        maven2 \
+        percona-server-client \
+        percona-server-server \
         sun-java6-jdk \
         tomcat6 \
         varnish \
         wget
-»    
 }
 
 make_dir $ece_directories
@@ -151,7 +185,7 @@ function set_up_app_server
     cd /opt/tomcat/lib
     ln -s $jdbc_driver
 
-    echo > tomcat/conf/server.xml <<EOF
+    cat > /opt/tomcat/conf/server.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
 <Server port="8105" shutdown="SHUTDOWN">
   <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
@@ -241,7 +275,7 @@ url="jdbc:mysql://localhost:3306/ece5db?autoReconnect=true&amp;useUnicode=true&a
 </Server>
 
 EOF
-    echo > /opt/tomcat/conf/context.xml <<EOF
+    cat > /opt/tomcat/conf/context.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
 <Context>
 
@@ -295,8 +329,13 @@ EOF
 # last, give the control back to the ECE user & group 
 function set_correct_permissions()
 {
-    adduser $ece_user
-    addgroup $ece_group
+    if [ $(grep $ece_user /etc/passwd | wc -l) -lt 1 ]; then
+        # TODO add support for useradd
+        adduser $ece_user
+    fi
+    if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
+        addgroup $ece_group
+    fi
     
     chown -R ${ece_user}:${ece_group} $ece_directories
 }
@@ -329,16 +368,44 @@ EOF
 
 }
 
-if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
-    install_debian_packages
-fi
 
+function check_for_pre_requisites()
+{
+    pre_requisites="
+curl
+wget
+ant
+mvn
+java
+mysql
+"
+    ok=1
+    
+    for el in $pre_requisites; do
+        if [ $(which $el | wc -l) -lt 1 ]; then
+            print "You're missing $el"
+            ok=0
+        fi
+    done
+
+    if [ $ok -eq 0 ]; then
+        print "Please install the missing packages before"
+        print "running $(basename $0) again."
+        exit 1
+    fi
+}
+
+# if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
+#     install_debian_packages
+# fi
+
+check_for_pre_requisites
 # download_all
 # set_up_engine_plugins_and_assembly_tool
 # set_up_ece_scripts
 # set_up_ecedb
 # set_correct_permissions
-# set_up_app_server
+set_up_app_server
 # set_up_test_publication
 
 # print_status
