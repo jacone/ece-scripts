@@ -58,6 +58,9 @@ function make_dir()
     fi
 }
 
+# TODO download documentation to
+# /usr/share/doc/escenic/content-engine-<version>/
+
 function download_all()
 {
     make_dir $download_dir
@@ -96,36 +99,44 @@ function install_debian_packages()
         percona-server-client \
         percona-server-server \
         sun-java6-jdk \
-        tomcat6 \
         varnish \
         wget
+
+    # TODO later: support for the tomcat package 
+    #        tomcat6 \
 }
 
 make_dir $ece_directories
 
 function set_up_engine_plugins_and_assembly_tool()
 {
+    make_dir /opt/escenic/
     cd /opt/escenic/
-    unzip /tmp/engine*.zip
+    unzip $download_dir/engine*.zip
     ln -s engine-* engine
-    mv /tmp/engine*.zip /tmp
+    mv $download_dir/engine*.zip /tmp
     
     make_dir /opt/escenic/assemblytool/
     cd /opt/escenic/assemblytool/
     unzip $download_dir/assemblytool*zip
     mv $download_dir/assemblytool*zip /tmp/
+
+    # now, there's only plugins left in the download dir
+    # we extract them in /opt/escenic as we want to re-use
+    # them between minor updates of ECE.
+    cd /opt/escenic/
+    for el in $download_dir/*.zip; do
+        unzip $el
+    done
+    
+    cd /opt/escenic/assemblytool/
     make_dir plugins
     cd plugins
-    find ../../ -type d -depth 0 | \
+    find ../../ -maxdepth 1 -type d | \
         grep -v engine | \
         grep -v assemblytool | \
         while read directory; do
         ln -s $directory
-    done
-
-    cd /opt/escenic/
-    for el in $download_dir/*.zip; do
-        unzip $el
     done
 }
 
@@ -133,8 +144,11 @@ function set_up_ece_scripts()
 {
     cd $download_dir
     git clone git://github.com/skybert/ece-scripts.git
-    cp ece-scripts/usr/bin/ece /usr/bin/
-    cp ece-scripts/etc/* /etc/
+    cp -r ece-scripts/usr/* /usr/
+    cp -r ece-scripts/etc/* /etc/
+
+    # add init.d to the default runlevels, support at least
+    # RedHat/chekcconfig and Debian/update-rc.d
 }
 
 function set_up_ecedb()
@@ -143,7 +157,7 @@ function set_up_ecedb()
     cd /opt/escenic/engine/plugins
     ln -s /opt/escenic/forum*
     ln -s /opt/escenic/community-engine*
-    bash /opt/escenic/ece-scripts/usr/bin/drop-and-create-ecedb
+    bash /usr/sbin/drop-and-create-ecedb
     rm -rf /opt/escenic/engine/plugins
 }
 
@@ -152,12 +166,12 @@ function set_up_basic_nursery_configuration()
     cp -r /opt/escenic/engine/siteconfig/config-skeleton/* \
         /etc/escenic/engine/common/
 
-    echo > /etc/escenic/engine/common/ServerConfig.properties <<EOF
+    cat > /etc/escenic/engine/common/ServerConfig.properties <<EOF
 databaseProductName=MySQL
 filePublicationRoot=/var/lib/escenic/engine/
 webPublicationRoot=http://$HOSTNAME:${tomcat_port}/
 EOF
-    echo > /etc/escenic/engine/common/neo/io/managers/ContentManager.properties <<EOF
+    cat > /etc/escenic/engine/common/neo/io/managers/ContentManager.properties <<EOF
 readConnector=/connector/ReadConnector
 updateConnector=/connector/UpdateConnector
 EOF
@@ -165,7 +179,7 @@ EOF
 
 function set_up_proper_log4j_configuration()
 {
-    echo > /etc/escenic/engine/common/trace.properties <<EOF
+    cat > /etc/escenic/engine/common/trace.properties <<EOF
 log4j.rootLogger=ERROR, ECELOG
 log4j.appender.ECELOG=org.apache.log4j.DailyRollingFileAppender
 log4j.appender.ECELOG.File=/var/log/escenic/${escenic.server}-messages
@@ -185,6 +199,11 @@ function set_up_app_server
     cd /opt/tomcat/lib
     ln -s $jdbc_driver
 
+    cat /opt/tomcat/conf/catalina.properties | \
+        sed 's/common.loader=/common.loader=\$\{catalina.base\}\/escenic\/lib\/\*\.jar\,/g' \
+        > /opt/tomcat/conf/catalina.properties.tmp
+    mv /opt/tomcat/conf/catalina.properties.tmp /opt/tomcat/conf/catalina.properties
+    
     cat > /opt/tomcat/conf/server.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
 <Server port="8105" shutdown="SHUTDOWN">
@@ -323,7 +342,7 @@ EOF
 
 </Context>
 EOF
-    
+
 }
 
 # last, give the control back to the ECE user & group 
@@ -360,7 +379,7 @@ function set_up_test_publication()
 {
     make_dir /opt/escenic/assemblytool/publications/
     cp /opt/escenic/engine/contrib/wars/demo-clean.war mypub.war
-    echo > /opt/escenic/assemblytool/publications/mypub.properties <<EOF
+    cat > /opt/escenic/assemblytool/publications/mypub.properties <<EOF
 name: mypub
 source-webapp: mypub.war
 context-root: mypub
@@ -399,13 +418,14 @@ mysql
 #     install_debian_packages
 # fi
 
-check_for_pre_requisites
+# check_for_pre_requisites
 # download_all
 # set_up_engine_plugins_and_assembly_tool
-# set_up_ece_scripts
-# set_up_ecedb
+# set_up_basic_nursery_configuration
+set_up_ece_scripts
+set_up_ecedb
 # set_correct_permissions
-set_up_app_server
+# set_up_app_server
 # set_up_test_publication
 
 # print_status
