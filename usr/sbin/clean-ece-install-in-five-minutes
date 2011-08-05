@@ -80,15 +80,19 @@ function download_all()
         wget --continue \
             --http-user $technet_user \
             --http-password $technet_password \
-            $el
+            $el \
+            1>>$log 2>>$log
     done
 
-    wget --continue $tomcat_download
+    wget --continue $tomcat_download \
+        1>>$log 2>>$log
 }
 
 function install_debian_packages()
 {
-    apt-get install curl
+    apt-get install curl \
+        1>>$log 2>>$log
+
     
     echo "deb http://repo.percona.com/apt squeeze main" \
         >> /etc/apt/sources.list.d/escenic.list
@@ -96,8 +100,11 @@ function install_debian_packages()
     echo "deb http://repo.varnish-cache.org/debian/ $(lsb_release -s -c) varnish-3.0" >> \
         /etc/apt/sources.list.d/escenic.list
 
-    gpg --keyserver  hkp://keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A
-    gpg -a --export CD2EFD2A | apt-key add -
+    gpg --keyserver  hkp://keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A \
+        1>>$log 2>>$log
+
+    gpg -a --export CD2EFD2A | apt-key add - \
+        1>>$log 2>>$log
     
     # apt-get update
     apt-get install \
@@ -105,6 +112,7 @@ function install_debian_packages()
         ant-contrib \
         ant-optional \
         libapr1 \
+        libtcnative-1 \
         libmysql-java \
         memcached \
         maven2 \
@@ -112,7 +120,8 @@ function install_debian_packages()
         percona-server-server \
         sun-java6-jdk \
         varnish \
-        wget
+        wget \
+        1>>$log 2>>$log
 
     # TODO later: support for the tomcat package 
     #        tomcat6 \
@@ -124,13 +133,17 @@ function set_up_engine_plugins_and_assembly_tool()
 {
     make_dir /opt/escenic/
     cd /opt/escenic/
-    unzip $download_dir/engine*.zip
+    unzip $download_dir/engine*.zip \
+        1>>$log 2>>$log
+
     ln -s engine-* engine
     mv $download_dir/engine*.zip /tmp
     
     make_dir /opt/escenic/assemblytool/
     cd /opt/escenic/assemblytool/
-    unzip $download_dir/assemblytool*zip
+    unzip $download_dir/assemblytool*zip \
+        1>>$log 2>>$log
+
     mv $download_dir/assemblytool*zip /tmp/
 
     # now, there's only plugins left in the download dir
@@ -138,21 +151,33 @@ function set_up_engine_plugins_and_assembly_tool()
     # them between minor updates of ECE.
     cd /opt/escenic/
     for el in $download_dir/*.zip; do
-        unzip $el
+        unzip $el \
+        1>>$log 2>>$log
     done
     
     cd /opt/escenic/assemblytool/
     make_dir plugins
     cd plugins
     find ../../ -maxdepth 1 -type d | \
-        grep -v engine | \
         grep -v assemblytool | \
         while read directory; do
-        ln -s $directory
-    done
+         if [ $directory = "../../" ]; then
+             continue
+         fi
+        
+          # nuisance to get the community engine, but not the engine
+          if [ $(echo $directory | grep engine | wc -l) -gt 0 ]; then
+              if [ $(echo $directory | grep community | wc -l) -lt 1 ]; then
+                  continue
+              fi
+          fi
+          
+          ln -s $directory
+        done
 
     cd /opt/escenic/assemblytool/
-    ant initialize
+    ant -q initialize \
+        1>>$log 2>>$log
     cat assemble.properties | \
         sed 's/#\ engine.root\ =\ \./engine.root=\/opt\/escenic\/engine/g' \
         > assemble.properties.tmp
@@ -170,9 +195,10 @@ function set_up_ece_scripts()
     cd $download_dir
     if [ -d ece-scripts ]; then
         (cd ece-scripts
-            git pull)
+            git pull 1>>$log 2>>$log)
     else
-        git clone git://github.com/skybert/ece-scripts.git
+        git clone git://github.com/skybert/ece-scripts.git \
+        1>>$log 2>>$log
     fi
     
     cp -r ece-scripts/usr/* /usr/
@@ -193,9 +219,27 @@ function set_up_ecedb()
 {
     make_dir /opt/escenic/engine/plugins
     cd /opt/escenic/engine/plugins
-    ln -s /opt/escenic/forum*
-    ln -s /opt/escenic/community-engine*
-    bash /usr/sbin/drop-and-create-ecedb
+    
+    find ../../ -maxdepth 1 -type d | \
+        grep -v assemblytool | \
+        while read directory; do
+         if [ $directory = "../../" ]; then
+             continue
+         fi
+        
+          # nuisance to get the community engine, but not the engine
+          if [ $(echo $directory | grep engine | wc -l) -gt 0 ]; then
+              if [ $(echo $directory | grep community | wc -l) -lt 1 ]; then
+                  continue
+              fi
+          fi
+          
+          ln -s $directory
+        done
+    
+    bash /usr/sbin/drop-and-create-ecedb \
+        1>>$log 2>>$log
+    cd ~/
     rm -rf /opt/escenic/engine/plugins
 }
 
@@ -204,7 +248,18 @@ function set_up_basic_nursery_configuration()
     cp -r /opt/escenic/engine/siteconfig/config-skeleton/* \
         /etc/escenic/engine/common/
     cp -r /opt/escenic/engine/security/ \
-        /etc/escenic/engine/
+        /etc/escenic/engine/common/
+
+    make_dir /etc/escenic/engine/instance
+
+    for el in /opt/escenic/assemblytool/plugins/*; do
+        if [ ! -d $el/misc/siteconfig/ ]; then
+            continue
+        fi
+
+        cp -r $el/misc/siteconfig/* /etc/escenic/engine/common/
+        
+    done
 
     cat > /etc/escenic/engine/common/ServerConfig.properties <<EOF
 databaseProductName=MySQL
@@ -215,17 +270,34 @@ EOF
 readConnector=/connector/ReadConnector
 updateConnector=/connector/UpdateConnector
 EOF
+
+    file=/etc/escenic/engine/common/com/escenic/community/CommunityEngine.properties
+    cat $file | \
+        sed 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' \
+        > $file.tmp
+    mv $file.tmp $file
 }
 
-function set_up_proper_log4j_configuration()
+function make_ln()
+{
+    if [ ! -h $el ]; then
+        ln -s $el
+    fi
+}
+
+function set_up_proper_logging_configuration()
 {
     cat > /etc/escenic/engine/common/trace.properties <<EOF
 log4j.rootLogger=ERROR, ECELOG
 log4j.appender.ECELOG=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.ECELOG.File=/var/log/escenic/${escenic.server}-messages
+log4j.appender.ECELOG.File=/var/log/escenic/\${escenic.server}-messages
 log4j.appender.ECELOG.layout=org.apache.log4j.PatternLayout
 log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
 EOF
+    cd /opt/tomcat/lib/
+    make_ln /etc/escenic/engine/common/trace.properties
+
+    # TODO fix the solr logging in tomcat/conf/logging.properties
 }
 
 function set_up_app_server
@@ -410,13 +482,19 @@ function print_status()
 
 function print_next_steps()
 {
-    echo " You must now do: \
-* add /opt/tomcat/escenic/lib to common.loader
-  in /opt/tomcat/conf/catalina.properties
+    cat <<EOF
+  The basic Escenic Content Engine setup is now completed.
 
-* add 
+  You must now do the following:
 
-"
+* go to http://$HOSTNAME:8080/escenic-admin/pages/publication/new.jsp
+  and create a new publication using the WAR found in:
+  /opt/escenic/assemblytool/dist/war/mypub.war
+
+* configure the instances you want to be started at
+  boot time in /etc/default/ece
+
+EOF
 }
 
 function set_up_test_publication()
@@ -431,6 +509,9 @@ context-root: mypub
 EOF
 
     su - $ece_user -c "ece assemble deploy start"
+
+    # TODO create the publication by POSTing to
+    # /escenic-admin/do/publication/resource
 }
 
 
@@ -460,6 +541,26 @@ mysql
     fi
 }
 
+function check_for_required_downloads()
+{
+    required_escenic_packages="engine assemblytool apache-tomcat"
+    
+    for el in $required_escenic_packages; do
+        if [ ! -e $download_dir/${el}* ]; then
+            print "Couldn't find $el* in $download_dir"
+            exit 1
+        fi
+    done
+}
+
+function set_up_memcached()
+{
+    # 1) download java library
+    # 2) configure PresenationArticle cache for the publication
+    # 3) build and re-deploy
+    echo ""
+}
+
 function start_components()
 {
     # TODO might be a hub and indexer too
@@ -481,22 +582,51 @@ function set_up_solr()
     cd /var/lib/escenic/solr/
     ln -s /etc/escenic/solr conf
 }
-    
 
-if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
-    install_debian_packages
-fi
+function un_install_ece()
+{
+    # TODO safety, warnings++
+    rm -rf /etc/escenic/ \
+        /opt/*tomcat* \
+        /opt/escenic \
+        /var/lib/escenic \
+        /var/run/escenic/ \
+        /etc/escenic/ \
+        /usr/bin/ece \
+        /var/log/escenic/;
 
-check_for_pre_requisites
-download_all
+    # prepare for new install
+    mv /tmp/*.zip /tmp/ece-downloads/
+
+}
+
+function stop_conflicting_processes()
+{
+    # TODO this is dirty
+    killall java
+}
+
+#if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
+#    install_debian_packages
+#fi
+
+stop_conflicting_processes
+# check_for_pre_requisites
+# download_all
+check_for_required_downloads
 set_up_engine_plugins_and_assembly_tool
 set_up_basic_nursery_configuration
+set_up_solr
 set_up_ece_scripts
 set_up_ecedb
 set_up_app_server
+set_up_proper_logging_configuration
 set_correct_permissions
 set_up_user_enviornment
-start_components
+
+# commented out until set_up_user_enviornment uses the running engine
+# to create a new publication
+# start_components
 set_up_test_publication
 
 print_status
