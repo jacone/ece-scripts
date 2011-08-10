@@ -998,7 +998,7 @@ function print_help()
     echo "      Needed only for updating publication resources"
     echo ""
     echo " -r --resource <resource>" 
-    echo "      Needed only for updating publication resources."
+    echo "      Used for updating publication resources."
     echo "      Must be one of: content-type, feature, layout, layout-group"
     echo "                      image-version, menu"
     echo ""
