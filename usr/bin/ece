@@ -70,7 +70,7 @@ java_home
 solr_home
 "
 
-indexer_required_fields="
+search_required_fields="
 appserver
 java_home
 solr_home
@@ -247,8 +247,8 @@ function set_instance_settings()
     # and can now ensure that required fields are set and apply them.
     if [ $type = "rmi-hub" ]; then
         ensure_that_required_fields_are_set $hub_required_fields
-    elif [ $type = "indexer" ]; then
-        ensure_that_required_fields_are_set $indexer_required_fields
+    elif [ $type = "search" ]; then
+        ensure_that_required_fields_are_set $search_required_fields
     elif [ $type = "engine" ]; then
         ensure_that_required_fields_are_set $engine_required_fields
     fi
@@ -985,11 +985,12 @@ function print_help()
     echo "DESCRIPTION"
     echo " -t --type <type>"
     echo "      The following types are available:"
-    echo "      engine  - The Escenic Content Engine, this is the default"
-    echo "                and is the assumed type if none is specified."
-    echo "      search  - A standalone search indexer and solr instance"
-    echo "      rmi-hub - The RMI hub responsible for the internal "
-    echo "                communication between the ECE instances."
+    echo "      engine  -  The Escenic Content Engine, this is the default"
+    echo "                 and is the assumed type if none is specified."
+    echo "      search  -  A standalone search indexer and solr instance"
+    echo "      rmi-hub -  The RMI hub responsible for the internal "
+    echo "                 communication between the ECE instances."
+    echo "      analysis - The Escenic Analysis Engine also knows as 'Stats'"
     echo ""
     echo " -i --instance <instance>" 
     echo "      The type instance, such as editor1, web1 or search1"
