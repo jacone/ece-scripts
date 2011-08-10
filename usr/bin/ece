@@ -235,6 +235,25 @@ function set_type_settings()
     read_conf_file `basename $0`-$type.conf
 }
 
+function set_type_pid()
+{
+    # Get a hold of the PID of the process. Although we've got the PID
+    # file, we stil get the PID from the OS here as we used it for
+    # sanity checking later on, see stop_type().
+    if [ $type = "rmi-hub" ]; then
+        # we need to be able to differentiate between an ECE instance
+        # and an rmi hub, for this we use java.security.policy which
+        # the hub doesn't have.
+        type_pid=`ps -ef | grep -v java.security.policy | \
+            awk "/Djava.rmi.server.hostname=$ece_server_hostname / && \
+            !/awk/"' {print $2}'`
+    else
+        type_pid=`ps -ef | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
+    fi
+
+    debug "type_pid is now=$type_pid"
+}
+
 function set_instance_settings()
 {
     # optional: possible to have instance specific conf files,
@@ -253,23 +272,6 @@ function set_instance_settings()
         ensure_that_required_fields_are_set $engine_required_fields
     fi
 
-    # Get a hold of the PID of the process. Although we've got the PID
-    # file, we stil get the PID from the OS here as we used it for
-    # sanity checking later on, see stop_type().
-    if [ $type = "rmi-hub" ]; then
-        # we need to be able to differentiate between an ECE instance
-        # and an rmi hub, for this we use java.security.policy which
-        # the hub doesn't have.
-        type_pid=`ps -ef | grep -v java.security.policy | \
-            awk "/Djava.rmi.server.hostname=$ece_server_hostname / && \
-            !/awk/"' {print $2}'`
-    fi
-    
-    # if type is rmi-hub, we don't' need more configuration.
-    if [ $type = "rmi-hub" ]; then
-        return
-    fi
-
     # We respect ece_server if it's set in any of the configuration
     # files. If it's not set there, it sets some sensible defaults.
     if [ -z $ece_server ]; then
@@ -279,12 +281,14 @@ function set_instance_settings()
             ece_server=${HOSTNAME}-${instance}
         fi
     fi
+
+    set_type_pid
     
-    # Get a hold of the PID of the process. Although we've got the PID
-    # file, we stil get the PID from the OS here as we used it for
-    # sanity checking later on, see stop_type().
-    type_pid=`ps -ef | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
-    
+    # if type is rmi-hub, we don't' need more configuration.
+    if [ $type = "rmi-hub" ]; then
+        return
+    fi
+
     # Common options for all ECE installations
     #
     # * escenic.server is to identify the ECE instance, if
@@ -649,7 +653,7 @@ function stop_type()
 function kill_type()
 {
     if [ -n "$type_pid" ]; then
-        message="using force to stop the $instance instance of $type on $HOSTNAME ..."
+        message="Using force to stop the $instance instance of $type on $HOSTNAME ..."
         log $message
         print $message
         kill -9 $type_pid
@@ -662,6 +666,30 @@ function kill_type()
     
     exit_on_error "kill_type"
 }
+
+function restart_type()
+{
+    stop_type
+    
+    # I've tested this with various values, 8 seconds seems to
+    # guarantee that the previous JVM process has stopped
+    # properly before starting the new one.
+    sleep 8
+
+    # sometimes the JVM refuses to shot down when doing a graceful
+    # kill, therefore, if it's still running after the sleep above, we
+    # use brute force to kill it.
+    set_type_pid
+    if [ -n "$type_pid" ]; then
+        message="The $instance instance of $type failed to stop gracefully"
+        debug $message
+        log $message >> $log_file
+        print $message
+        kill_type
+    fi
+    
+    start_type
+}    
 
 function assemble()
 {
@@ -876,8 +904,8 @@ function get_status()
         fi
     else
         print $pid_file "did not exist, "
-        print "the ${instance} instance  of ${type} "
-        print "hasn't been started properly with `basename $0`"
+        print "the ${instance} instance of ${type} is running with PID $type_pid"
+        print "but hasn't been started properly with `basename $0`"
         exit 1
     fi
 
@@ -1038,12 +1066,7 @@ for el in $command; do
             stop_type
             ;;
         restart)
-            stop_type
-            # I've tested this with various values, 8 seconds seems to
-            # guarantee that the previous JVM process has stopped
-            # properly before starting the new one.
-            sleep 8 
-            start_type
+            restart_type
             ;;
         log)
             tail_messages_log
