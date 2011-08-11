@@ -747,9 +747,9 @@ touch $pid_file
 print "Here we go!"
 print "I'm logging to $log"
 
-#if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
-#    install_debian_packages
-#fi
+if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
+    install_debian_packages
+fi
 
 stop_conflicting_processes
 check_for_pre_requisites
