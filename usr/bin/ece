@@ -64,7 +64,6 @@ ece_security_configuration_dir
 enable_heap_dump
 enable_remote_debugging
 enable_remote_monitoring
-extract_webapps
 is_production
 java_home
 solr_home
@@ -474,41 +473,33 @@ function deploy()
                 log $message
             fi
                         
-            if [ $extract_webapps ]; then
-                for war in $dir/*.war ; do
-                    name=`basename $war .war`
+            for war in $dir/*.war ; do
+                name=`basename $war .war`
 
-                    deploy_this_war=1
-                    if [ -n "$deploy_webapp_white_list" ]; then
-                        deploy_this_war=0
+                deploy_this_war=1
+                if [ -n "$deploy_webapp_white_list" ]; then
+                    deploy_this_war=0
 
-                        for el in $deploy_webapp_white_list; do
-                            if [ $el = $name ]; then
-                                debug "found $war in white list, will deploy it"
-                                deploy_this_war=1
-                            fi
-                        done
-                    fi
+                    for el in $deploy_webapp_white_list; do
+                        if [ $el = $name ]; then
+                            debug "found $war in white list, will deploy it"
+                            deploy_this_war=1
+                        fi
+                    done
+                fi
 
-                    if [ $deploy_this_war -eq 0 ]; then
-                        continue
-                    fi
-                    
-                    (cd $tomcat_base/webapps &&
-                        mkdir $name &&
-                        cd $name &&
-                        jar xf $war \
-                            1>>$log_file \
-                            2>>$log_file)
-                    exit_on_error "extracting $war to $tomcat_base/webapps/"
-                done
-            else
-                cp $dir/*.war \
-                    $tomcat_base/webapps/ \
-                    1>>$log_file \
-                    2>>$log_file
-                exit_on_error "copying war files to $tomcat_base/webapps/"
-            fi
+                if [ $deploy_this_war -eq 0 ]; then
+                    continue
+                fi
+                
+                (cd $tomcat_base/webapps &&
+                    mkdir $name &&
+                    cd $name &&
+                    jar xf $war \
+                        1>>$log_file \
+                        2>>$log_file)
+                exit_on_error "extracting $war to $tomcat_base/webapps/"
+            done
             ;;
         
         resin)
@@ -669,7 +660,7 @@ function stop_type()
                 2>>$log_file
         fi
     else
-        print "$instance instance of $type on $HOSTNAME is NOT running"
+        print "The $instance instance of $type on $HOSTNAME is NOT running"
     fi
     
     exit_on_error $message
@@ -890,7 +881,7 @@ function clean_up()
 
     tmp_dir_prefix="`basename $0`-"
     if [ `ls  $tmp_dir | grep $tmp_dir_prefix | wc -l` -gt 0 ]; then
-        print "Cleaning up $tmp_dir_prefix* files in $tmp_dir ..." 
+        print "Cleaning up generated files in $tmp_dir ..." 
         rm -r $tmp_dir/$tmp_dir_prefix*
     fi
     
