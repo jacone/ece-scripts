@@ -466,9 +466,34 @@ function deploy()
                 exit 1
             fi
             
-            if [ $extract_webapps ] ; then
+            if [ -n "$deploy_webapp_white_list" ]; then
+                deploy_this_war=0
+                message="Deployment white list active, only deploying: "
+                message=$message"$deploy_webapp_white_list"
+                print $message
+                log $message
+            fi
+                        
+            if [ $extract_webapps ]; then
                 for war in $dir/*.war ; do
                     name=`basename $war .war`
+
+                    deploy_this_war=1
+                    if [ -n "$deploy_webapp_white_list" ]; then
+                        deploy_this_war=0
+
+                        for el in $deploy_webapp_white_list; do
+                            if [ $el = $name ]; then
+                                debug "found $war in white list, will deploy it"
+                                deploy_this_war=1
+                            fi
+                        done
+                    fi
+
+                    if [ $deploy_this_war -eq 0 ]; then
+                        continue
+                    fi
+                    
                     (cd $tomcat_base/webapps &&
                         mkdir $name &&
                         cd $name &&
