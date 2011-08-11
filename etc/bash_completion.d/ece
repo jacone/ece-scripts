@@ -1,0 +1,9 @@
+_ece_commands()
+{
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    COMPREPLY=( $(compgen -W "applog assemble clean deploy help kill log outlog restart start status stop threaddump update versions" -- $cur) )
+}
+
+complete -F _ece_commands ece
+
+
