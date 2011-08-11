@@ -27,21 +27,6 @@ search
 rmi-hub
 "
 
-command_list="
-applog
-assemble
-clean
-deploy
-help
-log
-outlog
-restart
-start
-status
-stop
-threaddump
-"
-
 common_settings_list="
 ece_home
 java_home
@@ -397,6 +382,11 @@ function sanity_check()
 {
     verify_that_directory_and_file_are_writeable $log_file
     verify_that_directory_and_file_are_writeable $pid_file
+
+    if [ -z "$command" ]; then
+        print "You must specificy a command, see 'ece help'."
+        exit 1
+    fi
 }
 
 function deploy()
@@ -1115,11 +1105,18 @@ for el in $command; do
             update_publication_resources
             ;;
         help)
-            print_help
+            if [ -x $(which less) ]; then
+                print_help | less
+            elif [ -x $(which more) ]; then
+                print_help | more
+            else
+                print_help
+            fi
+            
             ;;
         *)
-            print "Invalid command: $el :-("
-            print_help
+            print "Invalid command: '$el' :-("
+            print "Try 'ece help' to get a list of all commands available."
             exit 1
     esac
 done
