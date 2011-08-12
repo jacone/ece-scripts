@@ -1,7 +1,38 @@
+# auto completion for the /usr/bin/ece command.
 _ece_commands()
 {
     local cur=${COMP_WORDS[COMP_CWORD]}
-    COMPREPLY=( $(compgen -W "applog assemble clean deploy help kill log outlog restart start status stop threaddump update versions" -- $cur) )
+    local prev=${COMP_WORDS[COMP_CWORD-1]}
+
+    commands="applog assemble clean deploy help kill log outlog restart start status stop threaddump update versions"
+    resources="content-type feature layout layout-group image-version menu"
+    types="engine search analysis rmi-hub"
+
+    # default completions is the list of commands
+    completions=$commands
+
+    long_options="--help"
+
+    # TODO make educated guesses on these.
+    instances=""
+    publications=""
+
+    case "$prev" in
+        -t)
+            completions=$types
+            ;;
+        -i)
+            completions=$instances
+            ;;
+        -p)
+            completions=$publications
+            ;;
+        -r)
+            completions=$resources
+            ;;
+    esac
+  
+    COMPREPLY=( $(compgen -W "$completions" -- $cur) )
 }
 
 complete -F _ece_commands ece
