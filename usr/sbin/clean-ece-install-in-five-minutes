@@ -28,11 +28,10 @@ function print()
     echo $id $@
 }
 
-# TODO remember to enable this again
-# if [ $(whoami) != "root" ]; then
-#     print "You must be root when running $(basename $0)"
-#    exit 1
-# fi
+if [ $(whoami) != "root" ]; then
+    print "You must be root when running $(basename $0)"
+   exit 1
+fi
 
 technet_user=`grep technet_user $HOME/.escenicrc 2>/dev/null | cut -d'=' -f2`
 technet_password=`grep technet_password $HOME/.escenicrc 2>/dev/null | cut -d'=' -f2`
@@ -79,6 +78,16 @@ function make_dir()
 for el in $dir_list; do
     make_dir $el
 done
+
+function make_ln()
+{
+    if [ -e $1 -a ! -h $(basename $1) ]; then
+        ln -s $1
+    else
+        print "Tried to make a symlink to $1, but it doesn't exist"
+        exit 1
+    fi
+}
 
 # TODO download documentation to
 # /usr/share/doc/escenic/content-engine-<version>/
@@ -132,11 +141,13 @@ make_dir $ece_directories
 function set_up_assembly_tool()
 {
     make_dir /opt/escenic/assemblytool/
-    
     cd /opt/escenic/assemblytool/
-    unzip $download_dir/assemblytool*zip \
-        1>>$log 2>>$log
-    mv $download_dir/assemblytool*zip /tmp/
+    
+    if [ -e $download_dir/assemblytool*zip ]; then
+        unzip -u $download_dir/assemblytool*zip \
+            1>>$log 2>>$log
+        mv $download_dir/assemblytool*zip /tmp/
+    fi
     
     cd /opt/escenic/assemblytool/
     make_dir plugins
@@ -155,7 +166,7 @@ function set_up_assembly_tool()
               fi
           fi
           
-          ln -s $directory
+          make_ln $directory
         done
 
     cd /opt/escenic/assemblytool/
@@ -174,9 +185,9 @@ function set_up_assembly_tool()
 
 function set_up_engine_and_plugins()
 {
-    make_dir /opt/escenic/
+    make_dir /opt/escenic
     cd /opt/escenic/
-    unzip -f $download_dir/engine*.zip \
+    unzip -u $download_dir/engine*.zip \
         1>>$log 2>>$log
 
     if [ -h engine ]; then
@@ -192,12 +203,11 @@ function set_up_engine_and_plugins()
     # them between minor updates of ECE.
     cd /opt/escenic/
     for el in $download_dir/*.zip; do
-        unzip -f $el \
+        unzip -u $el \
         1>>$log 2>>$log
     done
     
 }
-
 
 function set_up_ece_scripts()
 {
@@ -285,16 +295,6 @@ EOF
         sed 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' \
         > $file.tmp
     mv $file.tmp $file
-}
-
-function make_ln()
-{
-    if [ -e $1 ]; then
-        ln -s $1
-    else
-        print "Tried to make a symlink to $el, but it doesn't exist"
-        exit 1
-    fi
 }
 
 function set_up_proper_logging_configuration()
@@ -603,7 +603,7 @@ EOF
 
  function check_for_required_downloads()
  {
-     required_escenic_packages="engine assemblytool apache-tomcat"
+     required_escenic_packages="engine assemblytool"
 
      for el in $required_escenic_packages; do
          if [ ! -e $download_dir/${el}* ]; then
@@ -630,8 +630,16 @@ EOF
  function set_up_user_enviornment()
  {
      # TODO get this from ece.conf and other magic
+
      if [ $(grep JAVA_HOME /home/$ece_user/.bashrc | wc -l) -lt 1 ]; then
          echo JAVA_HOME=/usr/lib/jvm/java-6-sun >> /home/$ece_user/.bashrc
+     fi
+     if [ $(grep JAVA_HOME /root/.bashrc | wc -l) -lt 1 ]; then
+         echo JAVA_HOME=/usr/lib/jvm/java-6-sun >> /root/.bashrc
+     fi
+
+     if [ $on_debian_or_derivative -eq 1 ]; then
+         export JAVA_HOME=/usr/lib/jvm/java-6-sun
      fi
  }
 
@@ -777,16 +785,21 @@ EOF
      echo ""
      echo "Select 1-7 and press ENTER"
      echo ""
-     echo "  1 - Development or testing environment (cache, app, database)"
+     echo "  1 - Development or testing environment (cache, app & database)"
      echo "  2 - Cache server (cache & web server)"
      echo "  3 - Database server"
-     echo "  4 - Presentation server (ECE, memcached)"
-     echo "  5 - Editorial (publication) server (ECE, assemble host)"
+     echo "  4 - Editorial (publication) server (ECE, assemble host)"
+     echo "  5 - Presentation server (ECE, memcached)"
      echo "  6 - RMI hub"
      echo "  7 - Standalone search instance (solr + indexer-webapp)"
      echo ""
-     echo -n "Your choice: "
+     echo -n "Your choice [1]: "
      read install_profile_number
+
+     if [ -z $install_profile_number ]; then
+         install_profile_number=1
+     fi
+     
  }
 
  function common_pre_install()
@@ -869,7 +882,6 @@ EOF
      download_escenic_components
      set_up_engine_and_plugins
      set_up_ece_scripts
-     
      set_up_ecedb
 }
 
@@ -885,8 +897,9 @@ function install_editorial_server()
 {
     download_escenic_components
     check_for_required_downloads
-    
+
     set_up_engine_and_plugins
+    set_up_user_enviornment
     set_up_assembly_tool
     set_up_basic_nursery_configuration
     set_up_user_enviornment
@@ -911,6 +924,7 @@ function install_search_instance()
 function install_all_in_one_environment()
 {
     set_up_engine_plugins
+    set_up_user_enviornment
     set_up_assembly_tool
     set_up_basic_nursery_configuration
     set_up_solr
@@ -918,7 +932,6 @@ function install_all_in_one_environment()
     set_up_ecedb
     set_up_app_server
     set_up_proper_logging_configuration
-    set_up_user_enviornment
 }
 
 function common_post_install()
@@ -928,11 +941,16 @@ function common_post_install()
     print_next_steps
 }
 
+set_up_assembly_tool
+exit
+echo ARNEsadf;lkjasd;lkasdjf;aldskfjb
+
 read_user_input
 touch $pid_file
 print "I'm logging to $log"
 
 common_pre_install
+
 
 case $install_profile_number in
     1)
@@ -944,6 +962,7 @@ case $install_profile_number in
         install_database_server
         ;;
     4)
+        install_editorial_server
         ;;
     5)
         ;;
