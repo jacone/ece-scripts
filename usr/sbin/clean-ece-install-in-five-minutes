@@ -23,6 +23,15 @@ pid_file=/tmp/$(basename $0).pid
 on_debian_or_derivative=0
 on_debian=0
 
+debug=1
+
+function debug()
+{
+    if [ $debug -eq 1 ]; then
+        echo "$@" >> $log
+    fi
+}
+
 function print()
 {
     echo $id $@
@@ -30,13 +39,13 @@ function print()
 
 if [ $(whoami) != "root" ]; then
     print "You must be root when running $(basename $0)"
-   exit 1
+    exit 1
 fi
 
 technet_user=`grep technet_user $HOME/.escenicrc 2>/dev/null | cut -d'=' -f2`
 technet_password=`grep technet_password $HOME/.escenicrc 2>/dev/null | cut -d'=' -f2`
 
-if [ -z $technet_user -o -z $technet_password ]; then
+if [ -z "$technet_user" -o -z "$technet_password" ]; then
     print "Be sure to set technet_user and technet_password "
     print "in $HOME/.escenicrc"
     exit 1
@@ -48,7 +57,7 @@ http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
 http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.6.0.zip
 http://technet.escenic.com/downloads/release/53/community-engine-3.6.1.0.zip
 http://technet.escenic.com/downloads/release/53/dashboard-1.0.0.0.zip
-http://technet.escenic.com/downloads/release/53/engine-5.3.1.3.zip
+http://technet.escenic.com/downloads/release/53/engine-5.3.2.2.zip
 http://technet.escenic.com/downloads/release/53/forum-3.0.0.0.zip
 http://technet.escenic.com/downloads/release/53/inpage-1.3.0.0.zip
 http://technet.escenic.com/downloads/release/53/lucy-dist-4.1.6.0.zip
@@ -67,6 +76,7 @@ dir_list="
 /var/lib/escenic
 /var/log/escenic
 /var/run/escenic
+/var/spool/escenic/migration
 "
 function make_dir()
 {
@@ -94,6 +104,8 @@ function make_ln()
 
 function download_escenic_components()
 {
+    print "Downloading Escenic software from technet.escenic.com ..."
+    
     make_dir $download_dir
     cd $download_dir
     for el in $technet_download_list; do
@@ -112,6 +124,8 @@ function download_escenic_components()
 
 function install_debian_packages()
 {
+    print "Installing Debian packages..."
+
     apt-get install -y curl \
         1>>$log 2>>$log
     
@@ -140,6 +154,8 @@ make_dir $ece_directories
 
 function set_up_assembly_tool()
 {
+    print "Setting up the Assembly Tool ..."
+    
     make_dir /opt/escenic/assemblytool/
     cd /opt/escenic/assemblytool/
     
@@ -148,26 +164,40 @@ function set_up_assembly_tool()
             1>>$log 2>>$log
         mv $download_dir/assemblytool*zip /tmp/
     fi
+
+    # adding an instance layer to the Nursery configuration
+    cp -r /opt/escenic/engine/siteconfig/bootstrap-skeleton \
+        /opt/escenic/assemblytool/conf
+    cd /opt/escenic/assemblytool/conf/
+    cp -r layers/host layers/instance
+    cat > layers/instance/Files.properties <<EOF
+\$class=neo.nursery.FileSystemDepot
+fileSystemRoot = /etc/escenic/engine/instance/\${com.escenic.instance}/
+EOF
+    echo "" >> Nursery.properties
+    echo "layer.06 = /layers/instance/Layer" >> Nursery.properties
+    echo "come here" > /tmp/tkj
     
+    # set up which plugins to use
     cd /opt/escenic/assemblytool/
     make_dir plugins
     cd plugins
     find ../../ -maxdepth 1 -type d | \
         grep -v assemblytool | \
         while read directory; do
-         if [ $directory = "../../" ]; then
-             continue
-         fi
+        if [ $directory = "../../" ]; then
+            continue
+        fi
         
           # nuisance to get the community engine, but not the engine
-          if [ $(echo $directory | grep engine | wc -l) -gt 0 ]; then
-              if [ $(echo $directory | grep community | wc -l) -lt 1 ]; then
-                  continue
-              fi
-          fi
-          
-          make_ln $directory
-        done
+        if [ $(echo $directory | grep engine | wc -l) -gt 0 ]; then
+            if [ $(echo $directory | grep community | wc -l) -lt 1 ]; then
+                continue
+            fi
+        fi
+        
+        make_ln $directory
+    done
 
     cd /opt/escenic/assemblytool/
     ant -q initialize \
@@ -185,18 +215,23 @@ function set_up_assembly_tool()
 
 function set_up_engine_and_plugins()
 {
+    print "Setting up the Escenic Content Engine & its plugins ..."
+
     make_dir /opt/escenic
     cd /opt/escenic/
-    unzip -u $download_dir/engine*.zip \
-        1>>$log 2>>$log
 
-    if [ -h engine ]; then
-        rm engine
+    if [ ! -d engine-* ]; then
+        unzip -u $download_dir/engine*.zip \
+            1>>$log 2>>$log
+        if [ -h engine ]; then
+            rm engine
+        fi
+    
+        ln -s engine-* engine
+        mv $download_dir/engine*.zip /tmp
+    else
+        debug "engine-<version> is already there, skipping to next step."
     fi
-    
-    ln -s engine-* engine
-    
-    mv $download_dir/engine*.zip /tmp
     
     # now, there's only plugins left in the download dir
     # we extract them in /opt/escenic as we want to re-use
@@ -204,20 +239,22 @@ function set_up_engine_and_plugins()
     cd /opt/escenic/
     for el in $download_dir/*.zip; do
         unzip -u $el \
-        1>>$log 2>>$log
+            1>>$log 2>>$log
     done
-    
+
 }
 
 function set_up_ece_scripts()
 {
+    print "Setting up the ece Unix scripts ..." 
+
     cd $download_dir
     if [ -d ece-scripts ]; then
         (cd ece-scripts
             git pull 1>>$log 2>>$log)
     else
         git clone git://github.com/skybert/ece-scripts.git \
-        1>>$log 2>>$log
+            1>>$log 2>>$log
     fi
     
     cp -r ece-scripts/usr/* /usr/
@@ -236,25 +273,27 @@ function set_up_ece_scripts()
 
 function set_up_ecedb()
 {
+    print "Setting up the ECE database schema ..."
+
     make_dir /opt/escenic/engine/plugins
     cd /opt/escenic/engine/plugins
     
     find ../../ -maxdepth 1 -type d | \
         grep -v assemblytool | \
         while read directory; do
-         if [ $directory = "../../" ]; then
-             continue
-         fi
+        if [ $directory = "../../" ]; then
+            continue
+        fi
         
           # nuisance to get the community engine, but not the engine
-          if [ $(echo $directory | grep engine | wc -l) -gt 0 ]; then
-              if [ $(echo $directory | grep community | wc -l) -lt 1 ]; then
-                  continue
-              fi
-          fi
-          
-          ln -s $directory
-        done
+        if [ $(echo $directory | grep engine | wc -l) -gt 0 ]; then
+            if [ $(echo $directory | grep community | wc -l) -lt 1 ]; then
+                continue
+            fi
+        fi
+        
+        ln -s $directory
+    done
     
     bash /usr/sbin/drop-and-create-ecedb \
         1>>$log 2>>$log
@@ -264,6 +303,8 @@ function set_up_ecedb()
 
 function set_up_basic_nursery_configuration()
 {
+    print "Setting up the basic Nursery configuration ..."
+    
     cp -r /opt/escenic/engine/siteconfig/config-skeleton/* \
         /etc/escenic/engine/common/
     cp -r /opt/escenic/engine/security/ \
@@ -299,6 +340,8 @@ EOF
 
 function set_up_proper_logging_configuration()
 {
+    print "Setting up proper log4j & Java logging configuration ..."
+    
     cat > /etc/escenic/engine/common/trace.properties <<EOF
 log4j.rootLogger=ERROR, ECELOG
 log4j.appender.ECELOG=org.apache.log4j.DailyRollingFileAppender
@@ -308,6 +351,7 @@ log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
 EOF
     cd /opt/tomcat/lib/
     make_ln /etc/escenic/engine/common/trace.properties
+    ln -sf trace.properties log4j.properies
 
     cat > /opt/tomcat/conf/logging.properties <<EOF
 handlers = 1catalina.org.apache.juli.FileHandler, 2localhost.org.apache.juli.FileHandler, java.util.logging.ConsoleHandler, 6localhost.org.apache.juli.FileHandler
@@ -340,56 +384,67 @@ EOF
 
 function set_up_app_server
 {
+    print "Setting up the application server ..."
+    echo ""
     echo "On which ports do you wish to run the app server on?"
     echo "Press ENTER to accept the default (port 8080, shutdown port 8005)"
-    echo "Or enter: <port> <shutdown port>, e.g.: '8080 8005'"
-    echo -n "Your choice: "
+    echo "Or enter: <port> <shutdown port>, e.g.: '8180 8105'"
+    echo ""
+    echo -n "Your choice [8080 8005]> "
     read user_ports
 
-    if [ -z $user_ports ]; then
+    if [ -z "$user_ports" ]; then
         appserver_port=8080
         shutdown_port=8005
     else
         appserver_host=$(echo $user_ports | cut -d' ' -f1)
         shutdown_port=$(echo $user_ports | cut -d' ' -f2)
     fi
-    
-    echo "Where does the database run?"
-    echo "Press ENTER to accept the default (db1:3306)"
+
+    echo ""
+    echo "Another question: Where does the database run?"
+    echo "Press ENTER to accept the default ($HOSTNAME:3306)"
     echo "Or enter: <host>:<port>, e.g.: 'db1:3306'"
-    echo -n "Your choice: "
+    echo ""
+    echo -n "Your choice [$HOSTNAME:3306]> "
     read user_database
 
-    if [ -z $user_database ]; then
-        db_host=db1
-        shutdown_port=3306
+    if [ -z "$user_database" ]; then
+        db_host=$HOSTNAME
+        db_port=3306
     else
         db_host=$(echo $user_database | cut -d':' -f1)
         db_port=$(echo $user_database | cut -d':' -f2)
     fi
-    
     
     cd $download_dir
     wget --continue $tomcat_download \
         1>>$log 2>>$log
     
     cd /opt/
-    tar xzf $download_dir/apache-*.tar.gz
-    ln -s apache-tomcat* tomcat
-    make_dir tomcat/escenic/lib
     
-    make_dir /opt/tomcat/lib
-    cd /opt/tomcat/lib
+    # TODO add support for multiple tomcats
+    
+    tar xzf $download_dir/apache-tomcat*.tar.gz
+    tomcat_base=/opt/tomcat-${ece_instance_name}
+    make_dir $tomcat_base
+
+    cp -r /opt/apache-tomcat*/conf/ $tomcat_base
+    for el in "escenic/lib lib work logs temp webapps"; do
+        make_dir $tomcat_base/$el
+    done
+    
+    cd $tomcat_base/lib
     make_ln $jdbc_driver
 
-    cat /opt/tomcat/conf/catalina.properties | \
+    cat $tomcat_base/conf/catalina.properties | \
         sed 's/common.loader=/common.loader=\$\{catalina.base\}\/escenic\/lib\/\*\.jar\,/g' \
-        > /opt/tomcat/conf/catalina.properties.tmp
-    mv /opt/tomcat/conf/catalina.properties.tmp /opt/tomcat/conf/catalina.properties
+        > $tomcat_base/conf/catalina.properties.tmp
+    mv $tomcat_base/conf/catalina.properties.tmp $tomcat_base/conf/catalina.properties
     
-    cat > /opt/tomcat/conf/server.xml <<EOF
+    cat > $tomcat_base/conf/server.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
-<Server port="$appserver_port" shutdown="SHUTDOWN">
+<Server port="$shutdown_port" shutdown="SHUTDOWN">
   <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
   <Listener className="org.apache.catalina.core.JasperListener" />
   <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
@@ -477,7 +532,7 @@ url="jdbc:mysql://localhost:3306/ece5db?autoReconnect=true&amp;useUnicode=true&a
 </Server>
 
 EOF
-    cat > /opt/tomcat/conf/context.xml <<EOF
+    cat > $tomcat_base/conf/context.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
 <Context>
 
@@ -531,6 +586,8 @@ EOF
 # last, give the control back to the ECE user & group 
 function set_correct_permissions()
 {
+    print "Setting correct permissions on all ECE related directories ..."
+
     if [ $(grep $ece_user /etc/passwd | wc -l) -lt 1 ]; then
         # TODO add support for useradd
         adduser $ece_user
@@ -540,10 +597,14 @@ function set_correct_permissions()
     fi
 
     for el in $dir_list; do
-        chown -R ${ece_user}:${ece_group} $el
+        if [ -d $el ]; then
+            chown -R ${ece_user}:${ece_group} $el
+        fi
     done
     
-    chown -R ${ece_user}:${ece_group} /opt/tomcat/
+    if [ -e $tomcat_base ]; then
+        chown -R ${ece_user}:${ece_group} $tomcat_base
+    fi
 }
 
 function print_status()
@@ -562,16 +623,22 @@ function print_status()
 
     print "The basic Escenic Content Engine setup is now completed."
     print "It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
-    print ""
-    print "The Varnish cache server is running on http://${HOSTNAME}:80/"
-    print "where as ECE is running on http://${HOSTNAME}:$appserver_port/"
-    print "You can type 'ece versions' to see all the installed components"
+
+    if [ $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
+        print "The Varnish cache server is running on http://${HOSTNAME}:80/"
+    fi
+    
+    if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER -o \
+        $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+        print "Your app server is running on http://${HOSTNAME}:$appserver_port/"
+        print "You can type 'ece versions' to see all the installed components"
+    fi
 }
 
 function print_next_steps()
 {
+    print "You're next steps on ${HOSTNAME} will be:"
     cat <<EOF
-  You must now do the following:
 
 * go to http://$HOSTNAME:8080/escenic-admin/pages/publication/new.jsp
   and create a new publication using the WAR found in:
@@ -585,6 +652,7 @@ EOF
 
 function set_up_test_publication()
 {
+    print "Setting up the 'mypub' test publication ..."
     make_dir /opt/escenic/assemblytool/publications/
     cd /opt/escenic/assemblytool/publications/
     cp /opt/escenic/engine/contrib/wars/demo-clean.war mypub.war
@@ -594,97 +662,119 @@ source-war: mypub.war
 context-root: mypub
 EOF
 
-    su - $ece_user -c "ece assemble deploy start" 1>>$log 2>>$log
+    set_correct_permissions
+    su - $ece_user -c "ece -i $ece_instance_name assemble deploy start" \
+        1>>$log 2>>$log
 
     # TODO create the publication by POSTing to
     # /escenic-admin/do/publication/resource
 }
 
 
- function check_for_required_downloads()
- {
-     required_escenic_packages="engine assemblytool"
+function check_for_required_downloads()
+{
+    print "Asserting that required downloads succeeded ..."
+    required_escenic_packages="engine assemblytool"
 
-     for el in $required_escenic_packages; do
-         if [ ! -e $download_dir/${el}* ]; then
-             print "Couldn't find $el* in $download_dir"
-             exit 1
-         fi
-     done
- }
+    for el in $required_escenic_packages; do
+        if [ $(ls $download_dir | \
+            grep ${el} | \
+            grep -v community | \
+            grep -v analysis | \
+            grep .zip$ | \
+            wc -l) \
+            -lt 1 ]; then
+            print "Couldn't find $el* in $download_dir"
+            exit 1
+        fi
+    done
+}
 
- function set_up_memcached()
- {
+function set_up_memcached()
+{
      # 1) download java library
      # 2) configure PresenationArticle cache for the publication
      # 3) build and re-deploy
-     echo ""
- }
+    echo "TBD"
+}
 
- function start_components()
- {
-     # TODO might be a hub and indexer too
-     su - $ece_user -c "ece start" 1>>$log 2>>$log
- }
+function start_components()
+{
+    # TODO might be a hub and indexer too
+    # su - $ece_user -c "ece start" 1>>$log 2>>$log
+    echo "TBD"
+}
 
- function set_up_user_enviornment()
- {
+function set_up_user_enviornment()
+{
+    print "Setting up the ${ece_user}'s user Unix environment ..."
+
      # TODO get this from ece.conf and other magic
 
-     if [ $(grep JAVA_HOME /home/$ece_user/.bashrc | wc -l) -lt 1 ]; then
-         echo JAVA_HOME=/usr/lib/jvm/java-6-sun >> /home/$ece_user/.bashrc
-     fi
-     if [ $(grep JAVA_HOME /root/.bashrc | wc -l) -lt 1 ]; then
-         echo JAVA_HOME=/usr/lib/jvm/java-6-sun >> /root/.bashrc
-     fi
+    if [ $(grep JAVA_HOME /home/$ece_user/.bashrc | wc -l) -lt 1 ]; then
+        echo JAVA_HOME=/usr/lib/jvm/java-6-sun >> /home/$ece_user/.bashrc
+    fi
+    if [ $(grep JAVA_HOME /root/.bashrc | wc -l) -lt 1 ]; then
+        echo JAVA_HOME=/usr/lib/jvm/java-6-sun >> /root/.bashrc
+    fi
 
-     if [ $on_debian_or_derivative -eq 1 ]; then
-         export JAVA_HOME=/usr/lib/jvm/java-6-sun
-     fi
- }
+    if [ $on_debian_or_derivative -eq 1 ]; then
+        export JAVA_HOME=/usr/lib/jvm/java-6-sun
+    fi
 
- function set_up_solr()
- {
-     cp -r  /opt/escenic/engine/solr/conf /etc/escenic/solr
-     mkdir -p /var/lib/escenic/solr/
-     cd /var/lib/escenic/solr/
-     ln -s /etc/escenic/solr conf
- }
+    if [ $(grep bash_completion.d/ece /home/$ece_user/.bashrc | wc -l) -lt 1 ]
+    then
+        echo ". /etc/bash_completion.d/ece" \
+            >> /home/$ece_user/.bashrc
+    fi
+}
 
- function un_install_ece()
- {
+function set_up_solr()
+{
+    print "Setting up solr ..."
+    cp -r  /opt/escenic/engine/solr/conf /etc/escenic/solr
+    mkdir -p /var/lib/escenic/solr/
+    cd /var/lib/escenic/solr/
+    ln -s /etc/escenic/solr conf
+}
+
+function un_install_ece()
+{
+    print "Uninstalling ECE ..."
      # TODO safety, warnings++
-     rm -rf /etc/escenic/ \
-         /opt/*tomcat* \
-         /opt/escenic \
-         /var/lib/escenic \
-         /var/run/escenic/ \
-         /etc/escenic/ \
-         /usr/bin/ece \
-         /var/log/escenic/;
+    rm -rf /etc/escenic/ \
+        /opt/*tomcat* \
+        /opt/escenic \
+        /var/lib/escenic \
+        /var/run/escenic/ \
+        /etc/escenic/ \
+        /usr/bin/ece \
+        /var/log/escenic/;
 
      # prepare for new install
-     mv /tmp/*.zip /tmp/ece-downloads/
+    mv /tmp/*.zip /tmp/ece-downloads/
 
- }
+}
 
- function stop_conflicting_processes()
- {
+function stop_conflicting_processes()
+{
+    print "Stopping conflicting processes ..."
      # TODO this is dirty
-     killall java 1>>$log 2>>$log
- }
+    killall java 1>>$log 2>>$log
+}
 
- function set_up_varnish()
- {
-     /etc/init.d/varnish stop 1>>$log 2>>$log
+function set_up_varnish()
+{
+    print "Setting up the Varnish caching server to match your environment ..."
+    /etc/init.d/varnish stop 1>>$log 2>>$log
 
-     file=/etc/default/varnish
-     cat $file | \
-         sed 's/6081/80/g' \
-         > $file.tmp
-     mv $file.tmp $file
+    file=/etc/default/varnish
+    cat $file | \
+        sed 's/6081/80/g' \
+        > $file.tmp
+    mv $file.tmp $file
 
-     cat > /etc/varnish/default.vcl <<EOF
+    cat > /etc/varnish/default.vcl <<EOF
 /* IPs that are allowed to access the administrative pages/webapps. */
 acl staff {
   "localhost";
@@ -696,40 +786,40 @@ acl adactus {
 }
 EOF
 
-     for el in $backend_servers; do
-         print "Adding backend $el to Varnish list of backends."
-         appserver_host=$(echo $el | cut -d':' -f1)
-         appserver_port=$(echo $el | cut -d':' -f2)
+    for el in $backend_servers; do
+        print "Adding backend $el to Varnish list of backends."
+        appserver_host=$(echo $el | cut -d':' -f1)
+        appserver_port=$(echo $el | cut -d':' -f2)
 
-     cat >> /etc/varnish/default.vcl <<EOF
+        cat >> /etc/varnish/default.vcl <<EOF
 backend $appserver_host {
   .host = "$appserver_host";
   .port = "$appserver_port";
 }
 EOF
-     done
+    done
 
-     cat >> /etc/varnish/default.vcl <<EOF
+    cat >> /etc/varnish/default.vcl <<EOF
 /* The client director gives us session stickiness based on client
  * IP. */
 director webdirector client {
 EOF
-     for el in $backend_servers; do
-         print "Adding backend $el to Varnish backend cluster."
-         appserver_host=$(echo $el | cut -d':' -f1)
-     cat >> /etc/varnish/default.vcl <<EOF
+    for el in $backend_servers; do
+        print "Adding backend $el to Varnish backend cluster."
+        appserver_host=$(echo $el | cut -d':' -f1)
+        cat >> /etc/varnish/default.vcl <<EOF
   {
      .backend = $appserver_host;
      .weight = 1;
   }
 EOF
-     done
+    done
 
-     cat >> /etc/varnish/default.vcl <<EOF
+    cat >> /etc/varnish/default.vcl <<EOF
 }
 EOF
 
-     cat >> /etc/varnish/default.vcl <<EOF
+    cat >> /etc/varnish/default.vcl <<EOF
 sub vcl_recv {
   if (!client.ip ~ staff &&
       (req.url ~ "^/escenic" ||
@@ -776,125 +866,173 @@ sub vcl_deliver {
   set resp.http.X-Cache-Backend = req.backend;
 }
 EOF
-     /etc/init.d/varnish start 1>>$log 2>>$log
+    /etc/init.d/varnish start 1>>$log 2>>$log
 }
 
- function read_user_input()
- {
-     echo "Hi, which server profile do you wish to install?"
-     echo ""
-     echo "Select 1-7 and press ENTER"
-     echo ""
-     echo "  1 - Development or testing environment (cache, app & database)"
-     echo "  2 - Cache server (cache & web server)"
-     echo "  3 - Database server"
-     echo "  4 - Editorial (publication) server (ECE, assemble host)"
-     echo "  5 - Presentation server (ECE, memcached)"
-     echo "  6 - RMI hub"
-     echo "  7 - Standalone search instance (solr + indexer-webapp)"
-     echo ""
-     echo -n "Your choice [1]: "
-     read install_profile_number
+PROFILE_ALL_IN_ONE=1
+PROFILE_CACHE_SERVER=2
+PROFILE_DB_SERVER=3
+PROFILE_EDITORIAL_SERVER=4
+PROFILE_PRESENTATION_SERVER=5
+PROFILE_RMI_HUB=6
+PROFILE_SEARCH_SERVER=7
 
-     if [ -z $install_profile_number ]; then
-         install_profile_number=1
-     fi
-     
- }
+function read_user_input()
+{
+    echo "Hi, which server profile do you wish to install?"
+    echo ""
+    echo "Select 1-7 and press ENTER"
+    echo ""
+    echo "  $PROFILE_ALL_IN_ONE - Development or testing environment \
+(cache, ECE, assemble host & database)"
+    echo "  $PROFILE_CACHE_SERVER - Cache server (cache & web server)"
+    echo "  $PROFILE_DB_SERVER - Database server"
+    echo "  $PROFILE_EDITORIAL_SERVER - Editorial (publication) server \
+(ECE, assemble host)"
+    echo "  $PROFILE_PRESENTATION_SERVER - Presentation server (ECE, memcached)"
+    echo "  $PROFILE_RMI_HUB - RMI hub"
+    echo "  $PROFILE_SEARCH_SERVER - Standalone search instance \
+(solr + indexer-webapp)"
+    echo ""
+    echo -n "Your choice [1]> "
+    read install_profile_number
 
- function common_pre_install()
- {
-     if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
-         on_debian_or_derivative=1
-         on_debian=1
-     fi
+    if [ -z "$install_profile_number" ]; then
+        install_profile_number=$PROFILE_ALL_IN_ONE
+    fi
+    
+}
 
-     stop_conflicting_processes
+function common_pre_install()
+{
+    if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
+        on_debian_or_derivative=1
+        on_debian=1
+    fi
 
- }
+    stop_conflicting_processes
 
- function assert_pre_prequesite()
- {
-     if [ $(which $1 | wc -l) -lt 1 ]; then
-         print "Please install $1 first and re-run $(basename $0) again"
-         exit 1
-     fi
+}
 
- }
+function assert_pre_prequesite()
+{
+    if [ $(which $1 | wc -l) -lt 1 ]; then
+        print "Please install $1 first and re-run $(basename $0) again"
+        exit 1
+    fi
 
- function install_cache_server()
- {
+}
 
-     if [ $on_debian -eq 1 ]; then
-         curl http://repo.varnish-cache.org/debian/GPG-key.txt 2>>$log | apt-key add -
-         echo "deb http://repo.varnish-cache.org/debian/ $(lsb_release -s -c) varnish-3.0" >> \
-             /etc/apt/sources.list.d/escenic.list
-     fi
+function install_cache_server()
+{
+    print "Installing a caching server on $HOSTNAME ..."
 
-     if [ $on_debian_or_derivative -eq 1 ]; then
-         apt-get install -y varnish 1>>$log 2>>$log
-     fi
+    if [ $on_debian -eq 1 ]; then
+        curl http://repo.varnish-cache.org/debian/GPG-key.txt 2>>$log | apt-key add -
+        echo "deb http://repo.varnish-cache.org/debian/ $(lsb_release -s -c) varnish-3.0" >> \
+            /etc/apt/sources.list.d/escenic.list
+    fi
 
-     assert_pre_prequesite varnishd
+    if [ $on_debian_or_derivative -eq 1 ]; then
+        apt-get install -y varnish 1>>$log 2>>$log
+    fi
 
-     print "You must now list your backend servers."
-     print "Seperate the entries with a space. e.g.: app1:8080 app2:8080."
-     print "Default is two backend servers, app1:8080 and app2:8080,"
-     print "so just press ENTER if you want these two as your backends."
-     echo -n "Your backends: "
-     read backend_servers
+    assert_pre_prequesite varnishd
 
-     if [ -z $backend_servers ]; then
-         backend_servers="app1:8080 app2:8080"
-     fi
+    print "You must now list your backend servers."
+    print "Seperate the entries with a space. e.g.: app1:8080 app2:8080."
+    print "Press ENTER to accept the default: web1:8080 and web2:8080"
+    echo ""
+    echo -n "Your choice [web1:8080 web2:8080]> "
+    read backend_servers
 
-     set_up_varnish $backend_servers
- }
+    if [ -z "$backend_servers" ]; then
+        backend_servers="app1:8080 app2:8080"
+    fi
 
- function install_database_server()
- {
-     if [ $on_debian ]; then
-         echo "deb http://repo.percona.com/apt squeeze main" \
-             >> /etc/apt/sources.list.d/escenic.list
+    set_up_varnish $backend_servers
+}
 
-         if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
-             gpg --keyserver  hkp://keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A \
-                 1>>$log 2>>$log
-             gpg -a --export CD2EFD2A | apt-key add - \
-                 1>>$log 2>>$log
-         fi
-     fi
+function install_database_server()
+{
+    print "Installing the database server on $HOSTNAME ..."
 
-     if [ $on_debian_or_derivative -eq 1 ]; then
+    if [ $on_debian ]; then
+        echo "deb http://repo.percona.com/apt squeeze main" \
+            >> /etc/apt/sources.list.d/escenic.list
+
+        if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
+            gpg --keyserver  hkp://keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A \
+                1>>$log 2>>$log
+            gpg -a --export CD2EFD2A | apt-key add - \
+                1>>$log 2>>$log
+        fi
+    fi
+
+    if [ $on_debian_or_derivative -eq 1 ]; then
          # some how, this is to install Percona 5.5
-         if [ -e /var/lib/mysql/debian-*.flag ]; then
-             rm /var/lib/mysql/debian-*.flag
-         fi
-         
-         apt-get install -y percona-server-server \
-             percona-server-client \
-             libmysql-java \
-             1>>$log 2>>$log
-     fi
+        if [ -e /var/lib/mysql/debian-*.flag ]; then
+            rm /var/lib/mysql/debian-*.flag
+        fi
+        
+        apt-get install -y percona-server-server \
+            percona-server-client \
+            libmysql-java \
+            1>>$log 2>>$log
+    fi
 
-     assert_pre_prequesite mysql
-     
-     download_escenic_components
-     set_up_engine_and_plugins
-     set_up_ece_scripts
-     set_up_ecedb
+    assert_pre_prequesite mysql
+    
+    download_escenic_components
+    set_up_engine_and_plugins
+    set_up_ece_scripts
+    set_up_ecedb
+}
+
+# $1 is the default instance name, the calee is responsible for
+# setting this.
+function ask_for_instance_name()
+{
+    print "What do you want to call this ECE instance?"
+    print "Press ENTER to accept the default instance name, $1."
+    echo ""
+    echo -n "Your choice [$1]> "
+    read ece_instance_name
+    if [ -z "$ece_instance_name" ]; then
+        ece_instance_name=editor1
+    fi
+    make_dir /etc/escenic/engine/instance/${ece_instance_name}
 }
 
 function install_presentation_server()
 {
+    print "Installing a presentation server on $HOSTNAME ..."
+
+    ask_for_instance_name "web1"
     download_escenic_components
     check_for_required_downloads
     set_up_ece_scripts
-    echo ""
+
+    set_up_engine_and_plugins
+    set_up_user_enviornment
+    set_up_assembly_tool
+    set_up_basic_nursery_configuration
+    
+    set_up_app_server
+    set_up_proper_logging_configuration
+    
+    file=/etc/escenic/ece-${ece_instance_name}.conf
+    print "Creating instance specific .conf file in $file ..."
+    cat > $file <<EOF
+deploy_webapp_white_list="escenic-admin mypub"
+EOF
 }
 
 function install_editorial_server()
 {
+    print "Installing an editorial server on $HOSTNAME ..."
+
+    ask_for_instance_name "editor1"
     download_escenic_components
     check_for_required_downloads
 
@@ -902,7 +1040,10 @@ function install_editorial_server()
     set_up_user_enviornment
     set_up_assembly_tool
     set_up_basic_nursery_configuration
-    set_up_user_enviornment
+    
+    set_up_app_server
+    set_up_proper_logging_configuration
+    set_up_ece_scripts
     
     # commented out until set_up_user_enviornment uses the running engine
     # to create a new publication
@@ -923,6 +1064,8 @@ function install_search_instance()
 # useful for development and test environments.
 function install_all_in_one_environment()
 {
+    print "Installing an all-in-one environment on $HOSTNAME ..."
+
     set_up_engine_plugins
     set_up_user_enviornment
     set_up_assembly_tool
@@ -941,10 +1084,6 @@ function common_post_install()
     print_next_steps
 }
 
-set_up_assembly_tool
-exit
-echo ARNEsadf;lkjasd;lkasdjf;aldskfjb
-
 read_user_input
 touch $pid_file
 print "I'm logging to $log"
@@ -953,21 +1092,23 @@ common_pre_install
 
 
 case $install_profile_number in
-    1)
-        ;;
-    2)
-        install_cache_server
-        ;;
-    3)
-        install_database_server
-        ;;
-    4)
-        install_editorial_server
-        ;;
-    5)
-        ;;
-    6)
-        ;;
+    $PROFILE_ALL_IN_ONE)
+    ;;
+    $PROFILE_CACHE_SERVER)
+    install_cache_server
+    ;;
+    $PROFILE_DB_SERVER)
+    install_database_server
+    ;;
+    $PROFILE_EDITORIAL_SERVER)
+    install_editorial_server
+    ;;
+    $PROFILE_PRESENTATION_SERVER)
+    install_presentation_server
+    ;;
+    $PROFILE_RMI_HUB)
+    install_rmi_hub
+    ;;
     default)
         print "You must select 1-7"
         exit 1
@@ -975,4 +1116,4 @@ case $install_profile_number in
 esac
 
 
-# common_post_install
+common_post_install
