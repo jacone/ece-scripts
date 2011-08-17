@@ -1077,6 +1077,7 @@ function install_editorial_server()
     set_up_proper_logging_configuration
     set_up_ece_scripts
 
+    set_correct_permissions
     assemble_deploy_and_start_type
     
     # commented out until set_up_user_enviornment uses the running engine
@@ -1113,7 +1114,6 @@ function install_all_in_one_environment()
 
 function common_post_install()
 {
-    set_correct_permissions
     print_status
     print_next_steps
 }
