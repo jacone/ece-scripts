@@ -382,6 +382,26 @@ org.apache.catalina.core.ContainerBase.[Catalina].[localhost].handlers = 2localh
 EOF
 }
 
+# $1 is the property
+# $2 is the value
+
+# will set these for the current instance's ece.conf. If the value
+# already is set, it will replace it with this one.
+function set_ece_instance_conf()
+{
+    conf_file=/etc/escenic/ece-$ece_instance_name.conf
+    
+    if [ $(grep $1 $conf_file | wc -l) -gt 0 ]; then
+        # TODO update existing values of the property instead of
+        # removing & appending it.
+        cat $conf_file | grep -v ^$1 > $conf_file.tmp
+        mv $conf_file.tmp $conf_file
+        echo "$1=$2" >> $conf_file
+    else
+        echo "$1=$2" >> $conf_file
+    fi
+}
+
 function set_up_app_server
 {
     print "Setting up the application server ..."
@@ -423,17 +443,17 @@ function set_up_app_server
     
     cd /opt/
     
-    # TODO add support for multiple tomcats
-    
     tar xzf $download_dir/apache-tomcat*.tar.gz
     tomcat_base=/opt/tomcat-${ece_instance_name}
     make_dir $tomcat_base
 
     cp -r /opt/apache-tomcat*/conf/ $tomcat_base
-    for el in "escenic/lib lib work logs temp webapps"; do
+    for el in escenic/lib lib work logs temp webapps; do
         make_dir $tomcat_base/$el
     done
-    
+
+    set_ece_instance_conf tomcat_base $tomcat_base   
+   
     cd $tomcat_base/lib
     make_ln $jdbc_driver
 
