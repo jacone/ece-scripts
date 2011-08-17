@@ -444,11 +444,13 @@ function set_up_app_server
     cd /opt/
     
     tar xzf $download_dir/apache-tomcat*.tar.gz
+    ln -sf apache-tomcat* tomcat
+    
     tomcat_base=/opt/tomcat-${ece_instance_name}
     make_dir $tomcat_base
 
     cp -r /opt/apache-tomcat*/conf/ $tomcat_base
-    for el in escenic/lib lib work logs temp webapps; do
+    for el in bin escenic/lib lib work logs temp webapps; do
         make_dir $tomcat_base/$el
     done
 
@@ -688,6 +690,7 @@ EOF
 
     # TODO create the publication by POSTing to
     # /escenic-admin/do/publication/resource
+    # //depot/branches/personal/mogsie/fromscratch/create-publication.sh
 }
 
 
@@ -1048,6 +1051,15 @@ deploy_webapp_white_list="escenic-admin mypub"
 EOF
 }
 
+function assemble_deploy_and_start_type()
+{
+    # TODO set type
+    type=engine
+    ece_command="ece -i $ece_instance_name -t $type assemble deploy start"
+    
+    su - $ece_user -c "$ece_command" 1>>$log 2>>$log
+}
+
 function install_editorial_server()
 {
     print "Installing an editorial server on $HOSTNAME ..."
@@ -1064,11 +1076,13 @@ function install_editorial_server()
     set_up_app_server
     set_up_proper_logging_configuration
     set_up_ece_scripts
+
+    assemble_deploy_and_start_type
     
     # commented out until set_up_user_enviornment uses the running engine
     # to create a new publication
     # start_components
-    set_up_test_publication
+    # set_up_test_publication
 }
 
 function install_rmi_hub()
