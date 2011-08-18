@@ -130,32 +130,28 @@ function download_escenic_components()
 
 }
 
-function install_debian_packages()
+function install_common_os_packages()
 {
-    print "Installing Debian packages..."
+    print "Installing 3rd party packages needed by $(basename $0) ..."
 
-    apt-get install -y curl \
-        1>>$log 2>>$log
-    
-    # apt-get update
-    apt-get install -y \
-        ant \
-        ant-contrib \
-        ant-optional \
-        libapr1 \
-        libtcnative-1 \
-        libmysql-java \
-        memcached \
-        maven2 \
-        percona-server-client \
-        percona-server-server \
-        sun-java6-jdk \
-        varnish \
-        wget \
-        1>>$log 2>>$log
+    if [ $on_debian_or_derivative -eq 1 ]; then
+        # Ubuntu doesn't have git (!) but only git-core.
+        if [ $on_ubuntu -eq 1 ]; then
+            git_package=git-core
+        else
+            git_package=git
+        fi
+        
+        apt-get install -y \
+            curl \
+            $git_package \
+            wget \
+            1>>$log 2>>$log
+    fi
 
-    # TODO later: support for the tomcat package 
-    #        tomcat6 \
+    assert_pre_prequesite curl
+    assert_pre_prequesite wget
+    assert_pre_prequesite git
 }
 
 make_dir $ece_directories
@@ -431,10 +427,27 @@ function set_ece_instance_conf()
     echo "$1=$2" >> $conf_file
 }
 
-function install_ece_third_party_libraries
+# Installs third party packages needed by the ECE (i.e. Java related).
+# Also see install_common_os_packages for packages common to all
+# servers in the architecture.
+function install_ece_third_party_packages
 {
+    print "Installing 3rd party packages needed by ECE ..."
+    
     if [ $on_debian_or_derivative -eq 1 ]; then
-        apt-get install -y \
+
+        if [ $on_ubuntu -eq 1 ]; then
+            echo "deb http://archive.canonical.com/ $(lsb_release -s -c) partner" \
+                >> /etc/apt/sources.list.d/escenic.list
+        fi
+        
+        apt-get update \
+            1>>$log 2>>$log
+
+        echo "sun-java6-jdk shared/accepted-sun-dlj-v1-1 boolean true" | \
+            debconf-set-selections
+        
+        apt-get --asume-yes install \
             ant \
             ant-contrib \
             ant-optional \
@@ -444,10 +457,13 @@ function install_ece_third_party_libraries
             memcached \
             maven2 \
             sun-java6-jdk \
-            varnish \
             wget \
          1>>$log 2>>$log
     fi
+    
+    for el in ant mvn java; do
+        assert_pre_prequesite $el
+    done
 }
 
 function set_up_app_server
@@ -973,7 +989,7 @@ function read_user_input()
     echo ""
     echo -n "  $PROFILE_ALL_IN_ONE - The full stack on one host. "
     echo "Suitable for development and"
-    echo "      test environments (cache, ECE, assemble host & database)."
+    echo "      test environments (cache, ECE, assembly host & database)."
     echo -n "  $PROFILE_EDITORIAL_SERVER - Editorial (publication) server "
     echo "(ECE, assembly host)."
     echo -n "  $PROFILE_PRESENTATION_SERVER - Presentation server "
@@ -1001,8 +1017,13 @@ function common_pre_install()
         on_debian=1
     fi
 
+    if [ $(lsb_release -i | grep Ubuntu | wc -l) -gt 0 ]; then
+        on_ubuntu=1
+    fi
+
     make_dir $download_dir
     stop_conflicting_processes
+    install_common_os_packages
     set_up_ece_scripts
 }
 
@@ -1018,14 +1039,22 @@ function install_cache_server()
 {
     print "Installing a caching server on $HOSTNAME ..."
 
+    if [ $on_debian_or_derivative -eq 1 ]; then
+        curl http://repo.varnish-cache.org/debian/GPG-key.txt 2>>$log | \
+            apt-key add - 1>>$log 2>>$log
+    fi
+    
     if [ $on_debian -eq 1 ]; then
-        curl http://repo.varnish-cache.org/debian/GPG-key.txt 2>>$log | apt-key add - 1>>$log 2>>$log
         echo "deb http://repo.varnish-cache.org/debian/ $(lsb_release -s -c) varnish-3.0" >> \
             /etc/apt/sources.list.d/escenic.list
+    elif [ $on_ubuntu -eq 1 ]; then
+        echo "deb http://repo.varnish-cache.org/ubuntu/ $(lsb_release -s -c) varnish-3.0" \
+            >> /etc/apt/sources.list.d/escenic.list
     fi
 
     if [ $on_debian_or_derivative -eq 1 ]; then
-        apt-get install -y varnish 1>>$log 2>>$log
+        apt-get update 1>>$log 2>>$log
+        apt-get -y install varnish 1>>$log 2>>$log
     fi
 
     assert_pre_prequesite varnishd
@@ -1047,28 +1076,53 @@ function install_database_server()
 {
     print "Installing the database server on $HOSTNAME ..."
 
-    if [ $on_debian ]; then
-        echo "deb http://repo.percona.com/apt squeeze main" \
-            >> /etc/apt/sources.list.d/escenic.list
-
-        if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
-            gpg --keyserver  hkp://keys.gnupg.net --recv-keys 1C4CBDCDCD2EFD2A \
-                1>>$log 2>>$log
-            gpg -a --export CD2EFD2A | apt-key add - \
-                1>>$log 2>>$log
-        fi
-    fi
-
     if [ $on_debian_or_derivative -eq 1 ]; then
+
+        code_name=$(lsb_release -s -c)
+        
+        supported_code_name=0
+        supported_list="lenny squeeze hardy lucid maverick"
+        for el in $supported_list; do
+            if [ $code_name = $el ]; then
+                supported_code_name=1
+            fi
+        done
+        
          # some how, this is to install Percona 5.5
         if [ -e /var/lib/mysql/debian-*.flag ]; then
             rm /var/lib/mysql/debian-*.flag
         fi
         
-        apt-get install -y percona-server-server \
-            percona-server-client \
-            libmysql-java \
-            1>>$log 2>>$log
+        if [ $supported_code_name -eq 1 ]; then
+            echo "deb http://repo.percona.com/apt ${code_name} main" \
+                >> /etc/apt/sources.list.d/escenic.list
+
+            if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
+                gpg --keyserver hkp://keys.gnupg.net \
+                    --recv-keys 1C4CBDCDCD2EFD2A \
+                    1>>$log 2>>$log
+                gpg -a --export CD2EFD2A | apt-key add - \
+                    1>>$log 2>>$log
+            fi
+            
+            apt-get update \
+                1>>$log 2>>$log
+            apt-get install -y percona-server-server \
+                percona-server-client \
+                1>>$log 2>>$log
+        else
+            print -n "The Percona APT repsository "
+            print "doesn't have packages for your Debian (or derivative) "
+            print "version with code name $code_name. I will use vanilla "
+            print "MySQL instead."
+
+            apt-get update \
+                1>>$log 2>>$log
+            apt-get install -y mysql-server \
+                mysql-client \
+                libmysql-java \
+                1>>$log 2>>$log
+        fi
     fi
 
     assert_pre_prequesite mysql
@@ -1097,10 +1151,7 @@ function ask_for_instance_name()
 # $2=<editorial server=0 | presentation server=1>
 function install_ece_instance()
 {
-    install_ece_third_party_libraries
-    for el in ant mvn java wget curl; do
-        assert_pre_prequesite $el
-    done
+    install_ece_third_party_packages
     
     ask_for_instance_name $1
     download_escenic_components
