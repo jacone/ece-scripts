@@ -483,7 +483,7 @@ function set_up_app_server
     
     print "Last question: Where does the search instance run?"
     print "Press ENTER to accept the default ($HOSTNAME:8080)"
-    print "If you're in doubt select this :-)"
+    print "If you're in doubt, just press ENTER :-)"
     print "Or enter: <host>:<port>, e.g.: 'db1:3306'"
     echo -n "Your choice [$HOSTNAME:8080]> "
     read user_search
@@ -722,28 +722,35 @@ function print_status_and_next_steps()
         echo "   - Create a new publiation at:"
         echo "    http://$HOSTNAME:${appserver_port}/escenic-admin/pages/publication/new.jsp"
         echo "    You may use the WAR found in:"
-        echo "    /opt/escenic/assemblytool/dist/war/mypub.war"
+        echo "    /opt/escenic/assemblytool/dist/war/${publication_name}.war"
         echo "   - configure the instances you want to be started at boot time"
         echo "     in /etc/default/ece"
         echo "   - include $instance_name in your RMI hub configuration."
     fi
 }
 
-function set_up_test_publication()
+function set_up_publication()
 {
-    print "Setting up the 'mypub' test publication ..."
+    publication_name=mypub
+    
+    print "What name do you wish to give to your first publication?"
+    print "Press ENTER to accept ${publication_name}"
+    echo -n "Your choice [${publication_name}]> "
+    read publication_name
+
+    if [ -z "$publication_name" ]; then
+        publication_name=$1
+    fi
+
+    print "Setting up the ${publication_name} publication ..."
     make_dir /opt/escenic/assemblytool/publications/
     cd /opt/escenic/assemblytool/publications/
-    cp /opt/escenic/engine/contrib/wars/demo-clean.war mypub.war
-    cat > /opt/escenic/assemblytool/publications/mypub.properties <<EOF
-name: mypub
-source-war: mypub.war
-context-root: mypub
+    cp /opt/escenic/engine/contrib/wars/demo-clean.war ${publication_name}.war
+    cat > /opt/escenic/assemblytool/publications/${publication_name}.properties <<EOF
+name: ${publication_name}
+source-war: ${publication_name}.war
+context-root: ${publication_name}
 EOF
-
-    set_correct_permissions
-    su - $ece_user -c "ece -i $instance_name assemble deploy start" \
-        1>>$log 2>>$log
 
     # TODO create the publication by POSTing to
     # /escenic-admin/do/publication/resource
@@ -752,6 +759,10 @@ EOF
 
 function check_for_required_downloads()
 {
+    if [ $ece_software_setup_completed -eq 1 ]; then
+        return
+    fi
+    
     print "Asserting that required downloads succeeded ..."
     required_escenic_packages="engine assemblytool"
 
@@ -866,7 +877,6 @@ acl adactus {
 EOF
 
     for el in $backend_servers; do
-        print "Adding backend $el to Varnish list of backends."
         appserver_host=$(echo $el | cut -d':' -f1)
         appserver_port=$(echo $el | cut -d':' -f2)
 
@@ -884,7 +894,6 @@ EOF
 director webdirector client {
 EOF
     for el in $backend_servers; do
-        print "Adding backend $el to Varnish backend cluster."
         appserver_host=$(echo $el | cut -d':' -f1)
         cat >> /etc/varnish/default.vcl <<EOF
   {
@@ -1023,12 +1032,12 @@ function install_cache_server()
 
     print "You must now list your backend servers."
     print "Seperate the entries with a space. e.g.: app1:8080 app2:8080."
-    print "Press ENTER to accept the default: $HOSTNAME:$appserver_port"
-    echo -n "Your choice [$HOSTNAME:${appserver_port}]> "
+    print "Press ENTER to accept the default: ${HOSTNAME}:${appserver_port}"
+    echo -n "Your choice [${HOSTNAME}:${appserver_port}]> "
     read backend_servers
 
     if [ -z "$backend_servers" ]; then
-        backend_servers="${HOSTNAME:${appserver_port}"
+        backend_servers="${HOSTNAME}:${appserver_port}"
     fi
 
     set_up_varnish $backend_servers
@@ -1111,7 +1120,7 @@ function install_ece_instance()
         file=/etc/escenic/ece-${instance_name}.conf
         print "Creating instance specific conf: $file ..."
         cat >> $file <<EOF
-deploy_webapp_white_list="escenic-admin mypub"
+deploy_webapp_white_list="escenic-admin ${publication_name}"
 EOF
     fi
     
@@ -1140,12 +1149,10 @@ function install_editorial_server()
     print "Installing an editorial server on $HOSTNAME ..."
 
     install_ece_instance "editor1" 0
+
+    # set_up_publication
+
     assemble_deploy_and_start_type
-    
-    # commented out until set_up_user_enviornment uses the running engine
-    # to create a new publication
-    # start_components
-    # set_up_test_publication
 }
 
 function install_rmi_hub()
@@ -1215,6 +1222,9 @@ function install_all_in_one_environment()
     install_ece_instance "dev1" 0
     install_cache_server
     set_up_solr
+    
+    type=engine
+    assemble_deploy_and_start_type
 }
 
 function common_post_install()
