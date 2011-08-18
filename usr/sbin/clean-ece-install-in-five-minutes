@@ -98,7 +98,7 @@ function make_ln()
 {
     if [ -e $1 -a ! -h $(basename $1) ]; then
         ln -s $1
-    else
+    elif [ ! -e $1 ]; then
         print "Tried to make a symlink to $1, but it doesn't exist"
         exit 1
     fi
@@ -530,6 +530,7 @@ function set_up_app_server
     done
 
     set_ece_instance_conf tomcat_base $tomcat_base   
+    set_ece_instance_conf tomcat_home /opt/tomcat   
    
     cd $tomcat_base/lib
     make_ln $jdbc_driver
@@ -722,7 +723,7 @@ function print_status_and_next_steps()
     echo "o  It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 
     if [ $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
-        print "o  The cache server runs http://${HOSTNAME}:80/"
+        print "o  The cache server up and running at http://${HOSTNAME}:80/"
     fi
     
     if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER -o \
