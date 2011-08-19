@@ -1,0 +1,172 @@
+* A Guide to using the Escenic Content Engine Install Script, ece-install
+
+** Supported operating systems
+For the best experience, run this script on Debian Squeeze (or newer),
+the latest Ubuntu LTS or most other Debian based operating systems,
+but it should work without any problems on any Unix like system that
+has a recent version of BASH.
+
+*** Debian based operating systems
+If running on a Debian based operating system, ece-install will take
+care of installing all required third party software, such as database
+& caching server.
+
+*** Other GNU/Linux and Unix systems 
+If you're installing on another Linux or Unix system, you must first
+make sure that these 3rd party components are installed. ece-install
+will tell you which ones it cannot find and tell you to install these,
+so you can simply run it to find out which ones you need.
+
+You may also look inside the ece-install script for all calls to the
+'assert_pre_prequesite' method and you'll get a list of the binaries
+ece-install assumes are present.
+
+** A note on running ece-install on non-GNU/Linux systems
+Please note, it's assumed that the OS uses GNU's tools, i.e. find, cp
+& tar. If you're running a system which has a different set of core
+tools, such as any of the BSDs (including Mac OS X) or Solaris, make
+sure that GNU's tools take precedence in the command PATH offered to
+ece-install.
+
+** You must run the script as root
+If you start the script as a regular user, it will complain:
+
+[ece-install] You must be root when running ece-install
+
+To become root on Ubuntu based systems and Mac OS X, do:
+
+   $ sudo su
+
+On all other Unix like system, do:
+
+   $ su
+
+** Running more than one installation process
+If the script believes there's already an ece-intall process running,
+it will abort:
+
+[ece-install] There's already one ece-install process running. If you believe
+[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
+[ece-install] before it completed, you may delete /var/run/ece-install.pid and
+[ece-install] run ece-install again.
+
+** Available server profiles
+When starting the script, it will ask you which server profile you
+want to install:
+
+Hi, which server profile do you wish to install?
+
+Select 1-7 and press ENTER
+
+  1 - The full stack on one host. Suitable for development and
+      test environments (cache, ECE, assembly host & database).
+  2 - Editorial (publication) server (ECE, assembly host).
+  3 - Presentation server (ECE, memcached).
+  4 - Database server.
+  5 - Cache server (cache & web server).
+  6 - RMI hub.
+  7 - Standalone search instance (solr + indexer-webapp).
+  8 - Install Widget Framework. This will also set up a WF based 
+      publication for you (repo.escenic.com user/pass required).
+
+*** Common for editorial, presentation and search instances
+- Sun Java 6
+- Apache Tomcat application server:
+  * Compression of textual content (previously, this was typically set
+    up with Apache and its mod_deflate module).
+  * pooling set up tweaked for high read/write performance.
+  * proper logging configuration directing solr messages to its own log.
+  * routing information in the cookies
+  * access log
+
+- APR, native library for optimal Tomcat I/O performance
+- Escenic Assembly environment
+- Database driver
+
+- Compression of content (what was previously accomplished with
+  Apache/mod_deflate) 
+
+*** 1 - Full stack on one host
+This profile is suitable for developers and admins wanting to set up a
+test environment. It will install the full stack including caching
+server, application server, ECE, assembly host, database, Widget
+Framework, as well as creating a publication for you.
+
+For further details on each of the different server components, see
+the different profile descriptions bellow.
+
+
+*** 2 - Editorial server (publication server)
+
+
+*** 3 - Presentation server
+This will set up a typical presentation server:
+- Memcached, distributed memory cache
+- Escenic Assembly environment (which may be removed after the
+  installation). 
+- Deployment setup to only deploy escenic-admin and the
+  publication(s).
+
+*** 4 - Database server
+If ece-install is run on a support version of Debian or Ubuntu, this
+will install the excellent Percona distribution of MySQL with their
+set of high performance patches.
+
+If not, MySQL or Percona must be installed in advance.
+
+Given that the mysqld is install, this profile will download all the
+Escenic components and install the ECE database schema based from the
+SQL files contained inside the distribution bundles. To accomplish
+this, the script will make a call to drop-and-create-ecedb in the same
+directory as the ece-intall script itself.
+
+If you wish to change the DB's host, user or password, you must update
+the drop-and-create-ecedb script prior to running ece-install. 
+
+*** 5 - Cache server
+If ece-install is run on a support version of Debian or Ubuntu, it
+will install the latest Varnish 3.0 caching server from the Varnish
+APT repository.
+
+If ece-install is run on a different platform, the admin must install
+Varnish 3.x prior to running ece-install.
+
+The script will configure Varnish for a typical Escenic site:
+- will introduce access control lists of IPs which may access the
+  privileged web applications such as /escenic-admin, /escenic and
+  /webservice.
+- will set up sticky sessions/session binding
+- will set up a backend cluster and allow the user to enter the
+  different backend servers that will serve the web site.
+- will set up configuration to strip away cookies from static
+  resources, such as CSS, JS and pictures.
+
+TBD:
+- If run on a Linux platform, the script will tweak the kernel
+  parameters for optimal TCP handling for a web facing server.
+- Will install the nginx web server for serving static content and
+  will configure Varnish accordingly. This will be very useful for
+  Adactus servers wanting to pull content from your ECEs.
+
+*** 8 - Install Widget Framework
+You'll need a user name and password for accessing the
+repo.escenic.com Maven repository. You should get these credentials
+when you bought Widget Framework. If you for some reason do not have
+these, please contact support@escenic.com. 
+
+If you don't have these ready in your .escenicrc, ece-install will
+complain:
+
+[ece-install] Be sure to set wf_user and wf_password in /root/.escenicrc
+[ece-install] If you don't have these, please contact support@escenic.com
+  
+** Uninstalling everything that the ece-install set up
+WARNING: this is potentially dangerous as some of these components may
+be used by other pieces of software you have running on your
+host. However, this may be useful if you're installing a clean
+environment and want to e.g. undo your previous install to install a
+different profile.
+
+Open the ece-install script and look for the "un_install_ece"
+function, it has copy and pastable commands for undoing most/all
+things set up by the script.
