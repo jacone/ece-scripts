@@ -71,9 +71,14 @@ PROFILE_PRESENTATION_SERVER=3
 PROFILE_RMI_HUB=6
 PROFILE_SEARCH_SERVER=7
 PROFILE_WIDGET_FRAMEWORK=8
+PROFILE_CREATE_PUBLICATION=9
 
+# Because of issue VF-3559, we also create the default family and host
+# directories.
 dir_list="
 /etc/escenic/engine/common
+/etc/escenic/engine/family/default
+/etc/escenic/engine/host/localhost
 /opt/escenic
 /var/cache/escenic
 /var/crash/escenic
@@ -82,6 +87,7 @@ dir_list="
 /var/run/escenic
 /var/spool/escenic/migration
 "
+
 function make_dir()
 {
     if [ ! -d $1 ]; then
@@ -140,12 +146,22 @@ function install_common_os_packages()
         else
             git_package=git
         fi
+
+        packages="curl $git_package wget"
+
+        some_are_missing=0
+        for el in $packages; do
+            dpkg -l $el 1>/dev/null 2>/dev/null
+            if [ $? -gt 0 ]; then
+                some_are_missing=1
+            fi
+        done
+
+        if [ $some_are_missing -eq 0 ]; then
+            return
+        fi
         
-        apt-get install -y \
-            curl \
-            $git_package \
-            wget \
-            1>>$log 2>>$log
+        apt-get install -y $packages 1>>$log 2>>$log
     fi
 
     assert_pre_prequesite curl
@@ -254,7 +270,7 @@ function set_up_engine_and_plugins()
 
 function set_up_ece_scripts()
 {
-    print "Setting up the ece Unix scripts ..." 
+    print "Setting up the ece UNIX scripts ..." 
 
     cd $download_dir
     if [ -d ece-scripts ]; then
@@ -696,14 +712,22 @@ function set_correct_permissions()
 
     for el in $dir_list; do
         if [ -d $el ]; then
-            chown -R ${ece_user}:${ece_group} $el
+            chown -R ${ece_user}:${ece_group} $el \
+                1>>$log 2>>$log                
         fi
     done
     
     if [ -e $tomcat_base ]; then
-        chown -R ${ece_user}:${ece_group} $tomcat_base
+        chown -R ${ece_user}:${ece_group} $tomcat_base \
+        1>>$log 2>>$log
+    fi
+
+    if [ $(ls /tmp | grep ^ece | wc -l) -gt 0 ]; then
+        chown -R ${ece_user}:${ece_group} /tmp/ece-* \
+            1>>$log 2>>$log
     fi
 }
+
 
 function print_status_and_next_steps()
 {
@@ -720,29 +744,28 @@ function print_status_and_next_steps()
     seconds_left=$(( seconds_left - $minutes * 60 ))
 
     print "The basic setup of $instance_name is now completed!"
-    echo "o  It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    print "It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 
     if [ $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
-        print "o  The cache server up and running at http://${HOSTNAME}:80/"
+        echo "The cache server up and running at http://${HOSTNAME}:80/"
     fi
     
     if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER -o \
         $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
-        echo "o  Your app server is running on http://${HOSTNAME}:$appserver_port/"
+        echo "Your app server is running on http://${HOSTNAME}:$appserver_port/"
         echo ""
         versions="ece -i $instance_name -t $type versions"
-        echo "o  You can type '$versions' to see the "
-        echo "   Escenic software installed"
+        echo "You can type '$versions' to see the Escenic software installed"
 
         echo ""
-        echo "o  You're next steps on ${HOSTNAME} will be:"
-        echo "   - Create a new publiation at:"
+        echo "You're next steps on ${HOSTNAME} will be:"
+        echo "- Create a new publiation at:"
         echo "    http://$HOSTNAME:${appserver_port}/escenic-admin/pages/publication/new.jsp"
         echo "    You may use the WAR found in:"
         echo "    /opt/escenic/assemblytool/dist/war/${publication_name}.war"
-        echo "   - configure the instances you want to be started at boot time"
-        echo "     in /etc/default/ece"
-        echo "   - include $instance_name in your RMI hub configuration."
+        echo "- configure the instances you want to be started at boot time"
+        echo "  in /etc/default/ece"
+        echo "- include $instance_name in your RMI hub configuration."
     fi
 }
 
@@ -750,7 +773,7 @@ function print_status_and_next_steps()
 # //depot/branches/personal/mogsie/fromscratch/create-publication.sh
 function create_publication_in_db()
 {
-    print "Creating publication ${publication_name} ..."
+    print "Creating publication ${publication_name} in ECE ..."
 
     ece_admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin
     
@@ -784,7 +807,7 @@ function create_publication_definition_and_war()
 {
     publication_name=mypub
     
-    print "What name do you wish to give to your first publication?"
+    print "What name do you wish to give your publication?"
     print "Press ENTER to accept ${publication_name}"
     echo -n "Your choice [${publication_name}]> "
     read publication_name
@@ -804,15 +827,14 @@ EOF
 
     publication_war=/opt/escenic/assemblytool/publications/${publication_name}.war
     if [ -d /opt/escenic/widget-framework-core-* ]; then
-        print "Basing your ${publication_name}.war on Widget Framework Demo ..."
+        print "Basing ${publication_name}.war on the Widget Framework Demo ..."
         cd /opt/escenic/widget-framework-core-*/publications/demo-core
         mvn package \
             1>>$log 2>>$log
-        cp target/demo-core-*.war $(dirname ${publication_war})
+        cp target/demo-core-*.war ${publication_war}
     else
         print "Basing your ${publication_name}.war on ECE/demo-clean ..."
-        cp /opt/escenic/engine/contrib/wars/demo-clean.war ${publication_name}.war \
-            $(dirname ${publication_war})
+        cp /opt/escenic/engine/contrib/wars/demo-clean.war ${publication_war}
     fi
     
 }
@@ -857,7 +879,7 @@ function start_components()
 
 function set_up_user_enviornment()
 {
-    print "Setting up the ${ece_user}'s user Unix environment ..."
+    print "Setting up the ${ece_user} user's UNIX environment ..."
 
      # TODO get this from ece.conf and other magic
 
@@ -942,9 +964,22 @@ function set_up_varnish()
     mv $file.tmp $file
 
     cat > /etc/varnish/default.vcl <<EOF
+/* Varnish configuration for Escenic Content Engine              -*- java -*- */
+
 /* IPs that are allowed to access the administrative pages/webapps. */
 acl staff {
   "localhost";
+EOF
+    w | cut -d' ' -f7 | sort | uniq | while read l; do
+        if [ $(echo $l | wc -c) -gt 8 ]; then
+    cat >> /etc/varnish/default.vcl <<EOF
+  # The host which conducted the ece-install"
+  "${l}";
+EOF
+        fi
+    done
+    
+    cat >> /etc/varnish/default.vcl <<EOF
 }
 
 /* The IP of the Adactus/Mobilize server */
@@ -1040,12 +1075,13 @@ function read_user_input()
     echo ""
     echo "Select 1-7 and press ENTER"
     echo ""
-    echo -n "  $PROFILE_ALL_IN_ONE - The full stack on one host. "
-    echo "Suitable for development and"
-    echo "      test environments. This profile will install caching server, "
-    echo "      ECE, assembly host, database & Widget Framework."
-    echo -n "  $PROFILE_EDITORIAL_SERVER - Editorial (publication) server "
-    echo "(ECE, assembly host)."
+    echo "  $PROFILE_ALL_IN_ONE - All in one, the full stack on one host. "
+    echo "      Suitable for development and test environments."
+    echo "      It will install caching server, ECE, assembly host, database &"
+    echo "      Widget Framework as well as sett up a new publication."
+    echo "  $PROFILE_EDITORIAL_SERVER - Editorial (publication) server."
+    echo "      This will install ECE, an assembly host & as well as "
+    echo "      creating and set up a new publication."
     echo -n "  $PROFILE_PRESENTATION_SERVER - Presentation server "
     echo "(ECE, memcached)."
     echo "  $PROFILE_DB_SERVER - Database server."
@@ -1054,9 +1090,11 @@ function read_user_input()
     echo "  $PROFILE_RMI_HUB - RMI hub."
     echo -n "  $PROFILE_SEARCH_SERVER - Standalone search instance "
     echo "(solr + indexer-webapp)."
-    echo -n "  $PROFILE_WIDGET_FRAMEWORK - Install Widget Framework."
-    echo " This will also set up a WF based "
-    echo "      publication for you (repo.escenic.com user/pass required)."
+    echo "  $PROFILE_WIDGET_FRAMEWORK - Install the Widget Framework."
+    echo "      (You need user/pass for repo.escenic.com for this)."
+    echo "  $PROFILE_CREATE_PUBLICATION - Create a new publication."
+    echo "      This profile will create new publication based on WF"
+    echo "      (if available) or ECE/clean-demo."
     echo ""
     echo -n "Your choice [1]> "
     read install_profile_number
@@ -1110,9 +1148,11 @@ function common_pre_install()
     fi
 
     make_dir $download_dir
+    set_correct_permissions
     stop_conflicting_processes
     install_common_os_packages
     set_up_ece_scripts
+    set_up_user_enviornment
 }
 
 function assert_pre_prequesite()
@@ -1254,7 +1294,6 @@ function install_ece_instance()
     check_for_required_downloads
 
     set_up_engine_and_plugins
-    set_up_user_enviornment
     set_up_assembly_tool
     set_up_basic_nursery_configuration
     set_up_instance_specific_nursery_configuration
@@ -1281,14 +1320,55 @@ function install_presentation_server()
     install_ece_instance "web1" 1
 }
 
-function assemble_deploy_and_start_type()
+function assemble_deploy_and_restart_type()
 {
     print "Assembling, deploying & starting $instance_name ..."
 
     # TODO set type
     type=engine
-    ece_command="ece -i $instance_name -t $type assemble deploy start"
+    ece_command="ece -i $instance_name -t $type clean assemble deploy restart"
     su - $ece_user -c "$ece_command" 1>>$log 2>>$log
+}
+
+function ensure_that_instance_is_running()
+{
+    ece_command="ece -i $1 -t $type status"
+    if [ $(su - $ece_user -c "$ece_command" | grep UP | wc -l) -lt 1 ]; then
+        ece_command="ece -i $1 -t $type start"
+        su - $ece_user -c "$ece_command" 1>>$log 2>>$log
+        # TODO improve this by adding a timed while loop
+        sleep 30
+    fi
+}
+
+function create_publication()
+{
+    if [ ! -e /opt/escenic/engine -o \
+        ! -e /opt/escenic/assemblytool ]; then
+        print "Please install ECE and an assembly environment before"
+        print "running this installation profile again."
+        exit 1
+    fi
+
+    print "Getting ready to create a new publiation ..."
+    create_publication_definition_and_war
+
+    # TODO make educated guesses about the available instances on
+    # $HOSTNAME by looking in /etc/escenic/ece-*.conf
+    
+    default_instance=dev1
+    print "Which ECE instance do you wish to use to create it?"
+    echo -n "Your choice [$default_instance]> "
+    read instance_name
+
+    if [ -z "$instance_name" ]; then
+        instance_name=$default_instance
+    fi
+
+    type=engine
+    ensure_that_instance_is_running $instance_name
+    create_publication_in_db $publication_war
+    assemble_deploy_and_restart_type
 }
 
 function install_editorial_server()
@@ -1296,10 +1376,10 @@ function install_editorial_server()
     print "Installing an editorial server on $HOSTNAME ..."
 
     install_ece_instance "editor1" 0
-
-    # create_publication
-
-    assemble_deploy_and_start_type
+    type=engine
+    ece_command="ece -i $instance_name -t $type assemble deploy restart"
+    su - $ece_user -c "$ece_command" 1>>$log 2>>$log
+    create_publication
 }
 
 function install_rmi_hub()
@@ -1428,7 +1508,7 @@ EOF
         >> $dir/SearchEngine.properties
 
     set_up_solr
-    assemble_deploy_and_start_type
+    assemble_deploy_and_restart_type
 }
 
 # useful for development and test environments.
@@ -1442,12 +1522,7 @@ function install_all_in_one_environment()
     set_up_solr
 
     install_widget_framework
-
-    create_publication_definition_and_war
-    # type=engine
-    assemble_deploy_and_start_type
-    create_publication_in_db $publication_war
-    
+    create_publication
 }
 
 function common_post_install()
@@ -1481,6 +1556,9 @@ case $install_profile_number in
     ;;
     $PROFILE_WIDGET_FRAMEWORK)
     install_widget_framework
+    ;;
+    $PROFILE_CREATE_PUBLICATION)
+    create_publication
     ;;
     default)
         print "You must select 1-7"
