@@ -872,7 +872,7 @@ function clean_up()
     tmp_dir_prefix="`basename $0`-"
     if [ `ls  $tmp_dir | grep $tmp_dir_prefix | wc -l` -gt 0 ]; then
         print "Cleaning up generated files in $tmp_dir ..." 
-        rm -r $tmp_dir/$tmp_dir_prefix-[0-9]* \
+        rm -rf $tmp_dir/$tmp_dir_prefix-[0-9]* \
             1>>$log_file \
             2>>$log_file
     fi
@@ -880,7 +880,7 @@ function clean_up()
     if [ -e /var/cache/escenic/ -a \
         `ls  /var/cache/escenic | grep ece- | wc -l` -gt 0 ]; then
         print "Cleaning up "`basename $0`" files in /var/cache/escenic/ ..." 
-        rm -r /var/cache/escenic/* \
+        rm -rf /var/cache/escenic/* \
             1>>$log_file \
             2>>$log_file
     fi
