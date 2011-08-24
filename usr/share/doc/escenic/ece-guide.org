@@ -1,0 +1,43 @@
+Guide for the ece Script
+
+* TAB completion
+The ece script offers TAB completion, given that your version of BASH
+supports this and that you have enabled it (some distributions hasn't
+turned on BASH completion per default).
+
+** Completing ece commands
+You will find yourself using this regularly, both for speed, but also
+to remember all the different options and their correct wording:
+
+#+BEGIN_SRC sh
+$ ece TAB TAB
+applog      deploy      log         start       threaddump  
+assemble    help        outlog      status      update      
+clean       kill        restart     stop        versions 
+#+END_SRC
+
+The commands are all described in detail in "ece help"
+
+** Completing types of servers the ece scripts can operate on
+#+BEGIN_SRC sh
+$ ece -t TAB TAB
+analysis  engine    rmi-hub   search 
+#+END_SRC
+
+** Completing the publication resources available
+The ece script can update the publication resources for a given
+publication.
+
+To help selecting the correct publication resource, you can make ece
+list and complete the available resource names:
+
+#+BEGIN_SRC sh
+$ ece -p mypub -r TAB TAB
+content-type   image-version  layout-group   
+feature        layout         menu
+#+END_SRC
+
+* Getting an overview of all available options
+#+BEGIN_SRC sh
+$ ece help
+#+END_SRC
