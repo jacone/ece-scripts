@@ -1,0 +1,81 @@
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: small;
+  #width : 600;
+  margin: 70px 70px 0px 50px;
+}
+
+h1, h2 {
+  color: #e88424;
+}
+
+h1 {
+  font-size: 150%;
+}
+
+h2 {
+  font-size: 120%;
+  margin-top: 3em;
+  margin-bottom: 0em;
+}
+
+h3, h4, h5, h6 {
+  font-weight: bold;
+  margin-top: 2em;
+  margin-bottom: 0.2em;
+}
+
+h3, h4, h5 {
+  font-size: 110%;
+}
+
+h6 {
+  font-size: 80%;
+}
+
+a {
+  color: #333;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+p, dl {
+  font-size: 95%;
+}
+
+p {
+  margin-top: 0em;
+  margin-bottom: 0.6em;
+}
+
+pre.programlisting {
+  margin-top: 0em;
+  background-color: #ffddaa;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+em {
+  font-weight: bold;
+  font-style: normal;
+}
+
+em.replaceable {
+  font-weight: normal;
+  font-style: italic;
+}
+
+div.note {
+  background-color: #ffddaa;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
