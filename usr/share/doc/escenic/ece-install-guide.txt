@@ -2,7 +2,7 @@
               ==========================================
 
 Author: Torstein Krause Johansen
-Date: 2011-08-24 17:55:32 CST
+Date: 2011-08-24 18:58:19 CST
 
 
 Table of Contents
@@ -21,8 +21,9 @@ Table of Contents
     5.5 4 - Database server 
     5.6 5 - Cache server 
     5.7 8 - Install Widget Framework 
-6 Uninstalling everything that the ece-install set up 
-    6.1 9 - Create Publication 
+    5.8 9 - Create Publication 
+6 Full Automatic Install (FAI) 
+7 Uninstalling everything that the ece-install set up 
 
 
 1 Supported operating systems 
@@ -46,7 +47,7 @@ will tell you which ones it cannot find and tell you to install these,
 so you can simply run it to find out which ones you need.
 
 You may also look inside the ece-install script for all calls to the
-'assert_pre_prequesite' method and you'll get a list of the binaries
+'assert\_pre\_prequesite' method and you'll get a list of the binaries
 ece-install assumes are present.
 
 2 A note on running ece-install on non-GNU/Linux systems 
@@ -122,7 +123,7 @@ want to install:
 - Sun Java 6
 - Apache Tomcat application server:
   * Compression of textual content (previously, this was typically set
-    up with Apache and its mod_deflate module).
+    up with Apache and its mod\_deflate module).
   * pooling set up tweaked for high read/write performance.
   * proper logging configuration directing solr messages to its own log.
   * routing information in the cookies
@@ -133,7 +134,7 @@ want to install:
 - Database driver
 
 - Compression of content (what was previously accomplished with
-  Apache/mod_deflate) 
+  Apache/mod\_deflate) 
 
 5.2 1 - Full stack on one host 
 ===============================
@@ -225,19 +226,7 @@ complain:
 
 
 
-6 Uninstalling everything that the ece-install set up 
-------------------------------------------------------
-WARNING: this is potentially dangerous as some of these components may
-be used by other pieces of software you have running on your
-host. However, this may be useful if you're installing a clean
-environment and want to e.g. undo your previous install to install a
-different profile.
-
-Open the ece-install script and look for the "un_install_ece"
-function, it has copy and pastable commands for undoing most/all
-things set up by the script.
-
-6.1 9 - Create Publication 
+5.8 9 - Create Publication 
 ===========================
 This profile will create a publication for you, only asking you the
 name of the publication and which ECE instance to use for its
@@ -246,3 +235,61 @@ creation.
 This installation profile will base the publication on the Widget
 Framework if its present on the system, if not, ECE's clean demo WAR
 is used as a basis.  
+
+6 Full Automatic Install (FAI) 
+-------------------------------
+The ece-install script has support for doing a full automatic install
+(FAI).
+
+The ece-install script understands for the following settings in the
+$HOME/.ece-install.conf file of the root user:
+
+  Parameter                     Default   Description                                    
+ -----------------------------+---------+-----------------------------------------------
+  fai\_cache\_install                 0   Install cache server profile                   
+  fai\_db\_install                    0   Install db profile                             
+  fai\_editor\_install                0   Install the editorial profile                  
+  fai\_editor\_name             editor1   Name of the editor instance                    
+  fai\_editor\_port                8080   HTTP port of the editor instance               
+  fai\_editor\_shutdown            8005   Shutdown port of the editor instance           
+  fai\_enabled                        0   Whether or not to run ece-install in FAI mode  
+  fai\_presentation\_install          0   Install the presentation server profile        
+  fai\_presentation\_name          web1   Name of the presentation server instance       
+  fai\_presentation\_port          8080   HTTP port of the presentation server instance  
+  fai\_presentation\_shutdown      8005   Shutdown port of the presentation instance     
+  fai\_publication\_create            0   Create a new publication                       
+  fai\_publication\_name          mypub   Name of the publication                        
+  fai\_rmi\_install                   0   Install RMI hub profile                        
+  fai\_search\_name             search1   Name of the search instance                    
+  fai\_search\_port                8080   HTTP port of the search instance               
+  fai\_search\_shutdown            8005   Shutdown port of the search instance           
+  fai\_wf\_install                    0   Install Widget Framework profile               
+
+As you've probably have guessed, 0 means "false" and 1 means "true" :-)
+
+To automatically install an editorial server and create a publication
+called "jollygood", the minimal configuration in .ece-install.conf
+would be:
+
+
+
+  fai_enabled=1
+  fai_editor_install=1
+  fai_publication_create=1
+  fai_publication_name=jollygood
+
+
+
+
+7 Uninstalling everything that the ece-install set up 
+------------------------------------------------------
+WARNING: this is potentially dangerous as some of these components may
+be used by other pieces of software you have running on your
+host. However, this may be useful if you're installing a clean
+environment and want to e.g. undo your previous install to install a
+different profile.
+
+Open the ece-install script and look for the "un\_install\_ece"
+function, it has copy and pastable commands for undoing most/all
+things set up by the script.
+

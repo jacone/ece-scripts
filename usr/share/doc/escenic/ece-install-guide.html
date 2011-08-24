@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-08-24 17:55:34 CST"/>
+<meta name="generated" content="2011-08-24 18:58:21 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -152,13 +152,11 @@ lang="en" xml:lang="en">
 <li><a href="#sec-5-5">5.5 4 - Database server </a></li>
 <li><a href="#sec-5-6">5.6 5 - Cache server </a></li>
 <li><a href="#sec-5-7">5.7 8 - Install Widget Framework </a></li>
+<li><a href="#sec-5-8">5.8 9 - Create Publication </a></li>
 </ul>
 </li>
-<li><a href="#sec-6">6 Uninstalling everything that the ece-install set up </a>
-<ul>
-<li><a href="#sec-6-1">6.1 9 - Create Publication </a></li>
-</ul>
-</li>
+<li><a href="#sec-6">6 Full Automatic Install (FAI) </a></li>
+<li><a href="#sec-7">7 Uninstalling everything that the ece-install set up </a></li>
 </ul>
 </div>
 </div>
@@ -198,7 +196,7 @@ so you can simply run it to find out which ones you need.
 </p>
 <p>
 You may also look inside the ece-install script for all calls to the
-'assert<sub>pre</sub><sub>prequesite'</sub> method and you'll get a list of the binaries
+'assert_pre_prequesite' method and you'll get a list of the binaries
 ece-install assumes are present.
 </p>
 </div>
@@ -324,7 +322,7 @@ Select 1-7 and press ENTER
 <li>Apache Tomcat application server:
 <ul>
 <li>Compression of textual content (previously, this was typically set
-    up with Apache and its mod<sub>deflate</sub> module).
+    up with Apache and its mod_deflate module).
 </li>
 <li>pooling set up tweaked for high read/write performance.
 </li>
@@ -346,7 +344,7 @@ Select 1-7 and press ENTER
 
 </li>
 <li>Compression of content (what was previously accomplished with
-  Apache/mod<sub>deflate</sub>) 
+  Apache/mod_deflate) 
 </li>
 </ul>
 
@@ -508,31 +506,12 @@ complain:
 
 
 </div>
-</div>
 
 </div>
 
-<div id="outline-container-6" class="outline-2">
-<h2 id="sec-6"><span class="section-number-2">6</span> Uninstalling everything that the ece-install set up </h2>
-<div class="outline-text-2" id="text-6">
-
-<p>WARNING: this is potentially dangerous as some of these components may
-be used by other pieces of software you have running on your
-host. However, this may be useful if you're installing a clean
-environment and want to e.g. undo your previous install to install a
-different profile.
-</p>
-<p>
-Open the ece-install script and look for the "un<sub>install</sub><sub>ece</sub>"
-function, it has copy and pastable commands for undoing most/all
-things set up by the script.
-</p>
-
-</div>
-
-<div id="outline-container-6-1" class="outline-3">
-<h3 id="sec-6-1"><span class="section-number-3">6.1</span> 9 - Create Publication </h3>
-<div class="outline-text-3" id="text-6-1">
+<div id="outline-container-5-8" class="outline-3">
+<h3 id="sec-5-8"><span class="section-number-3">5.8</span> 9 - Create Publication </h3>
+<div class="outline-text-3" id="text-5-8">
 
 <p>This profile will create a publication for you, only asking you the
 name of the publication and which ECE instance to use for its
@@ -544,9 +523,94 @@ Framework if its present on the system, if not, ECE's clean demo WAR
 is used as a basis.  
 </p></div>
 </div>
+
+</div>
+
+<div id="outline-container-6" class="outline-2">
+<h2 id="sec-6"><span class="section-number-2">6</span> Full Automatic Install (FAI) </h2>
+<div class="outline-text-2" id="text-6">
+
+<p>The ece-install script has support for doing a full automatic install
+(FAI).
+</p>
+<p>
+The ece-install script understands for the following settings in the
+$HOME/.ece-install.conf file of the root user:
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<caption></caption>
+<colgroup><col class="left" /><col class="right" /><col class="left" />
+</colgroup>
+<thead>
+<tr><th scope="col" class="left">Parameter</th><th scope="col" class="right">Default</th><th scope="col" class="left">Description</th></tr>
+</thead>
+<tbody>
+<tr><td class="left">fai_cache_install</td><td class="right">0</td><td class="left">Install cache server profile</td></tr>
+<tr><td class="left">fai_db_install</td><td class="right">0</td><td class="left">Install db profile</td></tr>
+<tr><td class="left">fai_editor_install</td><td class="right">0</td><td class="left">Install the editorial profile</td></tr>
+<tr><td class="left">fai_editor_name</td><td class="right">editor1</td><td class="left">Name of the editor instance</td></tr>
+<tr><td class="left">fai_editor_port</td><td class="right">8080</td><td class="left">HTTP port of the editor instance</td></tr>
+<tr><td class="left">fai_editor_shutdown</td><td class="right">8005</td><td class="left">Shutdown port of the editor instance</td></tr>
+<tr><td class="left">fai_enabled</td><td class="right">0</td><td class="left">Whether or not to run ece-install in FAI mode</td></tr>
+<tr><td class="left">fai_presentation_install</td><td class="right">0</td><td class="left">Install the presentation server profile</td></tr>
+<tr><td class="left">fai_presentation_name</td><td class="right">web1</td><td class="left">Name of the presentation server instance</td></tr>
+<tr><td class="left">fai_presentation_port</td><td class="right">8080</td><td class="left">HTTP port of the presentation server instance</td></tr>
+<tr><td class="left">fai_presentation_shutdown</td><td class="right">8005</td><td class="left">Shutdown port of the presentation instance</td></tr>
+<tr><td class="left">fai_publication_create</td><td class="right">0</td><td class="left">Create a new publication</td></tr>
+<tr><td class="left">fai_publication_name</td><td class="right">mypub</td><td class="left">Name of the publication</td></tr>
+<tr><td class="left">fai_rmi_install</td><td class="right">0</td><td class="left">Install RMI hub profile</td></tr>
+<tr><td class="left">fai_search_name</td><td class="right">search1</td><td class="left">Name of the search instance</td></tr>
+<tr><td class="left">fai_search_port</td><td class="right">8080</td><td class="left">HTTP port of the search instance</td></tr>
+<tr><td class="left">fai_search_shutdown</td><td class="right">8005</td><td class="left">Shutdown port of the search instance</td></tr>
+<tr><td class="left">fai_wf_install</td><td class="right">0</td><td class="left">Install Widget Framework profile</td></tr>
+</tbody>
+</table>
+
+
+<p>
+As you've probably have guessed, 0 means "false" and 1 means "true" :-)
+</p>
+<p>
+To automatically install an editorial server and create a publication
+called "jollygood", the minimal configuration in .ece-install.conf
+would be:
+</p>
+
+
+
+<pre class="example">fai_enabled=1
+fai_editor_install=1
+fai_publication_create=1
+fai_publication_name=jollygood
+
+</pre>
+
+
+
+
+</div>
+
+</div>
+
+<div id="outline-container-7" class="outline-2">
+<h2 id="sec-7"><span class="section-number-2">7</span> Uninstalling everything that the ece-install set up </h2>
+<div class="outline-text-2" id="text-7">
+
+<p>WARNING: this is potentially dangerous as some of these components may
+be used by other pieces of software you have running on your
+host. However, this may be useful if you're installing a clean
+environment and want to e.g. undo your previous install to install a
+different profile.
+</p>
+<p>
+Open the ece-install script and look for the "un_install_ece"
+function, it has copy and pastable commands for undoing most/all
+things set up by the script.
+</p>
+</div>
 </div>
 <div id="postamble">
-<p class="date">Date: 2011-08-24 17:55:34 CST</p>
+<p class="date">Date: 2011-08-24 18:58:21 CST</p>
 <p class="author">Author: Torstein Krause Johansen</p>
 <p class="creator">Org version 7.6 with Emacs version 23</p>
 <a href="http://validator.w3.org/check?uri=referer">Validate XHTML 1.0</a>
