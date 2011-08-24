@@ -284,8 +284,26 @@ function set_up_ece_scripts()
     cp -r ece-scripts/usr/* /usr/
     cp -r ece-scripts/etc/* /etc/
 
-    # add init.d to the default runlevels, support at least
-    # RedHat/chekcconfig and Debian/update-rc.d
+    # no need to add init.d scripts to the runlevel(s) for these
+    # profiles
+    if [ $install_profile_number -eq $PROFILE_WIDGET_FRAMEWORK -o \
+         $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
+         $install_profile_number -eq $PROFILE_DB_SERVER -o \
+         $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
+        return
+    fi
+
+    if [ $on_debian_or_derivative ]; then
+        print "Adding the ece init.d script to the default run levels..."
+        update-rc.d ece defaults \
+            1>>$log 2>>$log
+    else
+        print "You remember to add /etc/intit.d/ece to the desired runlevels" 
+        # TODO add init.d to the default runlevels, for other
+        # distributions too:
+        # - RedHat/chekcconfig
+        # - Gentoo: rc-update add ece default
+    fi
 }
 
 function set_up_ecedb()
@@ -717,7 +735,7 @@ function set_correct_permissions()
         fi
     done
     
-    if [ -e $tomcat_base ]; then
+    if [ -d "$tomcat_base" ]; then
         chown -R ${ece_user}:${ece_group} $tomcat_base \
         1>>$log 2>>$log
     fi
@@ -986,6 +1004,7 @@ EOF
 acl adactus {
   "203.33.232.216";
 }
+
 EOF
 
     for el in $backend_servers; do
@@ -997,6 +1016,7 @@ backend $appserver_host {
   .host = "$appserver_host";
   .port = "$appserver_port";
 }
+
 EOF
     done
 
