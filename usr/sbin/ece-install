@@ -159,7 +159,7 @@ install_packages_if_missing()
             # we don't need to grep away "No packages found matching
             # ..." since this message from dpkg is written to standard
             # error.
-            if [ $(dpkg -l $el | grep ^ii | wc -l) -lt 1 ]; then
+            if [ $(dpkg -l $el 2>/dev/null | grep ^ii | wc -l) -lt 1 ]; then
                 some_are_missing=1
             fi
         done
@@ -1538,9 +1538,9 @@ function get_boolean_conf_value()
     value=$(get_conf_value $1)
     if [ -z "$value" ]; then
         echo 0
-    elif [ $value = "" ]; then
+    elif [ "$value" = "" ]; then
         echo 0
-    elif [ $value -eq 1 ]; then
+    elif [ "$value" -eq 1 ]; then
         echo 1
     else
         echo 0
