@@ -2,7 +2,7 @@
               ==========================================
 
 Author: Torstein Krause Johansen
-Date: 2011-08-25 12:40:38 CST
+Date: 2011-08-25 14:11:23 CST
 
 
 Table of Contents
@@ -25,7 +25,9 @@ Table of Contents
 6 Full Automatic Install (FAI) 
 7 Running more than one installation process 
 8 Re-running ece-install 
-9 Uninstalling everything that the ece-install set up 
+9 Overview of file paths used by the ece-install script 
+10 Uninstalling everything that the ece-install set up 
+11 Example Output 
 
 
 1 Supported operating systems 
@@ -321,8 +323,44 @@ following variables:
 - wf\_download\_list
 - tomcat\_download
 
-9 Uninstalling everything that the ece-install set up 
-------------------------------------------------------
+9 Overview of file paths used by the ece-install script 
+--------------------------------------------------------
+There are of course other paths involved when setting up your system,
+but these should be the most interesting ones.
+
+  Path                                          Explanation                                                       
+ ---------------------------------------------+------------------------------------------------------------------
+  /etc/apt/sources.list.d/escenic.list          3rd party APT repositories added by ece-install *)                
+  /etc/default/ece                              The configuration file for the ece init.d script                  
+  /etc/escenic/ece-<instance>.conf              Instance specific settings for /usr/bin/ece                       
+  /etc/escenic/ece.conf                         Common ece.conf file for /usr/bin/ece                             
+  /etc/escenic/engine/common                    Common Nursery configuration layer                                
+  /etc/escenic/engine/common/security           Common security configuration for all ECE instances.              
+  /etc/escenic/engine/common/trace.properties   Log4j configuration, produces instance specific log files.        
+  /etc/escenic/engine/instance/<instance>       Instance specific Nursery configuration                           
+  /etc/escenic/solr                             ECE specific Solr configuration                                   
+  /etc/init.d/mysql[d]                          For starting and stopping MySQL/Percona                           
+  /etc/init.d/varnish                           For starting and stopping Varnish                                 
+  /etc/intit.d/ece                              The init.d script managing _all_ the ECE instances on your host.  
+  /etc/varnish/default.vcl                      The Varnish configuration                                         
+  /opt/escenic                                  All ECE components can be found here                              
+  /opt/escenic/assemblytool                     The assembly tool                                                 
+  /opt/escenic/assemblytool/plugins             Contains symlinks to all plugins in /opt/escenic                  
+  /opt/escenic/engine                           Symlink pointing to the current ECE                               
+  /opt/tomcat                                   Symlink pointing to the install Apache Tomcat (catalina\_home)    
+  /opt/tomcat-<instance>                        Instance specific Tomcat files (catalina\_base)                   
+  /usr/bin/ece                                  Script for operating all ECE instances + RMI hub and EAE          
+  /usr/sbin/drop-and-create-ecedb               DB script used by the ece-install script                          
+  /usr/sbin/ece-install                         The installation script described in this guide                   
+  /var/log/escenic/<type>-<instance>.log        The instance's log4j  log                                         
+  /var/log/escenic/<type>-<instance>.out        The instance system out log                                       
+  /var/log/escenic/solr.<date>.log              The Solr log (not in standard out!)                               
+  /var/run/escenic/<type>-<instance>.pid        The instance's  PID file                                          
+
+*) Applies only to Debian based systems.
+
+10 Uninstalling everything that the ece-install set up 
+-------------------------------------------------------
 WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
 host. However, this may be useful if you're installing a clean
@@ -332,4 +370,100 @@ different profile.
 Open the ece-install script and look for the "un\_install\_ece"
 function, it has copy and pastable commands for undoing most/all
 things set up by the script.
+
+
+11 Example Output 
+------------------
+Below is an example output of running ece-install, installing the
+all-in-one profile.
+
+
+
+  Hi, which server profile do you wish to install?
+  
+  Select 1-7 and press ENTER
+  
+    1 - All in one, the full stack on one host. 
+        Suitable for development and test environments.
+        It will install caching server, ECE, assembly host, database &
+        Widget Framework as well as set up a new publication.
+    2 - Editorial (publication) server.
+        This will install ECE, an assembly host & as well as 
+        creating and set up a new publication.
+    3 - Presentation server (ECE, memcached).
+    4 - Database server.
+    5 - Cache server (cache & web server).
+    6 - RMI hub.
+    7 - Standalone search instance (solr + indexer-webapp).
+    8 - Install the Widget Framework.
+        (You need user/pass for repo.escenic.com for this).
+    9 - Create a new publication.
+        This profile will create new publication based on WF
+        (if available) or ECE/clean-demo.
+  
+  Your choice [1]> 
+  [ece-install] I'm logging to /tmp/ece-install.log
+  [ece-install] Setting correct permissions on all ECE related directories ...
+  [ece-install] Stopping conflicting processes ...
+  [ece-install] Installing 3rd party packages needed by ece-install ...
+  [ece-install] Setting up the ece UNIX scripts ...
+  [ece-install] Adding the ece init.d script to the default run levels...
+  [ece-install] Setting up the escenic user's UNIX environment ...
+  [ece-install] Installing an all-in-one environment on ubiquitous ...
+  [ece-install] Installing the database server on ubiquitous ...
+  [ece-install] Installing the Percona database ...
+  [ece-install] Downloading Escenic software from technet.escenic.com ...
+  [ece-install] Setting up the Escenic Content Engine & its plugins ...
+  [ece-install] Setting up the ECE database schema ...
+  [ece-install] Installing 3rd party packages needed by ECE ...
+  [ece-install] What do you want to call this ECE instance?
+  [ece-install] Press ENTER to accept the default instance name, dev1.
+  Your choice [dev1]> 
+  [ece-install] Setting up the Assembly Tool ...
+  [ece-install] Setting up the basic Nursery configuration ...
+  [ece-install] Setting up the application server ...
+  [ece-install] On which ports do you wish to run the app server on?
+  [ece-install] Press ENTER to accept the default (port 8080, shutdown port 8005)
+  [ece-install] Or enter: <port> <shutdown port>, e.g.: '8180 8105'
+  Your choice [8080 8005]> 
+  [ece-install] Another question: Where does the database run?
+  [ece-install] Press ENTER to accept the default (ubiquitous:3306)
+  [ece-install] Or enter: <host>:<port>, e.g.: 'db1:3306'
+  Your choice [ubiquitous:3306]> 
+  [ece-install] Last question: Where does the search instance run?
+  [ece-install] Press ENTER to accept the default (ubiquitous:8080)
+  [ece-install] If you're in doubt, just press ENTER :-)
+  [ece-install] Or enter: <host>:<port>, e.g.: 'db1:3306'
+  Your choice [ubiquitous:8080]> 
+  [ece-install] Setting up proper log4j & Java logging configuration ...
+  [ece-install] Setting correct permissions on all ECE related directories ...
+  [ece-install] Assembling, deploying & starting dev1 ...
+  [ece-install] Installing a caching server on ubiquitous ...
+  [ece-install] You must now list your backend servers.
+  [ece-install] Seperate the entries with a space. e.g.: app1:8080 app2:8080.
+  [ece-install] Press ENTER to accept the default: ubiquitous:8080
+  Your choice [ubiquitous:8080]> 
+  [ece-install] Setting up Varnish to match your environment ...
+  [ece-install] Setting up solr ...
+  [ece-install] Creating a Maven settings file: /root/.m2/settings.xml ...
+  [ece-install] Downloading Widget Framework from technet.escenic.com ...
+  [ece-install] Installing Widget Framework into your local Maven repository ...
+  [ece-install] Getting ready to create a new publiation ...
+  [ece-install] What name do you wish to give your publication?
+  [ece-install] Press ENTER to accept mypub
+  Your choice [mypub]> bad
+  [ece-install] Setting up the bad publication ...
+  [ece-install] Basing bad.war on the Widget Framework Demo ...
+  [ece-install] Which ECE instance do you wish to use to create it?
+  Your choice [dev1]> 
+  [ece-install] Creating publication bad using dev1 ...
+  [ece-install] Assembling, deploying & starting dev1 ...
+  [ece-install] The basic setup of dev1 is now completed!
+  [ece-install] It took 0d 0h 17m 43s
+
+
+
+
+
+[1] DEFINITION NOT FOUND: 1
 

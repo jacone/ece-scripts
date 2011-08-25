@@ -36,4 +36,48 @@ feature        layout         menu
 * Getting an overview of all available options
 #+BEGIN_SRC sh
 $ ece help
+Usage: /home/torstein/bin/ece [-t <type>] [-i <instance>] <command>
+
+DESCRIPTION
+ -t --type <type>
+      The following types are available:
+      engine  -  The Escenic Content Engine, this is the default
+                 and is the assumed type if none is specified.
+      search  -  A standalone search indexer and solr instance
+      rmi-hub -  The RMI hub responsible for the internal 
+                 communication between the ECE instances.
+      analysis - The Escenic Analysis Engine also knows as 'Stats'
+
+ -i --instance <instance>
+      The type instance, such as editor1, web1 or search1
+
+ -p --publication <publication>
+      Needed only for updating publication resources
+
+ -r --resource <resource>
+      Used for updating publication resources.
+      Must be one of: content-type, feature, layout, layout-group
+                      image-version, menu
+
+ -v --verbose
+      Prints out debug statements, useful for debugging.
+
+The following commands are available:
+   applog     the type's app server log
+   assemble   runs the Assembly Tool *)
+   clean      removes temporary files created by /home/torstein/bin/ece *)
+   deploy     deploys the assembled EAR *)
+   help       prints this help screen
+   kill       uses force to stop the type
+   log        the type's Log4J log
+   outlog     the [ece#engine] script log (system out log)
+   restart    restarts the type
+   start      starts the type
+   status     checks if the type is running
+   stop       stops the type
+   threaddump write a thread dump to standard out (system out log)
+   update     update publication resources
+   versions   lists the ECE component versions
+
+*) only applicable if type is 'engine'
 #+END_SRC
