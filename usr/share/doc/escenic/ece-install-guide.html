@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-08-25 14:11:21 CST"/>
+<meta name="generated" content="2011-08-25 22:02:19 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -630,8 +630,12 @@ $HOME/.ece-install.conf file of the root user:
 <tr><th scope="col" class="left">Parameter</th><th scope="col" class="right">Default</th><th scope="col" class="left">Description</th></tr>
 </thead>
 <tbody>
+<tr><td class="left">fai_all_install</td><td class="right">0</td><td class="left">Install all components on your server.</td></tr>
 <tr><td class="left">fai_cache_install</td><td class="right">0</td><td class="left">Install cache server profile</td></tr>
+<tr><td class="left">fai_cache_backends</td><td class="right">${HOSTNAME}:8080</td><td class="left">Space separated, e.g. "app1:8080 app2:8080"</td></tr>
 <tr><td class="left">fai_db_install</td><td class="right">0</td><td class="left">Install db profile</td></tr>
+<tr><td class="left">fai_db_host</td><td class="right">$HOSTNAME</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
+<tr><td class="left">fai_db_port</td><td class="right">3306</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
 <tr><td class="left">fai_editor_install</td><td class="right">0</td><td class="left">Install the editorial profile</td></tr>
 <tr><td class="left">fai_editor_name</td><td class="right">editor1</td><td class="left">Name of the editor instance</td></tr>
 <tr><td class="left">fai_editor_port</td><td class="right">8080</td><td class="left">HTTP port of the editor instance</td></tr>
@@ -643,6 +647,7 @@ $HOME/.ece-install.conf file of the root user:
 <tr><td class="left">fai_presentation_shutdown</td><td class="right">8005</td><td class="left">Shutdown port of the presentation instance</td></tr>
 <tr><td class="left">fai_publication_create</td><td class="right">0</td><td class="left">Create a new publication</td></tr>
 <tr><td class="left">fai_publication_name</td><td class="right">mypub</td><td class="left">Name of the publication</td></tr>
+<tr><td class="left">fai_publication_use<sub>instance</sub></td><td class="right">dev1</td><td class="left">Name of local instance to use for creation</td></tr>
 <tr><td class="left">fai_rmi_install</td><td class="right">0</td><td class="left">Install RMI hub profile</td></tr>
 <tr><td class="left">fai_search_name</td><td class="right">search1</td><td class="left">Name of the search instance</td></tr>
 <tr><td class="left">fai_search_port</td><td class="right">8080</td><td class="left">HTTP port of the search instance</td></tr>
@@ -667,6 +672,19 @@ would be:
 fai_editor_install=1
 fai_publication_create=1
 fai_publication_name=jollygood
+
+</pre>
+
+
+
+
+<p>
+When FAI is enabled, ece-install will report:
+</p>
+
+
+<pre class="example">[ece-install] Full Automatic Install (FAI) enabled.
+[ece-install] All user input will be read from /root/.ece-install.conf
 
 </pre>
 
@@ -819,112 +837,16 @@ things set up by the script.
 <p>Below is an example output of running ece-install, installing the
 all-in-one profile.
 </p>
-
-
-
-<pre class="example">Hi, which server profile do you wish to install?
-
-Select 1-7 and press ENTER
-
-  1 - All in one, the full stack on one host. 
-      Suitable for development and test environments.
-      It will install caching server, ECE, assembly host, database &amp;
-      Widget Framework as well as set up a new publication.
-  2 - Editorial (publication) server.
-      This will install ECE, an assembly host &amp; as well as 
-      creating and set up a new publication.
-  3 - Presentation server (ECE, memcached).
-  4 - Database server.
-  5 - Cache server (cache &amp; web server).
-  6 - RMI hub.
-  7 - Standalone search instance (solr + indexer-webapp).
-  8 - Install the Widget Framework.
-      (You need user/pass for repo.escenic.com for this).
-  9 - Create a new publication.
-      This profile will create new publication based on WF
-      (if available) or ECE/clean-demo.
-
-Your choice [1]&gt; 
-[ece-install] I'm logging to /tmp/ece-install.log
-[ece-install] Setting correct permissions on all ECE related directories ...
-[ece-install] Stopping conflicting processes ...
-[ece-install] Installing 3rd party packages needed by ece-install ...
-[ece-install] Setting up the ece UNIX scripts ...
-[ece-install] Adding the ece init.d script to the default run levels...
-[ece-install] Setting up the escenic user's UNIX environment ...
-[ece-install] Installing an all-in-one environment on ubiquitous ...
-[ece-install] Installing the database server on ubiquitous ...
-[ece-install] Installing the Percona database ...
-[ece-install] Downloading Escenic software from technet.escenic.com ...
-[ece-install] Setting up the Escenic Content Engine &amp; its plugins ...
-[ece-install] Setting up the ECE database schema ...
-[ece-install] Installing 3rd party packages needed by ECE ...
-[ece-install] What do you want to call this ECE instance?
-[ece-install] Press ENTER to accept the default instance name, dev1.
-Your choice [dev1]&gt; 
-[ece-install] Setting up the Assembly Tool ...
-[ece-install] Setting up the basic Nursery configuration ...
-[ece-install] Setting up the application server ...
-[ece-install] On which ports do you wish to run the app server on?
-[ece-install] Press ENTER to accept the default (port 8080, shutdown port 8005)
-[ece-install] Or enter: &lt;port&gt; &lt;shutdown port&gt;, e.g.: '8180 8105'
-Your choice [8080 8005]&gt; 
-[ece-install] Another question: Where does the database run?
-[ece-install] Press ENTER to accept the default (ubiquitous:3306)
-[ece-install] Or enter: &lt;host&gt;:&lt;port&gt;, e.g.: 'db1:3306'
-Your choice [ubiquitous:3306]&gt; 
-[ece-install] Last question: Where does the search instance run?
-[ece-install] Press ENTER to accept the default (ubiquitous:8080)
-[ece-install] If you're in doubt, just press ENTER :-)
-[ece-install] Or enter: &lt;host&gt;:&lt;port&gt;, e.g.: 'db1:3306'
-Your choice [ubiquitous:8080]&gt; 
-[ece-install] Setting up proper log4j &amp; Java logging configuration ...
-[ece-install] Setting correct permissions on all ECE related directories ...
-[ece-install] Assembling, deploying &amp; starting dev1 ...
-[ece-install] Installing a caching server on ubiquitous ...
-[ece-install] You must now list your backend servers.
-[ece-install] Seperate the entries with a space. e.g.: app1:8080 app2:8080.
-[ece-install] Press ENTER to accept the default: ubiquitous:8080
-Your choice [ubiquitous:8080]&gt; 
-[ece-install] Setting up Varnish to match your environment ...
-[ece-install] Setting up solr ...
-[ece-install] Creating a Maven settings file: /root/.m2/settings.xml ...
-[ece-install] Downloading Widget Framework from technet.escenic.com ...
-[ece-install] Installing Widget Framework into your local Maven repository ...
-[ece-install] Getting ready to create a new publiation ...
-[ece-install] What name do you wish to give your publication?
-[ece-install] Press ENTER to accept mypub
-Your choice [mypub]&gt; bad
-[ece-install] Setting up the bad publication ...
-[ece-install] Basing bad.war on the Widget Framework Demo ...
-[ece-install] Which ECE instance do you wish to use to create it?
-Your choice [dev1]&gt; 
-[ece-install] Creating publication bad using dev1 ...
-[ece-install] Assembling, deploying &amp; starting dev1 ...
-[ece-install] The basic setup of dev1 is now completed!
-[ece-install] It took 0d 0h 17m 43s
-
-</pre>
-
-
-
-
-
-<div id="footnotes">
-<h2 class="footnotes">Footnotes: </h2>
-<div id="text-footnotes">
-<p class="footnote"><sup><a class="footnum" name="fn.1" href="#fnr.1">1</a></sup> DEFINITION NOT FOUND: 1
+<p>
+CANNOT INCLUDE FILE /tmp/ece-install.out
 </p>
-</div>
-</div>
-
 </div>
 </div>
 <div id="postamble">
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-08-25 14:11:21 CST
+  Date: 2011-08-25 22:02:19 CST
 </p></div>
 </div>
 </body>

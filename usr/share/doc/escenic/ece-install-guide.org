@@ -223,6 +223,12 @@ fai_publication_create=1
 fai_publication_name=jollygood
 #+END_SRC
 
+When FAI is enabled, ece-install will report:
+#+BEGIN_SRC sh
+[ece-install] Full Automatic Install (FAI) enabled.
+[ece-install] All user input will be read from /root/.ece-install.conf
+#+END_SRC
+
 * Running more than one installation process
 If the script believes there's already an ece-intall process running,
 it will abort:
