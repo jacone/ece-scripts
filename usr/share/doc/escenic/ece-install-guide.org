@@ -28,8 +28,17 @@ tools, such as any of the BSDs (including Mac OS X) or Solaris, make
 sure that GNU's tools take precedence in the command PATH offered to
 ece-install.
 
-* You must run the script as root
-If you start the script as a regular user, it will complain:
+* Downloading the ece-install script
+The ece-install script can be downloaded from:
+https://raw.github.com/skybert/ece-scripts/master/usr/sbin/ece-install
+or be downloaded together with the other ece-scripts using git:
+#+BEGIN_SRC sh
+$ git clone git@github.com:skybert/ece-scripts.git
+#+END_SRC
+
+* Running the ece-install script
+You must run the script as the root user.  If you start the script as
+a regular user, it will complain:
 #+BEGIN_SRC sh
 [ece-install] You must be root when running ece-install
 #+END_SRC
@@ -41,16 +50,6 @@ On all other Unix like system, do:
 #+BEGIN_SRC sh
    $ su
 #+END_SRC
-* Running more than one installation process
-If the script believes there's already an ece-intall process running,
-it will abort:
-#+BEGIN_SRC sh
-[ece-install] There's already one ece-install process running. If you believe
-[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
-[ece-install] before it completed, you may delete /var/run/ece-install.pid and
-[ece-install] run ece-install again.
-#+END_SRC
-
 * Available server profiles
 When starting the script, it will ask you which server profile you
 want to install:
@@ -218,6 +217,40 @@ fai_editor_install=1
 fai_publication_create=1
 fai_publication_name=jollygood
 #+END_SRC
+
+* Running more than one installation process
+If the script believes there's already an ece-intall process running,
+it will abort:
+#+BEGIN_SRC sh
+[ece-install] There's already one ece-install process running. If you believe
+[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
+[ece-install] before it completed, you may delete /var/run/ece-install.pid and
+[ece-install] run ece-install again.
+#+END_SRC
+
+* Re-running ece-install
+Although the initial thought behind ece-install, is to run it on a
+clean system to get up and running as soon as possible. However, you
+may want to re-run ece-install on the same host, for instance to add
+another instance of ECE, set up Widget Framework or create another
+publication.
+
+ece-install has a number of features which will try to minimise the
+time it takes to run it on consecutive runs. If running on Debian
+based systems, it will check if you already have installed
+pre-requisite 3rd party libraries and only if any are missing will it
+ask the package manager to fetch it.
+
+Likewise, ece-install will see if the Escenic artifacts or application
+server that you need are already present in the /tmp/ece-downloads
+folder, and only download the missing ones (if any).
+
+To get a list of the artifacts it'll pull from
+http://technet.escenic.com and http://tomcat.apache.org search for the
+following variables:
+- technet\_download\_list
+- wf\_download\_list
+- tomcat\_download
 
 * Uninstalling everything that the ece-install set up
 WARNING: this is potentially dangerous as some of these components may
