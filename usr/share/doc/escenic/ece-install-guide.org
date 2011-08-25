@@ -252,21 +252,14 @@ following variables:
 - wf\_download\_list
 - tomcat\_download
 
-* Uninstalling everything that the ece-install set up
-WARNING: this is potentially dangerous as some of these components may
-be used by other pieces of software you have running on your
-host. However, this may be useful if you're installing a clean
-environment and want to e.g. undo your previous install to install a
-different profile.
-
-Open the ece-install script and look for the "un\_install\_ece"
-function, it has copy and pastable commands for undoing most/all
-things set up by the script.
-
 * Overview of file paths used by the ece-install script
+There are of course other paths involved when setting up your system,
+but these should be the most interesting ones.
+
 |---------------------------------------------+------------------------------------------------------------------|
 | Path                                        | Explanation                                                      |
 |---------------------------------------------+------------------------------------------------------------------|
+| /etc/apt/sources.list.d/escenic.list        | 3rd party APT repositories added by ece-install *)               |
 | /etc/default/ece                            | The configuration file for the ece init.d script                 |
 | /etc/escenic/ece-<instance>.conf            | Instance specific settings for /usr/bin/ece                      |
 | /etc/escenic/ece.conf                       | Common ece.conf file for /usr/bin/ece                            |
@@ -292,6 +285,25 @@ things set up by the script.
 | /var/log/escenic/<type>-<instance>.out      | The instance system out log                                      |
 | /var/log/escenic/solr.<date>.log            | The Solr log (not in standard out!)                              |
 | /var/run/escenic/<type>-<instance>.pid      | The instance's  PID file                                         |
+|---------------------------------------------+------------------------------------------------------------------|
 
-There are of course other paths involved when setting up your system,
-but these should be the most interesting ones.
+*) Applies only to Debian based systems.
+
+* Uninstalling everything that the ece-install set up
+WARNING: this is potentially dangerous as some of these components may
+be used by other pieces of software you have running on your
+host. However, this may be useful if you're installing a clean
+environment and want to e.g. undo your previous install to install a
+different profile.
+
+Open the ece-install script and look for the "un\_install\_ece"
+function, it has copy and pastable commands for undoing most/all
+things set up by the script.
+
+
+* Example Output
+Below is an example output of running ece-install, installing the
+all-in-one profile.
+
+#+INCLUDE: "/tmp/ece-install.out" src text
+
