@@ -1,8 +1,5 @@
 #! /usr/bin/env bash
 
-#         version: $Revision: #9 $ $Date: 2011/01/27 $
-# last updated by: $Author: torstein $
-# 
 # Script that will drop and re-create an ECE database, running
 # all ECE and ECE plugins SQL scripts in the correct order.
 #
@@ -16,7 +13,7 @@
 #
 # -torstein@escenic.com
 
-drop_db_first=1
+drop_db_first=0
 user=ece5user
 password=ece5password
 db=ece5db
