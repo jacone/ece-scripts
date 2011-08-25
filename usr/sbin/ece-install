@@ -14,6 +14,10 @@ ece_user=escenic
 ece_group=escenic
 jdbc_driver=/usr/share/java/mysql.jar
 debug=0
+
+# don't touch this one if you're installing on a Debian based system
+# as it'll be set up for you by the script itself.
+java_home=/usr/lib/jvm/java-6-sun
 #####################################################################
 
 id="[$(basename $0)]"
@@ -22,9 +26,9 @@ download_dir=/tmp/ece-downloads
 log=/tmp/$(basename $0).log
 conf_file=$HOME/.ece-install.conf
 fay_enabled=0
+common_nursery_dir=/etc/escenic/engine/common
 
-# defaults, will be set to correct values in run-time.
-java_home=/usr/lib/jvm/java-6-sun
+# globals will be set to correct values in run-time.
 appserver_port=8080
 on_debian_or_derivative=0
 on_debian=0
@@ -78,7 +82,7 @@ PROFILE_CREATE_PUBLICATION=9
 # Because of issue VF-3559, we also create the default family and host
 # directories.
 dir_list="
-/etc/escenic/engine/common
+$common_nursery_dir
 /etc/escenic/engine/family/default
 /etc/escenic/engine/host/localhost
 /opt/escenic
@@ -146,9 +150,11 @@ install_packages_if_missing()
 {
     if [ $on_debian_or_derivative ]; then
         some_are_missing=0
-        for el in $1; do
-            dpkg -l $el 1>/dev/null 2>/dev/null
-            if [ $? -gt 0 ]; then
+        for el in $@; do
+            # we don't need to grep away "No packages found matching
+            # ..." since this message from dpkg is written to standard
+            # error.
+            if [ $(dpkg -l $el | grep ^ii | wc -l) -lt 1 ]; then
                 some_are_missing=1
             fi
         done
@@ -157,7 +163,7 @@ install_packages_if_missing()
             return
         fi
         
-        apt-get install -y $1 1>>$log 2>>$log
+        apt-get install -y $@ 1>>$log 2>>$log
     fi
 }
 
@@ -356,9 +362,9 @@ function set_up_basic_nursery_configuration()
     print "Setting up the basic Nursery configuration ..."
     
     cp -r /opt/escenic/engine/siteconfig/config-skeleton/* \
-        /etc/escenic/engine/common/
+        $common_nursery_dir/
     cp -r /opt/escenic/engine/security/ \
-        /etc/escenic/engine/common/
+        $common_nursery_dir/
 
     make_dir /etc/escenic/engine/instance
 
@@ -367,25 +373,34 @@ function set_up_basic_nursery_configuration()
             continue
         fi
 
-        cp -r $el/misc/siteconfig/* /etc/escenic/engine/common/
+        cp -r $el/misc/siteconfig/* $common_nursery_dir/
         
     done
 
-    cat > /etc/escenic/engine/common/ServerConfig.properties <<EOF
+    cat > $common_nursery_dir/ServerConfig.properties <<EOF
 databaseProductName=MySQL
 filePublicationRoot=/var/lib/escenic/engine/
 webPublicationRoot=http://$HOSTNAME:${appserver_port}/
 EOF
-    cat > /etc/escenic/engine/common/neo/io/managers/ContentManager.properties <<EOF
+    cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
 readConnector=/connector/ReadConnector
 updateConnector=/connector/UpdateConnector
 EOF
 
-    file=/etc/escenic/engine/common/com/escenic/community/CommunityEngine.properties
+    file=$common_nursery_dir/com/escenic/community/CommunityEngine.properties
     cat $file | \
         sed 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' \
         > $file.tmp
     mv $file.tmp $file
+
+    file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
+    cat >> $file <<EOF
+
+# We set this to get around a missing feature in Varnish, see:
+# https://www.varnish-cache.org/trac/wiki/Future_Feature#Chunkedencodingclientrequests
+# For Escenic-ites, see: VF-3480
+property.com.escenic.client.chunked=false
+EOF
 }
 
 function set_up_instance_specific_nursery_configuration()
@@ -413,7 +428,7 @@ function set_up_proper_logging_configuration()
 {
     print "Setting up proper log4j & Java logging configuration ..."
     
-    cat > /etc/escenic/engine/common/trace.properties <<EOF
+    cat > $common_nursery_dir/trace.properties <<EOF
 log4j.rootLogger=ERROR, ECELOG
 log4j.appender.ECELOG=org.apache.log4j.DailyRollingFileAppender
 log4j.appender.ECELOG.File=/var/log/escenic/\${escenic.server}-messages
@@ -421,7 +436,7 @@ log4j.appender.ECELOG.layout=org.apache.log4j.PatternLayout
 log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
 EOF
     cd $tomcat_base/lib/
-    make_ln /etc/escenic/engine/common/trace.properties
+    make_ln $common_nursery_dir/trace.properties
     ln -sf trace.properties log4j.properies
 
     cat > $tomcat_base/conf/logging.properties <<EOF
@@ -461,18 +476,18 @@ EOF
 # the value already is set, it will replace it with this one.
 function set_ece_instance_conf()
 {
-    conf_file=/etc/escenic/ece-$instance_name.conf
+    instance_conf_file=/etc/escenic/ece-$instance_name.conf
     
-    if [ -r $conf_file ]; then
-        if [ $(grep $1 $conf_file | wc -l) -gt 0 ]; then
+    if [ -r $instance_conf_file ]; then
+        if [ $(grep $1 $instance_conf_file | wc -l) -gt 0 ]; then
             # TODO update existing values of the property instead of
             # removing & appending it.
-            cat $conf_file | grep -v ^$1 > $conf_file.tmp
-            mv $conf_file.tmp $conf_file
+            cat $instance_conf_file | grep -v ^$1 > $instance_conf_file.tmp
+            mv $instance_conf_file.tmp $instance_conf_file
         fi
     fi
     
-    echo "$1=$2" >> $conf_file
+    echo "$1=$2" >> $instance_conf_file
 }
 
 # Installs third party packages needed by the ECE (i.e. Java related).
@@ -958,7 +973,7 @@ function un_install_ece()
         /usr/bin/ece \
         /var/log/escenic/ \
         /etc/apt/sources.list.d/escenic.list \
-        $HOME/.m2 \
+#        $HOME/.m2 \
         /var/run/ece-install.pid
 
     apt-get --yes --purge remove \
@@ -969,7 +984,7 @@ function un_install_ece()
         ant-contrib \
         ant-optional \
         libmysql-java \
-        memcached 
+        memcached \
         sun-java6-jdk
     
     apt-get clean
@@ -1113,7 +1128,7 @@ function read_user_input()
     echo "  $PROFILE_ALL_IN_ONE - All in one, the full stack on one host. "
     echo "      Suitable for development and test environments."
     echo "      It will install caching server, ECE, assembly host, database &"
-    echo "      Widget Framework as well as sett up a new publication."
+    echo "      Widget Framework as well as set up a new publication."
     echo "  $PROFILE_EDITORIAL_SERVER - Editorial (publication) server."
     echo "      This will install ECE, an assembly host & as well as "
     echo "      creating and set up a new publication."
@@ -1428,7 +1443,7 @@ function install_rmi_hub()
         /etc/escenic/rmi-hub/
 
     hub_host=$HOSTNAME
-    file=/etc/escenic/engine/common
+    file=$common_nursery_dir
     file=$file/neo/io/managers/HubConnectionManager.properties
 
     make_dir $(basename $file)
@@ -1455,10 +1470,8 @@ function get_conf_value()
         return
     fi
 
-    value=
     if [ $(grep $1 $conf_file | grep -v ^# | wc -l) -gt 0 ]; then
         echo $(grep $1 $conf_file | grep -v ^# | cut -d'=' -f2)
-        return
     fi
 }
 
@@ -1466,10 +1479,9 @@ function install_widget_framework()
 {
     # TODO java.lang.NoClassDefFoundError:
     # Lcom/escenic/framework/captcha/ReCaptchaConfig;
-
     
-    wf_user=`grep wf_user $conf_file 2>/dev/null | cut -d'=' -f2`
-    wf_password=`grep wf_password $conf_file 2>/dev/null | cut -d'=' -f2`
+    wf_user=$(get_conf_value wf_user)
+    wf_password=$(get_conf_value wf_password)
 
     if [ -z "$wf_user" -o -z "$wf_password" ]; then
         print "Be sure to set wf_user and wf_password in $conf_file"
@@ -1540,7 +1552,7 @@ EOF
     wf_dist_dir=$(echo $wf_maven_dir/widget-framework-common/target/widget-framework-common-*-dist/widget-framework-common-*)
     cd /opt/escenic/assemblytool/plugins
     ln -s $wf_dist_dir
-    cp -r $wf_dist_dir/misc/siteconfig/* /etc/escenic/engine/common/
+    cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
 }
 
 function install_search_instance()
@@ -1554,24 +1566,22 @@ function install_search_instance()
 deploy_webapp_white_list="escenic-admin solr indexer-webapp"
 EOF
 
-    common_dir=/etc/escenic/engine/common
-
     # TODO update instead of append
-    dir=$common_dir/com/escenic/framework/search/solr
+    dir=$common_nursery_dir/com/escenic/framework/search/solr
     make_dir dir
     echo "solrServerURI=http://${search_host}:${search_port}/solr" \
         >>  $dir/SolrSearchEngine.properties
     
-    dir=$common_dir/com/escenic/webservice/search
+    dir=$common_nursery_dir/com/escenic/webservice/search
     make_dir $dir
     echo "solrURI=http://${search_host}:${search_port}/solr/select" \
         >> $dir/DelegatingSearchEngine.properties
 
-    dir=$common_dir/com/escenic/lucy
+    dir=$common_nursery_dir/com/escenic/lucy
     echo "solrURI=http://${search_host}:${search_port}/solr" \
         >> $dir/LucySearchEngine.properties
 
-    dir=$common_dir/com/escenic/forum/search/lucy
+    dir=$common_nursery_dir/com/escenic/forum/search/lucy
     echo "solrURI=http://${search_host}:${search_port}/solr" \
         >> $dir/SearchEngine.properties
 
