@@ -25,7 +25,6 @@ pid_file=/var/run/$(basename $0).pid
 download_dir=/tmp/ece-downloads
 log=/tmp/$(basename $0).log
 conf_file=$HOME/.ece-install.conf
-fay_enabled=0
 common_nursery_dir=/etc/escenic/engine/common
 
 # globals will be set to correct values in run-time.
@@ -37,6 +36,12 @@ on_debian=0
 # server profiles, all of which needs downloading and setting up the
 # ECE software components.
 ece_software_setup_completed=0
+
+NEW_LINE="
+"
+# the next steps printed when the user has installed his/her
+# components.
+next_steps=""
 
 function debug()
 {
@@ -560,7 +565,7 @@ function set_up_app_server
     print "Last question: Where does the search instance run?"
     print "Press ENTER to accept the default ($HOSTNAME:8080)"
     print "If you're in doubt, just press ENTER :-)"
-    print "Or enter: <host>:<port>, e.g.: 'db1:3306'"
+    print "Or enter: <host>:<port>, e.g.: 'search1:8080'"
     echo -n "Your choice [$HOSTNAME:8080]> "
     read user_search
 
@@ -909,18 +914,15 @@ function check_for_required_downloads()
     done
 }
 
-function set_up_memcached()
+function install_memcached()
 {
+    if [ $on_debian_or_derivative ]; then
+        install_packages_if_missing "memcached"
+    fi
+    
      # 1) download java library
      # 2) configure PresenationArticle cache for the publication
      # 3) build and re-deploy
-    echo "TBD"
-}
-
-function start_components()
-{
-    # TODO might be a hub and indexer too
-    # su - $ece_user -c "ece start" 1>>$log 2>>$log
     echo "TBD"
 }
 
@@ -1475,6 +1477,23 @@ function get_conf_value()
     fi
 }
 
+# returns 0 for false, 1 for true
+#
+# paramaters: $1 : the conf key, see get_conf_value
+function get_boolean_conf_value()
+{
+    value=$(get_conf_value $1)
+    if [ -z "$value" ]; then
+        echo 0
+    elif [ $value = "" ]; then
+        echo 0
+    elif [ $value -eq 1 ]; then
+        echo 1
+    else
+        echo 0
+    fi
+}
+
 function install_widget_framework()
 {
     # TODO java.lang.NoClassDefFoundError:
@@ -1616,6 +1635,8 @@ for el in $@; do
 done
 
 assert_correct_runtime_environment
+
+fai_enabled=$(get_boolean_conf_value fai_enabled)
 
 read_user_input
 common_pre_install
