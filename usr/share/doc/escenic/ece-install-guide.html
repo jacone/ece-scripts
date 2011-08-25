@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-08-24 18:58:21 CST"/>
+<meta name="generated" content="2011-08-25 12:40:35 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -53,7 +53,89 @@ lang="en" xml:lang="en">
   .org-info-js_search-highlight {background-color:#ffff00; color:#000000;
                                  font-weight:bold; }
   /*]]>*/-->
-</style> <link rel="stylesheet" type="text/css" href="vizrt-header.css"/>
+</style><style type="text/css">
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: small;
+  #width : 600;
+  margin: 70px 70px 0px 50px;
+}
+
+h1, h2 {
+  color: #e88424;
+}
+
+h1 {
+  font-size: 150%;
+}
+
+h2 {
+  font-size: 120%;
+  margin-top: 3em;
+  margin-bottom: 0em;
+}
+
+h3, h4, h5, h6 {
+  font-weight: bold;
+  margin-top: 2em;
+  margin-bottom: 0.2em;
+}
+
+h3, h4, h5 {
+  font-size: 110%;
+}
+
+h6 {
+  font-size: 80%;
+}
+
+a {
+  color: #333;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+p, dl {
+  font-size: 95%;
+}
+
+p {
+  margin-top: 0em;
+  margin-bottom: 0.6em;
+}
+
+pre.programlisting {
+  margin-top: 0em;
+  background-color: #ffddaa;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+em {
+  font-weight: bold;
+  font-style: normal;
+}
+
+em.replaceable {
+  font-weight: normal;
+  font-style: italic;
+}
+
+div.note {
+  background-color: #ffddaa;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+</style>
+
 <script type="text/javascript">
 <!--/*--><![CDATA[/*><!--*/
  function CodeHighlightOn(elem, id)
@@ -141,8 +223,8 @@ lang="en" xml:lang="en">
 </ul>
 </li>
 <li><a href="#sec-2">2 A note on running ece-install on non-GNU/Linux systems </a></li>
-<li><a href="#sec-3">3 You must run the script as root </a></li>
-<li><a href="#sec-4">4 Running more than one installation process </a></li>
+<li><a href="#sec-3">3 Downloading the ece-install script </a></li>
+<li><a href="#sec-4">4 Running the ece-install script </a></li>
 <li><a href="#sec-5">5 Available server profiles </a>
 <ul>
 <li><a href="#sec-5-1">5.1 Common for editorial, presentation and search instances </a></li>
@@ -156,7 +238,9 @@ lang="en" xml:lang="en">
 </ul>
 </li>
 <li><a href="#sec-6">6 Full Automatic Install (FAI) </a></li>
-<li><a href="#sec-7">7 Uninstalling everything that the ece-install set up </a></li>
+<li><a href="#sec-7">7 Running more than one installation process </a></li>
+<li><a href="#sec-8">8 Re-running ece-install </a></li>
+<li><a href="#sec-9">9 Uninstalling everything that the ece-install set up </a></li>
 </ul>
 </div>
 </div>
@@ -219,10 +303,32 @@ ece-install.
 </div>
 
 <div id="outline-container-3" class="outline-2">
-<h2 id="sec-3"><span class="section-number-2">3</span> You must run the script as root </h2>
+<h2 id="sec-3"><span class="section-number-2">3</span> Downloading the ece-install script </h2>
 <div class="outline-text-2" id="text-3">
 
-<p>If you start the script as a regular user, it will complain:
+<p>The ece-install script can be downloaded from:
+<a href="https://raw.github.com/skybert/ece-scripts/master/usr/sbin/ece-install">https://raw.github.com/skybert/ece-scripts/master/usr/sbin/ece-install</a>
+or be downloaded together with the other ece-scripts using git:
+</p>
+
+
+<pre class="example">$ git clone git@github.com:skybert/ece-scripts.git
+
+</pre>
+
+
+
+
+</div>
+
+</div>
+
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> Running the ece-install script </h2>
+<div class="outline-text-2" id="text-4">
+
+<p>You must run the script as the root user.  If you start the script as
+a regular user, it will complain:
 </p>
 
 
@@ -251,29 +357,6 @@ On all other Unix like system, do:
 <pre class="example">$ su
 
 </pre>
-
-
-
-</div>
-
-</div>
-
-<div id="outline-container-4" class="outline-2">
-<h2 id="sec-4"><span class="section-number-2">4</span> Running more than one installation process </h2>
-<div class="outline-text-2" id="text-4">
-
-<p>If the script believes there's already an ece-intall process running,
-it will abort:
-</p>
-
-
-<pre class="example">[ece-install] There's already one ece-install process running. If you believe
-[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
-[ece-install] before it completed, you may delete /var/run/ece-install.pid and
-[ece-install] run ece-install again.
-
-</pre>
-
 
 
 
@@ -593,8 +676,71 @@ fai_publication_name=jollygood
 </div>
 
 <div id="outline-container-7" class="outline-2">
-<h2 id="sec-7"><span class="section-number-2">7</span> Uninstalling everything that the ece-install set up </h2>
+<h2 id="sec-7"><span class="section-number-2">7</span> Running more than one installation process </h2>
 <div class="outline-text-2" id="text-7">
+
+<p>If the script believes there's already an ece-intall process running,
+it will abort:
+</p>
+
+
+<pre class="example">[ece-install] There's already one ece-install process running. If you believe
+[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
+[ece-install] before it completed, you may delete /var/run/ece-install.pid and
+[ece-install] run ece-install again.
+
+</pre>
+
+
+
+
+</div>
+
+</div>
+
+<div id="outline-container-8" class="outline-2">
+<h2 id="sec-8"><span class="section-number-2">8</span> Re-running ece-install </h2>
+<div class="outline-text-2" id="text-8">
+
+<p>Although the initial thought behind ece-install, is to run it on a
+clean system to get up and running as soon as possible. However, you
+may want to re-run ece-install on the same host, for instance to add
+another instance of ECE, set up Widget Framework or create another
+publication.
+</p>
+<p>
+ece-install has a number of features which will try to minimise the
+time it takes to run it on consecutive runs. If running on Debian
+based systems, it will check if you already have installed
+pre-requisite 3rd party libraries and only if any are missing will it
+ask the package manager to fetch it.
+</p>
+<p>
+Likewise, ece-install will see if the Escenic artifacts or application
+server that you need are already present in the /tmp/ece-downloads
+folder, and only download the missing ones (if any).
+</p>
+<p>
+To get a list of the artifacts it'll pull from
+<a href="http://technet.escenic.com">http://technet.escenic.com</a> and http://tomcat.apache.org search for the
+following variables:
+</p><ul>
+<li>technet_download_list
+</li>
+<li>wf_download_list
+</li>
+<li>tomcat_download
+</li>
+</ul>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-9" class="outline-2">
+<h2 id="sec-9"><span class="section-number-2">9</span> Uninstalling everything that the ece-install set up </h2>
+<div class="outline-text-2" id="text-9">
 
 <p>WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
@@ -610,7 +756,7 @@ things set up by the script.
 </div>
 </div>
 <div id="postamble">
-<p class="date">Date: 2011-08-24 18:58:21 CST</p>
+<p class="date">Date: 2011-08-25 12:40:35 CST</p>
 <p class="author">Author: Torstein Krause Johansen</p>
 <p class="creator">Org version 7.6 with Emacs version 23</p>
 <a href="http://validator.w3.org/check?uri=referer">Validate XHTML 1.0</a>

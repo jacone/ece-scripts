@@ -2,7 +2,7 @@
               ==========================================
 
 Author: Torstein Krause Johansen
-Date: 2011-08-24 18:58:19 CST
+Date: 2011-08-25 12:40:38 CST
 
 
 Table of Contents
@@ -11,8 +11,8 @@ Table of Contents
         1.1 Debian based operating systems 
         1.2 Other GNU/Linux and Unix systems 
 2 A note on running ece-install on non-GNU/Linux systems 
-3 You must run the script as root 
-4 Running more than one installation process 
+3 Downloading the ece-install script 
+4 Running the ece-install script 
 5 Available server profiles 
     5.1 Common for editorial, presentation and search instances 
     5.2 1 - Full stack on one host 
@@ -23,7 +23,9 @@ Table of Contents
     5.7 8 - Install Widget Framework 
     5.8 9 - Create Publication 
 6 Full Automatic Install (FAI) 
-7 Uninstalling everything that the ece-install set up 
+7 Running more than one installation process 
+8 Re-running ece-install 
+9 Uninstalling everything that the ece-install set up 
 
 
 1 Supported operating systems 
@@ -58,9 +60,22 @@ tools, such as any of the BSDs (including Mac OS X) or Solaris, make
 sure that GNU's tools take precedence in the command PATH offered to
 ece-install.
 
-3 You must run the script as root 
-----------------------------------
-If you start the script as a regular user, it will complain:
+3 Downloading the ece-install script 
+-------------------------------------
+The ece-install script can be downloaded from:
+[https://raw.github.com/skybert/ece-scripts/master/usr/sbin/ece-install]
+or be downloaded together with the other ece-scripts using git:
+
+
+  $ git clone git@github.com:skybert/ece-scripts.git
+
+
+
+
+4 Running the ece-install script 
+---------------------------------
+You must run the script as the root user.  If you start the script as
+a regular user, it will complain:
 
 
   [ece-install] You must be root when running ece-install
@@ -78,20 +93,6 @@ On all other Unix like system, do:
 
 
   $ su
-
-
-
-4 Running more than one installation process 
----------------------------------------------
-If the script believes there's already an ece-intall process running,
-it will abort:
-
-
-  [ece-install] There's already one ece-install process running. If you believe
-  [ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
-  [ece-install] before it completed, you may delete /var/run/ece-install.pid and
-  [ece-install] run ece-install again.
-
 
 
 
@@ -281,7 +282,46 @@ would be:
 
 
 
-7 Uninstalling everything that the ece-install set up 
+7 Running more than one installation process 
+---------------------------------------------
+If the script believes there's already an ece-intall process running,
+it will abort:
+
+
+  [ece-install] There's already one ece-install process running. If you believe
+  [ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
+  [ece-install] before it completed, you may delete /var/run/ece-install.pid and
+  [ece-install] run ece-install again.
+
+
+
+
+8 Re-running ece-install 
+-------------------------
+Although the initial thought behind ece-install, is to run it on a
+clean system to get up and running as soon as possible. However, you
+may want to re-run ece-install on the same host, for instance to add
+another instance of ECE, set up Widget Framework or create another
+publication.
+
+ece-install has a number of features which will try to minimise the
+time it takes to run it on consecutive runs. If running on Debian
+based systems, it will check if you already have installed
+pre-requisite 3rd party libraries and only if any are missing will it
+ask the package manager to fetch it.
+
+Likewise, ece-install will see if the Escenic artifacts or application
+server that you need are already present in the /tmp/ece-downloads
+folder, and only download the missing ones (if any).
+
+To get a list of the artifacts it'll pull from
+[http://technet.escenic.com] and http://tomcat.apache.org search for the
+following variables:
+- technet\_download\_list
+- wf\_download\_list
+- tomcat\_download
+
+9 Uninstalling everything that the ece-install set up 
 ------------------------------------------------------
 WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
