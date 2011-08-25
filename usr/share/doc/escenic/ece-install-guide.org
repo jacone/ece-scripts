@@ -263,3 +263,35 @@ Open the ece-install script and look for the "un\_install\_ece"
 function, it has copy and pastable commands for undoing most/all
 things set up by the script.
 
+* Overview of file paths used by the ece-install script
+|---------------------------------------------+------------------------------------------------------------------|
+| Path                                        | Explanation                                                      |
+|---------------------------------------------+------------------------------------------------------------------|
+| /etc/default/ece                            | The configuration file for the ece init.d script                 |
+| /etc/escenic/ece-<instance>.conf            | Instance specific settings for /usr/bin/ece                      |
+| /etc/escenic/ece.conf                       | Common ece.conf file for /usr/bin/ece                            |
+| /etc/escenic/engine/common                  | Common Nursery configuration layer                               |
+| /etc/escenic/engine/common/security         | Common security configuration for all ECE instances.             |
+| /etc/escenic/engine/common/trace.properties | Log4j configuration, produces instance specific log files.       |
+| /etc/escenic/engine/instance/<instance>     | Instance specific Nursery configuration                          |
+| /etc/escenic/solr                           | ECE specific Solr configuration                                  |
+| /etc/init.d/mysql[d]                        | For starting and stopping MySQL/Percona                          |
+| /etc/init.d/varnish                         | For starting and stopping Varnish                                |
+| /etc/intit.d/ece                            | The init.d script managing _all_ the ECE instances on your host. |
+| /etc/varnish/default.vcl                    | The Varnish configuration                                        |
+| /opt/escenic                                | All ECE components can be found here                             |
+| /opt/escenic/assemblytool                   | The assembly tool                                                |
+| /opt/escenic/assemblytool/plugins           | Contains symlinks to all plugins in /opt/escenic                 |
+| /opt/escenic/engine                         | Symlink pointing to the current ECE                              |
+| /opt/tomcat                                 | Symlink pointing to the install Apache Tomcat (catalina\_home)   |
+| /opt/tomcat-<instance>                      | Instance specific Tomcat files (catalina\_base)                  |
+| /usr/bin/ece                                | Script for operating all ECE instances + RMI hub and EAE         |
+| /usr/sbin/drop-and-create-ecedb             | DB script used by the ece-install script                         |
+| /usr/sbin/ece-install                       | The installation script described in this guide                  |
+| /var/log/escenic/<type>-<instance>.log      | The instance's log4j  log                                        |
+| /var/log/escenic/<type>-<instance>.out      | The instance system out log                                      |
+| /var/log/escenic/solr.<date>.log            | The Solr log (not in standard out!)                              |
+| /var/run/escenic/<type>-<instance>.pid      | The instance's  PID file                                         |
+
+There are of course other paths involved when setting up your system,
+but these should be the most interesting ones.
