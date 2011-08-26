@@ -1,6 +1,6 @@
 Welcome to the /usr/sbin/ece-install Guide
 
-* Supported operating systems
+* Supported Operating Systems
 For the best experience, run this script on Debian Squeeze (or newer),
 the latest Ubuntu LTS or most other Debian based operating systems,
 but it should work without any problems on any Unix like system that
@@ -21,14 +21,14 @@ You may also look inside the ece-install script for all calls to the
 'assert\_pre\_prequesite' method and you'll get a list of the binaries
 ece-install assumes are present.
 
-* A note on running ece-install on non-GNU/Linux systems
+* A Note on Running Ece-Install On Non-GNU/Linux Systems
 Please note, it's assumed that the OS uses GNU's tools, i.e. find, cp
 & tar. If you're running a system which has a different set of core
 tools, such as any of the BSDs (including Mac OS X) or Solaris, make
 sure that GNU's tools take precedence in the command PATH offered to
 ece-install.
 
-* Downloading the ece-install script
+* Downloading the ece-install Script
 The ece-install script can be downloaded from:
 https://raw.github.com/skybert/ece-scripts/master/usr/sbin/ece-install
 or be downloaded together with the other ece-scripts using git:
@@ -36,7 +36,7 @@ or be downloaded together with the other ece-scripts using git:
 $ git clone git@github.com:skybert/ece-scripts.git
 #+END_SRC
 
-* Running the ece-install script
+* Running the ece-install Script
 You must run the script as the root user.  If you start the script as
 a regular user, it will complain:
 #+BEGIN_SRC sh
@@ -50,7 +50,51 @@ On all other Unix like system, do:
 #+BEGIN_SRC sh
    $ su
 #+END_SRC
-* Available server profiles
+
+You will need access to http://technet.escenic.com and put these
+credentials in the root user's $HOME/.ece-install.conf, normally this
+means /root/.ece-install.conf, the script will also tell you this if
+you forget to provide such a configuration file:
+#+BEGIN_SRC sh
+[ece-install] /root/.ece-install.conf doesn't exist, I cannot live without it :-(
+#+END_SRC
+
+As for the technet credentials, the script will also tell you if it
+cannot find what it's looking for:
+#+BEGIN_SRC sh
+[ece-install] Be sure to set technet_user and technet_password
+[ece-install] in /root/.ece-install.conf
+#+END_SRC
+
+The minimum .ece-install.conf file is thus:
+#+BEGIN_SRC sh
+technet_user=<user>
+technet_password=<password>
+#+END_SRC
+
+If you're installing WF as well, you'll need additional credentials
+for this, see the Widget Framwork section below, and if you want to
+runn a fully automatic install without any user interaction, you'll
+need to specify some FAI specific parameters, see the FAI section
+below. 
+
+With the configuration file in place, you're now ready to run it:
+#+BEGIN_SRC sh
+# bash ece-install [-v|--verbose]
+#+END_SRC
+
+If something goes astray with the script, and the log file cannot give
+you enough clues, the ultimate way of debugging this is to run the
+BASH interpreter with the -x flag:
+#+BEGIN_SRC sh
+# bash -x ece-install
+#+END_SRC
+
+Here you can see everything that BASH does when running the script,
+how the wildcard variables expand and so on. Normally, having a tail
+on /var/log/ece-install.log should be sufficient, though.
+
+* Available Server Profiles
 When starting the script, it will ask you which server profile you
 want to install:
 #+BEGIN_SRC sh
@@ -69,24 +113,36 @@ Select 1-7 and press ENTER
   8 - Install Widget Framework. This will also set up a WF based 
       publication for you (repo.escenic.com user/pass required).
 #+END_SRC
-** Common for editorial, presentation and search instances
-- Sun Java 6
-- Apache Tomcat application server:
-  * Compression of textual content (previously, this was typically set
-    up with Apache and its mod\_deflate module).
-  * pooling set up tweaked for high read/write performance.
-  * proper logging configuration directing solr messages to its own log.
-  * routing information in the cookies
-  * access log
+** Common for Editorial, Presentation and Search Instances
+*** Sun Java 6
+*** Apache Tomcat application server
+- Compression of textual content (previously, this was typically set
+  up with Apache and its mod\_deflate module).
+- pooling set up tweaked for high read/write performance.
+- proper logging configuration directing solr messages to its own log.
+- routing information in the cookies
+- application server access log
+*** Basic Escenic Nursery configuration
+The basic Nursery configuration is taken care of for you, including RMI,
+  database, search and application server/URIs. 
+*** APR, native library for optimal Tomcat I/O performance
+*** Escenic Assembly environment
+The reason why ece-install sets this up on each host, is to make the
+installation process as smooth as possible. The assembly environment
+may be removed after the installation if you want to.
 
-- APR, native library for optimal Tomcat I/O performance
-- Escenic Assembly environment
-- Database driver
+*** Database driver
 
-- Compression of content (what was previously accomplished with
-  Apache/mod\_deflate) 
+*** Compression of content 
+This was was previously accomplished by having a web server in fron t
+of the application server (or cache server if you used ESI). A typical
+system architecture would contain Apache with mod\_deflate. However,
+this is no longer necessary as Varnish can handles ESI parsing of
+compressed content (and many other things that we before needed Apache
+for). Thus, we'll let the application server do the compression for us
+now.
 
-** 1 - Full stack on one host
+** 1 - Full Stack on One Host
 This profile is suitable for developers and admins wanting to set up a
 test environment. It will install the full stack including caching
 server, application server, ECE, assembly host, database, Widget
@@ -96,10 +152,10 @@ For further details on each of the different server components, see
 the different profile descriptions bellow.
 
 
-** 2 - Editorial server (publication server)
+** 2 - Editorial Server (Publication Server)
 
 
-** 3 - Presentation server
+** 3 - Presentation Server
 This will set up a typical presentation server:
 - Memcached, distributed memory cache
 - Escenic Assembly environment (which may be removed after the
@@ -107,7 +163,7 @@ This will set up a typical presentation server:
 - Deployment setup to only deploy escenic-admin and the
   publication(s).
 
-** 4 - Database server
+** 4 - Database Server
 If ece-install is run on a support version of Debian or Ubuntu, this
 will install the excellent Percona distribution of MySQL with their
 set of high performance patches.
@@ -120,10 +176,15 @@ SQL files contained inside the distribution bundles. To accomplish
 this, the script will make a call to drop-and-create-ecedb in the same
 directory as the ece-intall script itself.
 
-If you wish to change the DB's host, user or password, you must update
-the drop-and-create-ecedb script prior to running ece-install. 
+The script will fail by itself if the DB already exists:
+#+BEGIN_SRC sh
+[ece-install] Setting up the ECE database schema ...
+ERROR 1007 (HY000) at line 1: Can't create database 'ece5db'; database exists
+ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already exists
+[ece-install] running tables FAILED, exiting :-(
+#+END_SRC
 
-** 5 - Cache server
+** 5 - Cache Server
 If ece-install is run on a support version of Debian or Ubuntu, it
 will install the latest Varnish 3.0 caching server from the Varnish
 APT repository.
@@ -161,10 +222,10 @@ repo.escenic.com Maven repository. You should get these credentials
 when you bought Widget Framework. If you for some reason do not have
 these, please contact support@escenic.com. 
 
-If you don't have these ready in your .escenicrc, ece-install will
+If you don't have these ready in your .ece-install.conf, ece-install will
 complain:
 #+BEGIN_SRC sh
-[ece-install] Be sure to set wf_user and wf_password in /root/.escenicrc
+[ece-install] Be sure to set wf_user and wf_password in /root/.ece-install.conf
 [ece-install] If you don't have these, please contact support@escenic.com
 #+END_SRC
 ** 9 - Create Publication
@@ -229,7 +290,7 @@ When FAI is enabled, ece-install will report:
 [ece-install] All user input will be read from /root/.ece-install.conf
 #+END_SRC
 
-* Running more than one installation process
+* Running More Than One Installation Process
 If the script believes there's already an ece-intall process running,
 it will abort:
 #+BEGIN_SRC sh
@@ -239,7 +300,7 @@ it will abort:
 [ece-install] run ece-install again.
 #+END_SRC
 
-* Re-running ece-install
+* Re-running ece-install (and How To Speed It Up)
 Although the initial thought behind ece-install, is to run it on a
 clean system to get up and running as soon as possible. However, you
 may want to re-run ece-install on the same host, for instance to add
@@ -263,7 +324,7 @@ following variables:
 - wf\_download\_list
 - tomcat\_download
 
-* Overview of file paths used by the ece-install script
+* Overview of File Paths Used by the ece-install script
 There are of course other paths involved when setting up your system,
 but these should be the most interesting ones.
 
@@ -300,7 +361,13 @@ but these should be the most interesting ones.
 
 *) Applies only to Debian based systems.
 
-* Uninstalling everything that the ece-install set up
+* Assumptions
+** /etc/esecenic is shared
+It's assumed that the /etc/escenic directory is either on a shared
+file system or rsync-ed among the hosts that are running the ECE
+instances (the exception being database and cache servers).
+ 
+* Uninstalling everything That the ece-install Set Up
 WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
 host. However, this may be useful if you're installing a clean

@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-08-25 22:02:19 CST"/>
+<meta name="generated" content="2011-08-26 17:45:45 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -213,7 +213,7 @@ div.note {
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#sec-1">1 Supported operating systems </a>
+<li><a href="#sec-1">1 Supported Operating Systems </a>
 <ul>
 <li>
 <ul>
@@ -222,33 +222,48 @@ div.note {
 </ul></li>
 </ul>
 </li>
-<li><a href="#sec-2">2 A note on running ece-install on non-GNU/Linux systems </a></li>
-<li><a href="#sec-3">3 Downloading the ece-install script </a></li>
-<li><a href="#sec-4">4 Running the ece-install script </a></li>
-<li><a href="#sec-5">5 Available server profiles </a>
+<li><a href="#sec-2">2 A Note on Running Ece-Install On Non-GNU/Linux Systems </a></li>
+<li><a href="#sec-3">3 Downloading the ece-install Script </a></li>
+<li><a href="#sec-4">4 Running the ece-install Script </a></li>
+<li><a href="#sec-5">5 Available Server Profiles </a>
 <ul>
-<li><a href="#sec-5-1">5.1 Common for editorial, presentation and search instances </a></li>
-<li><a href="#sec-5-2">5.2 1 - Full stack on one host </a></li>
-<li><a href="#sec-5-3">5.3 2 - Editorial server (publication server) </a></li>
-<li><a href="#sec-5-4">5.4 3 - Presentation server </a></li>
-<li><a href="#sec-5-5">5.5 4 - Database server </a></li>
-<li><a href="#sec-5-6">5.6 5 - Cache server </a></li>
+<li><a href="#sec-5-1">5.1 Common for Editorial, Presentation and Search Instances </a>
+<ul>
+<li><a href="#sec-5-1-1">5.1.1 Sun Java 6 </a></li>
+<li><a href="#sec-5-1-2">5.1.2 Apache Tomcat application server </a></li>
+<li><a href="#sec-5-1-3">5.1.3 Basic Escenic Nursery configuration </a></li>
+<li><a href="#sec-5-1-4">5.1.4 APR, native library for optimal Tomcat I/O performance </a></li>
+<li><a href="#sec-5-1-5">5.1.5 Escenic Assembly environment </a></li>
+<li><a href="#sec-5-1-6">5.1.6 Database driver </a></li>
+<li><a href="#sec-5-1-7">5.1.7 Compression of content </a></li>
+</ul>
+</li>
+<li><a href="#sec-5-2">5.2 1 - Full Stack on One Host </a></li>
+<li><a href="#sec-5-3">5.3 2 - Editorial Server (Publication Server) </a></li>
+<li><a href="#sec-5-4">5.4 3 - Presentation Server </a></li>
+<li><a href="#sec-5-5">5.5 4 - Database Server </a></li>
+<li><a href="#sec-5-6">5.6 5 - Cache Server </a></li>
 <li><a href="#sec-5-7">5.7 8 - Install Widget Framework </a></li>
 <li><a href="#sec-5-8">5.8 9 - Create Publication </a></li>
 </ul>
 </li>
 <li><a href="#sec-6">6 Full Automatic Install (FAI) </a></li>
-<li><a href="#sec-7">7 Running more than one installation process </a></li>
-<li><a href="#sec-8">8 Re-running ece-install </a></li>
-<li><a href="#sec-9">9 Overview of file paths used by the ece-install script </a></li>
-<li><a href="#sec-10">10 Uninstalling everything that the ece-install set up </a></li>
-<li><a href="#sec-11">11 Example Output </a></li>
+<li><a href="#sec-7">7 Running More Than One Installation Process </a></li>
+<li><a href="#sec-8">8 Re-running ece-install (and How To Speed It Up) </a></li>
+<li><a href="#sec-9">9 Overview of File Paths Used by the ece-install script </a></li>
+<li><a href="#sec-10">10 Assumptions </a>
+<ul>
+<li><a href="#sec-10-1">10.1 /etc/esecenic is shared </a></li>
+</ul>
+</li>
+<li><a href="#sec-11">11 Uninstalling everything That the ece-install Set Up </a></li>
+<li><a href="#sec-12">12 Example Output </a></li>
 </ul>
 </div>
 </div>
 
 <div id="outline-container-1" class="outline-2">
-<h2 id="sec-1"><span class="section-number-2">1</span> Supported operating systems </h2>
+<h2 id="sec-1"><span class="section-number-2">1</span> Supported Operating Systems </h2>
 <div class="outline-text-2" id="text-1">
 
 <p>For the best experience, run this script on Debian Squeeze (or newer),
@@ -291,7 +306,7 @@ ece-install assumes are present.
 </div>
 
 <div id="outline-container-2" class="outline-2">
-<h2 id="sec-2"><span class="section-number-2">2</span> A note on running ece-install on non-GNU/Linux systems </h2>
+<h2 id="sec-2"><span class="section-number-2">2</span> A Note on Running Ece-Install On Non-GNU/Linux Systems </h2>
 <div class="outline-text-2" id="text-2">
 
 <p>Please note, it's assumed that the OS uses GNU's tools, i.e. find, cp
@@ -305,7 +320,7 @@ ece-install.
 </div>
 
 <div id="outline-container-3" class="outline-2">
-<h2 id="sec-3"><span class="section-number-2">3</span> Downloading the ece-install script </h2>
+<h2 id="sec-3"><span class="section-number-2">3</span> Downloading the ece-install Script </h2>
 <div class="outline-text-2" id="text-3">
 
 <p>The ece-install script can be downloaded from:
@@ -326,7 +341,7 @@ or be downloaded together with the other ece-scripts using git:
 </div>
 
 <div id="outline-container-4" class="outline-2">
-<h2 id="sec-4"><span class="section-number-2">4</span> Running the ece-install script </h2>
+<h2 id="sec-4"><span class="section-number-2">4</span> Running the ece-install Script </h2>
 <div class="outline-text-2" id="text-4">
 
 <p>You must run the script as the root user.  If you start the script as
@@ -362,12 +377,93 @@ On all other Unix like system, do:
 
 
 
+
+<p>
+You will need access to <a href="http://technet.escenic.com">http://technet.escenic.com</a> and put these
+credentials in the root user's $HOME/.ece-install.conf, normally this
+means <i>root</i>.ece-install.conf, the script will also tell you this if
+you forget to provide such a configuration file:
+</p>
+
+
+<pre class="example">[ece-install] /root/.ece-install.conf doesn't exist, I cannot live without it :-(
+
+</pre>
+
+
+
+
+<p>
+As for the technet credentials, the script will also tell you if it
+cannot find what it's looking for:
+</p>
+
+
+<pre class="example">[ece-install] Be sure to set technet_user and technet_password
+[ece-install] in /root/.ece-install.conf
+
+</pre>
+
+
+
+
+<p>
+The minimum .ece-install.conf file is thus:
+</p>
+
+
+<pre class="example">technet_user=&lt;user&gt;
+technet_password=&lt;password&gt;
+
+</pre>
+
+
+
+
+<p>
+If you're installing WF as well, you'll need additional credentials
+for this, see the Widget Framwork section below, and if you want to
+runn a fully automatic install without any user interaction, you'll
+need to specify some FAI specific parameters, see the FAI section
+below. 
+</p>
+<p>
+With the configuration file in place, you're now ready to run it:
+</p>
+
+
+<pre class="example"># bash ece-install [-v|--verbose]
+
+</pre>
+
+
+
+
+<p>
+If something goes astray with the script, and the log file cannot give
+you enough clues, the ultimate way of debugging this is to run the
+BASH interpreter with the -x flag:
+</p>
+
+
+<pre class="example"># bash -x ece-install
+
+</pre>
+
+
+
+
+<p>
+Here you can see everything that BASH does when running the script,
+how the wildcard variables expand and so on. Normally, having a tail
+on /var/log/ece-install.log should be sufficient, though.
+</p>
 </div>
 
 </div>
 
 <div id="outline-container-5" class="outline-2">
-<h2 id="sec-5"><span class="section-number-2">5</span> Available server profiles </h2>
+<h2 id="sec-5"><span class="section-number-2">5</span> Available Server Profiles </h2>
 <div class="outline-text-2" id="text-5">
 
 <p>When starting the script, it will ask you which server profile you
@@ -398,16 +494,27 @@ Select 1-7 and press ENTER
 </div>
 
 <div id="outline-container-5-1" class="outline-3">
-<h3 id="sec-5-1"><span class="section-number-3">5.1</span> Common for editorial, presentation and search instances </h3>
+<h3 id="sec-5-1"><span class="section-number-3">5.1</span> Common for Editorial, Presentation and Search Instances </h3>
 <div class="outline-text-3" id="text-5-1">
 
-<ul>
-<li>Sun Java 6
-</li>
-<li>Apache Tomcat application server:
+
+</div>
+
+<div id="outline-container-5-1-1" class="outline-4">
+<h4 id="sec-5-1-1"><span class="section-number-4">5.1.1</span> Sun Java 6 </h4>
+<div class="outline-text-4" id="text-5-1-1">
+
+</div>
+
+</div>
+
+<div id="outline-container-5-1-2" class="outline-4">
+<h4 id="sec-5-1-2"><span class="section-number-4">5.1.2</span> Apache Tomcat application server </h4>
+<div class="outline-text-4" id="text-5-1-2">
+
 <ul>
 <li>Compression of textual content (previously, this was typically set
-    up with Apache and its mod_deflate module).
+  up with Apache and its mod_deflate module).
 </li>
 <li>pooling set up tweaked for high read/write performance.
 </li>
@@ -415,31 +522,72 @@ Select 1-7 and press ENTER
 </li>
 <li>routing information in the cookies
 </li>
-<li>access log
-
+<li>application server access log
 </li>
 </ul>
 
-</li>
-<li>APR, native library for optimal Tomcat I/O performance
-</li>
-<li>Escenic Assembly environment
-</li>
-<li>Database driver
+</div>
 
-</li>
-<li>Compression of content (what was previously accomplished with
-  Apache/mod_deflate) 
-</li>
-</ul>
+</div>
+
+<div id="outline-container-5-1-3" class="outline-4">
+<h4 id="sec-5-1-3"><span class="section-number-4">5.1.3</span> Basic Escenic Nursery configuration </h4>
+<div class="outline-text-4" id="text-5-1-3">
+
+<p>The basic Nursery configuration is taken care of for you, including RMI,
+  database, search and application server/URIs. 
+</p></div>
+
+</div>
+
+<div id="outline-container-5-1-4" class="outline-4">
+<h4 id="sec-5-1-4"><span class="section-number-4">5.1.4</span> APR, native library for optimal Tomcat I/O performance </h4>
+<div class="outline-text-4" id="text-5-1-4">
+
+</div>
+
+</div>
+
+<div id="outline-container-5-1-5" class="outline-4">
+<h4 id="sec-5-1-5"><span class="section-number-4">5.1.5</span> Escenic Assembly environment </h4>
+<div class="outline-text-4" id="text-5-1-5">
+
+<p>The reason why ece-install sets this up on each host, is to make the
+installation process as smooth as possible. The assembly environment
+may be removed after the installation if you want to.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-5-1-6" class="outline-4">
+<h4 id="sec-5-1-6"><span class="section-number-4">5.1.6</span> Database driver </h4>
+<div class="outline-text-4" id="text-5-1-6">
 
 
+</div>
+
+</div>
+
+<div id="outline-container-5-1-7" class="outline-4">
+<h4 id="sec-5-1-7"><span class="section-number-4">5.1.7</span> Compression of content </h4>
+<div class="outline-text-4" id="text-5-1-7">
+
+<p>This was was previously accomplished by having a web server in fron t
+of the application server (or cache server if you used ESI). A typical
+system architecture would contain Apache with mod_deflate. However,
+this is no longer necessary as Varnish can handles ESI parsing of
+compressed content (and many other things that we before needed Apache
+for). Thus, we'll let the application server do the compression for us
+now.
+</p>
+</div>
 </div>
 
 </div>
 
 <div id="outline-container-5-2" class="outline-3">
-<h3 id="sec-5-2"><span class="section-number-3">5.2</span> 1 - Full stack on one host </h3>
+<h3 id="sec-5-2"><span class="section-number-3">5.2</span> 1 - Full Stack on One Host </h3>
 <div class="outline-text-3" id="text-5-2">
 
 <p>This profile is suitable for developers and admins wanting to set up a
@@ -457,7 +605,7 @@ the different profile descriptions bellow.
 </div>
 
 <div id="outline-container-5-3" class="outline-3">
-<h3 id="sec-5-3"><span class="section-number-3">5.3</span> 2 - Editorial server (publication server) </h3>
+<h3 id="sec-5-3"><span class="section-number-3">5.3</span> 2 - Editorial Server (Publication Server) </h3>
 <div class="outline-text-3" id="text-5-3">
 
 
@@ -467,7 +615,7 @@ the different profile descriptions bellow.
 </div>
 
 <div id="outline-container-5-4" class="outline-3">
-<h3 id="sec-5-4"><span class="section-number-3">5.4</span> 3 - Presentation server </h3>
+<h3 id="sec-5-4"><span class="section-number-3">5.4</span> 3 - Presentation Server </h3>
 <div class="outline-text-3" id="text-5-4">
 
 <p>This will set up a typical presentation server:
@@ -488,7 +636,7 @@ the different profile descriptions bellow.
 </div>
 
 <div id="outline-container-5-5" class="outline-3">
-<h3 id="sec-5-5"><span class="section-number-3">5.5</span> 4 - Database server </h3>
+<h3 id="sec-5-5"><span class="section-number-3">5.5</span> 4 - Database Server </h3>
 <div class="outline-text-3" id="text-5-5">
 
 <p>If ece-install is run on a support version of Debian or Ubuntu, this
@@ -506,15 +654,26 @@ this, the script will make a call to drop-and-create-ecedb in the same
 directory as the ece-intall script itself.
 </p>
 <p>
-If you wish to change the DB's host, user or password, you must update
-the drop-and-create-ecedb script prior to running ece-install. 
+The script will fail by itself if the DB already exists:
 </p>
+
+
+<pre class="example">[ece-install] Setting up the ECE database schema ...
+ERROR 1007 (HY000) at line 1: Can't create database 'ece5db'; database exists
+ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already exists
+[ece-install] running tables FAILED, exiting :-(
+
+</pre>
+
+
+
+
 </div>
 
 </div>
 
 <div id="outline-container-5-6" class="outline-3">
-<h3 id="sec-5-6"><span class="section-number-3">5.6</span> 5 - Cache server </h3>
+<h3 id="sec-5-6"><span class="section-number-3">5.6</span> 5 - Cache Server </h3>
 <div class="outline-text-3" id="text-5-6">
 
 <p>If ece-install is run on a support version of Debian or Ubuntu, it
@@ -578,12 +737,12 @@ when you bought Widget Framework. If you for some reason do not have
 these, please contact support@escenic.com. 
 </p>
 <p>
-If you don't have these ready in your .escenicrc, ece-install will
+If you don't have these ready in your .ece-install.conf, ece-install will
 complain:
 </p>
 
 
-<pre class="example">[ece-install] Be sure to set wf_user and wf_password in /root/.escenicrc
+<pre class="example">[ece-install] Be sure to set wf_user and wf_password in /root/.ece-install.conf
 [ece-install] If you don't have these, please contact support@escenic.com
 
 </pre>
@@ -696,7 +855,7 @@ When FAI is enabled, ece-install will report:
 </div>
 
 <div id="outline-container-7" class="outline-2">
-<h2 id="sec-7"><span class="section-number-2">7</span> Running more than one installation process </h2>
+<h2 id="sec-7"><span class="section-number-2">7</span> Running More Than One Installation Process </h2>
 <div class="outline-text-2" id="text-7">
 
 <p>If the script believes there's already an ece-intall process running,
@@ -719,7 +878,7 @@ it will abort:
 </div>
 
 <div id="outline-container-8" class="outline-2">
-<h2 id="sec-8"><span class="section-number-2">8</span> Re-running ece-install </h2>
+<h2 id="sec-8"><span class="section-number-2">8</span> Re-running ece-install (and How To Speed It Up) </h2>
 <div class="outline-text-2" id="text-8">
 
 <p>Although the initial thought behind ece-install, is to run it on a
@@ -759,7 +918,7 @@ following variables:
 </div>
 
 <div id="outline-container-9" class="outline-2">
-<h2 id="sec-9"><span class="section-number-2">9</span> Overview of file paths used by the ece-install script </h2>
+<h2 id="sec-9"><span class="section-number-2">9</span> Overview of File Paths Used by the ece-install script </h2>
 <div class="outline-text-2" id="text-9">
 
 <p>There are of course other paths involved when setting up your system,
@@ -811,8 +970,28 @@ but these should be the most interesting ones.
 </div>
 
 <div id="outline-container-10" class="outline-2">
-<h2 id="sec-10"><span class="section-number-2">10</span> Uninstalling everything that the ece-install set up </h2>
+<h2 id="sec-10"><span class="section-number-2">10</span> Assumptions </h2>
 <div class="outline-text-2" id="text-10">
+
+
+</div>
+
+<div id="outline-container-10-1" class="outline-3">
+<h3 id="sec-10-1"><span class="section-number-3">10.1</span> /etc/esecenic is shared </h3>
+<div class="outline-text-3" id="text-10-1">
+
+<p>It's assumed that the /etc/escenic directory is either on a shared
+file system or rsync-ed among the hosts that are running the ECE
+instances (the exception being database and cache servers).
+</p>
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-11" class="outline-2">
+<h2 id="sec-11"><span class="section-number-2">11</span> Uninstalling everything That the ece-install Set Up </h2>
+<div class="outline-text-2" id="text-11">
 
 <p>WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
@@ -830,9 +1009,9 @@ things set up by the script.
 
 </div>
 
-<div id="outline-container-11" class="outline-2">
-<h2 id="sec-11"><span class="section-number-2">11</span> Example Output </h2>
-<div class="outline-text-2" id="text-11">
+<div id="outline-container-12" class="outline-2">
+<h2 id="sec-12"><span class="section-number-2">12</span> Example Output </h2>
+<div class="outline-text-2" id="text-12">
 
 <p>Below is an example output of running ece-install, installing the
 all-in-one profile.
@@ -846,7 +1025,7 @@ CANNOT INCLUDE FILE /tmp/ece-install.out
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-08-25 22:02:19 CST
+  Date: 2011-08-26 17:45:45 CST
 </p></div>
 </div>
 </body>
