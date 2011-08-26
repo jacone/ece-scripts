@@ -55,6 +55,14 @@ function print()
     echo $id $@
 }
 
+function exit_on_error()
+{
+    if [ $? -eq 1 ]; then
+        echo $id $@ "FAILED, exiting :-("
+        exit 1
+    fi
+}
+
 technet_download_list="
 http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
 http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.6.0.zip
@@ -357,11 +365,32 @@ function set_up_ecedb()
             ln -s $directory
         fi
     done
+
+    source /usr/sbin/drop-and-create-ecedb
+    # TODO in future, it'll be possible to override db_user,
+    # db_password and db_schema here by reading these via
+    # get_conf_value
+    create_ecedb
+    exit_on_error "create_ecedb"
     
-    bash /usr/sbin/drop-and-create-ecedb \
-        1>>$log 2>>$log
     cd ~/
     rm -rf /opt/escenic/engine/plugins
+
+    add_next_step "- DB is now set up on $HOSTNAME:3306"
+}
+
+# returns a string of asterixes with the same lenght as the inputted
+# string.
+function get_asterixes()
+{
+    s=""
+    j=$(echo $1 | wc -c)
+
+    # wc -c always returns the length + 1, hence we start on index=1
+    for (( i=1; i<$j; i++ )); do
+        s=${s}"-"
+    done
+    echo "$s"
 }
 
 function set_up_basic_nursery_configuration()
@@ -836,12 +865,11 @@ function print_status_and_next_steps()
     minutes=$(( seconds_left / 60 ))
     seconds_left=$(( seconds_left - $minutes * 60 ))
 
-    print "The basic setup of $instance_name is now completed!"
-    print "It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    print "The installation is now completed!"
+    print "- It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    echo "$next_steps"
 
-    print "You're next steps on ${HOSTNAME} will be:"
-    echo $next_steps
-    
+    print ""
     print "Enjoy your time with Escenic Content Engine!"
     print ""
     print "-Vizrt Online"
@@ -1311,14 +1339,18 @@ function install_cache_server()
 
     set_up_varnish $backend_servers
 
-    add_next_step "The cache server up and running at http://${HOSTNAME}:80/"
+    add_next_step "- Cache server is up and running at http://${HOSTNAME}:80/"
 }
 
 # Parameters:
 # $1 : your added line
 function add_next_step()
 {
-    next_steps=${next_steps}${NEW_LINE}${1}
+    if [ -n "$next_steps" ]; then
+        next_steps=${next_steps}${NEW_LINE}${id}" "${1}
+    else
+        next_steps=${id}" "${1}
+    fi
 }
 
 function install_database_server()
@@ -1427,11 +1459,12 @@ EOF
     
     set_correct_permissions
     assemble_deploy_and_restart_type
-    
-    add_next_step "New ECE instance $instance_name installed."
-    add_next_step "It's running at http://$HOSTNAME:$appserver_port"
-    add_next_step "You can view all installed plugin & engine versions with:"
-    add_next_step "ece -i $instance_name versions"
+
+    admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin
+    add_next_step "- New ECE instance $instance_name installed."
+    add_next_step "- Its admin interface is available at $admin_uri"
+    add_next_step "- You can view all installed plugin & engine versions with:"
+    add_next_step "  ece -i $instance_name versions"
 }
 
 function install_presentation_server()
@@ -1504,6 +1537,8 @@ function create_publication()
     # above.
     create_publication_in_db $publication_war
     assemble_deploy_and_restart_type
+
+    add_next_step "- a new publication $publication_name has been created"
 }
 
 function install_editorial_server()
@@ -1538,12 +1573,10 @@ clientConfiguration=/neo/io/services/HubConnection
 pingTime=10000
 EOF
 
-    next_step="- Restart all your instances to make the hub seem them"
-    next_steps=${next_steps}${NEW_LINE}${next_step}
+    add_next_step "- Restart all your instances to make the hub seem them:"
     for el in /etc/escenic/engine/instance/*; do
         instance_name=$(basename $el)
-        next_step="   * $ ece -i ${instance_name} restart"
-        next_steps=${next_steps}${NEW_LINE}${next_step}
+        add_next_step "   - $ ece -i ${instance_name} restart"
     done
 
     print "Starting the RMI-hub on $HOSTNAME ..."
@@ -1665,6 +1698,9 @@ EOF
     fi
     
     cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
+
+    add_next_step "- Widget Framework has been installed into your local" 
+    add_next_step "  Maven repository and its ECE components have been installed"
 }
 
 function install_search_instance()
