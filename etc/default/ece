@@ -4,13 +4,13 @@
 # instances. If you only have one # instance, use "default" as its
 # name. If you don't have any instances of that type on this host,
 # then just set the variable to an empty string.
-engine_instance_list="app1 app2"
+engine_instance_list="editor1 web1"
 search_instance_list="search1"
-analysis_instance_list="analysis1"
+analysis_instance_list=""
 
 # You only need one hub in an ECE cluster, so only set this one to
-# true on one host.
-enable_rmi_hub=true
+# true on one host. 1 means on, 0 means off.
+enable_rmi_hub=0
 
 # The location of the ece script, default is /usr/bin/ece
 ece_script=/usr/bin/ece
