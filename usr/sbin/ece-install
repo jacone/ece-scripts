@@ -865,7 +865,7 @@ function print_status_and_next_steps()
     minutes=$(( seconds_left / 60 ))
     seconds_left=$(( seconds_left - $minutes * 60 ))
 
-    print "The installation is now completed!"
+    print "The installation is now complete!"
     print "- It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
     echo "$next_steps"
 

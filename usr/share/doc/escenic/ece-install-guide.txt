@@ -2,7 +2,7 @@
               ==========================================
 
 Author: Torstein Krause Johansen
-Date: 2011-08-26 17:45:48 CST
+Date: 2011-08-26 18:28:17 CST
 
 
 Table of Contents
@@ -36,7 +36,7 @@ Table of Contents
 10 Assumptions 
     10.1 /etc/esecenic is shared 
 11 Uninstalling everything That the ece-install Set Up 
-12 Example Output 
+12 Example Output FAI 
 
 
 1 Supported Operating Systems 
@@ -496,10 +496,77 @@ function, it has copy and pastable commands for undoing most/all
 things set up by the script.
 
 
-12 Example Output 
-------------------
-Below is an example output of running ece-install, installing the
-all-in-one profile.
+12 Example Output FAI 
+----------------------
+The ece-install will often be run in FAI mode where all the settings
+are read from ~/.ece-install.conf. Given the following entries in this
+file: 
 
-CANNOT INCLUDE FILE /tmp/ece-install.out
+
+  technet_user=apples
+  technet_password=andoranges
+  wf_user=foo
+  wf_password=bar
+  
+  fai_enabled=1
+  fai_all_install=1
+
+
+
+
+The following output is produced from ece-install:
+
+
+  root@ubiquitous:~# bash ece-install 
+  [ece-install] Full Automatic Install (FAI) enabled.
+  [ece-install] All user input will be read from /root/.ece-install.conf
+  [ece-install] I'm logging to /var/log/ece-install.log
+  [ece-install] Setting correct permissions on all ECE related directories ...
+  [ece-install] Stopping conflicting processes ...
+  [ece-install] Installing 3rd party packages needed by ece-install ...
+  [ece-install] Setting up the ece UNIX scripts ...
+  [ece-install] Adding the ece init.d script to the default run levels...
+  [ece-install] Setting up the escenic user's UNIX environment ...
+  [ece-install] Installing an all-in-one environment on ubiquitous ...
+  [ece-install] Installing the database server on ubiquitous ...
+  [ece-install] Installing the Percona database ...
+  [ece-install] Downloading Escenic software from technet.escenic.com ...
+  [ece-install] Setting up the Escenic Content Engine & its plugins ...
+  [ece-install] Setting up the ECE database schema ...
+  [ece-install] Installing 3rd party packages needed by ECE ...
+  [ece-install] Setting up the Assembly Tool ...
+  [ece-install] Setting up the basic Nursery configuration ...
+  [ece-install] Setting up the application server ...
+  [ece-install] Setting up proper log4j & Java logging configuration ...
+  [ece-install] Setting correct permissions on all ECE related directories ...
+  [ece-install] Assembling, deploying & starting dev1 ...
+  [ece-install] Installing a caching server on ubiquitous ...
+  [ece-install] Setting up Varnish to match your environment ...
+  [ece-install] Setting up solr ...
+  [ece-install] Creating a Maven settings file: /root/.m2/settings.xml ...
+  [ece-install] Downloading Widget Framework from technet.escenic.com ...
+  [ece-install] Installing Widget Framework into your local Maven repository ...
+  [ece-install] Getting ready to create a new publiation ...
+  [ece-install] Setting up the mypub publication ...
+  [ece-install] Basing mypub.war on the Widget Framework Demo ...
+  [ece-install] Creating publication mypub using dev1 ...
+  [ece-install] Assembling, deploying & starting dev1 ...
+  [ece-install] The installation is now complete!
+  [ece-install] - It took 0d 0h 29m 40s
+  [ece-install] - DB is now set up on ubiquitous:3306
+  [ece-install] - New ECE instance dev1 installed.
+  [ece-install] - Its admin interface is available at http://ubiquitous:8080/escenic-admin
+  [ece-install] - You can view all installed plugin & engine versions with:
+  [ece-install]   ece -i dev1 versions
+  [ece-install] - Cache server is up and running at http://ubiquitous:80/
+  [ece-install] - Widget Framework has been installed into your local
+  [ece-install]   Maven repository and its ECE components have been installed
+  [ece-install] - a new publication mypub has been created
+  [ece-install]
+  [ece-install] Enjoy your time with Escenic Content Engine!
+  [ece-install]
+  [ece-install] -Vizrt Online
+
+
+
 
