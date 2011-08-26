@@ -71,7 +71,7 @@ java_home
 function exit_on_error()
 {
     if [ $? -eq 1 ]; then
-        print $1 "FAILED, exiting :-("
+        print $@ "FAILED, exiting :-("
         exit 1
     fi
 }
