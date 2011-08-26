@@ -37,12 +37,14 @@ dir_list="
 
 ece_script=/usr/bin/ece
 
-# the values above may be overidden a file named the same as this
-# init.d script, located in:
+# The values above may be overidden a file named the same as this
+# init.d script. This init.d configuration must also hold the
+# variables controlling which ECE instances to start. The list of
+# locations per default caters (at least) for Debian & Gentoo based
+# systems:
 conf_file_location_list="
 /etc/default
 /etc/conf.d
-/tmp
 "
 
 function read_conf_file()
@@ -85,7 +87,7 @@ function ensure_ece_script_is_ok()
 
 function execute_command()
 {
-    if [ $enable_rmi_hub = "true" ]; then
+    if [ $enable_rmi_hub -eq 1 ]; then
         su - $ece_unix_user -c "$ece_script -t rmi-hub $1"
     fi
     
