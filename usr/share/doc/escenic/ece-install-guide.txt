@@ -2,7 +2,7 @@
               ==========================================
 
 Author: Torstein Krause Johansen
-Date: 2011-08-26 18:28:17 CST
+Date: 2011-08-26 18:32:11 CST
 
 
 Table of Contents
@@ -35,7 +35,7 @@ Table of Contents
 9 Overview of File Paths Used by the ece-install script 
 10 Assumptions 
     10.1 /etc/esecenic is shared 
-11 Uninstalling everything That the ece-install Set Up 
+11 Uninstalling Everything That the ece-install Set Up 
 12 Example Output FAI 
 
 
@@ -483,7 +483,7 @@ file system or rsync-ed among the hosts that are running the ECE
 instances (the exception being database and cache servers).
  
 
-11 Uninstalling everything That the ece-install Set Up 
+11 Uninstalling Everything That the ece-install Set Up 
 -------------------------------------------------------
 WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your

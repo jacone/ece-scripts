@@ -367,7 +367,7 @@ It's assumed that the /etc/escenic directory is either on a shared
 file system or rsync-ed among the hosts that are running the ECE
 instances (the exception being database and cache servers).
  
-* Uninstalling everything That the ece-install Set Up
+* Uninstalling Everything That the ece-install Set Up
 WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
 host. However, this may be useful if you're installing a clean
