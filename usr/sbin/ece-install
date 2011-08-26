@@ -23,7 +23,7 @@ java_home=/usr/lib/jvm/java-6-sun
 id="[$(basename $0)]"
 pid_file=/var/run/$(basename $0).pid
 download_dir=/tmp/ece-downloads
-log=/tmp/$(basename $0).log
+log=/var/log/$(basename $0).log
 conf_file=$HOME/.ece-install.conf
 common_nursery_dir=/etc/escenic/engine/common
 
@@ -475,6 +475,24 @@ org.apache.catalina.core.ContainerBase.[Catalina].[localhost].handlers = 2localh
 EOF
 }
 
+# Parameters:
+# $1 is the property
+# $2 is the value
+# $3 is the file
+function set_conf_file_value()
+{
+    if [ -r $3 ]; then
+        if [ $(grep $1 $3 | wc -l) -gt 0 ]; then
+            # TODO update existing values of the property instead of
+            # removing & appending it.
+            cat $3 | grep -v ^$1 > $3.tmp
+            mv $3.tmp $3
+        fi
+    fi
+    
+    echo "$1=$2" >> $3
+}
+
 # The function accepts the following parameters:
 # $1 is the property
 # $2 is the value
@@ -484,17 +502,7 @@ EOF
 function set_ece_instance_conf()
 {
     instance_conf_file=/etc/escenic/ece-$instance_name.conf
-    
-    if [ -r $instance_conf_file ]; then
-        if [ $(grep $1 $instance_conf_file | wc -l) -gt 0 ]; then
-            # TODO update existing values of the property instead of
-            # removing & appending it.
-            cat $instance_conf_file | grep -v ^$1 > $instance_conf_file.tmp
-            mv $instance_conf_file.tmp $instance_conf_file
-        fi
-    fi
-    
-    echo "$1=$2" >> $instance_conf_file
+    set_conf_file_value $1 $2 $instance_conf_file
 }
 
 # Installs third party packages needed by the ECE (i.e. Java related).
@@ -543,22 +551,31 @@ function set_up_app_server
         print "Or enter: <port> <shutdown port>, e.g.: '8180 8105'"
         echo -n "Your choice [8080 8005]> "
         read user_ports
+        
+        if [ -z "$user_ports" ]; then
+            appserver_port=$(echo $user_ports | cut -d' ' -f1)
+            shutdown_port=$(echo $user_ports | cut -d' ' -f2)
+        fi
     else
-        user_ports=$(get_conf_value fai_editor_port)
-        if [ -n "${user_ports}" ]; then
-            user_ports=$user_ports" "$(get_conf_value fai_editor_shutdown)
+        if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+            appserver_port=$(get_conf_value fai_editor_port)
+            shutdown_port=$(get_conf_value fai_editor_shutdown)
+        elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+            appserver_port=$(get_conf_value fai_presentation_port)
+            shutdown_port=$(get_conf_value fai_presentation_shutdown)
+        elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+            appserver_port=$(get_conf_value fai_search_port)
+            shutdown_port=$(get_conf_value fai_search_shutdown)
         fi
     fi
 
-    if [ -z "$user_ports" ]; then
+    if [ -z "$appserver_port" ]; then
         appserver_port=8080
-        shutdown_port=8005
-    else
-        appserver_port=$(echo $user_ports | cut -d' ' -f1)
-        shutdown_port=$(echo $user_ports | cut -d' ' -f2)
+    elif [ -z "$appserver_shutdown" ]; then
+        appserver_shutdown=8005
     fi
     
-    debug "user_ports=[${user_ports}] appserver_port=$appserver_port shutdown_port=$shutdown_port"
+    debug "appserver_port=$appserver_port shutdown_port=$shutdown_port"
     
     if [ $fai_enabled -eq 0 ]; then
         print "Another question: Where does the database run?"
@@ -822,29 +839,12 @@ function print_status_and_next_steps()
     print "The basic setup of $instance_name is now completed!"
     print "It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 
-    if [ $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
-        echo "The cache server up and running at http://${HOSTNAME}:80/"
-    fi
+    print "You're next steps on ${HOSTNAME} will be:"
+    echo $next_steps
     
-    if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER -o \
-        $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
-        print "Your app server is running on"\ "http://${HOSTNAME}:$appserver_port"
-        print ""
-        versions="ece -i $instance_name -t $type versions"
-        print "You can now switch to the $ece_user and type:"
-        print "     $versions"
-        print "to see the Escenic software I have installed for you."
-
-        print ""
-        print "You're next steps on ${HOSTNAME} will be:"
-        print "- configure the instances you want to be started at boot time"
-        print "  in /etc/default/ece"
-        print "- include $instance_name in your RMI hub configuration."
-        print ""
-        print "Enjoy your time with Escenic Content Engine!"
-        print ""
-        print "-Vizrt Online"
-    fi
+    print "Enjoy your time with Escenic Content Engine!"
+    print ""
+    print "-Vizrt Online"
 }
 
 # Based on Erik Mogensen's work:
@@ -1167,7 +1167,7 @@ function read_user_input()
 {
     echo "Hi, which server profile do you wish to install?"
     echo ""
-    echo "Select 1-7 and press ENTER"
+    echo "Select 1-9 and press ENTER"
     echo ""
     echo "  $PROFILE_ALL_IN_ONE - All in one, the full stack on one host. "
     echo "      Suitable for development and test environments."
@@ -1214,6 +1214,11 @@ function assert_correct_runtime_environment()
         exit 1
     else
         echo $BASHPID > $pid_file
+    fi
+
+    if [ ! -e "$conf_file" ]; then
+        print $conf_file "doesn't exist, I cannot live without it :-("
+        exit 1
     fi
 }
 
@@ -1305,6 +1310,15 @@ function install_cache_server()
     fi
 
     set_up_varnish $backend_servers
+
+    add_next_step "The cache server up and running at http://${HOSTNAME}:80/"
+}
+
+# Parameters:
+# $1 : your added line
+function add_next_step()
+{
+    next_steps=${next_steps}${NEW_LINE}${1}
 }
 
 function install_database_server()
@@ -1368,6 +1382,14 @@ function ask_for_instance_name()
         print "Press ENTER to accept the default instance name, $1."
         echo -n "Your choice [$1]> "
         read instance_name
+    else
+        if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+            instance_name=$(get_conf_value fai_editor_name)
+        elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+            instance_name=$(get_conf_value fai_presentation_name)
+        elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+            instance_name=$(get_conf_value fai_search_name)
+        fi
     fi
 
     if [ -z "$instance_name" ]; then
@@ -1405,6 +1427,11 @@ EOF
     
     set_correct_permissions
     assemble_deploy_and_restart_type
+    
+    add_next_step "New ECE instance $instance_name installed."
+    add_next_step "It's running at http://$HOSTNAME:$appserver_port"
+    add_next_step "You can view all installed plugin & engine versions with:"
+    add_next_step "ece -i $instance_name versions"
 }
 
 function install_presentation_server()
@@ -1502,15 +1529,26 @@ function install_rmi_hub()
     file=$file/neo/io/managers/HubConnectionManager.properties
 
     make_dir $(basename $file)
-    echo "hub=rmi://${hub_host}:1099/hub/Hub" > $file
+    set_conf_file_value hub \
+        "rmi://${hub_host}:1099/hub/Hub" \
+        $file
 
     cat > common/io/api/EventManager.properties <<EOF
 clientConfiguration=/neo/io/services/HubConnection
 pingTime=10000
 EOF
 
-    print "TBD : not finished"
-    
+    next_step="- Restart all your instances to make the hub seem them"
+    next_steps=${next_steps}${NEW_LINE}${next_step}
+    for el in /etc/escenic/engine/instance/*; do
+        instance_name=$(basename $el)
+        next_step="   * $ ece -i ${instance_name} restart"
+        next_steps=${next_steps}${NEW_LINE}${next_step}
+    done
+
+    print "Starting the RMI-hub on $HOSTNAME ..."
+    ece_command="ece -t rmi-hub restart"
+    su - $ece_user -c "$ece_command" 1>>$log 2>>$log
 }
 
 # reads the value of the desired setting from $conf_file
@@ -1521,8 +1559,7 @@ function get_conf_value()
 {
     if [ ! -e "$conf_file" ]; then
         print $conf_file "doesn't exist."
-        echo ""
-        return
+        exit 1
     fi
 
     if [ $(grep $1 $conf_file | grep -v ^# | wc -l) -gt 0 ]; then
