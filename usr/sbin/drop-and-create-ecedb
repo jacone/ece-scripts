@@ -149,7 +149,7 @@ function create_ecedb()
         done
     fi
 
-    echo "${id} ${db_product}://${db_host}/${db_schema} is now ready for ${db_user}/${db_password}"
+    debug "${id} ${db_product}://${db_host}/${db_schema} is now ready for ${db_user}/${db_password}"
 }
 
 # pre_install_new_ecedb
