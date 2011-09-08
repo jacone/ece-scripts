@@ -83,9 +83,16 @@ With the configuration file in place, you're now ready to run it:
 # bash ece-install [-v|--verbose]
 #+END_SRC
 
-If something goes astray with the script, and the log file cannot give
-you enough clues, the ultimate way of debugging this is to run the
-BASH interpreter with the -x flag:
+ece-install will try to "fail fast", exiting as soon as it detects an
+error during its execution:
+#+BEGIN_SRC sh
+[ece-install-1] The command [cd /does/not/exist] FAILED, exiting :-(
+[ece-install-1] See /var/log/ece-install.log for further details.
+#+END_SRC
+
+As a last resort, if something goes astray with the script, and the
+log file cannot give you enough clues, the ultimate way of debugging
+this is to run the BASH interpreter with the -x flag:
 #+BEGIN_SRC sh
 # bash -x ece-install
 #+END_SRC
