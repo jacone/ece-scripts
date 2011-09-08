@@ -692,8 +692,11 @@ function set_up_app_server
     run cd $tomcat_base/lib
     make_ln $jdbc_driver
 
+    file=$tomcat_base/conf/catalina.properties
     sed -i 's/common.loader=/common.loader=\$\{catalina.base\}\/escenic\/lib\/\*\.jar\,/g' \
-        > $tomcat_base/conf/catalina.properties
+        $file \
+        1>>$log 2>>$log
+    exit_on_error "sed on $file"
     
     cat > $tomcat_base/conf/server.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
@@ -893,8 +896,8 @@ function print_status_and_next_steps()
     minutes=$(( seconds_left / 60 ))
     seconds_left=$(( seconds_left - $minutes * 60 ))
 
-    print "The installation is now complete!"
-    print "- It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    s="- The installation is now complete!"
+    print $s" It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
     echo "$next_steps"
 
     print ""
@@ -1490,9 +1493,12 @@ EOF
 
     admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin
     add_next_step "- New ECE instance $instance_name installed."
-    add_next_step "- Its admin interface is available at $admin_uri"
+    add_next_step "- Its admin interface is available at"
+    add_next_step "  $admin_uri"
     add_next_step "- You can view all installed plugin & engine versions with:"
     add_next_step "  ece -i $instance_name versions"
+    add_next_step "- Edit /etc/default/ece to configure the instances "
+    add_next_step "  on $HOSTNAME you want to start at boot time."
 }
 
 function install_presentation_server()
