@@ -834,7 +834,10 @@ function set_correct_permissions()
 
     if [ $(grep $ece_user /etc/passwd | wc -l) -lt 1 ]; then
         # TODO add support for useradd
-        run adduser $ece_user -p $ece_user
+        run adduser $ece_user \
+            --disabled-password \
+            --gecos "Escenic-user,Room,Work,Home,Other"
+        add_next_step "- Set a password for the new $ece_user (passwd $ece_user)"
     fi
     if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
         run addgroup $ece_group
