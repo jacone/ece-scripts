@@ -1095,10 +1095,7 @@ function set_up_varnish()
     /etc/init.d/varnish stop 1>>$log 2>>$log
 
     file=/etc/default/varnish
-    cat $file | \
-        sed 's/6081/80/g' \
-        > $file.tmp
-    mv $file.tmp $file
+    sed -i -e 's/6081/80/g' -e 's/^START=no$/START=yes/' $file
 
     cat > /etc/varnish/default.vcl <<EOF
 /* Varnish configuration for Escenic Content Engine              -*- java -*- */
@@ -1127,11 +1124,12 @@ acl adactus {
 EOF
 
     for el in $backend_servers; do
+        appserver_id=$(echo $el | cut -d':' -f1 | sed 's/-/_/g' )
         appserver_host=$(echo $el | cut -d':' -f1)
         appserver_port=$(echo $el | cut -d':' -f2)
 
         cat >> /etc/varnish/default.vcl <<EOF
-backend $appserver_host {
+backend $appserver_id {
   .host = "$appserver_host";
   .port = "$appserver_port";
 }
@@ -1145,10 +1143,10 @@ EOF
 director webdirector client {
 EOF
     for el in $backend_servers; do
-        appserver_host=$(echo $el | cut -d':' -f1)
+	      appserver_id=$(echo $el | cut -d':' -f1 | sed 's/-/_/g' )        
         cat >> /etc/varnish/default.vcl <<EOF
   {
-     .backend = $appserver_host;
+     .backend = $appserver_id;
      .weight = 1;
   }
 EOF
