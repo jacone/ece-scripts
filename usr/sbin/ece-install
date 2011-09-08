@@ -4,6 +4,10 @@
 # five minutes. The setup the user is getting is suitable for a
 # production environment, except for the fact that with this script,
 # all ECE components are set up on the same host.
+#
+# BUG: if creating a publication and WF is downloaded, but not
+# installed, then the pub is built from WF, but WF is not added to the
+# plugins. This _is_ a corner case, but should still be fixed.
 
 # by tkj@vizrt.com
 
@@ -14,13 +18,13 @@ ece_user=escenic
 ece_group=escenic
 jdbc_driver=/usr/share/java/mysql.jar
 debug=0
+tomcat_download=http://ftp.nsysu.edu.tw/Apache/tomcat/tomcat-6/v6.0.32/bin/apache-tomcat-6.0.32.tar.gz
 
 # don't touch this one if you're installing on a Debian based system
 # as it'll be set up for you by the script itself.
 java_home=/usr/lib/jvm/java-6-sun
 #####################################################################
 
-id="[$(basename $0)]"
 pid_file=/var/run/$(basename $0).pid
 download_dir=/tmp/ece-downloads
 log=/var/log/$(basename $0).log
@@ -43,6 +47,13 @@ NEW_LINE="
 # components.
 next_steps=""
 
+
+function get_id()
+{
+    id="[$(basename $0)-$(get_seconds_since_start)]"
+    echo $id
+}
+
 function debug()
 {
     if [ $debug -eq 1 ]; then
@@ -52,7 +63,7 @@ function debug()
 
 function print()
 {
-    echo $id $@
+    echo $(get_id) $@
 }
 
 function exit_on_error()
@@ -80,7 +91,6 @@ http://technet.escenic.com/downloads/release/53/xml-editor-dist-2.1.0.0.zip
 wf_download_list="
 http://technet.escenic.com/downloads/widget-framework/widget-framework-core-1.10.0.0.zip
 "
-tomcat_download=http://ftp.nsysu.edu.tw/Apache/tomcat/tomcat-6/v6.0.32/bin/apache-tomcat-6.0.32.tar.gz
 
 PROFILE_ALL_IN_ONE=1
 PROFILE_CACHE_SERVER=5
@@ -193,13 +203,13 @@ function install_common_os_packages()
             git_package=git
         fi
 
-        packages="curl $git_package wget"
+        packages="curl $git_package wget unzip"
         install_packages_if_missing $packages
     fi
 
-    assert_pre_prequesite curl
-    assert_pre_prequesite wget
-    assert_pre_prequesite git
+    for el in curl wget git unzip; do
+        assert_pre_prequesite $el
+    done
 }
 
 make_dir $ece_directories
@@ -822,7 +832,7 @@ EOF
 # last, give the control back to the ECE user & group 
 function set_correct_permissions()
 {
-    print "Setting correct permissions on all ECE related directories ..."
+    print "Setting correct permissions on ECE related directories ..."
 
     if [ $(grep $ece_user /etc/passwd | wc -l) -lt 1 ]; then
         # TODO add support for useradd
@@ -850,6 +860,13 @@ function set_correct_permissions()
     fi
 }
 
+function get_seconds_since_start()
+{
+    now=`date +%s`
+    started=`stat -c %Y $pid_file`
+    seconds=$(( now - started ))
+    echo "$seconds"
+}
 
 function print_status_and_next_steps()
 {
@@ -1202,8 +1219,7 @@ function read_user_input()
     echo "      It will install caching server, ECE, assembly host, database &"
     echo "      Widget Framework as well as set up a new publication."
     echo "  $PROFILE_EDITORIAL_SERVER - Editorial (publication) server."
-    echo "      This will install ECE, an assembly host & as well as "
-    echo "      creating and set up a new publication."
+    echo "      This will install ECE and an assembly host."
     echo -n "  $PROFILE_PRESENTATION_SERVER - Presentation server "
     echo "(ECE, memcached)."
     echo "  $PROFILE_DB_SERVER - Database server."
@@ -1235,13 +1251,14 @@ function assert_correct_runtime_environment()
     fi
     
     if [ -e $pid_file ]; then
-        print "There's already one $(basename $0) process running. If you believe"
-        print "this is wrong, e.g. if a previous run of $(basename $0) was aborted"
-        print "before it completed, you may delete ${pid_file} and "
-        print "run $(basename $0) again."
+        print "There's already one $(basename $0) process running."
+        print "If you blelieve this is wrong, e.g. if a previous run of" 
+        print "$(basename $0) was aborted before it completed, you"
+        print "may remove ${pid_file} and run $(basename $0) again."
         exit 1
     else
         echo $BASHPID > $pid_file
+        started=`stat -c %Y $pid_file`
     fi
 
     if [ ! -e "$conf_file" ]; then
@@ -1347,9 +1364,9 @@ function install_cache_server()
 function add_next_step()
 {
     if [ -n "$next_steps" ]; then
-        next_steps=${next_steps}${NEW_LINE}${id}" "${1}
+        next_steps=${next_steps}${NEW_LINE}$(get_id)" "${1}
     else
-        next_steps=${id}" "${1}
+        next_steps=$(get_id)" "${1}
     fi
 }
 
@@ -1546,10 +1563,6 @@ function install_editorial_server()
     print "Installing an editorial server on $HOSTNAME ..."
 
     install_ece_instance "editor1" 0
-    type=engine
-    ece_command="ece -i $instance_name -t $type assemble deploy restart"
-    su - $ece_user -c "$ece_command" 1>>$log 2>>$log
-    create_publication
 }
 
 function install_rmi_hub()
