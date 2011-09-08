@@ -12,7 +12,8 @@
 # by tkj@vizrt.com
 
 #####################################################################
-# User definable variables (the defaults are fine in most cases).
+# User definable variables (the defaults are fine in most cases). Any
+# of these may be overridden in the .ece-isntall.conf file
 #####################################################################
 ece_user=escenic
 ece_group=escenic
@@ -70,9 +71,16 @@ function print()
 function exit_on_error()
 {
     if [ $? -eq 1 ]; then
-        echo $id $@ "FAILED, exiting :-("
+        print "The command ["$@"] FAILED, exiting :-("
+        print "See $log for further details."
         exit 1
     fi
+}
+
+function run()
+{
+    $@ 1>>$log 2>>$log
+    exit_on_error $@
 }
 
 technet_download_list="
@@ -121,7 +129,7 @@ $common_nursery_dir
 function make_dir()
 {
     if [ ! -d $1 ]; then
-        mkdir -p $1
+        run mkdir -p $1
     fi
 }
 
@@ -132,7 +140,7 @@ done
 function make_ln()
 {
     if [ -e $1 -a ! -h $(basename $1) ]; then
-        ln -s $1
+        run ln -s $1
     elif [ ! -e $1 ]; then
         print "Tried to make a symlink to $1, but it doesn't exist"
         exit 1
@@ -156,7 +164,7 @@ function download_escenic_components()
             continue
         fi
         
-        wget --continue \
+        run wget --continue \
             --http-user $technet_user \
             --http-password $technet_password \
             $el \
@@ -187,7 +195,7 @@ install_packages_if_missing()
             return
         fi
         
-        apt-get install -y $@ 1>>$log 2>>$log
+        run apt-get install -y $@ 1>>$log 2>>$log
     fi
 }
 
@@ -223,7 +231,7 @@ function set_up_assembly_tool()
     cd /opt/escenic/assemblytool/
     
     if [ -e $download_dir/assemblytool*zip ]; then
-        unzip -u $download_dir/assemblytool*zip \
+        run unzip -u $download_dir/assemblytool*zip \
             1>>$log 2>>$log
     fi
 
@@ -261,18 +269,13 @@ EOF
         make_ln $directory
     done
 
-    cd /opt/escenic/assemblytool/
-    ant -q initialize \
+    run cd /opt/escenic/assemblytool/
+    run ant -q initialize \
         1>>$log 2>>$log
-    cat assemble.properties | \
-        sed 's/#\ engine.root\ =\ \./engine.root=\/opt\/escenic\/engine/g' \
-        > assemble.properties.tmp
-    mv assemble.properties.tmp assemble.properties
-
-    cat assemble.properties | \
-        sed 's/\#\# plugins\ =\ \/path\/to\/plugins/plugins=\/opt\/escenic\/assemblytool\/plugins/g' \
-        > assemble.properties.tmp
-    mv assemble.properties.tmp assemble.properties
+    run sed -i 's/#\ engine.root\ =\ \./engine.root=\/opt\/escenic\/engine/g' \
+        assemble.properties 
+    run sed -i 's/\#\# plugins\ =\ \/path\/to\/plugins/plugins=\/opt\/escenic\/assemblytool\/plugins/g' \
+        assemble.properties
 }
 
 function set_up_engine_and_plugins()
@@ -287,13 +290,13 @@ function set_up_engine_and_plugins()
     cd /opt/escenic/
 
     if [ ! -d engine-* ]; then
-        unzip -u $download_dir/engine*.zip \
+        run unzip -u $download_dir/engine*.zip \
             1>>$log 2>>$log
         if [ -h engine ]; then
-            rm engine
+            run rm engine
         fi
     
-        ln -s engine-* engine
+        run ln -s engine-* engine
     else
         debug "engine-<version> is already there, skipping to next step."
     fi
@@ -308,7 +311,7 @@ function set_up_engine_and_plugins()
           continue
         fi
         
-        unzip -u $el \
+        run unzip -u $el \
             1>>$log 2>>$log
     done
 
@@ -319,17 +322,17 @@ function set_up_ece_scripts()
 {
     print "Setting up the ece UNIX scripts ..." 
 
-    cd $download_dir
+    run cd $download_dir
     if [ -d ece-scripts ]; then
         (cd ece-scripts
             git pull 1>>$log 2>>$log)
     else
-        git clone $git_source \
+        run git clone $git_source \
             1>>$log 2>>$log
     fi
     
-    cp -r ece-scripts/usr/* /usr/
-    cp -r ece-scripts/etc/* /etc/
+    run cp -r ece-scripts/usr/* /usr/
+    run cp -r ece-scripts/etc/* /etc/
 
     # no need to add init.d scripts to the runlevel(s) for these
     # profiles
@@ -342,7 +345,7 @@ function set_up_ece_scripts()
 
     if [ $on_debian_or_derivative ]; then
         print "Adding the ece init.d script to the default run levels..."
-        update-rc.d ece defaults \
+        run update-rc.d ece defaults \
             1>>$log 2>>$log
     else
         print "You remember to add /etc/intit.d/ece to the desired runlevels" 
@@ -358,7 +361,7 @@ function set_up_ecedb()
     print "Setting up the ECE database schema ..."
 
     make_dir /opt/escenic/engine/plugins
-    cd /opt/escenic/engine/plugins
+    run cd /opt/escenic/engine/plugins
     
     find ../../ -maxdepth 1 -type d | \
         grep -v assemblytool | \
@@ -375,7 +378,7 @@ function set_up_ecedb()
         fi
 
         if [ ! -h $(basename $directory) ]; then
-            ln -s $directory
+            run ln -s $directory
         fi
     done
 
@@ -384,10 +387,9 @@ function set_up_ecedb()
     # db_password and db_schema here by reading these via
     # get_conf_value
     create_ecedb
-    exit_on_error "create_ecedb"
     
     cd ~/
-    rm -rf /opt/escenic/engine/plugins
+    run rm -rf /opt/escenic/engine/plugins
 
     add_next_step "- DB is now set up on $HOSTNAME:3306"
 }
@@ -410,9 +412,9 @@ function set_up_basic_nursery_configuration()
 {
     print "Setting up the basic Nursery configuration ..."
     
-    cp -r /opt/escenic/engine/siteconfig/config-skeleton/* \
+    run cp -r /opt/escenic/engine/siteconfig/config-skeleton/* \
         $common_nursery_dir/
-    cp -r /opt/escenic/engine/security/ \
+    run cp -r /opt/escenic/engine/security/ \
         $common_nursery_dir/
 
     make_dir /etc/escenic/engine/instance
@@ -422,25 +424,21 @@ function set_up_basic_nursery_configuration()
             continue
         fi
 
-        cp -r $el/misc/siteconfig/* $common_nursery_dir/
-        
+        run cp -r $el/misc/siteconfig/* $common_nursery_dir/
     done
 
-    cat > $common_nursery_dir/ServerConfig.properties <<EOF
+    run cat > $common_nursery_dir/ServerConfig.properties <<EOF
 databaseProductName=MySQL
 filePublicationRoot=/var/lib/escenic/engine/
 webPublicationRoot=http://$HOSTNAME:${appserver_port}/
 EOF
-    cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
+    run cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
 readConnector=/connector/ReadConnector
 updateConnector=/connector/UpdateConnector
 EOF
 
     file=$common_nursery_dir/com/escenic/community/CommunityEngine.properties
-    cat $file | \
-        sed 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' \
-        > $file.tmp
-    mv $file.tmp $file
+    sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
 
     file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
     cat >> $file <<EOF
@@ -458,7 +456,7 @@ function set_up_instance_specific_nursery_configuration()
        i=$(( i + 1 ))
        if [ $(basename $el) = $instance_name ]; then
            rmi_port="8${i}23"
-           echo "port=$rmi_port" > $el/RMI.properties
+           run echo "port=$rmi_port" > $el/RMI.properties
        fi
     done
 
@@ -468,7 +466,7 @@ function set_up_instance_specific_nursery_configuration()
     
     # we don't touch it if the file already exists.
     if [ ! -e $file ]; then
-        echo "hostname=$HOSTNAME" >> $file
+        run echo "hostname=$HOSTNAME" >> $file
     fi
     
 }
@@ -486,7 +484,7 @@ log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
 EOF
     cd $tomcat_base/lib/
     make_ln $common_nursery_dir/trace.properties
-    ln -sf trace.properties log4j.properies
+    run ln -sf trace.properties log4j.properies
 
     cat > $tomcat_base/conf/logging.properties <<EOF
 handlers = 1catalina.org.apache.juli.FileHandler, 2localhost.org.apache.juli.FileHandler, java.util.logging.ConsoleHandler, 6localhost.org.apache.juli.FileHandler
@@ -662,19 +660,18 @@ function set_up_app_server
         search_port=$(echo $user_search | cut -d':' -f2)
     fi
     
-    cd $download_dir
-    wget --continue $tomcat_download \
+    run cd $download_dir
+    run wget --continue $tomcat_download \
         1>>$log 2>>$log
     
-    cd /opt/
-    
-    tar xzf $download_dir/apache-tomcat*.tar.gz
-    ln -sf apache-tomcat* tomcat
+    run cd /opt/
+    run tar xzf $download_dir/apache-tomcat*.tar.gz
+    run ln -sf apache-tomcat* tomcat
     
     tomcat_base=/opt/tomcat-${instance_name}
     make_dir $tomcat_base
 
-    cp -r /opt/apache-tomcat*/conf/ $tomcat_base
+    run cp -r /opt/apache-tomcat*/conf/ $tomcat_base
     for el in bin escenic/lib lib work logs temp webapps; do
         make_dir $tomcat_base/$el
     done
@@ -682,13 +679,11 @@ function set_up_app_server
     set_ece_instance_conf tomcat_base $tomcat_base   
     set_ece_instance_conf tomcat_home /opt/tomcat   
    
-    cd $tomcat_base/lib
+    run cd $tomcat_base/lib
     make_ln $jdbc_driver
 
-    cat $tomcat_base/conf/catalina.properties | \
-        sed 's/common.loader=/common.loader=\$\{catalina.base\}\/escenic\/lib\/\*\.jar\,/g' \
-        > $tomcat_base/conf/catalina.properties.tmp
-    mv $tomcat_base/conf/catalina.properties.tmp $tomcat_base/conf/catalina.properties
+    run sed -i 's/common.loader=/common.loader=\$\{catalina.base\}\/escenic\/lib\/\*\.jar\,/g' \
+        > $tomcat_base/conf/catalina.properties
     
     cat > $tomcat_base/conf/server.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
@@ -839,26 +834,26 @@ function set_correct_permissions()
 
     if [ $(grep $ece_user /etc/passwd | wc -l) -lt 1 ]; then
         # TODO add support for useradd
-        adduser $ece_user
+        run adduser $ece_user -p $ece_user
     fi
     if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
-        addgroup $ece_group
+        run addgroup $ece_group
     fi
 
     for el in $dir_list; do
         if [ -d $el ]; then
-            chown -R ${ece_user}:${ece_group} $el \
+            run chown -R ${ece_user}:${ece_group} $el \
                 1>>$log 2>>$log                
         fi
     done
     
     if [ -d "$tomcat_base" ]; then
-        chown -R ${ece_user}:${ece_group} $tomcat_base \
+        run chown -R ${ece_user}:${ece_group} $tomcat_base \
         1>>$log 2>>$log
     fi
 
     if [ $(ls /tmp | grep ^ece | wc -l) -gt 0 ]; then
-        chown -R ${ece_user}:${ece_group} /tmp/ece-* \
+        run chown -R ${ece_user}:${ece_group} /tmp/ece-* \
             1>>$log 2>>$log
     fi
 }
@@ -912,14 +907,14 @@ function create_publication_in_db()
         exit 1;
     fi
 
-    curl --silent \
+    run curl --silent \
         -F "type=webapp" \
         -F "resourceFile=@${1}" \
         --cookie JSESSIONID="$cookie" \
         "${ece_admin_uri}/do/publication/resource" \
         1>>$log 2>>$log
     
-    curl --silent  \
+    run curl --silent  \
         -F "name=${publication_name}" \
         -F "publisherName=Escenic" \
         -F "adminPassword=${publication_name}" \
@@ -948,7 +943,7 @@ function create_publication_definition_and_war()
 
     print "Setting up the ${publication_name} publication ..."
     make_dir /opt/escenic/assemblytool/publications/
-    cd /opt/escenic/assemblytool/publications/
+    run cd /opt/escenic/assemblytool/publications/
     cat > /opt/escenic/assemblytool/publications/${publication_name}.properties <<EOF
 name: ${publication_name}
 source-war: ${publication_name}.war
@@ -958,13 +953,13 @@ EOF
     publication_war=/opt/escenic/assemblytool/publications/${publication_name}.war
     if [ -d /opt/escenic/widget-framework-core-* ]; then
         print "Basing ${publication_name}.war on the Widget Framework Demo ..."
-        cd /opt/escenic/widget-framework-core-*/publications/demo-core
-        mvn package \
+        run cd /opt/escenic/widget-framework-core-*/publications/demo-core
+        run mvn package \
             1>>$log 2>>$log
-        cp target/demo-core-*.war ${publication_war}
+        run cp target/demo-core-*.war ${publication_war}
     else
         print "Basing your ${publication_name}.war on ECE/demo-clean ..."
-        cp /opt/escenic/engine/contrib/wars/demo-clean.war ${publication_war}
+        run cp /opt/escenic/engine/contrib/wars/demo-clean.war ${publication_war}
     fi
     
 }
@@ -1018,10 +1013,10 @@ function set_up_user_enviornment()
      # TODO get this from ece.conf and other magic
 
     if [ $(grep JAVA_HOME /home/$ece_user/.bashrc | wc -l) -lt 1 ]; then
-        echo JAVA_HOME=$java_home >> /home/$ece_user/.bashrc
+        run echo JAVA_HOME=$java_home >> /home/$ece_user/.bashrc
     fi
     if [ $(grep JAVA_HOME /root/.bashrc | wc -l) -lt 1 ]; then
-        echo JAVA_HOME=$java_home >> /root/.bashrc
+        run echo JAVA_HOME=$java_home >> /root/.bashrc
     fi
 
     if [ $on_debian_or_derivative -eq 1 ]; then
@@ -1030,7 +1025,7 @@ function set_up_user_enviornment()
 
     if [ $(grep bash_completion.d/ece /home/$ece_user/.bashrc | wc -l) -lt 1 ]
     then
-        echo ". /etc/bash_completion.d/ece" \
+        run echo ". /etc/bash_completion.d/ece" \
             >> /home/$ece_user/.bashrc
     fi
 }
@@ -1039,13 +1034,13 @@ function set_up_solr()
 {
     print "Setting up solr ..."
     if [ ! -d /etc/escenic/solr ]; then
-        cp -r  /opt/escenic/engine/solr/conf /etc/escenic/solr
+        run cp -r /opt/escenic/engine/solr/conf /etc/escenic/solr
     fi
     
     make_dir /var/lib/escenic/solr/
-    cd /var/lib/escenic/solr/
+    run cd /var/lib/escenic/solr/
     if  [ ! -h conf ]; then
-        ln -s /etc/escenic/solr conf
+        run ln -s /etc/escenic/solr conf
     fi
 }
 
@@ -1098,7 +1093,7 @@ function set_up_varnish()
     /etc/init.d/varnish stop 1>>$log 2>>$log
 
     file=/etc/default/varnish
-    sed -i -e 's/6081/80/g' -e 's/^START=no$/START=yes/' $file
+    run sed -i -e 's/6081/80/g' -e 's/^START=no$/START=yes/' $file
 
     cat > /etc/varnish/default.vcl <<EOF
 /* Varnish configuration for Escenic Content Engine              -*- java -*- */
@@ -1273,7 +1268,7 @@ function common_pre_install()
 {
     print "I'm logging to $log"
 
-    source $conf_file
+    run source $conf_file
 
     if [ -z "$technet_user" -o -z "$technet_password" ]; then
         print "Be sure to set technet_user and technet_password "
@@ -1313,10 +1308,10 @@ function add_apt_source()
     escenic_sources=/etc/apt/sources.list.d/escenic.list
     if [ ! -e $escenic_sources ]; then
         echo "$@" >> $escenic_sources
-        apt-get update 1>>$log 2>>$log
+        run apt-get update 1>>$log 2>>$log
     elif [ $(grep "$@" $escenic_sources | wc -l) -lt 1 ]; then
         echo "$@" >> $escenic_sources
-        apt-get update 1>>$log 2>>$log
+        run apt-get update 1>>$log 2>>$log
     fi
 }
 
@@ -1325,7 +1320,7 @@ function install_cache_server()
     print "Installing a caching server on $HOSTNAME ..."
 
     if [ $on_debian_or_derivative -eq 1 ]; then
-        curl http://repo.varnish-cache.org/debian/GPG-key.txt 2>>$log | \
+        run curl http://repo.varnish-cache.org/debian/GPG-key.txt 2>>$log | \
             apt-key add - 1>>$log 2>>$log
     fi
     
@@ -1389,17 +1384,17 @@ function install_database_server()
         
          # some how, this is to install Percona 5.5
         if [ -e /var/lib/mysql/debian-*.flag ]; then
-            rm /var/lib/mysql/debian-*.flag
+            run rm /var/lib/mysql/debian-*.flag
         fi
         
         if [ $supported_code_name -eq 1 ]; then
             print "Installing the Percona database ..."
 
             if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
-                gpg --keyserver hkp://keys.gnupg.net \
+                run gpg --keyserver hkp://keys.gnupg.net \
                     --recv-keys 1C4CBDCDCD2EFD2A \
                     1>>$log 2>>$log
-                gpg -a --export CD2EFD2A | apt-key add - \
+                run gpg -a --export CD2EFD2A | apt-key add - \
                     1>>$log 2>>$log
             fi
             add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
@@ -1570,7 +1565,7 @@ function install_rmi_hub()
 {
     make_dir /etc/escenic/rmi-hub
     
-    cp -r /opt/escenic/engine/contrib/rmi-hub/config/* \
+    run cp -r /opt/escenic/engine/contrib/rmi-hub/config/* \
         /etc/escenic/rmi-hub/
 
     hub_host=$HOSTNAME
