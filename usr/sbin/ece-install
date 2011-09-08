@@ -113,7 +113,7 @@ PROFILE_CREATE_PUBLICATION=9
 
 # Because of issue VF-3559, we also create the default family and host
 # directories.
-dir_list="
+engine_dir_list="
 $common_nursery_dir
 /etc/escenic/engine/family/default
 /etc/escenic/engine/host/localhost
@@ -121,6 +121,7 @@ $common_nursery_dir
 /var/cache/escenic
 /var/crash/escenic
 /var/lib/escenic
+/var/lib/escenic/solr/data/index
 /var/log/escenic
 /var/run/escenic
 /var/spool/escenic/migration
@@ -133,10 +134,6 @@ function make_dir()
     fi
 }
 
-for el in $dir_list; do
-    make_dir $el
-done
-
 function make_ln()
 {
     if [ -e $1 -a ! -h $(basename $1) ]; then
@@ -145,6 +142,13 @@ function make_ln()
         print "Tried to make a symlink to $1, but it doesn't exist"
         exit 1
     fi
+}
+
+function set_up_engine_directories()
+{
+    for el in $engine_dir_list; do
+        make_dir $el
+    done
 }
 
 # TODO download documentation to
@@ -272,10 +276,15 @@ EOF
     run cd /opt/escenic/assemblytool/
     run ant -q initialize \
         1>>$log 2>>$log
-    run sed -i 's/#\ engine.root\ =\ \./engine.root=\/opt\/escenic\/engine/g' \
-        assemble.properties 
-    run sed -i 's/\#\# plugins\ =\ \/path\/to\/plugins/plugins=\/opt\/escenic\/assemblytool\/plugins/g' \
-        assemble.properties
+    sed -i 's/#\ engine.root\ =\ \./engine.root=\/opt\/escenic\/engine/g' \
+        assemble.properties \
+        1>>$log 2>>$log
+    exit_on_error "sed on assemble.properties"
+
+    sed -i 's/\#\# plugins\ =\ \/path\/to\/plugins/plugins=\/opt\/escenic\/assemblytool\/plugins/g' \
+        assemble.properties \
+        1>>$log 2>>$log
+    exit_on_error "sed on assemble.properties"
 }
 
 function set_up_engine_and_plugins()
@@ -439,6 +448,7 @@ EOF
 
     file=$common_nursery_dir/com/escenic/community/CommunityEngine.properties
     sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
+    exit_on_error "sed on $file"
 
     file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
     cat >> $file <<EOF
@@ -682,7 +692,7 @@ function set_up_app_server
     run cd $tomcat_base/lib
     make_ln $jdbc_driver
 
-    run sed -i 's/common.loader=/common.loader=\$\{catalina.base\}\/escenic\/lib\/\*\.jar\,/g' \
+    sed -i 's/common.loader=/common.loader=\$\{catalina.base\}\/escenic\/lib\/\*\.jar\,/g' \
         > $tomcat_base/conf/catalina.properties
     
     cat > $tomcat_base/conf/server.xml <<EOF
@@ -1096,7 +1106,8 @@ function set_up_varnish()
     /etc/init.d/varnish stop 1>>$log 2>>$log
 
     file=/etc/default/varnish
-    run sed -i -e 's/6081/80/g' -e 's/^START=no$/START=yes/' $file
+    sed -i -e 's/6081/80/g' -e 's/^START=no$/START=yes/' $file
+    exit_on_error "sed on $file"
 
     cat > /etc/varnish/default.vcl <<EOF
 /* Varnish configuration for Escenic Content Engine              -*- java -*- */
@@ -1456,6 +1467,7 @@ function install_ece_instance()
     download_escenic_components
     check_for_required_downloads
 
+    set_up_engine_directories
     set_up_engine_and_plugins
     set_up_assembly_tool
     set_up_basic_nursery_configuration
