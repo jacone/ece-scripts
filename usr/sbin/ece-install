@@ -30,6 +30,7 @@ download_dir=/tmp/ece-downloads
 log=/var/log/$(basename $0).log
 conf_file=$HOME/.ece-install.conf
 common_nursery_dir=/etc/escenic/engine/common
+git_source=git://github.com/skybert/ece-scripts.git
 
 # globals will be set to correct values in run-time.
 appserver_port=8080
@@ -224,7 +225,6 @@ function set_up_assembly_tool()
     if [ -e $download_dir/assemblytool*zip ]; then
         unzip -u $download_dir/assemblytool*zip \
             1>>$log 2>>$log
-        mv $download_dir/assemblytool*zip /tmp/
     fi
 
     # adding an instance layer to the Nursery configuration
@@ -238,7 +238,6 @@ fileSystemRoot = /etc/escenic/engine/instance/\${com.escenic.instance}/
 EOF
     echo "" >> Nursery.properties
     echo "layer.06 = /layers/instance/Layer" >> Nursery.properties
-    echo "come here" > /tmp/tkj
     
     # set up which plugins to use
     cd /opt/escenic/assemblytool/
@@ -295,16 +294,20 @@ function set_up_engine_and_plugins()
         fi
     
         ln -s engine-* engine
-        mv $download_dir/engine*.zip /tmp
     else
         debug "engine-<version> is already there, skipping to next step."
     fi
     
-    # now, there's only plugins left in the download dir
     # we extract them in /opt/escenic as we want to re-use
     # them between minor updates of ECE.
     cd /opt/escenic/
     for el in $download_dir/*.zip; do
+        if [ "${el/engine*}" == "" ] ; then
+          continue
+        elif [ "${el/assemblytool*}" == "" ] ; then
+          continue
+        fi
+        
         unzip -u $el \
             1>>$log 2>>$log
     done
@@ -321,7 +324,7 @@ function set_up_ece_scripts()
         (cd ece-scripts
             git pull 1>>$log 2>>$log)
     else
-        git clone git://github.com/skybert/ece-scripts.git \
+        git clone $git_source \
             1>>$log 2>>$log
     fi
     
@@ -1260,7 +1263,8 @@ function assert_correct_runtime_environment()
     fi
 
     if [ ! -e "$conf_file" ]; then
-        print $conf_file "doesn't exist, I cannot live without it :-("
+        print $conf_file "doesn't exist."
+        print "I cannot live without it, so I'm exiting :-("
         exit 1
     fi
 }
@@ -1269,8 +1273,7 @@ function common_pre_install()
 {
     print "I'm logging to $log"
 
-    technet_user=`grep technet_user $conf_file 2>/dev/null | cut -d'=' -f2`
-    technet_password=`grep technet_password $conf_file 2>/dev/null | cut -d'=' -f2`
+    source $conf_file
 
     if [ -z "$technet_user" -o -z "$technet_password" ]; then
         print "Be sure to set technet_user and technet_password "
