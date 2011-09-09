@@ -19,7 +19,7 @@ ece_user=escenic
 ece_group=escenic
 jdbc_driver=/usr/share/java/mysql.jar
 debug=0
-tomcat_download=http://ftp.nsysu.edu.tw/Apache/tomcat/tomcat-6/v6.0.32/bin/apache-tomcat-6.0.32.tar.gz
+tomcat_download=http://apache.stu.edu.tw/tomcat/tomcat-6/v6.0.33/bin/apache-tomcat-6.0.33.tar.gz
 
 # don't touch this one if you're installing on a Debian based system
 # as it'll be set up for you by the script itself.
@@ -50,10 +50,18 @@ NEW_LINE="
 next_steps=""
 
 
+function get_seconds_since_start()
+{
+    now=`date +%s`
+    started=`stat -c %Y $pid_file`
+    seconds=$(( now - started ))
+    echo "$seconds"
+}
+
 function get_id()
 {
-    id="[$(basename $0)-$(get_seconds_since_start)]"
-    echo $id
+    timestamp=$(get_seconds_since_start)
+    echo "[$(basename $0)-${timestamp}]"
 }
 
 function debug()
@@ -70,7 +78,7 @@ function print()
 
 function exit_on_error()
 {
-    if [ $? -eq 1 ]; then
+    if [ $? -gt 0 ]; then
         print "The command ["$@"] FAILED, exiting :-("
         print "See $log for further details."
         exit 1
@@ -169,10 +177,10 @@ function download_escenic_components()
         fi
         
         run wget --continue \
+            --inet4-only \
             --http-user $technet_user \
             --http-password $technet_password \
-            $el \
-            1>>$log 2>>$log
+            $el 
     done
 
 }
@@ -436,12 +444,12 @@ function set_up_basic_nursery_configuration()
         run cp -r $el/misc/siteconfig/* $common_nursery_dir/
     done
 
-    run cat > $common_nursery_dir/ServerConfig.properties <<EOF
+    cat > $common_nursery_dir/ServerConfig.properties <<EOF
 databaseProductName=MySQL
 filePublicationRoot=/var/lib/escenic/engine/
 webPublicationRoot=http://$HOSTNAME:${appserver_port}/
 EOF
-    run cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
+    cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
 readConnector=/connector/ReadConnector
 updateConnector=/connector/UpdateConnector
 EOF
@@ -533,10 +541,12 @@ function set_conf_file_value()
 {
     if [ -r $3 ]; then
         if [ $(grep ^$1 $3 | wc -l) -gt 0 ]; then
-            sed -i "s/$1=.*/$1=$2/g" $3
+            sed -i "s/$1=.*/$1=\"$2\"/g" $3
         else
-            echo "$1=$2" >> $3
+            echo "$1=\"$2\"" >> $3
         fi
+    else
+        echo "$1=\"$2\"" >> $3
     fi
 }
 
@@ -668,13 +678,12 @@ function set_up_app_server
     fi
     
     run cd $download_dir
-    run wget --continue $tomcat_download \
-        1>>$log 2>>$log
+    run wget --continue --inet4-only $tomcat_download
     
     run cd /opt/
     run tar xzf $download_dir/apache-tomcat*.tar.gz
     run ln -sf apache-tomcat* tomcat
-    
+
     tomcat_base=/opt/tomcat-${instance_name}
     make_dir $tomcat_base
 
@@ -853,7 +862,7 @@ function set_correct_permissions()
         run addgroup $ece_group
     fi
 
-    for el in $dir_list; do
+    for el in $engine_dir_list; do
         if [ -d $el ]; then
             run chown -R ${ece_user}:${ece_group} $el \
                 1>>$log 2>>$log                
@@ -869,14 +878,6 @@ function set_correct_permissions()
         run chown -R ${ece_user}:${ece_group} /tmp/ece-* \
             1>>$log 2>>$log
     fi
-}
-
-function get_seconds_since_start()
-{
-    now=`date +%s`
-    started=`stat -c %Y $pid_file`
-    seconds=$(( now - started ))
-    echo "$seconds"
 }
 
 function print_status_and_next_steps()
@@ -1088,9 +1089,6 @@ function un_install_ece()
         sun-java6-jdk
     
     apt-get clean
-    
-     # prepare for new install
-    mv /tmp/*.zip /tmp/ece-downloads/
 }
 
 function stop_conflicting_processes()
@@ -1105,6 +1103,10 @@ function set_up_varnish()
     print "Setting up Varnish to match your environment ..."
     /etc/init.d/varnish stop 1>>$log 2>>$log
 
+    # we need to swap standard err and standard out here as varnishd
+    # -V for some reason writes to standard error.
+    using_varnish_3=$(varnishd -V 3>&1 1>&2 2>&3 | grep varnish-3 | wc -l)
+    
     file=/etc/default/varnish
     sed -i -e 's/6081/80/g' -e 's/^START=no$/START=yes/' $file
     exit_on_error "sed on $file"
@@ -1134,9 +1136,8 @@ acl adactus {
 }
 
 EOF
-
     for el in $backend_servers; do
-        appserver_id=$(echo $el | cut -d':' -f1 | sed 's/-/_/g' )
+        appserver_id=$(echo $el | cut -d':' -f1 | sed 's/-/_/g')
         appserver_host=$(echo $el | cut -d':' -f1)
         appserver_port=$(echo $el | cut -d':' -f2)
 
@@ -1206,7 +1207,18 @@ sub vcl_deliver {
    * URL has been fetched from cache or not.
    */
   if (obj.hits > 0) {
+EOF
+    if [ $using_varnish_3 -gt 0 ]; then
+        cat >> /etc/varnish/default.vcl <<EOF
     set resp.http.X-Cache = "HIT #" + obj.hits;
+EOF
+    else
+        cat >> /etc/varnish/default.vcl <<EOF
+    set resp.http.X-Cache = "HIT #" obj.hits;
+EOF
+    fi
+    
+    cat >> /etc/varnish/default.vcl <<EOF
   }
   else {
     set resp.http.X-Cache = "MISS";
@@ -1302,7 +1314,6 @@ function common_pre_install()
     fi
 
     make_dir $download_dir
-    set_correct_permissions
     stop_conflicting_processes
     install_common_os_packages
     set_up_ece_scripts
@@ -1463,7 +1474,7 @@ function ask_for_instance_name()
 function update_type_instances_to_start_up()
 {
     if [ $type = "engine" ]; then
-        for el in $(/etc/escenic/ece-*.conf); do
+        for el in /etc/escenic/ece-*.conf; do
             if [ $(echo el | grep analysis | wc -l) -gt 0 ]; then
                 continue
             elif [ $(echo el | grep search | wc -l) -gt 0 ]; then
@@ -1480,7 +1491,7 @@ function update_type_instances_to_start_up()
                 /etc/default/ece
         done
     elif [ $type = "search" ]; then
-        for el in $(/etc/escenic/ece-*.conf); do
+        for el in /etc/escenic/ece-*.conf; do
             if [ $(echo el | grep search | wc -l) -lt 1 ]; then
                 continue
             fi
@@ -1524,11 +1535,10 @@ function install_ece_instance()
 deploy_webapp_white_list="escenic-admin ${publication_name}"
 EOF
     fi
-    
+
     set_correct_permissions
     assemble_deploy_and_restart_type
     update_type_instances_to_start_up
-    
 
     admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin
     add_next_step "- New ECE instance $instance_name installed."
@@ -1536,8 +1546,8 @@ EOF
     add_next_step "  $admin_uri"
     add_next_step "- You can view all installed plugin & engine versions with:"
     add_next_step "  ece -i $instance_name versions"
-    add_next_step "- Edit /etc/default/ece to configure the instances "
-    add_next_step "  on $HOSTNAME you want to start at boot time."
+    add_next_step "- Verify that /etc/default/ece lists all the instances "
+    add_next_step "  on $HOSTNAME you wish to start at boot time."
 }
 
 function install_presentation_server()
@@ -1562,6 +1572,7 @@ function assemble_deploy_and_restart_type()
     # removal of existing publications.
     ece_command="ece -i $instance_name -t $type assemble deploy restart"
     su - $ece_user -c "$ece_command" 1>>$log 2>>$log
+    exit_on_error "su - $ece_user -c \"$ece_command\""
 }
 
 function ensure_that_instance_is_running()
@@ -1701,7 +1712,6 @@ function install_widget_framework()
     fi
 
     print "Creating a Maven settings file: $HOME/.m2/settings.xml ..."
-    # TODO consider /<home|Users>/${ece_user} instead
     make_dir $HOME/.m2
     cat > $HOME/.m2/settings.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1741,6 +1751,7 @@ EOF
     for el in $wf_download_list; do
         cd $download_dir
         wget --continue \
+            --inet4-only \
             --http-user $technet_user \
             --http-password $technet_password \
             $el \
