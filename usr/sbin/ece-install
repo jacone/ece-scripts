@@ -532,15 +532,12 @@ EOF
 function set_conf_file_value()
 {
     if [ -r $3 ]; then
-        if [ $(grep $1 $3 | wc -l) -gt 0 ]; then
-            # TODO update existing values of the property instead of
-            # removing & appending it.
-            cat $3 | grep -v ^$1 > $3.tmp
-            mv $3.tmp $3
+        if [ $(grep ^$1 $3 | wc -l) -gt 0 ]; then
+            sed -i "s/$1=.*/$1=$2/g" $3
+        else
+            echo "$1=$2" >> $3
         fi
     fi
-    
-    echo "$1=$2" >> $3
 }
 
 # The function accepts the following parameters:
@@ -1460,6 +1457,46 @@ function ask_for_instance_name()
     make_dir /etc/escenic/engine/instance/${instance_name}
 }
 
+# Will update /etc/default/instance with the type instances which are
+# installed on the given host. This method should work for engine,
+# search and analysis instances.
+function update_type_instances_to_start_up()
+{
+    if [ $type = "engine" ]; then
+        for el in $(/etc/escenic/ece-*.conf); do
+            if [ $(echo el | grep analysis | wc -l) -gt 0 ]; then
+                continue
+            elif [ $(echo el | grep search | wc -l) -gt 0 ]; then
+                continue
+            fi
+
+            current_instance=$(basename ${el} | \
+                sed -e 's/ece-//g' -e 's/engine-//g' | \
+                cut -d'.' -f1)
+            all_instances="$all_instances $current_instance"
+
+            set_conf_file_value engine_instance_list \
+                "$all_instances" \
+                /etc/default/ece
+        done
+    elif [ $type = "search" ]; then
+        for el in $(/etc/escenic/ece-*.conf); do
+            if [ $(echo el | grep search | wc -l) -lt 1 ]; then
+                continue
+            fi
+
+            current_instance=$(basename ${el} | \
+                sed -e 's/ece-//g' -e 's/search-//g' | \
+                cut -d'.' -f1)
+            all_instances="$all_instances $current_instance"
+
+            set_conf_file_value search_instance_list \
+                "$all_instances" \
+                /etc/default/ece
+        done
+    fi
+}
+
 # $1=<default instance name>
 # $2=<editorial server=0 | presentation server=1>
 function install_ece_instance()
@@ -1490,6 +1527,8 @@ EOF
     
     set_correct_permissions
     assemble_deploy_and_restart_type
+    update_type_instances_to_start_up
+    
 
     admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin
     add_next_step "- New ECE instance $instance_name installed."
