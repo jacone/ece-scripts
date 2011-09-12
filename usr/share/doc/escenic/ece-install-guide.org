@@ -250,34 +250,34 @@ The ece-install script has support for doing a full automatic install
 The ece-install script understands for the following settings in the
 $HOME/.ece-install.conf file of the root user:
 
-|--------------------------------+------------------+-----------------------------------------------|
-| Parameter                      |          Default | Description                                   |
-|--------------------------------+------------------+-----------------------------------------------|
-| fai\_all\_install              |                0 | Install all components on your server.        |
-| fai\_cache\_install            |                0 | Install cache server profile                  |
-| fai\_cache\_backends           | ${HOSTNAME}:8080 | Space separated, e.g. "app1:8080 app2:8080"   |
-| fai\_db\_install               |                0 | Install db profile                            |
-| fai\_db\_host                  |        $HOSTNAME | Useful for editor & presentation profiles     |
-| fai\_db\_port                  |             3306 | Useful for editor & presentation profiles     |
-| fai\_editor\_install           |                0 | Install the editorial profile                 |
-| fai\_editor\_name              |          editor1 | Name of the editor instance                   |
-| fai\_editor\_port              |             8080 | HTTP port of the editor instance              |
-| fai\_editor\_shutdown          |             8005 | Shutdown port of the editor instance          |
-| fai\_enabled                   |                0 | Whether or not to run ece-install in FAI mode |
-| fai\_public\_host\_name        | ${HOSTNAME}:8080 | The public address for your website           |
-| fai\_presentation\_install     |                0 | Install the presentation server profile       |
-| fai\_presentation\_name        |             web1 | Name of the presentation server instance      |
-| fai\_presentation\_port        |             8080 | HTTP port of the presentation server instance |
-| fai\_presentation\_shutdown    |             8005 | Shutdown port of the presentation instance    |
-| fai\_publication\_create       |                0 | Create a new publication                      |
-| fai\_publication\_name         |            mypub | Name of the publication                       |
-| fai\_publication\_use_instance |             dev1 | Name of local instance to use for creation    |
-| fai\_rmi\_install              |                0 | Install RMI hub profile                       |
-| fai\_search\_name              |          search1 | Name of the search instance                   |
-| fai\_search\_port              |             8080 | HTTP port of the search instance              |
-| fai\_search\_shutdown          |             8005 | Shutdown port of the search instance          |
-| fai\_wf\_install               |                0 | Install Widget Framework profile              |
-|--------------------------------+------------------+-----------------------------------------------|
+|---------------------------------+------------------+-----------------------------------------------|
+| Parameter                       |          Default | Description                                   |
+|---------------------------------+------------------+-----------------------------------------------|
+| fai\_all\_install               |                0 | Install all components on your server.        |
+| fai\_cache\_install             |                0 | Install cache server profile                  |
+| fai\_cache\_backends            | ${HOSTNAME}:8080 | Space separated, e.g. "app1:8080 app2:8080"   |
+| fai\_db\_install                |                0 | Install db profile                            |
+| fai\_db\_host                   |        $HOSTNAME | Useful for editor & presentation profiles     |
+| fai\_db\_port                   |             3306 | Useful for editor & presentation profiles     |
+| fai\_editor\_install            |                0 | Install the editorial profile                 |
+| fai\_editor\_name               |          editor1 | Name of the editor instance                   |
+| fai\_editor\_port               |             8080 | HTTP port of the editor instance              |
+| fai\_editor\_shutdown           |             8005 | Shutdown port of the editor instance          |
+| fai\_enabled                    |                0 | Whether or not to run ece-install in FAI mode |
+| fai\_public\_host\_name         | ${HOSTNAME}:8080 | The public address for your website           |
+| fai\_presentation\_install      |                0 | Install the presentation server profile       |
+| fai\_presentation\_name         |             web1 | Name of the presentation server instance      |
+| fai\_presentation\_port         |             8080 | HTTP port of the presentation server instance |
+| fai\_presentation\_shutdown     |             8005 | Shutdown port of the presentation instance    |
+| fai\_publication\_create        |                0 | Create a new publication                      |
+| fai\_publication\_name          |            mypub | Name of the publication                       |
+| fai\_publication\_use\_instance |             dev1 | Name of local instance to use for creation    |
+| fai\_rmi\_install               |                0 | Install RMI hub profile                       |
+| fai\_search\_name               |          search1 | Name of the search instance                   |
+| fai\_search\_port               |             8080 | HTTP port of the search instance              |
+| fai\_search\_shutdown           |             8005 | Shutdown port of the search instance          |
+| fai\_wf\_install                |                0 | Install Widget Framework profile              |
+|---------------------------------+------------------+-----------------------------------------------|
 
 As you've probably have guessed, 0 means "false" and 1 means "true" :-)
 
