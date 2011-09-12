@@ -81,3 +81,59 @@ The following commands are available:
 
 *) only applicable if type is 'engine'
 #+END_SRC
+
+* Installation
+The ece script and ece.conf may be used on any Unix like system that
+has a fairly recent version of BASH installed.
+
+** Overview of File Paths Used by the ece script
+These are recommended files and locations for using the ece script:
+
+|----------------------------------+-----------------------------|
+| Path                             | Explanation                 |
+|----------------------------------+-----------------------------|
+| /usr/bin/ece                     | The script itself           |
+| /etc/escenic/ece.conf            | The main configuration file |
+| /etc/escenic/ece-<instance>.conf | Instance specific settings  |
+|----------------------------------+-----------------------------|
+
+As you can see in ece.conf, there are a number of default locations
+dealing with log files, pid files, crash files as well as application
+server files. The defaults all follow the File Hierarchy Standard, but
+you may of course change these to your liking.
+
+If you wish to put the .conf files in other places, you may like to know
+that the ece script has preset list of locations where it looks for
+the .conf files mentioned above, namely:
+
+- current working directory
+- /etc/escenic/<type>/instance/<instance name>
+- /etc/escenic/<type>/host/<hostname>
+- /etc/escenic/<type>/common
+- /etc/escenic/<type>
+- /etc/escenic
+- <current working direcotry>/../etc
+
+You may override this list of locations by setting the
+this environment variable in your .bashrc or similar:
+#+BEGIN_SRC sh
+ECE_CONF_LOCATIONS 
+#+END_SRC
+
+The reason for having so many options is because various Escenic
+consultants, partners and customers have requested these locations to
+fit their systems. As you can see, fitting everyone's fancy adds up
+over time :-)
+
+* Running the ece script
+You must be normal user to run the ece script, otherwise it will
+complain:
+#+BEGIN_SRC sh
+[ece#engine] Sorry, you cannot be root when running ece
+[ece#engine] The root user can only use /etc/init.d/ece
+#+END_SRC
+
+As it mentions, the root user may use the init.d script and the
+accompanying /etc/default/ece to command the different ECE, EAE and
+RMI hub instances on your system.
+
