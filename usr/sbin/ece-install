@@ -317,15 +317,15 @@ function set_up_engine_and_plugins()
     else
         debug "engine-<version> is already there, skipping to next step."
     fi
-    
-    # we extract them in /opt/escenic as we want to re-use
-    # them between minor updates of ECE.
+
+    # we now extract all the plugins. We extract them in /opt/escenic
+    # as we want to re-use them between minor updates of ECE.
     cd /opt/escenic/
     for el in $download_dir/*.zip; do
-        if [ "${el/engine*}" == "" ] ; then
-          continue
-        elif [ "${el/assemblytool*}" == "" ] ; then
-          continue
+        if [ $(basename $el | grep ^engine-.*.zip | wc -l) -gt 0 ]; then
+            continue
+        elif [ $(basename $el | grep ^assemblytool-.*.zip | wc -l) -gt 0 ]; then
+            continue
         fi
         
         run unzip -u $el \
