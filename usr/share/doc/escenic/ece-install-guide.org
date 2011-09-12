@@ -21,7 +21,7 @@ You may also look inside the ece-install script for all calls to the
 'assert\_pre\_prequesite' method and you'll get a list of the binaries
 ece-install assumes are present.
 
-* A Note on Running Ece-Install On Non-GNU/Linux Systems
+* A Note on Running ece-install On Non-GNU/Linux Systems
 Please note, it's assumed that the OS uses GNU's tools, i.e. find, cp
 & tar. If you're running a system which has a different set of core
 tools, such as any of the BSDs (including Mac OS X) or Solaris, make
