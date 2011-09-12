@@ -1,8 +1,8 @@
-                       Guide for the ece Script
-                       ========================
+                  Guide for the /usr/bin/ece Script
+                  =================================
 
 Author: Torstein Krause Johansen
-Date: 2011-08-24 13:30:04 CST
+Date: 2011-09-12 18:14:41 CST
 
 
 Table of Contents
@@ -12,6 +12,9 @@ Table of Contents
     1.2 Completing types of servers the ece scripts can operate on 
     1.3 Completing the publication resources available 
 2 Getting an overview of all available options 
+3 Installation 
+    3.1 Overview of File Paths Used by the ece script 
+4 Running the ece script 
 
 
 1 TAB completion 
@@ -26,12 +29,10 @@ You will find yourself using this regularly, both for speed, but also
 to remember all the different options and their correct wording:
 
 
-
   $ ece TAB TAB
   applog      deploy      log         start       threaddump  
   assemble    help        outlog      status      update      
   clean       kill        restart     stop        versions
-
 
 
 
@@ -56,11 +57,9 @@ To help selecting the correct publication resource, you can make ece
 list and complete the available resource names:
 
 
-
   $ ece -p mypub -r TAB TAB
   content-type   image-version  layout-group   
   feature        layout         menu
-
 
 
 
@@ -69,6 +68,113 @@ list and complete the available resource names:
 
 
   $ ece help
+  Usage: /home/torstein/bin/ece [-t <type>] [-i <instance>] <command>
+  
+  DESCRIPTION
+   -t --type <type>
+        The following types are available:
+        engine  -  The Escenic Content Engine, this is the default
+                   and is the assumed type if none is specified.
+        search  -  A standalone search indexer and solr instance
+        rmi-hub -  The RMI hub responsible for the internal 
+                   communication between the ECE instances.
+        analysis - The Escenic Analysis Engine also knows as 'Stats'
+  
+   -i --instance <instance>
+        The type instance, such as editor1, web1 or search1
+  
+   -p --publication <publication>
+        Needed only for updating publication resources
+  
+   -r --resource <resource>
+        Used for updating publication resources.
+        Must be one of: content-type, feature, layout, layout-group
+                        image-version, menu
+  
+   -v --verbose
+        Prints out debug statements, useful for debugging.
+  
+  The following commands are available:
+     applog     the type's app server log
+     assemble   runs the Assembly Tool *)
+     clean      removes temporary files created by /home/torstein/bin/ece *)
+     deploy     deploys the assembled EAR *)
+     help       prints this help screen
+     kill       uses force to stop the type
+     log        the type's Log4J log
+     outlog     the [ece#engine] script log (system out log)
+     restart    restarts the type
+     start      starts the type
+     status     checks if the type is running
+     stop       stops the type
+     threaddump write a thread dump to standard out (system out log)
+     update     update publication resources
+     versions   lists the ECE component versions
+  
+  *) only applicable if type is 'engine'
 
 
+
+
+3 Installation 
+---------------
+The ece script and ece.conf may be used on any Unix like system that
+has a fairly recent version of BASH installed.
+
+3.1 Overview of File Paths Used by the ece script 
+==================================================
+These are recommended files and locations for using the ece script:
+
+  Path                               Explanation                  
+ ----------------------------------+-----------------------------
+  /usr/bin/ece                       The script itself            
+  /etc/escenic/ece.conf              The main configuration file  
+  /etc/escenic/ece-<instance>.conf   Instance specific settings   
+
+As you can see in ece.conf, there are a number of default locations
+dealing with log files, pid files, crash files as well as application
+server files. The defaults all follow the File Hierarchy Standard, but
+you may of course change these to your liking.
+
+If you wish to put the .conf files in other places, you may like to know
+that the ece script has preset list of locations where it looks for
+the .conf files mentioned above, namely:
+
+- current working directory
+- /etc/escenic/<type>/instance/<instance name>
+- /etc/escenic/<type>/host/<hostname>
+- /etc/escenic/<type>/common
+- /etc/escenic/<type>
+- /etc/escenic
+- <current working direcotry>/../etc
+
+You may override this list of locations by setting the
+this environment variable in your .bashrc or similar:
+
+
+  ECE_CONF_LOCATIONS
+
+
+
+
+The reason for having so many options is because various Escenic
+consultants, partners and customers have requested these locations to
+fit their systems. As you can see, fitting everyone's fancy adds up
+over time :-)
+
+4 Running the ece script 
+-------------------------
+You must be normal user to run the ece script, otherwise it will
+complain:
+
+
+  [ece#engine] Sorry, you cannot be root when running ece
+  [ece#engine] The root user can only use /etc/init.d/ece
+
+
+
+
+As it mentions, the root user may use the init.d script and the
+accompanying /etc/default/ece to command the different ECE, EAE and
+RMI hub instances on your system.
 
