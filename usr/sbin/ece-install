@@ -444,10 +444,26 @@ function set_up_basic_nursery_configuration()
         run cp -r $el/misc/siteconfig/* $common_nursery_dir/
     done
 
+    public_host_name=$HOSTNAME:${appserver_port}
+    if [ $fai_enabled -eq 1 ]; then
+        if [ -n "$fai_public_host_name" ]; then
+            public_host_name=$fai_public_host_name
+        fi
+    else
+        print "What is the public address of your website?"
+        print "Press ENTER to use the default ($public_host_name)"
+        echo -n "Your choice [$public_host_name]> "
+        read user_host_name
+    fi
+
+    if [ -n "$user_host_name" ]; then
+        public_host_name=$user_host_name
+    fi
+    
     cat > $common_nursery_dir/ServerConfig.properties <<EOF
 databaseProductName=MySQL
 filePublicationRoot=/var/lib/escenic/engine/
-webPublicationRoot=http://$HOSTNAME:${appserver_port}/
+webPublicationRoot=http://${public_host_name}/
 EOF
     cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
 readConnector=/connector/ReadConnector
@@ -541,7 +557,7 @@ function set_conf_file_value()
 {
     if [ -r $3 ]; then
         if [ $(grep ^$1 $3 | wc -l) -gt 0 ]; then
-            sed -i "s/$1=.*/$1=\"$2\"/g" $3
+            sed -i "s~$1=.*~$1=\"$2\"~g" $3
         else
             echo "$1=\"$2\"" >> $3
         fi
@@ -604,12 +620,12 @@ function set_up_app_server
 
     if [ $fai_enabled -eq 0 ]; then
         print "On which ports do you wish to run the app server on?"
-        print "Press ENTER to accept the default (port 8080, shutdown port 8005)"
+        print "Press ENTER to accept port 8080 and shutdown port 8005"
         print "Or enter: <port> <shutdown port>, e.g.: '8180 8105'"
         echo -n "Your choice [8080 8005]> "
         read user_ports
         
-        if [ -z "$user_ports" ]; then
+        if [ -n "$user_ports" ]; then
             appserver_port=$(echo $user_ports | cut -d' ' -f1)
             shutdown_port=$(echo $user_ports | cut -d' ' -f2)
         fi
