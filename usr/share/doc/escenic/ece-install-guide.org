@@ -264,6 +264,7 @@ $HOME/.ece-install.conf file of the root user:
 | fai\_editor\_port              |             8080 | HTTP port of the editor instance              |
 | fai\_editor\_shutdown          |             8005 | Shutdown port of the editor instance          |
 | fai\_enabled                   |                0 | Whether or not to run ece-install in FAI mode |
+| fai\_public\_host\_name        | ${HOSTNAME}:8080 | The public address for your website           |
 | fai\_presentation\_install     |                0 | Install the presentation server profile       |
 | fai\_presentation\_name        |             web1 | Name of the presentation server instance      |
 | fai\_presentation\_port        |             8080 | HTTP port of the presentation server instance |
