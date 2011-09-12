@@ -1409,9 +1409,9 @@ function install_cache_server()
 function add_next_step()
 {
     if [ -n "$next_steps" ]; then
-        next_steps=${next_steps}${NEW_LINE}$(get_id)" "${1}
+        next_steps=${next_steps}${NEW_LINE}"[$(basename $0)] "${1}
     else
-        next_steps=$(get_id)" "${1}
+        next_steps="[$(basename $0)] "${1}
     fi
 }
 
