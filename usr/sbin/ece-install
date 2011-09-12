@@ -1024,21 +1024,19 @@ function set_up_user_enviornment()
 {
     print "Setting up the ${ece_user} user's UNIX environment ..."
 
-     # TODO get this from ece.conf and other magic
-
-    if [ $(grep JAVA_HOME /home/$ece_user/.bashrc | wc -l) -lt 1 ]; then
+    if [ $(grep JAVA_HOME /home/$ece_user/.bashrc 2>/dev/null | wc -l) \
+        -lt 1 ]; then
         run echo JAVA_HOME=$java_home >> /home/$ece_user/.bashrc
     fi
-    if [ $(grep JAVA_HOME /root/.bashrc | wc -l) -lt 1 ]; then
+    
+    if [ $(grep JAVA_HOME /root/.bashrc 2>/dev/null | wc -l) -lt 1 ]; then
         run echo JAVA_HOME=$java_home >> /root/.bashrc
     fi
 
-    if [ $on_debian_or_derivative -eq 1 ]; then
-        export JAVA_HOME=$java_home
-    fi
+    export JAVA_HOME=$java_home
 
-    if [ $(grep bash_completion.d/ece /home/$ece_user/.bashrc | wc -l) -lt 1 ]
-    then
+    if [ $(grep bash_completion.d/ece /home/$ece_user/.bashrc 2>/dev/null | \
+        wc -l) -lt 1 ]; then
         run echo ". /etc/bash_completion.d/ece" \
             >> /home/$ece_user/.bashrc
     fi
