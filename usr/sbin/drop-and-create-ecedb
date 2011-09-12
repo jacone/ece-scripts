@@ -20,7 +20,7 @@ db_schema=ece5db
 db_host=localhost
 ece_home=/opt/escenic/engine
 db_product=mysql
-id="[`basename $0`]"
+my_id="[`basename $0`]"
 
 # oracle specific settings
 create_oracle_user=0
@@ -33,15 +33,15 @@ debug=0
 function debug()
 {
     if [ $debug -eq 1 ]; then
-        echo $id $1
+        echo $my_id $1
     fi
     
 }
 
-function exit_on_error()
+function exit_on_the_first_error()
 {
     if [ $? -eq 1 ]; then
-        echo $id $@ "FAILED, exiting :-("
+        echo $my_id $@ "FAILED, exiting :-("
         exit 1
     fi
 }
@@ -72,7 +72,7 @@ function run_db_scripts()
                 mysql -u $db_user -p$db_password -h $db_host $db_schema < $file
             fi
         fi
-        exit_on_error "running $el"
+        exit_on_the_first_error "running $el"
     done
 }
 
