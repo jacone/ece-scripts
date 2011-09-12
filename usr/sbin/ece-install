@@ -882,8 +882,6 @@ function set_correct_permissions()
 
 function print_status_and_next_steps()
 {
-    # su - $ece_user -c "ece versions" 1>>$log 2>>$log
-
     now=`date +%s`
     started=`stat -c %Y $pid_file`
     seconds=$(( now - started ))
@@ -896,6 +894,18 @@ function print_status_and_next_steps()
 
     s="- The installation is now complete!"
     print $s" It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    add_next_step "- See /usr/share/doc/escenic/ece-install-guide.txt for"
+    add_next_step "  a full overview of files and directories set up by"
+    add_next_step "  $(basename $0)"
+    add_next_step "- type 'ece help' to see all the options of this script"
+    add_next_step "  which allows you to control all the Escenic components."
+    add_next_step "  Also, see /usr/share/doc/escenic/ece-guide.txt for"
+    add_next_step "  further information on the ece script."
+    add_next_step "- For further reading, in-depth guides on installing, "
+    add_next_step "  configuring and developing Escenic web sites can be "
+    add_next_step "  fount at http://documentation.vizrt.com/ece-5.3.html"
+
+
     echo "$next_steps"
 
     print ""
@@ -1544,6 +1554,10 @@ EOF
     add_next_step "  $admin_uri"
     add_next_step "- You can view all installed plugin & engine versions with:"
     add_next_step "  ece -i $instance_name versions"
+    add_next_step "- type 'ece help' to see all the options of this script"
+    add_next_step "  which allows you to control all the Escenic components."
+    add_next_step "  Also, see /usr/share/doc/escenic/ece-guide.txt for"
+    add_next_step "  addtional information on the ece script."
     add_next_step "- Verify that /etc/default/ece lists all the instances "
     add_next_step "  on $HOSTNAME you wish to start at boot time."
 }
@@ -1813,6 +1827,7 @@ EOF
 
     set_up_solr
     assemble_deploy_and_restart_type
+    
 }
 
 # useful for development and test environments.
