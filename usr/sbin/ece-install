@@ -4,10 +4,6 @@
 # five minutes. The setup the user is getting is suitable for a
 # production environment, except for the fact that with this script,
 # all ECE components are set up on the same host.
-#
-# BUG: if creating a publication and WF is downloaded, but not
-# installed, then the pub is built from WF, but WF is not added to the
-# plugins. This _is_ a corner case, but should still be fixed.
 
 # by tkj@vizrt.com
 
@@ -21,8 +17,10 @@ jdbc_driver=/usr/share/java/mysql.jar
 debug=0
 tomcat_download=http://apache.stu.edu.tw/tomcat/tomcat-6/v6.0.33/bin/apache-tomcat-6.0.33.tar.gz
 
-# don't touch this one if you're installing on a Debian based system
-# as it'll be set up for you by the script itself.
+# The script will install the sun-java6-jdk package on Debian based
+# systems and this is the path of the JAVA home with this package. If
+# you're using a different system or have other preferences, change
+# java_home here.
 java_home=/usr/lib/jvm/java-6-sun
 #####################################################################
 
@@ -48,7 +46,6 @@ NEW_LINE="
 # the next steps printed when the user has installed his/her
 # components.
 next_steps=""
-
 
 function get_seconds_since_start()
 {
@@ -144,11 +141,20 @@ function make_dir()
 
 function make_ln()
 {
-    if [ -e $1 -a ! -h $(basename $1) ]; then
-        run ln -s $1
-    elif [ ! -e $1 ]; then
-        print "Tried to make a symlink to $1, but it doesn't exist"
-        exit 1
+    if [ $2 ]; then
+        if [ -e $1 -a ! -h $2 ]; then
+            run ln -s $1 $2
+        elif [ ! -e $1 ]; then
+            print "Tried to make a symlink to $1, but it doesn't exist"
+            exit 1
+        fi
+    else
+        if [ -e $1 -a ! -h $(basename $1) ]; then
+            run ln -s $1
+        elif [ ! -e $1 ]; then
+            print "Tried to make a symlink to $1, but it doesn't exist"
+            exit 1
+        fi
     fi
 }
 
@@ -1102,14 +1108,15 @@ function un_install_ece()
         /var/run/ece-install.pid
 
     apt-get --yes --purge remove \
-        varnish \
-        percona* \
-        maven2 \
         ant \
         ant-contrib \
         ant-optional \
         libmysql-java \
+        maven2 \
         memcached \
+        munin* \
+        percona* \
+        varnish \
         sun-java6-jdk
     
     apt-get clean
@@ -1563,6 +1570,8 @@ EOF
     set_correct_permissions
     assemble_deploy_and_restart_type
     update_type_instances_to_start_up
+    set_conf_file_value ece_unix_user $ece_user /etc/default/ece
+    set_conf_file_value ece_unix_group $ece_group /etc/default/ece
 
     admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin
     add_next_step "- New ECE instance $instance_name installed."
@@ -1581,7 +1590,7 @@ EOF
 function install_presentation_server()
 {
     print "Installing a presentation server on $HOSTNAME ..."
-
+    type=engine
     install_ece_instance "web1" 1
 }
 
@@ -1589,10 +1598,6 @@ function assemble_deploy_and_restart_type()
 {
     print "Assembling, deploying & starting $instance_name ..."
 
-    if [ -z "$type" ]; then
-        type=engine
-    fi
-    
     # TODO clear strategy on when to add 'clean' to the command list
     # For now, we'll omit it to make the install script run as fast as
     # possible. It should in most cases work just fine, the exception
@@ -1656,7 +1661,7 @@ function create_publication()
 function install_editorial_server()
 {
     print "Installing an editorial server on $HOSTNAME ..."
-
+    type=engine
     install_ece_instance "editor1" 0
 }
 
@@ -1813,7 +1818,7 @@ EOF
 
 function install_search_instance()
 {
-    type=search1
+    type=search
     install_ece_instance "search1" 0
     
     file=/etc/escenic/ece-${instance_name}.conf
@@ -1850,18 +1855,136 @@ EOF
 function install_all_in_one_environment()
 {
     print "Installing an all-in-one environment on $HOSTNAME ..."
-
+    type=engine
     install_database_server
     install_ece_instance "dev1" 0
     install_cache_server
+    install_web_server
+    install_munin_gatherer
     set_up_solr
 
     install_widget_framework
     create_publication
 }
 
+function install_web_server()
+{
+    print "Installing a web server on $HOSTNAME ..."
+
+    if [ $on_debian_or_derivative -eq 1 ]; then
+        packages="nginx"
+        install_packages_if_missing $packages
+    else
+        debug "Web server installation not supported on your system."
+        return
+    fi
+    
+    file=/etc/nginx/sites-available/default
+    run mv $file $file.orig
+    cat > $file <<EOF
+server {
+  listen 81 default;
+  access_log  /var/log/nginx/localhost.access.log;
+  location / {
+    root /var/cache/munin/www;
+    index index.html;
+  }
+
+  # Typical endpoint for Adactus/Mobilize to get the videos to
+  # transcode.
+  location /binary {
+    root /var/lib/escenic;
+    index index.html;
+  }
+}
+EOF
+    /etc/init.d/nginx restart 1>>$log 2>>$log
+
+    add_next_step "- Web server is install on http://${HOSTNAME}:81/"
+    add_next_step "  http://${HOSTNAME}:81/ gives you the munin interface"
+    add_next_step "  http://${HOSTNAME}:81/binary gives you the Adactus endpoint"
+}
+
+function install_munin_gatherer()
+{
+    print "Installing a Munin gatherer on $HOSTNAME ..."
+
+    if [ $on_debian_or_derivative -eq 1 ]; then
+        packages="munin"
+        install_packages_if_missing $packages
+    else
+        print "Munin gatherer installation not supported on your system :-("
+        print "You will have to install it manually."
+        return
+    fi
+
+    # TODO ask user/read fai_munin_node_list
+    # TODO has a hard dependency on install_web_server, should perhaps
+    # be called from this one?
+
+    add_next_step "- Munin interface available at http://$HOSTNAME:81/"
+}
+
+function install_munin_node()
+{
+    print "Installing a Munin node on $HOSTNAME ..."
+
+    if [ $on_debian_or_derivative -eq 1 ]; then
+        packages="munin-node munin-plugins-extra munin-java-plugins"
+        install_packages_if_missing $packages
+    else
+        print "Munin node installation not supported on your system"
+        print "You will have to install it manually."
+        return
+    fi
+
+    # install the escenic_jstat munin plugin
+    file=/usr/share/munin/plugins/escenic_jstat_
+    wget https://github.com/mogsie/escenic-munin/raw/master/escenic_jstat_ \
+        -O $file \
+        1>>$log 2>>$log
+    run chmod 755 $file
+
+    # TODO hack to get escenic_jstat to work with the new ece scripts.
+    cd $(dirname $file)
+    run patch -p1 < $download_dir/escenic_jstat_.diff
+
+    escenic_jstat_modules="_gc _gcoverhead _heap _uptime"
+    for el in /etc/escenic/ece-*.conf; do
+        current_instance=$(basename ${el} | \
+            sed -e 's/ece-//g' -e 's/engine-//g' | \
+            cut -d'.' -f1)
+        for module in $escenic_jstat_modules; do
+	          cd /usr/share/munin/plugins/
+	          make_ln escenic_jstat_ escenic_jstat_${current_instance}${module}
+        done
+
+        # we need to hack a bit since escenic_jstat_ looks for
+        # instance PIDs in /var/run/escenic ece-<instance>.pid. It's
+        # now <type>-<instance>.pid
+        file=/var/run/escenic/$type-${instance_name}.pid
+        if [ ! -e $file ]; then
+            run touch $file
+        fi
+
+        # enabling the instance specific munin entries:
+        for el in /usr/share/munin/plugins/escenic_jstat_[a-z]*; do
+            run cd /etc/munin/plugins
+            make_ln $el
+        done
+    done
+    
+    if [ $on_debian_or_derivative -eq 1 ]; then
+        service munin-node restart \
+            1>>$log 2>>$log
+    fi
+
+    add_next_step "- A Munin node has been installed on $HOSTNAME"
+}
+
 function common_post_install()
 {
+    install_munin_node
     print_status_and_next_steps
     rm $pid_file
 }
@@ -1880,47 +2003,44 @@ if [ $fai_enabled -eq 1 ]; then
     print "Full Automatic Install (FAI) enabled."
     print "All user input will be read from $conf_file"
     
+    common_pre_install
+    
     if [ $(get_boolean_conf_value fai_all_install) -eq 1 ]; then
         install_profile_number=$PROFILE_ALL_IN_ONE
-        common_pre_install
         install_all_in_one_environment
         common_post_install
     elif [ $(get_boolean_conf_value fai_editor_install) -eq 1 ]; then
         install_profile_number=$PROFILE_EDITORIAL_SERVER
-        common_pre_install
         install_editorial_server
         common_post_install
     elif [ $(get_boolean_conf_value fai_db_install) -eq 1 ]; then
         install_profile_number=$PROFILE_DB_SERVER
-        common_pre_install
         install_database_server
         common_post_install
     elif [ $(get_boolean_conf_value fai_cache_install) -eq 1 ]; then
         install_profile_number=$PROFILE_CACHE_SERVER
-        common_pre_install
         install_cache_server
-        common_post_install
+        install_web_server
+        install_munin_gatherer
     elif [ $(get_boolean_conf_value fai_rmi_install) -eq 1 ]; then
         install_profile_number=$PROFILE_RMI_HUB
         common_pre_install
         install_rmi_hub
-        common_post_install
     elif [ $(get_boolean_conf_value fai_wf_install) -eq 1 ]; then
         install_profile_number=$PROFILE_WIDGET_FRAMEWORK
         common_pre_install
         install_widget_framework
-        common_post_install
     elif [ $(get_boolean_conf_value fai_presentation_install) -eq 1 ]; then
         install_profile_number=$PROFILE_PRESENTATION_SERVER
         common_pre_install
         install_presentation_server
-        common_post_install
     elif [ $(get_boolean_conf_value fai_publication_create) -eq 1 ]; then
         install_profile_number=$PROFILE_CREATE_PUBLICATION
         common_pre_install
         create_publication
-        common_post_install
     fi
+    
+    common_post_install
 else
     read_user_input
     common_pre_install
@@ -1930,6 +2050,8 @@ else
         ;;
         $PROFILE_CACHE_SERVER)
         install_cache_server
+        install_web_server
+        install_munin_gatherer
         ;;
         $PROFILE_DB_SERVER)
         install_database_server
