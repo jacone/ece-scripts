@@ -1448,7 +1448,9 @@ function install_database_server()
 
             if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
                 run gpg --keyserver hkp://keys.gnupg.net \
-                    --recv-keys 1C4CBDCDCD2EFD2A \
+                    -a \
+                    --export 1C4CBDCDCD2EFD2A | \
+                    apt-key add - \
                     1>>$log 2>>$log
                 run gpg -a --export CD2EFD2A | apt-key add - \
                     1>>$log 2>>$log
