@@ -213,7 +213,7 @@ install_packages_if_missing()
             return
         fi
         
-        run apt-get install -y $@ 1>>$log 2>>$log
+        run apt-get install -y $@
     fi
 }
 
@@ -249,8 +249,7 @@ function set_up_assembly_tool()
     cd /opt/escenic/assemblytool/
     
     if [ -e $download_dir/assemblytool*zip ]; then
-        run unzip -u $download_dir/assemblytool*zip \
-            1>>$log 2>>$log
+        run unzip -u $download_dir/assemblytool*zip
     fi
 
     # adding an instance layer to the Nursery configuration
@@ -288,8 +287,7 @@ EOF
     done
 
     run cd /opt/escenic/assemblytool/
-    run ant -q initialize \
-        1>>$log 2>>$log
+    run ant -q initialize
     sed -i 's/#\ engine.root\ =\ \./engine.root=\/opt\/escenic\/engine/g' \
         assemble.properties \
         1>>$log 2>>$log
@@ -313,8 +311,7 @@ function set_up_engine_and_plugins()
     cd /opt/escenic/
 
     if [ ! -d engine-* ]; then
-        run unzip -u $download_dir/engine*.zip \
-            1>>$log 2>>$log
+        run unzip -u $download_dir/engine*.zip
         if [ -h engine ]; then
             run rm engine
         fi
@@ -334,8 +331,7 @@ function set_up_engine_and_plugins()
             continue
         fi
         
-        run unzip -u $el \
-            1>>$log 2>>$log
+        run unzip -u $el
     done
 
     ece_software_setup_completed=1
@@ -350,33 +346,11 @@ function set_up_ece_scripts()
         (cd ece-scripts
             git pull 1>>$log 2>>$log)
     else
-        run git clone $git_source \
-            1>>$log 2>>$log
+        run git clone $git_source
     fi
     
     run cp -r ece-scripts/usr/* /usr/
     run cp -r ece-scripts/etc/* /etc/
-
-    # no need to add init.d scripts to the runlevel(s) for these
-    # profiles
-    if [ $install_profile_number -eq $PROFILE_WIDGET_FRAMEWORK -o \
-         $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
-         $install_profile_number -eq $PROFILE_DB_SERVER -o \
-         $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
-        return
-    fi
-
-    if [ $on_debian_or_derivative ]; then
-        print "Adding the ece init.d script to the default run levels..."
-        run update-rc.d ece defaults \
-            1>>$log 2>>$log
-    else
-        print "You remember to add /etc/intit.d/ece to the desired runlevels" 
-        # TODO add init.d to the default runlevels, for other
-        # distributions too:
-        # - RedHat/chekcconfig
-        # - Gentoo: rc-update add ece default
-    fi
 }
 
 function set_up_ecedb()
@@ -892,13 +866,11 @@ function set_correct_permissions()
     done
     
     if [ -d "$tomcat_base" ]; then
-        run chown -R ${ece_user}:${ece_group} $tomcat_base \
-        1>>$log 2>>$log
+        run chown -R ${ece_user}:${ece_group} $tomcat_base
     fi
 
     if [ $(ls /tmp | grep ^ece | wc -l) -gt 0 ]; then
-        run chown -R ${ece_user}:${ece_group} /tmp/ece-* \
-            1>>$log 2>>$log
+        run chown -R ${ece_user}:${ece_group} /tmp/ece-*
     fi
 }
 
@@ -957,8 +929,7 @@ function create_publication_in_db()
         -F "type=webapp" \
         -F "resourceFile=@${1}" \
         --cookie JSESSIONID="$cookie" \
-        "${ece_admin_uri}/do/publication/resource" \
-        1>>$log 2>>$log
+        "${ece_admin_uri}/do/publication/resource"
     
     run curl --silent  \
         -F "name=${publication_name}" \
@@ -966,8 +937,7 @@ function create_publication_in_db()
         -F "adminPassword=${publication_name}" \
         -F "adminPasswordConfirm=${publication_name}" \
         --cookie JSESSIONID="$cookie" \
-        "${ece_admin_uri}/do/publication/insert" \
-        1>>$log 2>>$log
+        "${ece_admin_uri}/do/publication/insert"
 }
 
 function create_publication_definition_and_war()
@@ -1000,8 +970,7 @@ EOF
     if [ -d /opt/escenic/widget-framework-core-* ]; then
         print "Basing ${publication_name}.war on the Widget Framework Demo ..."
         run cd /opt/escenic/widget-framework-core-*/publications/demo-core
-        run mvn package \
-            1>>$log 2>>$log
+        run mvn package
         run cp target/demo-core-*.war ${publication_war}
     else
         print "Basing your ${publication_name}.war on ECE/demo-clean ..."
@@ -1069,8 +1038,7 @@ function set_up_user_enviornment()
 
     if [ $(grep bash_completion.d/ece /home/$ece_user/.bashrc 2>/dev/null | \
         wc -l) -lt 1 ]; then
-        run echo ". /etc/bash_completion.d/ece" \
-            >> /home/$ece_user/.bashrc
+        run echo ". /etc/bash_completion.d/ece"
     fi
 }
 
@@ -1104,10 +1072,15 @@ function un_install_ece()
         /usr/bin/ece \
         /var/log/escenic/ \
         /etc/apt/sources.list.d/escenic.list \
-#        $HOME/.m2 \
         /var/run/ece-install.pid
+#        $HOME/.m2 \
 
-    apt-get --yes --purge remove \
+    # remove the Varnish key
+    apt-key remove C4DEFFEB
+    # remove the Percona key
+    apt-key remove CD2EFD2A
+
+    for el in \
         ant \
         ant-contrib \
         ant-optional \
@@ -1117,7 +1090,10 @@ function un_install_ece()
         munin* \
         percona* \
         varnish \
-        sun-java6-jdk
+        sun-java6-jdk \
+        ; do
+        apt-get --yes --purge remove $el
+    done
     
     apt-get clean
 }
@@ -1364,10 +1340,10 @@ function add_apt_source()
     escenic_sources=/etc/apt/sources.list.d/escenic.list
     if [ ! -e $escenic_sources ]; then
         echo "$@" >> $escenic_sources
-        run apt-get update 1>>$log 2>>$log
+        run apt-get update
     elif [ $(grep "$@" $escenic_sources | wc -l) -lt 1 ]; then
         echo "$@" >> $escenic_sources
-        run apt-get update 1>>$log 2>>$log
+        run apt-get update
     fi
 }
 
@@ -1376,8 +1352,12 @@ function install_cache_server()
     print "Installing a caching server on $HOSTNAME ..."
 
     if [ $on_debian_or_derivative -eq 1 ]; then
-        run curl http://repo.varnish-cache.org/debian/GPG-key.txt 2>>$log | \
-            apt-key add - 1>>$log 2>>$log
+        curl --silent \
+            http://repo.varnish-cache.org/debian/GPG-key.txt \
+            2>> $log | \
+            apt-key add - \
+            1>>$log 2>>$log
+        run apt-get update
     fi
     
     if [ $on_debian -eq 1 ]; then
@@ -1447,13 +1427,14 @@ function install_database_server()
             print "Installing the Percona database ..."
 
             if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
-                run gpg --keyserver hkp://keys.gnupg.net \
+                gpg --keyserver hkp://keys.gnupg.net \
                     -a \
                     --export 1C4CBDCDCD2EFD2A | \
                     apt-key add - \
                     1>>$log 2>>$log
-                run gpg -a --export CD2EFD2A | apt-key add - \
+                gpg -a --export CD2EFD2A | apt-key add - \
                     1>>$log 2>>$log
+                run apt-get update
             fi
             add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
             packages="percona-server-server percona-server-client"
@@ -1800,7 +1781,7 @@ EOF
     assert_pre_prequesite mvn
     wf_maven_dir=$(echo /opt/escenic/widget-framework-core-*/maven)
     cd $wf_maven_dir
-    print "Installing Widget Framework into your local Maven repository ..."
+    print "Installing Widget Framework into your Maven repository ..."
     export JAVA_HOME=$java_home
     mvn install \
         1>>$log 2>>$log
@@ -1942,14 +1923,12 @@ function install_munin_node()
 
     # install the escenic_jstat munin plugin
     file=/usr/share/munin/plugins/escenic_jstat_
-    wget https://github.com/mogsie/escenic-munin/raw/master/escenic_jstat_ \
-        -O $file \
-        1>>$log 2>>$log
+    run wget \
+        --continue \
+        --inet4-only \
+        https://github.com/mogsie/escenic-munin/raw/master/escenic_jstat_ \
+        -O $file
     run chmod 755 $file
-
-    # TODO hack to get escenic_jstat to work with the new ece scripts.
-    cd $(dirname $file)
-    run patch -p1 < $download_dir/escenic_jstat_.diff
 
     escenic_jstat_modules="_gc _gcoverhead _heap _uptime"
     for el in /etc/escenic/ece-*.conf; do
@@ -1984,8 +1963,33 @@ function install_munin_node()
     add_next_step "- A Munin node has been installed on $HOSTNAME"
 }
 
+function add_server_to_runlevels()
+{
+    # no need to add init.d scripts to the runlevel(s) for these
+    # profiles
+    if [ $install_profile_number -eq $PROFILE_WIDGET_FRAMEWORK -o \
+         $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
+         $install_profile_number -eq $PROFILE_DB_SERVER -o \
+         $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
+        return
+    fi
+
+    if [ $on_debian_or_derivative ]; then
+        print "Adding the ece init.d script to the default run levels ..."
+        run update-rc.d ece defaults
+    else
+        add_next_step "- Remember to add /etc/intit.d/ece to the desired"
+        add_next_step "  run levels." 
+        # TODO add init.d to the default runlevels, for other
+        # distributions too:
+        # - RedHat/chekcconfig
+        # - Gentoo: rc-update add ece default
+    fi
+}
+
 function common_post_install()
 {
+    add_server_to_runlevels
     install_munin_node
     print_status_and_next_steps
     rm $pid_file
@@ -2010,15 +2014,12 @@ if [ $fai_enabled -eq 1 ]; then
     if [ $(get_boolean_conf_value fai_all_install) -eq 1 ]; then
         install_profile_number=$PROFILE_ALL_IN_ONE
         install_all_in_one_environment
-        common_post_install
     elif [ $(get_boolean_conf_value fai_editor_install) -eq 1 ]; then
         install_profile_number=$PROFILE_EDITORIAL_SERVER
         install_editorial_server
-        common_post_install
     elif [ $(get_boolean_conf_value fai_db_install) -eq 1 ]; then
         install_profile_number=$PROFILE_DB_SERVER
         install_database_server
-        common_post_install
     elif [ $(get_boolean_conf_value fai_cache_install) -eq 1 ]; then
         install_profile_number=$PROFILE_CACHE_SERVER
         install_cache_server
