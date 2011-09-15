@@ -107,18 +107,24 @@ want to install:
 #+BEGIN_SRC sh
 Hi, which server profile do you wish to install?
 
-Select 1-7 and press ENTER
+Select 1-9 and press ENTER
 
-  1 - The full stack on one host. Suitable for development and
-      test environments (cache, ECE, assembly host & database).
-  2 - Editorial (publication) server (ECE, assembly host).
+  1 - All in one, the full stack on one host. 
+      Suitable for development and test environments.
+      It will install caching server, ECE, assembly host, database &
+      Widget Framework as well as set up a new publication.
+  2 - Editorial (publication) server.
+      This will install ECE and an assembly host.
   3 - Presentation server (ECE, memcached).
   4 - Database server.
   5 - Cache server (cache & web server).
   6 - RMI hub.
   7 - Standalone search instance (solr + indexer-webapp).
-  8 - Install Widget Framework. This will also set up a WF based 
-      publication for you (repo.escenic.com user/pass required).
+  8 - Install the Widget Framework.
+      (You need user/pass for repo.escenic.com for this).
+  9 - Create a new publication.
+      This profile will create new publication based on WF
+      (if available) or ECE/clean-demo.
 #+END_SRC
 ** Common for All Server Profiles
 The script will install a Munin node on the host. It will also
