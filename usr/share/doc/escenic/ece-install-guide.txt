@@ -2,7 +2,7 @@
               ==========================================
 
 Author: Torstein Krause Johansen
-Date: 2011-09-12 19:02:40 CST
+Date: 2011-09-15 15:29:53 CST
 
 
 Table of Contents
@@ -14,21 +14,22 @@ Table of Contents
 3 Downloading the ece-install Script 
 4 Running the ece-install Script 
 5 Available Server Profiles 
-    5.1 Common for Editorial, Presentation and Search Instances 
-        5.1.1 Sun Java 6 
-        5.1.2 Apache Tomcat application server 
-        5.1.3 Basic Escenic Nursery configuration 
-        5.1.4 APR, native library for optimal Tomcat I/O performance 
-        5.1.5 Escenic Assembly environment 
-        5.1.6 Database driver 
-        5.1.7 Compression of content 
-    5.2 1 - Full Stack on One Host 
-    5.3 2 - Editorial Server (Publication Server) 
-    5.4 3 - Presentation Server 
-    5.5 4 - Database Server 
-    5.6 5 - Cache Server 
-    5.7 8 - Install Widget Framework 
-    5.8 9 - Create Publication 
+    5.1 Common for All Server Profiles 
+    5.2 Common for Editorial, Presentation and Search Instances 
+        5.2.1 Sun Java 6 
+        5.2.2 Apache Tomcat application server 
+        5.2.3 Basic Escenic Nursery configuration 
+        5.2.4 APR, native library for optimal Tomcat I/O performance 
+        5.2.5 Escenic Assembly environment 
+        5.2.6 Database driver 
+        5.2.7 Compression of content 
+    5.3 1 - Full Stack on One Host 
+    5.4 2 - Editorial Server (Publication Server) 
+    5.5 3 - Presentation Server 
+    5.6 4 - Database Server 
+    5.7 5 - Cache Server 
+    5.8 8 - Install Widget Framework 
+    5.9 9 - Create Publication 
 6 Full Automatic Install (FAI) 
 7 Running More Than One Installation Process 
 8 Re-running ece-install (and How To Speed It Up) 
@@ -199,13 +200,22 @@ want to install:
 
 
 
-5.1 Common for Editorial, Presentation and Search Instances 
+5.1 Common for All Server Profiles 
+===================================
+The script will install a Munin node on the host. It will also
+install the Escenic specific Munin plugins on hosts where there are
+any Escenic server components.
+
+TBD: there is currently an issue with the Escenic plugins not working
+properly with the new ece/ece-install scripts. We're working on this.
+
+5.2 Common for Editorial, Presentation and Search Instances 
 ============================================================
 
-5.1.1 Sun Java 6 
+5.2.1 Sun Java 6 
 ~~~~~~~~~~~~~~~~~
 
-5.1.2 Apache Tomcat application server 
+5.2.2 Apache Tomcat application server 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - Compression of textual content (previously, this was typically set
   up with Apache and its mod\_deflate module).
@@ -214,24 +224,24 @@ want to install:
 - routing information in the cookies
 - application server access log
 
-5.1.3 Basic Escenic Nursery configuration 
+5.2.3 Basic Escenic Nursery configuration 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The basic Nursery configuration is taken care of for you, including RMI,
   database, search and application server/URIs. 
 
-5.1.4 APR, native library for optimal Tomcat I/O performance 
+5.2.4 APR, native library for optimal Tomcat I/O performance 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-5.1.5 Escenic Assembly environment 
+5.2.5 Escenic Assembly environment 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The reason why ece-install sets this up on each host, is to make the
 installation process as smooth as possible. The assembly environment
 may be removed after the installation if you want to.
 
-5.1.6 Database driver 
+5.2.6 Database driver 
 ~~~~~~~~~~~~~~~~~~~~~~
 
-5.1.7 Compression of content 
+5.2.7 Compression of content 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 This was was previously accomplished by having a web server in fron t
 of the application server (or cache server if you used ESI). A typical
@@ -241,7 +251,7 @@ compressed content (and many other things that we before needed Apache
 for). Thus, we'll let the application server do the compression for us
 now.
 
-5.2 1 - Full Stack on One Host 
+5.3 1 - Full Stack on One Host 
 ===============================
 This profile is suitable for developers and admins wanting to set up a
 test environment. It will install the full stack including caching
@@ -252,11 +262,11 @@ For further details on each of the different server components, see
 the different profile descriptions bellow.
 
 
-5.3 2 - Editorial Server (Publication Server) 
+5.4 2 - Editorial Server (Publication Server) 
 ==============================================
 
 
-5.4 3 - Presentation Server 
+5.5 3 - Presentation Server 
 ============================
 This will set up a typical presentation server:
 - Memcached, distributed memory cache
@@ -265,7 +275,7 @@ This will set up a typical presentation server:
 - Deployment setup to only deploy escenic-admin and the
   publication(s).
 
-5.5 4 - Database Server 
+5.6 4 - Database Server 
 ========================
 If ece-install is run on a support version of Debian or Ubuntu, this
 will install the excellent Percona distribution of MySQL with their
@@ -290,7 +300,7 @@ The script will fail by itself if the DB already exists:
 
 
 
-5.6 5 - Cache Server 
+5.7 5 - Cache Server 
 =====================
 If ece-install is run on a support version of Debian or Ubuntu, it
 will install the latest Varnish 3.0 caching server from the Varnish
@@ -300,6 +310,7 @@ If ece-install is run on a different platform, the admin must install
 Varnish 3.x prior to running ece-install.
 
 The script will configure Varnish for a typical Escenic site:
+- it will set up the cache server on port 80
 - will set up an access control lists of IPs which may access the
   privileged web applications such as /escenic-admin, /escenic and
   /webservice.
@@ -315,15 +326,20 @@ The script will configure Varnish for a typical Escenic site:
   different backend servers that will serve the web site.
 - will set up configuration to strip away cookies from static
   resources, such as CSS, JS and pictures.
+- will install the nginx web server for serving static content and
+  will configure Varnish accordingly. This will be very useful for
+  Adactus servers wanting to pull content from your ECEs.
+- will install a Munin gatherer and make its interface available 
+  when accesssing the web server directly (port 81) 
 
 TBD:
 - If run on a Linux platform, the script will tweak the kernel
   parameters for optimal TCP handling for a web facing server.
-- Will install the nginx web server for serving static content and
-  will configure Varnish accordingly. This will be very useful for
-  Adactus servers wanting to pull content from your ECEs.
+- let the /munin run through on port 80, requiring the connecting IPs
+  to be in the staff network ACL, defined in the Varnish
+  configuration. 
 
-5.7 8 - Install Widget Framework 
+5.8 8 - Install Widget Framework 
 =================================
 You'll need a user name and password for accessing the
 repo.escenic.com Maven repository. You should get these credentials
@@ -339,7 +355,7 @@ complain:
 
 
 
-5.8 9 - Create Publication 
+5.9 9 - Create Publication 
 ===========================
 This profile will create a publication for you, only asking you the
 name of the publication and which ECE instance to use for its
@@ -526,73 +542,5 @@ file:
 
 
 The following output is produced from ece-install:
-
-
-  root@ubiquitous-7:~# bash ece-install
-  [ece-install-0] Full Automatic Install (FAI) enabled.
-  [ece-install-0] All user input will be read from /root/.ece-install.conf
-  [ece-install-0] I'm logging to /var/log/ece-install.log
-  [ece-install-1] Stopping conflicting processes ...
-  [ece-install-1] Installing 3rd party packages needed by ece-install ...
-  [ece-install-2] Setting up the ece UNIX scripts ...
-  [ece-install-5] Adding the ece init.d script to the default run levels...
-  [ece-install-5] Setting up the doesnt user's UNIX environment ...
-  [ece-install-5] Installing an all-in-one environment on ubiquitous-7 ...
-  [ece-install-5] Installing the database server on ubiquitous-7 ...
-  [ece-install-5] Installing the Percona database ...
-  [ece-install-65] Downloading Escenic software from technet.escenic.com ...
-  [ece-install-66] Setting up the Escenic Content Engine & its plugins ...
-  [ece-install-76] Setting up the ECE database schema ...
-  [ece-install-90] Installing 3rd party packages needed by ECE ...
-  [ece-install-106] Setting up the Assembly Tool ...
-  [ece-install-110] Setting up the basic Nursery configuration ...
-  [ece-install-110] Setting up the application server ...
-  [ece-install-116] Setting up proper log4j & Java logging configuration ...
-  [ece-install-116] Setting correct permissions on ECE related directories ...
-  [ece-install-116] Assembling, deploying & starting dev1 ...
-  [ece-install-183] Installing a caching server on ubiquitous-7 ...
-  [ece-install-215] Setting up Varnish to match your environment ...
-  [ece-install-220] Setting up solr ...
-  [ece-install-221] Creating a Maven settings file: /root/.m2/settings.xml ...
-  [ece-install-221] Downloading Widget Framework from technet.escenic.com ...
-  [ece-install-259] Installing Widget Framework into your local Maven repository ...
-  [ece-install-318] Getting ready to create a new publiation ...
-  [ece-install-318] Setting up the mypub publication ...
-  [ece-install-318] Basing mypub.war on the Widget Framework Demo ...
-  [ece-install-344] Creating publication mypub using dev1 ...
-  [ece-install-382] Assembling, deploying & starting dev1 ...
-  [ece-install-503] - The installation is now complete! It took 0d 0h 8m 22s
-  [ece-install-90] - DB is now set up on ubiquitous-7:3306
-  [ece-install-181] - New ECE instance dev1 installed.
-  [ece-install-181] - Its admin interface is available at
-  [ece-install-181]   http://ubiquitous-7:8080/escenic-admin
-  [ece-install-181] - You can view all installed plugin & engine versions with:
-  [ece-install-181]   ece -i dev1 versions
-  [ece-install-182] - type 'ece help' to see all the options of this script
-  [ece-install-182]   which allows you to control all the Escenic components.
-  [ece-install-182]   Also, see /usr/share/doc/escenic/ece-guide.txt for
-  [ece-install-182]   addtional information on the ece script.
-  [ece-install-183] - Verify that /etc/default/ece lists all the instances 
-  [ece-install-183]   on ubiquitous-7 you wish to start at boot time.
-  [ece-install-220] - Cache server is up and running at http://ubiquitous-7:80/
-  [ece-install-317] - Widget Framework has been installed into your local
-  [ece-install-318]   Maven repository and its ECE components have been installed
-  [ece-install-502] - a new publication mypub has been created
-  [ece-install-503] - See /usr/share/doc/escenic/ece-install-guide.txt for
-  [ece-install-503]   a full overview of files and directories set up by
-  [ece-install-504]   ece-install
-  [ece-install-504] - type 'ece help' to see all the options of this script
-  [ece-install-504]   which allows you to control all the Escenic components.
-  [ece-install-504]   Also, see /usr/share/doc/escenic/ece-guide.txt for
-  [ece-install-505]   further information on the ece script.
-  [ece-install-505] - For further reading, in-depth guides on installing, 
-  [ece-install-505]   configuring and developing Escenic web sites can be 
-  [ece-install-505]   fount at http://documentation.vizrt.com/ece-5.3.html
-  [ece-install-506]
-  [ece-install-506] Enjoy your time with Escenic Content Engine!
-  [ece-install-506]
-  [ece-install-506] -Vizrt Online
-
-
-
+CANNOT INCLUDE FILE /tmp/ece-install.out
 
