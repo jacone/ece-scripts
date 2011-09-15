@@ -120,6 +120,14 @@ Select 1-7 and press ENTER
   8 - Install Widget Framework. This will also set up a WF based 
       publication for you (repo.escenic.com user/pass required).
 #+END_SRC
+** Common for All Server Profiles
+The script will install a Munin node on the host. It will also
+install the Escenic specific Munin plugins on hosts where there are
+any Escenic server components.
+
+TBD: there is currently an issue with the Escenic plugins not working
+properly with the new ece/ece-install scripts. We're working on this.
+
 ** Common for Editorial, Presentation and Search Instances
 *** Sun Java 6
 *** Apache Tomcat application server
@@ -200,6 +208,7 @@ If ece-install is run on a different platform, the admin must install
 Varnish 3.x prior to running ece-install.
 
 The script will configure Varnish for a typical Escenic site:
+- it will set up the cache server on port 80
 - will set up an access control lists of IPs which may access the
   privileged web applications such as /escenic-admin, /escenic and
   /webservice.
@@ -215,13 +224,18 @@ The script will configure Varnish for a typical Escenic site:
   different backend servers that will serve the web site.
 - will set up configuration to strip away cookies from static
   resources, such as CSS, JS and pictures.
+- will install the nginx web server for serving static content and
+  will configure Varnish accordingly. This will be very useful for
+  Adactus servers wanting to pull content from your ECEs.
+- will install a Munin gatherer and make its interface available 
+  when accesssing the web server directly (port 81) 
 
 TBD:
 - If run on a Linux platform, the script will tweak the kernel
   parameters for optimal TCP handling for a web facing server.
-- Will install the nginx web server for serving static content and
-  will configure Varnish accordingly. This will be very useful for
-  Adactus servers wanting to pull content from your ECEs.
+- let the /munin run through on port 80, requiring the connecting IPs
+  to be in the staff network ACL, defined in the Varnish
+  configuration. 
 
 ** 8 - Install Widget Framework
 You'll need a user name and password for accessing the
