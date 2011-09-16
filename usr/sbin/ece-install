@@ -35,6 +35,7 @@ git_source=git://github.com/skybert/ece-scripts.git
 appserver_port=8080
 on_debian_or_derivative=0
 on_debian=0
+on_ubuntu=0
 
 # because the all in one profile will run database, search and app
 # server profiles, all of which needs downloading and setting up the
@@ -310,15 +311,21 @@ function set_up_engine_and_plugins()
     make_dir /opt/escenic
     cd /opt/escenic/
 
-    if [ ! -d engine-* ]; then
-        run unzip -u $download_dir/engine*.zip
+    for el in $technet_download_list; do
+        if [ $(basename $el | grep ^engine-[0-9] | wc -l) -gt 0 ]; then
+            engine_dir=$(get_base_dir_from_bundle $el)
+        fi
+    done
+    
+    if [ ! -d ${engine_dir} ]; then
+        run unzip -u $download_dir/${engine_dir}.zip
         if [ -h engine ]; then
             run rm engine
         fi
     
-        run ln -s engine-* engine
+        run ln -s ${engine_dir} engine
     else
-        debug "engine-<version> is already there, skipping to next step."
+        debug "${engine_dir} is already there, skipping to next step."
     fi
 
     # we now extract all the plugins. We extract them in /opt/escenic
@@ -594,6 +601,16 @@ function install_ece_third_party_packages
     done
 }
 
+function get_base_dir_from_bundle()
+{
+    file_name=$(basename $1)
+    for el in .tar.gz .tar.bz2 .zip; do
+        file_name=${file_name%$el}
+    done
+
+    echo $file_name
+}
+
 function set_up_app_server
 {
     print "Setting up the application server ..."
@@ -675,15 +692,20 @@ function set_up_app_server
     
     run cd $download_dir
     run wget --continue --inet4-only $tomcat_download
+    tomcat_dir=$(get_base_dir_from_bundle $tomcat_download)
     
     run cd /opt/
-    run tar xzf $download_dir/apache-tomcat*.tar.gz
-    run ln -sf apache-tomcat* tomcat
+    run tar xzf $download_dir/${tomcat_dir}.tar.gz
+
+    if [ -e tomcat ]; then
+        run rm tomcat
+    fi
+    run ln -sf ${tomcat_dir} tomcat
 
     tomcat_base=/opt/tomcat-${instance_name}
     make_dir $tomcat_base
 
-    run cp -r /opt/apache-tomcat*/conf/ $tomcat_base
+    run cp -r /opt/${tomcat_dir}/ $tomcat_base
     for el in bin escenic/lib lib work logs temp webapps; do
         make_dir $tomcat_base/$el
     done
@@ -1359,10 +1381,21 @@ function install_cache_server()
             1>>$log 2>>$log
         run apt-get update
     fi
+
+    code_name=$(lsb_release -s -c)
+        
+    supported_code_name=0
+    # list taken from http://repo.varnish-cache.org/debian/dists/
+    supported_list="lenny squeeze hardy lucid"
+    for el in $supported_list; do
+        if [ $code_name = $el ]; then
+            supported_code_name=1
+        fi
+    done
     
-    if [ $on_debian -eq 1 ]; then
+    if [ $supported_code_name -eq 1 -a $on_debian -eq 1 ]; then
         add_apt_source "deb http://repo.varnish-cache.org/debian/ $(lsb_release -s -c) varnish-3.0"
-    elif [ $on_ubuntu -eq 1 ]; then
+    elif [ $supported_code_name -eq 1 -a $on_ubuntu -eq 1 ]; then
         add_apt_source "deb http://repo.varnish-cache.org/ubuntu/ $(lsb_release -s -c) varnish-3.0"
     fi
 
@@ -1440,10 +1473,9 @@ function install_database_server()
             packages="percona-server-server percona-server-client"
             install_packages_if_missing $packages
         else
-            print -n "The Percona APT repsository "
-            print "doesn't have packages for your Debian (or derivative) "
-            print "version with code name $code_name. I will use vanilla "
-            print "MySQL instead."
+            print "The Percona APT repsository fdoesn't have packages for your"
+            print "Debian (or derivative) version with code name $code_name. "
+            print "I will use vanilla MySQL instead."
 
             packages="mysql-server mysql-client libmysql-java"
             install_packages_if_missing $packages
