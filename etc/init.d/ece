@@ -25,6 +25,11 @@
 #  would be: update-rc.d ece defaults
 #######################################################################
 
+if [ $(whoami) != "root" ]; then
+    echo "Sorry, you must be root for running $0"
+    exit 1
+fi
+
 #######################################################################
 # Default values
 #######################################################################
@@ -69,7 +74,7 @@ function ensure_dirs_are_ok()
         if [ ! -d $el ]; then
             mkdir -p $el
         fi
-        chown -R $ece_unix_user:$ece_unix_group $el
+        chown --changes -R $ece_unix_user:$ece_unix_group $el
     done
 }
 
