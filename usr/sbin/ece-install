@@ -1473,7 +1473,7 @@ function install_database_server()
             packages="percona-server-server percona-server-client"
             install_packages_if_missing $packages
         else
-            print "The Percona APT repsository fdoesn't have packages for your"
+            print "The Percona APT repsository doesn't have packages for your"
             print "Debian (or derivative) version with code name $code_name. "
             print "I will use vanilla MySQL instead."
 
@@ -1754,7 +1754,7 @@ function install_widget_framework()
     wf_password=$(get_conf_value wf_password)
 
     if [ -z "$wf_user" -o -z "$wf_password" ]; then
-        print "Be sure to set wf_user and wf_password in $conf_file"
+        print "Missing wf_user and wf_password in $conf_file"
         print "If you don't have these, please contact support@escenic.com"
         exit 1
     fi
