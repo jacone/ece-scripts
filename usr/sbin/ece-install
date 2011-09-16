@@ -1164,6 +1164,11 @@ acl adactus {
   "203.33.232.216";
 }
 
+/* Our web server for serving static content */
+backend static {
+  .host = "localhost";
+  .port = "81";
+}
 EOF
     for el in $backend_servers; do
         appserver_id=$(echo $el | cut -d':' -f1 | sed 's/-/_/g')
@@ -1203,6 +1208,7 @@ sub vcl_recv {
   if (!client.ip ~ staff &&
       (req.url ~ "^/escenic" ||
        req.url ~ "^/studio" ||
+       req.url ~ "^/munin" ||
        req.url ~ "^/webservice" ||
        req.url ~ "^/escenic-admin")) {
      error 405 "Not allowed.";
@@ -1214,7 +1220,13 @@ sub vcl_recv {
     error 405 "Not allowed.";
   }
 
-  set req.backend = webdirector;
+  if (req.url ~ "^/munin") {
+    set req.url = regsub(req.url, "^/munin", "/");
+    set req.backend = static;
+  }
+  else {
+    set req.backend = webdirector;
+  }
 
   if (req.url ~ "\.(png|gif|jpg|css|js)$" || req.url == "/favicon.ico") { 
     remove req.http.Cookie;
@@ -1986,6 +1998,17 @@ function install_munin_node()
             make_ln $el
         done
     done
+
+    # TODO in which version(s) of munin is this directory called
+    # client-conf.d?
+    file=/etc/munin/plugin-conf.d/munin-node
+    if [ -e $file ]; then
+        cat >> $file <<EOF
+
+[escenic*]
+user $ece_user
+
+EOF
     
     if [ $on_debian_or_derivative -eq 1 ]; then
         service munin-node restart \
