@@ -116,6 +116,7 @@ PROFILE_RMI_HUB=6
 PROFILE_SEARCH_SERVER=7
 PROFILE_WIDGET_FRAMEWORK=8
 PROFILE_CREATE_PUBLICATION=9
+PROFILE_MUNIN_GATHERER=10
 
 # Because of issue VF-3559, we also create the default family and host
 # directories.
@@ -1275,7 +1276,7 @@ function read_user_input()
 {
     echo "Hi, which server profile do you wish to install?"
     echo ""
-    echo "Select 1-9 and press ENTER"
+    echo "Select 1-10 and press ENTER"
     echo ""
     echo "  $PROFILE_ALL_IN_ONE - All in one, the full stack on one host. "
     echo "      Suitable for development and test environments."
@@ -1296,6 +1297,7 @@ function read_user_input()
     echo "  $PROFILE_CREATE_PUBLICATION - Create a new publication."
     echo "      This profile will create new publication based on WF"
     echo "      (if available) or ECE/clean-demo."
+    echo -n "  $PROFILE_MUNIN_GATHERER - The Munin gatherer."
     echo ""
     echo -n "Your choice [1]> "
     read install_profile_number
@@ -2004,11 +2006,11 @@ function install_munin_node()
     file=/etc/munin/plugin-conf.d/munin-node
     if [ -e $file ]; then
         cat >> $file <<EOF
-
 [escenic*]
 user $ece_user
 
 EOF
+    fi
     
     if [ $on_debian_or_derivative -eq 1 ]; then
         service munin-node restart \
@@ -2079,23 +2081,21 @@ if [ $fai_enabled -eq 1 ]; then
         install_profile_number=$PROFILE_CACHE_SERVER
         install_cache_server
         install_web_server
-        install_munin_gatherer
     elif [ $(get_boolean_conf_value fai_rmi_install) -eq 1 ]; then
         install_profile_number=$PROFILE_RMI_HUB
-        common_pre_install
         install_rmi_hub
     elif [ $(get_boolean_conf_value fai_wf_install) -eq 1 ]; then
         install_profile_number=$PROFILE_WIDGET_FRAMEWORK
-        common_pre_install
         install_widget_framework
     elif [ $(get_boolean_conf_value fai_presentation_install) -eq 1 ]; then
         install_profile_number=$PROFILE_PRESENTATION_SERVER
-        common_pre_install
         install_presentation_server
     elif [ $(get_boolean_conf_value fai_publication_create) -eq 1 ]; then
         install_profile_number=$PROFILE_CREATE_PUBLICATION
-        common_pre_install
         create_publication
+    elif [ $(get_boolean_conf_value fai_munin_gatherer_create) -eq 1 ]; then
+        install_profile_number=$PROFILE_MUNIN_GATHERER
+        install_munin_gatherer
     fi
     
     common_post_install
@@ -2131,6 +2131,9 @@ else
         ;;
         $PROFILE_CREATE_PUBLICATION)
         create_publication
+        ;;
+        $PROFILE_MUNIN_GATHERER)
+        install_munin_gatherer
         ;;
         default)
             print "You must select 1-7"
