@@ -873,7 +873,8 @@ function create_user_and_group_if_not_present()
        run adduser $ece_user \
            --disabled-password \
            --gecos "Escenic-user,Room,Work,Home,Other"
-       add_next_step "- Set a password for the new $ece_user (passwd $ece_user)"
+       add_next_step "- Set a password for the new UNIX user $ece_user"
+       add_next_step "  You can do this by running [passwd $ece_user]"
    fi
    
    if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
