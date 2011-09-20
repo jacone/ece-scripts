@@ -865,21 +865,27 @@ EOF
 
 }
 
+function create_user_and_group_if_not_present()
+{
+   if [ $(grep $ece_user /etc/passwd | wc -l) -lt 1 ]; then
+       print "Creating UNIX user $ece_user ..."
+        # TODO add support for useradd
+       run adduser $ece_user \
+           --disabled-password \
+           --gecos "Escenic-user,Room,Work,Home,Other"
+       add_next_step "- Set a password for the new $ece_user (passwd $ece_user)"
+   fi
+   
+   if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
+       print "Creating UNIX group $ece_group ..."
+       run addgroup $ece_group
+   fi
+ }
+
 # last, give the control back to the ECE user & group 
 function set_correct_permissions()
 {
     print "Setting correct permissions on ECE related directories ..."
-
-    if [ $(grep $ece_user /etc/passwd | wc -l) -lt 1 ]; then
-        # TODO add support for useradd
-        run adduser $ece_user \
-            --disabled-password \
-            --gecos "Escenic-user,Room,Work,Home,Other"
-        add_next_step "- Set a password for the new $ece_user (passwd $ece_user)"
-    fi
-    if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
-        run addgroup $ece_group
-    fi
 
     for el in $engine_dir_list; do
         if [ -d $el ]; then
@@ -1360,6 +1366,7 @@ function common_pre_install()
     stop_conflicting_processes
     install_common_os_packages
     set_up_ece_scripts
+    create_user_and_group_if_not_present
     set_up_user_enviornment
 }
 
