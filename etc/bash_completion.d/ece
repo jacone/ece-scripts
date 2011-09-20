@@ -4,7 +4,7 @@ _ece_commands()
     local cur=${COMP_WORDS[COMP_CWORD]}
     local prev=${COMP_WORDS[COMP_CWORD-1]}
 
-    commands="applog assemble clean deploy help kill log outlog restart start status stop threaddump update versions"
+    commands="applog assemble clean deploy help kill log loglist outlog restart start status stop threaddump update versions"
     resources="content-type feature layout layout-group image-version menu"
     types="engine search analysis rmi-hub"
 
