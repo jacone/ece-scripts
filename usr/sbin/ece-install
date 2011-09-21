@@ -612,6 +612,19 @@ function get_base_dir_from_bundle()
     echo $file_name
 }
 
+# Returns an escaped string useful for sed and other BASH commands.
+#
+# $1 :  the string
+function get_escaped_bash_string()
+{
+    result=$(echo $1 | \
+        sed -e 's/\$/\\$/g' \
+        -e 's/\*/\\*/g' \
+        -e 's#/#\\/#g' \
+        -e 's/\./\\./g')
+    echo $result
+}
+
 function set_up_app_server
 {
     print "Setting up the application server ..."
@@ -717,9 +730,15 @@ function set_up_app_server
     run cd $tomcat_base/lib
     make_ln $jdbc_driver
 
+    # it's important to append (and not pre-pend) the ECE libraries so
+    # that things put it in the standard loader behaves as expected,
+    # such as log4j configuration put in ${tomcat.base}/lib.
     file=$tomcat_base/conf/catalina.properties
-    sed -i 's/common.loader=/common.loader=\$\{catalina.base\}\/escenic\/lib\/\*\.jar\,/g' \
-        $file \
+    common_loader=$(grep ^common.loader $file)
+    escenic_loader=",$\{catalina.base\}/escenic/lib/*.jar"
+    old=$(get_escaped_bash_string ${common_loader})
+    new=${escaped_common_loader}$(get_escaped_bash_string ${escenic_loader})
+    sed -i "s#${old}#${new}#g" $file \
         1>>$log 2>>$log
     exit_on_error "sed on $file"
     
