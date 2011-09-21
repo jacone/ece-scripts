@@ -791,7 +791,7 @@ function tail_app_log()
         exit 1
     fi
     
-    print "Tailing the application server log $log_file"
+    print "Tailing the application server log $(get_app_log)"
     tail -f $(get_app_log)
 }
 
