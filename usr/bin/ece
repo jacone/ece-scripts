@@ -224,6 +224,12 @@ function set_type_settings()
 
 function set_type_pid()
 {
+    if [ $(uname) = "Linux" ]; then
+        ps_options="auxww"
+    else
+        ps_options="-ef"
+    fi
+    
     # Get a hold of the PID of the process. Although we've got the PID
     # file, we stil get the PID from the OS here as we used it for
     # sanity checking later on, see stop_type().
@@ -231,11 +237,11 @@ function set_type_pid()
         # we need to be able to differentiate between an ECE instance
         # and an rmi hub, for this we use java.security.policy which
         # the hub doesn't have.
-        type_pid=`ps -ef | grep -v java.security.policy | \
+        type_pid=`ps $ps_options | grep -v java.security.policy | \
             awk "/Djava.rmi.server.hostname=$ece_server_hostname / && \
             !/awk/"' {print $2}'`
     else
-        type_pid=`ps -ef | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
+        type_pid=`ps $ps_options | awk "/Descenic.server=$ece_server / && !/awk/"' {print $2}'`
     fi
 
     debug "type_pid is now=$type_pid"
