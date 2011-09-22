@@ -160,7 +160,7 @@ compressed content (and many other things that we before needed Apache
 for). Thus, we'll let the application server do the compression for us
 now.
 
-** 1 - Full Stack on One Host
+** Profile - Full Stack on One Host
 This profile is suitable for developers and admins wanting to set up a
 test environment. It will install the full stack including caching
 server, application server, ECE, assembly host, database, Widget
@@ -170,18 +170,17 @@ For further details on each of the different server components, see
 the different profile descriptions bellow.
 
 
-** 2 - Editorial Server (Publication Server)
+** Profile - Editorial Server (Publication Server)
+Will set up a typical editorial server (often referred to as the
+publication server in Escenic literature).
 
-
-** 3 - Presentation Server
+** Profile - Presentation Server
 This will set up a typical presentation server:
 - Memcached, distributed memory cache
-- Escenic Assembly environment (which may be removed after the
-  installation). 
 - Deployment setup to only deploy escenic-admin and the
   publication(s).
 
-** 4 - Database Server
+** Profile - Database Server
 If ece-install is run on a support version of Debian or Ubuntu, this
 will install the excellent Percona distribution of MySQL with their
 set of high performance patches.
@@ -202,7 +201,7 @@ ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already exists
 [ece-install] running tables FAILED, exiting :-(
 #+END_SRC
 
-** 5 - Cache Server
+** Profile - Cache Server
 If ece-install is run on a support version of Debian or Ubuntu, it
 will install the latest Varnish 3.0 caching server from the Varnish
 APT repository.
@@ -230,8 +229,6 @@ The script will configure Varnish for a typical Escenic site:
 - will install the nginx web server for serving static content and
   will configure Varnish accordingly. This will be very useful for
   Adactus servers wanting to pull content from your ECEs.
-- will install a Munin gatherer and make its interface available 
-  when accesssing the web server directly (port 81) 
 
 TBD:
 - If run on a Linux platform, the script will tweak the kernel
@@ -240,7 +237,7 @@ TBD:
   to be in the staff network ACL, defined in the Varnish
   configuration. 
 
-** 8 - Install Widget Framework
+** Profile - Install Widget Framework
 You'll need a user name and password for accessing the
 repo.escenic.com Maven repository. You should get these credentials
 when you bought Widget Framework. If you for some reason do not have
@@ -252,7 +249,7 @@ complain:
 [ece-install] Be sure to set wf_user and wf_password in /root/.ece-install.conf
 [ece-install] If you don't have these, please contact support@escenic.com
 #+END_SRC
-** 9 - Create Publication
+** Profile - Create Publication
 This profile will create a publication for you, only asking you the
 name of the publication and which ECE instance to use for its
 creation.
@@ -260,6 +257,13 @@ creation.
 This installation profile will base the publication on the Widget
 Framework if its present on the system, if not, ECE's clean demo WAR
 is used as a basis.  
+** Profile - Monitoring Server
+This will install a Munin gatherer and make its interface available 
+when accesssing the web server directly (port 81).
+
+TBD: This profile will also install the Nagios interface for
+monitoring the different nodes. 
+
 * Full Automatic Install (FAI)
 The ece-install script has support for doing a full automatic install
 (FAI).
