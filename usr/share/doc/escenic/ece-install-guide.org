@@ -131,9 +131,6 @@ The script will install a Munin node on the host. It will also
 install the Escenic specific Munin plugins on hosts where there are
 any Escenic server components.
 
-TBD: there is currently an issue with the Escenic plugins not working
-properly with the new ece/ece-install scripts. We're working on this.
-
 ** Common for Editorial, Presentation and Search Instances
 *** Sun Java 6
 *** Apache Tomcat application server
@@ -421,6 +418,9 @@ fai_enabled=1
 fai_all_install=1
 #+END_SRC
 
+All the different components described in this guide are installed on
+the host that runs the install script.
+
 The following output is produced from ece-install:
-#+INCLUDE: "/tmp/ece-install.out" src text
+#+INCLUDE: "~/tmp/ece-install.out" src text
 
