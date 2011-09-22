@@ -116,7 +116,7 @@ PROFILE_RMI_HUB=6
 PROFILE_SEARCH_SERVER=7
 PROFILE_WIDGET_FRAMEWORK=8
 PROFILE_CREATE_PUBLICATION=9
-PROFILE_MUNIN_GATHERER=10
+PROFILE_MONITORING_SERVER=10
 
 # Because of issue VF-3559, we also create the default family and host
 # directories.
@@ -1323,7 +1323,8 @@ function read_user_input()
     echo "  $PROFILE_CREATE_PUBLICATION - Create a new publication."
     echo "      This profile will create new publication based on WF"
     echo "      (if available) or ECE/clean-demo."
-    echo -n "  $PROFILE_MUNIN_GATHERER - The Munin gatherer."
+    echo -n "  $PROFILE_MONITORING_SERVER - A monitoring server."
+    echo "     This will install the Munin gatherer"
     echo ""
     echo -n "Your choice [1]> "
     read install_profile_number
@@ -2121,7 +2122,7 @@ if [ $fai_enabled -eq 1 ]; then
         install_profile_number=$PROFILE_CREATE_PUBLICATION
         create_publication
     elif [ $(get_boolean_conf_value fai_munin_gatherer_create) -eq 1 ]; then
-        install_profile_number=$PROFILE_MUNIN_GATHERER
+        install_profile_number=$PROFILE_MONITORING_SERVER
         install_munin_gatherer
     fi
     
@@ -2159,7 +2160,7 @@ else
         $PROFILE_CREATE_PUBLICATION)
         create_publication
         ;;
-        $PROFILE_MUNIN_GATHERER)
+        $PROFILE_MONITORING_SERVER)
         install_munin_gatherer
         ;;
         default)
