@@ -1023,11 +1023,12 @@ function update_publication_resources()
         menu)
             url=${url}/${publication}/escenic/plugin/menu
             ;;
-        
+        security)
+            url=${url}/${publication}/escenic/plugin/community/security
+            ;;
         *)
             print "Invalid resource: $(basename $resource) :-("
             exit 1
-        
     esac        
 
     print "Updating the $(basename $resource) resource for the $publication" \
