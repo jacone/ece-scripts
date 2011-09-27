@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Guide for the /usr/bin/ece Script</title>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-09-12 18:14:44 CST"/>
+<meta name="generated" content="2011-09-27 20:28:00 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -44,6 +44,12 @@ lang="en" xml:lang="en">
   dt { font-weight: bold; }
   div.figure { padding: 0.5em; }
   div.figure p { text-align: center; }
+  div.inlinetask {
+    padding:10px;
+    border:2px solid gray;
+    margin:10px;
+    background: #ffffcc;
+  }
   textarea { overflow-x: auto; }
   .linenr { font-size:smaller }
   .code-highlighted {background-color:#ffff00;}
@@ -161,8 +167,8 @@ div.note {
 
 </head>
 <body>
-<div id="content">
 
+<div id="preamble">
 <svg
         id="vizrt-logo"
         version="1.1"
@@ -207,7 +213,12 @@ div.note {
     </g> 
   </g> 
 </svg>
-<h1>Guide for the /usr/bin/ece Script</h1>
+
+</div>
+
+<div id="content">
+<h1 class="title">Guide for the /usr/bin/ece Script</h1>
+
 
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
@@ -221,12 +232,19 @@ div.note {
 </ul>
 </li>
 <li><a href="#sec-2">2 Getting an overview of all available options </a></li>
-<li><a href="#sec-3">3 Installation </a>
+<li><a href="#sec-3">3 Tailing log files </a>
 <ul>
-<li><a href="#sec-3-1">3.1 Overview of File Paths Used by the ece script </a></li>
+<li><a href="#sec-3-1">3.1 Getting an overview of the log files </a></li>
+<li><a href="#sec-3-2">3.2 Commands for tailing the log files </a></li>
+<li><a href="#sec-3-3">3.3 Piping the log files to another command </a></li>
 </ul>
 </li>
-<li><a href="#sec-4">4 Running the ece script </a></li>
+<li><a href="#sec-4">4 Installation </a>
+<ul>
+<li><a href="#sec-4-1">4.1 Overview of File Paths Used by the ece script </a></li>
+</ul>
+</li>
+<li><a href="#sec-5">5 Running the ece script </a></li>
 </ul>
 </div>
 </div>
@@ -251,14 +269,11 @@ to remember all the different options and their correct wording:
 </p>
 
 
-<pre class="example">$ ece TAB TAB
+<pre class="src src-sh">$ ece TAB TAB
 applog      deploy      log         start       threaddump  
 assemble    help        outlog      status      update      
 clean       kill        restart     stop        versions 
-
 </pre>
-
-
 
 <p>
 The commands are all described in detail in "ece help"
@@ -274,12 +289,9 @@ The commands are all described in detail in "ece help"
 
 
 
-<pre class="example">$ ece -t TAB TAB
+<pre class="src src-sh">$ ece -t TAB TAB
 analysis  engine    rmi-hub   search 
-
 </pre>
-
-
 
 
 </div>
@@ -299,13 +311,10 @@ list and complete the available resource names:
 </p>
 
 
-<pre class="example">$ ece -p mypub -r TAB TAB
+<pre class="src src-sh">$ ece -p mypub -r TAB TAB
 content-type   image-version  layout-group   
 feature        layout         menu
-
 </pre>
-
-
 
 </div>
 </div>
@@ -319,7 +328,7 @@ feature        layout         menu
 
 
 
-<pre class="example">$ ece help
+<pre class="src src-sh">$ ece help
 Usage: /home/torstein/bin/ece [-t &lt;type&gt;] [-i &lt;instance&gt;] &lt;command&gt;
 
 DESCRIPTION
@@ -330,7 +339,7 @@ DESCRIPTION
       search  -  A standalone search indexer and solr instance
       rmi-hub -  The RMI hub responsible for the internal 
                  communication between the ECE instances.
-      analysis - The Escenic Analysis Engine also knows as 'Stats'
+      analysis - The Escenic Analysis Engine also knows as <span style="color: #8b2252;">'Stats'</span>
 
  -i --instance &lt;instance&gt;
       The type instance, such as editor1, web1 or search1
@@ -347,13 +356,13 @@ DESCRIPTION
       Prints out debug statements, useful for debugging.
 
 The following commands are available:
-   applog     the type's app server log
-   assemble   runs the Assembly Tool *)
-   clean      removes temporary files created by /home/torstein/bin/ece *)
-   deploy     deploys the assembled EAR *)
-   help       prints this help screen
-   kill       uses force to stop the type
-   log        the type's Log4J log
+   applog     the type<span style="color: #8b2252;">'s app server log</span>
+<span style="color: #8b2252;">   assemble   runs the Assembly Tool *)</span>
+<span style="color: #8b2252;">   clean      removes temporary files created by /home/torstein/bin/ece *)</span>
+<span style="color: #8b2252;">   deploy     deploys the assembled EAR *)</span>
+<span style="color: #8b2252;">   help       prints this help screen</span>
+<span style="color: #8b2252;">   kill       uses force to stop the type</span>
+<span style="color: #8b2252;">   log        the type'</span>s Log4J log
    outlog     the [ece#engine] script log (system out log)
    restart    restarts the type
    start      starts the type
@@ -363,11 +372,8 @@ The following commands are available:
    update     update publication resources
    versions   lists the ECE component versions
 
-*) only applicable if type is 'engine'
-
+*) only applicable if type is <span style="color: #8b2252;">'engine'</span>
 </pre>
-
-
 
 
 </div>
@@ -375,8 +381,100 @@ The following commands are available:
 </div>
 
 <div id="outline-container-3" class="outline-2">
-<h2 id="sec-3"><span class="section-number-2">3</span> Installation </h2>
+<h2 id="sec-3"><span class="section-number-2">3</span> Tailing log files </h2>
 <div class="outline-text-2" id="text-3">
+
+<p>The script has a number of options to let you keep track of what's
+going on on your system.
+</p>
+
+</div>
+
+<div id="outline-container-3-1" class="outline-3">
+<h3 id="sec-3-1"><span class="section-number-3">3.1</span> Getting an overview of the log files </h3>
+<div class="outline-text-3" id="text-3-1">
+
+<p>The ece script will be more than happy to tell you about the log files
+on your system that are of interest to your instance:
+</p>
+
+
+<pre class="src src-sh">$ ece -i dev1 loglist
+[ece#engine-dev1] System out log: /var/log/escenic/engine-dev1.out
+[ece#engine-dev1] App server log: /opt/tomcat-dev1/logs/localhost.2011-09-20.log
+[ece#engine-dev1] log4j log: /var/log/escenic/messages
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-3-2" class="outline-3">
+<h3 id="sec-3-2"><span class="section-number-3">3.2</span> Commands for tailing the log files </h3>
+<div class="outline-text-3" id="text-3-2">
+
+<p>There are three different logs, which ece will let you tail. When
+tailing the log file, ece will also first print out where the file is
+located on the file system so you can open it later for further
+inspection. 
+</p>
+
+
+
+<pre class="src src-sh">$ ece -i dev1 outlog
+[ece#engine-dev1] Tailing the system out log /var/log/escenic/engine-dev1.out
+</pre>
+
+
+<p>
+The available log file commands are:
+</p><dl>
+<dt>outlog</dt><dd>the system out log
+</dd>
+<dt>applog</dt><dd>the app server log 
+</dd>
+<dt>log</dt><dd>the log4j log
+</dd>
+</dl>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-3-3" class="outline-3">
+<h3 id="sec-3-3"><span class="section-number-3">3.3</span> Piping the log files to another command </h3>
+<div class="outline-text-3" id="text-3-3">
+
+<p>If you wish to pass the log files onto another pipe, for instance to
+grep all the log files for a certain exception or error message, you
+will find the -q parameter useful:
+</p>
+
+
+<pre class="src src-sh">$ ece -i dev1 -q loglist | xargs grep IllegalArgumentException
+</pre>
+
+
+<p>
+This approach is also useful if you wish to tail all the log files at
+once: 
+</p>
+
+
+<pre class="src src-sh">$ ece -i dev1 -q loglist | xargs tail -f
+</pre>
+
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4"><span class="section-number-2">4</span> Installation </h2>
+<div class="outline-text-2" id="text-4">
 
 <p>The ece script and ece.conf may be used on any Unix like system that
 has a fairly recent version of BASH installed.
@@ -384,9 +482,9 @@ has a fairly recent version of BASH installed.
 
 </div>
 
-<div id="outline-container-3-1" class="outline-3">
-<h3 id="sec-3-1"><span class="section-number-3">3.1</span> Overview of File Paths Used by the ece script </h3>
-<div class="outline-text-3" id="text-3-1">
+<div id="outline-container-4-1" class="outline-3">
+<h3 id="sec-4-1"><span class="section-number-3">4.1</span> Overview of File Paths Used by the ece script </h3>
+<div class="outline-text-3" id="text-4-1">
 
 <p>These are recommended files and locations for using the ece script:
 </p>
@@ -438,11 +536,8 @@ this environment variable in your .bashrc or similar:
 </p>
 
 
-<pre class="example">ECE_CONF_LOCATIONS 
-
+<pre class="src src-sh">ECE_CONF_LOCATIONS 
 </pre>
-
-
 
 
 <p>
@@ -456,21 +551,18 @@ over time :-)
 
 </div>
 
-<div id="outline-container-4" class="outline-2">
-<h2 id="sec-4"><span class="section-number-2">4</span> Running the ece script </h2>
-<div class="outline-text-2" id="text-4">
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> Running the ece script </h2>
+<div class="outline-text-2" id="text-5">
 
 <p>You must be normal user to run the ece script, otherwise it will
 complain:
 </p>
 
 
-<pre class="example">[ece#engine] Sorry, you cannot be root when running ece
+<pre class="src src-sh">[ece#engine] Sorry, you cannot be root when running ece
 [ece#engine] The root user can only use /etc/init.d/ece
-
 </pre>
-
-
 
 
 <p>
@@ -480,12 +572,14 @@ RMI hub instances on your system.
 </p>
 </div>
 </div>
+</div>
+
 <div id="postamble">
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-09-12 18:14:44 CST
-</p></div>
+  Date: 2011-09-27 20:28:00 CST
+</p>
 </div>
 </body>
 </html>
