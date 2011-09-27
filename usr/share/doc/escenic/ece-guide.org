@@ -86,17 +86,6 @@ The following commands are available:
 The script has a number of options to let you keep track of what's
 going on on your system.
 
-** Tailing the logs
-There are three different logs, which ece will let you tail. When
-tailing the log file, ece will also first print out where the file is
-located on the file system so you can open it later for further
-inspection. 
-
-#+BEGIN_SRC sh
-$ ece -i dev1 outlog
-[ece#engine-dev1] Tailing the system out log /var/log/escenic/engine-dev1.out
-#+END_SRC
-
 ** Getting an overview of the log files
 The ece script will be more than happy to tell you about the log files
 on your system that are of interest to your instance:
@@ -107,11 +96,34 @@ $ ece -i dev1 loglist
 [ece#engine-dev1] log4j log: /var/log/escenic/messages
 #+END_SRC
 
+** Commands for tailing the log files
+There are three different logs, which ece will let you tail. When
+tailing the log file, ece will also first print out where the file is
+located on the file system so you can open it later for further
+inspection. 
+
+#+BEGIN_SRC sh
+$ ece -i dev1 outlog
+[ece#engine-dev1] Tailing the system out log /var/log/escenic/engine-dev1.out
+#+END_SRC
+
+The available log file commands are:
+- outlog :: the system out log
+- applog :: the app server log 
+- log :: the log4j log
+
+** Piping the log files to another command
 If you wish to pass the log files onto another pipe, for instance to
 grep all the log files for a certain exception or error message, you
 will find the -q parameter useful:
 #+BEGIN_SRC sh
 $ ece -i dev1 -q loglist | xargs grep IllegalArgumentException
+#+END_SRC
+
+This approach is also useful if you wish to tail all the log files at
+once: 
+#+BEGIN_SRC sh
+$ ece -i dev1 -q loglist | xargs tail -f
 #+END_SRC
 
 * Installation
