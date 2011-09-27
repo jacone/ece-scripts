@@ -1025,7 +1025,15 @@ EOF
         print "Basing your ${publication_name}.war on ECE/demo-clean ..."
         run cp /opt/escenic/engine/contrib/wars/demo-clean.war ${publication_war}
     fi
-    
+
+    # TODO add support for the community widgets
+    #
+    # 1 - add the core widgets to the
+    # publications/demo-community/pom.xml
+    # 
+    # 2 - add the <ui:group name="core-widgets"/> definition for core
+    # widgets in:
+    # publications/demo-community/src/main/webapp/META-INF/escenic/publication-resources/escenic/content-type
 }
 
 function check_for_required_downloads()
