@@ -552,6 +552,12 @@ function backup_type()
    fi
 
    if [ $appserver = "tomcat" ]; then
+       if [ ! -d $tomcat_base/conf ]; then
+           print $tomcat_base/conf "doesn't exist :-("
+           print "check your ece.conf the $instance instance of type $type"
+           exit 1
+       fi
+       
        connect_string=$(find $tomcat_base/conf | xargs \
            grep jdbc | \
            grep url | \
