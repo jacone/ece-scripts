@@ -840,6 +840,33 @@ function assemble()
         2>>$log_file
     exit_on_error "$message"
 
+    # test to see if the new versions of ECE & plugins are upgrades of
+    # the previous ones
+    duplicates_found=0
+    known_unharmful_duplicates="activation- $'\n' ehcache-$'\n' stax-api-$'\n'"
+    
+    cd $assemblytool_home/dist/.work/ear/lib
+    for el in *.jar; do
+        jar=$(basename $(echo $el | sed  -e  's/[0-9]//g') .jar | sed 's/\.//g')
+        if [ $(echo $known_unharmful_duplicates | grep $jar | wc -l) -gt 0 ]; then
+            continue
+        fi
+        if [ $(\ls *.jar | grep "$jar[0-9]" | wc -l) -gt 1 ]; then
+            duplicates_found=1
+            debug "More than one version of $jar"
+        fi
+    done
+
+    if [ $duplicates_found -eq 1 ]; then
+        print "Multiple versions of ECE and/or 3rd party libraries found."
+        print "Remember, you need to run '$(basename $0) clean assemble' when "
+        print "upgrading either ECE or one of the plugins."
+        print "Press ENTER to run '$(basename $0) clean assemble'"
+        read ok
+        clean_up
+        assemble
+    fi
+    
     mkdir -p $ear_cache_dir/
     exit_on_error "creating $ear_cache_dir"
 
