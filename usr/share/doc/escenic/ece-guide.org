@@ -126,6 +126,33 @@ once:
 $ ece -i dev1 -q loglist | xargs tail -f
 #+END_SRC
 
+* Assembling a new EAR
+The script will quite happily assemble your EAR file. Please note that
+you need to run 
+#+BEGIN_SRC sh
+$ ece clean assemble
+#+END_SRC
+whenever you've upgraded either ECE or one of its plugins. The script
+will try to take care of you though and warn you of such duplication:
+#+BEGIN_SRC sh
+[ece#engine] Multiple versions of ECE and/or 3rd party libraries found.
+[ece#engine] Remember, you need to run 'ece clean assemble' when
+[ece#engine] upgrading either ECE or one of the plugins.
+[ece#engine] Press ENTER to run 'ece clean assemble'
+#+END_SRC
+The script will then re-run the assembly by itself.
+
+If you're just re-running the assembly after just adding a new plugin
+or want to re-build your publications after template changes, you can
+omit the clean command and just run:
+#+BEGIN_SRC sh
+$ ece assembly
+#+END_SRC
+
+The EAR produced is now ready to be deployed with
+#+BEGIN_SRC sh
+$ ece [-i <instance>] deploy
+#+END_SRC
 * Installation
 The ece script and ece.conf may be used on any Unix like system that
 has a fairly recent version of BASH installed.
@@ -133,13 +160,15 @@ has a fairly recent version of BASH installed.
 ** Overview of File Paths Used by the ece script
 These are recommended files and locations for using the ece script:
 
-|----------------------------------+-----------------------------|
-| Path                             | Explanation                 |
-|----------------------------------+-----------------------------|
-| /usr/bin/ece                     | The script itself           |
-| /etc/escenic/ece.conf            | The main configuration file |
-| /etc/escenic/ece-<instance>.conf | Instance specific settings  |
-|----------------------------------+-----------------------------|
+|----------------------------------+----------------------------------|
+| Path                             | Explanation                      |
+|----------------------------------+----------------------------------|
+| /usr/bin/ece                     | The script itself                |
+| /etc/escenic/ece.conf            | The main configuration file      |
+| /etc/escenic/ece-<instance>.conf | Instance specific settings       |
+| /var/cache/escenic               | Directory of assembled EAR files |
+| /tmp                             | Directory for temporary files    |
+|----------------------------------+----------------------------------|
 
 As you can see in ece.conf, there are a number of default locations
 dealing with log files, pid files, crash files as well as application
