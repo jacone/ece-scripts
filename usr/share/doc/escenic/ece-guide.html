@@ -1,13 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
                "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
 lang="en" xml:lang="en">
 <head>
 <title>Guide for the /usr/bin/ece Script</title>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-09-27 20:28:00 CST"/>
+<meta name="generated" content="2011-10-07 16:47:40 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -239,12 +239,13 @@ div.note {
 <li><a href="#sec-3-3">3.3 Piping the log files to another command </a></li>
 </ul>
 </li>
-<li><a href="#sec-4">4 Installation </a>
+<li><a href="#sec-4">4 Assembling a new EAR </a></li>
+<li><a href="#sec-5">5 Installation </a>
 <ul>
-<li><a href="#sec-4-1">4.1 Overview of File Paths Used by the ece script </a></li>
+<li><a href="#sec-5-1">5.1 Overview of File Paths Used by the ece script </a></li>
 </ul>
 </li>
-<li><a href="#sec-5">5 Running the ece script </a></li>
+<li><a href="#sec-6">6 Running the ece script </a></li>
 </ul>
 </div>
 </div>
@@ -473,8 +474,58 @@ once:
 </div>
 
 <div id="outline-container-4" class="outline-2">
-<h2 id="sec-4"><span class="section-number-2">4</span> Installation </h2>
+<h2 id="sec-4"><span class="section-number-2">4</span> Assembling a new EAR </h2>
 <div class="outline-text-2" id="text-4">
+
+<p>The script will quite happily assemble your EAR file. Please note that
+you need to run 
+</p>
+
+
+<pre class="src src-sh">$ ece clean assemble
+</pre>
+
+<p>
+whenever you've upgraded either ECE or one of its plugins. The script
+will try to take care of you though and warn you of such duplication:
+</p>
+
+
+<pre class="src src-sh">[ece#engine] Multiple versions of ECE and/or 3rd party libraries found.
+[ece#engine] Remember, you need to run <span style="color: #8b2252;">'ece clean assemble'</span> when
+[ece#engine] upgrading either ECE or one of the plugins.
+[ece#engine] Press ENTER to run <span style="color: #8b2252;">'ece clean assemble'</span>
+</pre>
+
+<p>
+The script will then re-run the assembly by itself.
+</p>
+<p>
+If you're just re-running the assembly after just adding a new plugin
+or want to re-build your publications after template changes, you can
+omit the clean command and just run:
+</p>
+
+
+<pre class="src src-sh">$ ece assembly
+</pre>
+
+
+<p>
+The EAR produced is now ready to be deployed with
+</p>
+
+
+<pre class="src src-sh">$ ece [-i &lt;instance&gt;] deploy
+</pre>
+
+</div>
+
+</div>
+
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5"><span class="section-number-2">5</span> Installation </h2>
+<div class="outline-text-2" id="text-5">
 
 <p>The ece script and ece.conf may be used on any Unix like system that
 has a fairly recent version of BASH installed.
@@ -482,9 +533,9 @@ has a fairly recent version of BASH installed.
 
 </div>
 
-<div id="outline-container-4-1" class="outline-3">
-<h3 id="sec-4-1"><span class="section-number-3">4.1</span> Overview of File Paths Used by the ece script </h3>
-<div class="outline-text-3" id="text-4-1">
+<div id="outline-container-5-1" class="outline-3">
+<h3 id="sec-5-1"><span class="section-number-3">5.1</span> Overview of File Paths Used by the ece script </h3>
+<div class="outline-text-3" id="text-5-1">
 
 <p>These are recommended files and locations for using the ece script:
 </p>
@@ -499,6 +550,8 @@ has a fairly recent version of BASH installed.
 <tr><td class="left">/usr/bin/ece</td><td class="left">The script itself</td></tr>
 <tr><td class="left">/etc/escenic/ece.conf</td><td class="left">The main configuration file</td></tr>
 <tr><td class="left">/etc/escenic/ece-&lt;instance&gt;.conf</td><td class="left">Instance specific settings</td></tr>
+<tr><td class="left">/var/cache/escenic</td><td class="left">Directory of assembled EAR files</td></tr>
+<tr><td class="left">/tmp</td><td class="left">Directory for temporary files</td></tr>
 </tbody>
 </table>
 
@@ -551,9 +604,9 @@ over time :-)
 
 </div>
 
-<div id="outline-container-5" class="outline-2">
-<h2 id="sec-5"><span class="section-number-2">5</span> Running the ece script </h2>
-<div class="outline-text-2" id="text-5">
+<div id="outline-container-6" class="outline-2">
+<h2 id="sec-6"><span class="section-number-2">6</span> Running the ece script </h2>
+<div class="outline-text-2" id="text-6">
 
 <p>You must be normal user to run the ece script, otherwise it will
 complain:
@@ -578,7 +631,7 @@ RMI hub instances on your system.
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-09-27 20:28:00 CST
+  Date: 2011-10-07 16:47:40 CST
 </p>
 </div>
 </body>
