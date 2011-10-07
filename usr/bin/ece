@@ -190,30 +190,6 @@ function set_common_settings()
       $log_dir/messages
       $log_dir/Escenic-error.log
     "
-
-    host=localhost
-    if [ $appserver != "tomcat" ]; then
-        debug "Only tomcat is supported for reading host/port right now, "
-        debug "trying to make an educated guess"
-        port=8080
-    else
-        if [ -r $tomcat_base/logs/catalina.out ]; then
-            # for tomcat6-user packaged tomcats (and perhaps others)
-            out_log=$tomcat_base/logs/catalina.out
-        else
-            out_log=$log_file
-        fi
-
-        if [ -r $out_log ]; then
-            port=$(grep "INFO: Starting Coyote HTTP/1.1 on http-" \
-                $out_log | \
-                tail -1 | \
-                cut -d'-' -f2
-            )
-        fi
-        
-    fi
-    
 }
 
 function set_type_settings()
@@ -248,6 +224,33 @@ function set_type_pid()
     debug "type_pid is now=$type_pid"
 }
 
+function set_type_port()
+{
+    host=localhost
+    if [ $appserver != "tomcat" ]; then
+        debug "Only tomcat is supported for reading host/port right now, "
+        debug "trying to make an educated guess"
+        port=8080
+    else
+        if [ -r $tomcat_base/logs/catalina.out ]; then
+            # for tomcat6-user packaged tomcats (and perhaps others)
+            out_log=$tomcat_base/logs/catalina.out
+        else
+            out_log=$log_file
+        fi
+
+        if [ -r $out_log ]; then
+            port=$(grep "INFO: Starting Coyote HTTP/1.1 on http-" \
+                $out_log | \
+                tail -1 | \
+                cut -d'-' -f2
+            )
+        fi
+    fi
+
+    debug "set_type_port=$port"
+}
+
 function set_instance_settings()
 {
     # optional: possible to have instance specific conf files,
@@ -277,6 +280,8 @@ function set_instance_settings()
     fi
 
     set_type_pid
+
+    set_type_port
     
     # if type is rmi-hub, we don't' need more configuration.
     if [ $type = "rmi-hub" ]; then
@@ -385,7 +390,6 @@ function set_instance_settings()
     debug ECE_HOME=$ECE_HOME
     debug JAVA_HOME=$JAVA_HOME
     debug JAVA_OPTS=$JAVA_OPTS
-
 }
 
 function sanity_check()
