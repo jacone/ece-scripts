@@ -2,7 +2,7 @@
                   =================================
 
 Author: Torstein Krause Johansen
-Date: 2011-09-27 20:27:57 CST
+Date: 2011-10-07 16:47:42 CST
 
 
 Table of Contents
@@ -16,9 +16,10 @@ Table of Contents
     3.1 Getting an overview of the log files 
     3.2 Commands for tailing the log files 
     3.3 Piping the log files to another command 
-4 Installation 
-    4.1 Overview of File Paths Used by the ece script 
-5 Running the ece script 
+4 Assembling a new EAR 
+5 Installation 
+    5.1 Overview of File Paths Used by the ece script 
+6 Running the ece script 
 
 
 1 TAB completion 
@@ -164,20 +165,54 @@ once:
   $ ece -i dev1 -q loglist | xargs tail -f
 
 
-4 Installation 
+4 Assembling a new EAR 
+-----------------------
+The script will quite happily assemble your EAR file. Please note that
+you need to run 
+
+
+  $ ece clean assemble
+
+whenever you've upgraded either ECE or one of its plugins. The script
+will try to take care of you though and warn you of such duplication:
+
+
+  [ece#engine] Multiple versions of ECE and/or 3rd party libraries found.
+  [ece#engine] Remember, you need to run 'ece clean assemble' when
+  [ece#engine] upgrading either ECE or one of the plugins.
+  [ece#engine] Press ENTER to run 'ece clean assemble'
+
+The script will then re-run the assembly by itself.
+
+If you're just re-running the assembly after just adding a new plugin
+or want to re-build your publications after template changes, you can
+omit the clean command and just run:
+
+
+  $ ece assembly
+
+
+The EAR produced is now ready to be deployed with
+
+
+  $ ece [-i <instance>] deploy
+
+5 Installation 
 ---------------
 The ece script and ece.conf may be used on any Unix like system that
 has a fairly recent version of BASH installed.
 
-4.1 Overview of File Paths Used by the ece script 
+5.1 Overview of File Paths Used by the ece script 
 ==================================================
 These are recommended files and locations for using the ece script:
 
-  Path                               Explanation                  
- ----------------------------------+-----------------------------
-  /usr/bin/ece                       The script itself            
-  /etc/escenic/ece.conf              The main configuration file  
-  /etc/escenic/ece-<instance>.conf   Instance specific settings   
+  Path                               Explanation                       
+ ----------------------------------+----------------------------------
+  /usr/bin/ece                       The script itself                 
+  /etc/escenic/ece.conf              The main configuration file       
+  /etc/escenic/ece-<instance>.conf   Instance specific settings        
+  /var/cache/escenic                 Directory of assembled EAR files  
+  /tmp                               Directory for temporary files     
 
 As you can see in ece.conf, there are a number of default locations
 dealing with log files, pid files, crash files as well as application
@@ -208,7 +243,7 @@ consultants, partners and customers have requested these locations to
 fit their systems. As you can see, fitting everyone's fancy adds up
 over time :-)
 
-5 Running the ece script 
+6 Running the ece script 
 -------------------------
 You must be normal user to run the ece script, otherwise it will
 complain:
