@@ -590,8 +590,7 @@ function backup_type()
        print "Database dumped: $db_backup_file"
    fi
    
-   archive_dir=/tmp
-   archive_file=/tmp/${type}-${instance}-backup-$(date --iso).tar.gz
+   archive_file=$backup_dir/${type}-${instance}-backup-$(date --iso).tar.gz
    possible_backup="
 /etc/escenic 
 /opt/escenic 
