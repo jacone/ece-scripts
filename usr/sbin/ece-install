@@ -200,7 +200,7 @@ function download_escenic_components()
 # $1 : space separated string of package names 
 install_packages_if_missing()
 {
-    if [ $on_debian_or_derivative ]; then
+    if [ $on_debian_or_derivative -eq 1 ]; then
         some_are_missing=0
         for el in $@; do
             # we don't need to grep away "No packages found matching
@@ -2067,7 +2067,7 @@ function add_server_to_runlevels()
         return
     fi
 
-    if [ $on_debian_or_derivative ]; then
+    if [ $on_debian_or_derivative -eq 1 ]; then
         print "Adding the ece init.d script to the default run levels ..."
         run update-rc.d ece defaults
     else
