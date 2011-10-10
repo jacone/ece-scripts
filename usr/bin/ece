@@ -155,6 +155,20 @@ function read_conf_file()
     done
 }
 
+# If the system is installed using the recommended paths, the method
+# will return a list of the instances configured in
+# /etc/escenic/engine/instance
+function get_instance_list()
+{
+    instance_list=""
+
+    if [ -r /etc/escenic/engine/instance ]; then
+        instance_list=$(ls /etc/escenic/engine/instance)
+    fi
+
+    echo $instance_list
+}
+
 function set_common_settings()
 {
     # This behaviour can be overridden by specifying a list of
@@ -406,6 +420,19 @@ function sanity_check()
     if [ -z "$command" ]; then
         print "You must specificy a command, see 'ece help'."
         exit 1
+    fi
+
+    # checks if the user is using the default instance when he/she
+    # really wants to start one of the instances installed on the
+    # system.
+    if [ $instance = "default" -a $type = "engine" ]; then
+        instance_list=$(get_instance_list)
+        if [ -n "$instance_list" ]; then
+            print "You must specify the instance with -i <instance>"
+            print "e.g. ece -i $(echo $instance_list | cut -d' ' -f1) $command"
+            print "Instances available on $HOSTNAME: $instance_list"
+            exit 1
+        fi
     fi
 }
 
