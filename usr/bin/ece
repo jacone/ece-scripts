@@ -888,8 +888,7 @@ function assemble()
         print "Multiple versions of ECE and/or 3rd party libraries found."
         print "Remember, you need to run '$(basename $0) clean assemble' when "
         print "upgrading either ECE or one of the plugins."
-        print "Press ENTER to run '$(basename $0) clean assemble'"
-        read ok
+        print "I will now clean it up for you and re-run the assembly."
         clean_up
         assemble
     fi
