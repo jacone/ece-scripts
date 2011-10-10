@@ -29,7 +29,7 @@ download_dir=/tmp/ece-downloads
 log=/var/log/$(basename $0).log
 conf_file=$HOME/.ece-install.conf
 common_nursery_dir=/etc/escenic/engine/common
-git_source=git://github.com/skybert/ece-scripts.git
+ece_scripts_git_source=git://github.com/skybert/ece-scripts.git
 
 # globals will be set to correct values in run-time.
 appserver_port=8080
@@ -354,7 +354,7 @@ function set_up_ece_scripts()
         (cd ece-scripts
             git pull 1>>$log 2>>$log)
     else
-        run git clone $git_source
+        run git clone $ece_scripts_git_source
     fi
     
     run cp -r ece-scripts/usr/* /usr/
