@@ -108,6 +108,7 @@ create database $db_schema character set utf8 collate utf8_general_ci;
 grant all on $db_schema.* to $db_user@'%' identified by '$db_password';
 grant all on $db_schema.* to $db_user@'localhost' identified by '$db_password';
 EOF
+        exit_on_the_first_error "create db"
     else
         sqlplus /nolog << EOF
 connect /as sysdba;
