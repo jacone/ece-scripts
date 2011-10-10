@@ -117,6 +117,7 @@ PROFILE_SEARCH_SERVER=7
 PROFILE_WIDGET_FRAMEWORK=8
 PROFILE_CREATE_PUBLICATION=9
 PROFILE_MONITORING_SERVER=10
+PROFILE_RESTORE_FROM_BACKUP=11
 
 # Because of issue VF-3559, we also create the default family and host
 # directories.
@@ -735,6 +736,7 @@ function set_up_app_server
     # such as log4j configuration put in ${tomcat.base}/lib.
     file=$tomcat_base/conf/catalina.properties
     common_loader=$(grep ^common.loader $file)
+    escaped_common_loader=$(get_escaped_bash_string ${common_loader})
     escenic_loader=",$\{catalina.base\}/escenic/lib/*.jar"
     old=$(get_escaped_bash_string ${common_loader})
     new=${escaped_common_loader}$(get_escaped_bash_string ${escenic_loader})
@@ -1984,6 +1986,20 @@ function install_munin_gatherer()
     fi
 
     # TODO ask user/read fai_munin_node_list
+    if [ $fai_enabled -eq 0 ]; then
+        print "Which nodes shall this Munin monitor gather from?"
+        print "Separate your hosts with a space, e.g.: 'editor01 db01 web01'"
+        echo -n "Your choice> "
+        read user_munin_nodes
+        
+        if [ -n "$user_munin_nodes" ]; then
+            node_list=$user_munin_nodes
+        fi
+    else
+        node_list=$(get_conf_value fai_munin_node_list)
+    fi
+    
+    
     # TODO has a hard dependency on install_web_server, should perhaps
     # be called from this one?
 
@@ -2080,6 +2096,79 @@ function add_server_to_runlevels()
     fi
 }
 
+function restore_from_backup()
+{
+    # locals
+    restore_db=0
+    restore_binaries=0
+    restore_data_files=0
+    restore_conf=0
+    backup_file=""
+    
+    if [ $fai_enabled -eq 1 -a $fai_restore_from_backup -eq 1 ]; then
+        backup_file=${fai_restore_from_file}
+        
+        if [ $fai_restore_db -eq 1 -o $fai_restore_all -eq 1 ]; then
+            restore_db=1
+        fi
+        if [ $fai_restore_data_files -eq 1 -o $fai_restore_all -eq 1 ]; then
+            restore_data_files=1
+        fi
+        if [ $fai_restore_software_binaries -eq 1 -o $fai_restore_all -eq 1 ]; then
+            restore_binaries=1
+        fi
+        if [ $fai_restore_configuration -eq 1 -o $fai_restore_all -eq 1 ]; then
+            restore_conf=1
+        fi
+    else
+        print "From which dataset do you wish to backup?"
+        # TODO
+    fi
+
+    if [ ! -r $backup_file ]; then
+        print $backup_file "either doesn't exist or cannot be read."
+        print "I cannot restore from it :-("
+        exit 1
+    fi
+    
+    dir=$(mktemp -d)
+    
+    if [ $restore_db -eq 1 ]; then
+        install_database_server
+        run cd $dir
+        run tar xzf $backup_file --wildcards var/backups/escenic/*.sql.gz
+        # picking the DB backup file to restore
+        sql_file=$(ls -tra var/backups/escenic/*.sql.gz | tail -1)
+        print "Selected the most recent database dump " $sql_file
+        run mysql < $sql_file
+        print "Database restored on $HOSTNAME from $sql_file"
+    fi
+    
+    if [ $restore_data_files -eq 1 ]; then
+        run cd $dir
+        run tar xzf $backup_file var/lib/escenic
+        run mv var/lib/escenic /var/lib
+        print "Restored data files on $HOSTNAME from $backup_file"
+        print "Check /var/lib/escenic to to see they're all there"
+    fi
+    
+    if [ $restore_conf -eq 1 ]; then
+        run cd $dir
+        run tar xzf $backup_file etc
+        run mv etc /
+        print "Restored configuration files on $HOSTNAME from $backup_file"
+        print "Check /etc to see that they're all there".
+    fi
+    
+    if [ $restore_binaries -eq 1 ]; then
+        run cd $dir
+        run tar xzf $backup_file opt
+        run mv opt /
+        print "Restored software binaries on $HOSTNAME from $backup_file"
+        print "Check /opt to see that they're all there".
+    fi
+}
+
 function common_post_install()
 {
     add_server_to_runlevels
@@ -2132,6 +2221,9 @@ if [ $fai_enabled -eq 1 ]; then
     elif [ $(get_boolean_conf_value fai_munin_gatherer_create) -eq 1 ]; then
         install_profile_number=$PROFILE_MONITORING_SERVER
         install_munin_gatherer
+    elif [ $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
+        install_profile_number=$PROFILE_RESTORE_FROM_BACKUP
+        restore_from_backup
     fi
     
     common_post_install
@@ -2145,7 +2237,6 @@ else
         $PROFILE_CACHE_SERVER)
         install_cache_server
         install_web_server
-        install_munin_gatherer
         ;;
         $PROFILE_DB_SERVER)
         install_database_server
