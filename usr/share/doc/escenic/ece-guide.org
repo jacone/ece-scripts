@@ -130,7 +130,7 @@ $ ece -i dev1 -q loglist | xargs tail -f
 The script will quite happily assemble your EAR file. Please note that
 you need to run 
 #+BEGIN_SRC sh
-$ ece clean assemble
+$ ece -i clean assemble
 #+END_SRC
 whenever you've upgraded either ECE or one of its plugins. The script
 will try to take care of you though and warn you of such duplication:
@@ -138,9 +138,10 @@ will try to take care of you though and warn you of such duplication:
 [ece#engine] Multiple versions of ECE and/or 3rd party libraries found.
 [ece#engine] Remember, you need to run 'ece clean assemble' when
 [ece#engine] upgrading either ECE or one of the plugins.
-[ece#engine] Press ENTER to run 'ece clean assemble'
+[ece#engine] I will now clean it up for you and re-run the assembly.
+[ece#engine] Cleaning up generated files in /opt/escenic/assemblytool ...
+[ece#engine] Assembling your EAR file ...
 #+END_SRC
-The script will then re-run the assembly by itself.
 
 If you're just re-running the assembly after just adding a new plugin
 or want to re-build your publications after template changes, you can
@@ -199,6 +200,7 @@ fit their systems. As you can see, fitting everyone's fancy adds up
 over time :-)
 
 * Running the ece script
+** You must run it as a non-privileged user
 You must be normal user to run the ece script, otherwise it will
 complain:
 #+BEGIN_SRC sh
@@ -209,4 +211,33 @@ complain:
 As it mentions, the root user may use the init.d script and the
 accompanying /etc/default/ece to command the different ECE, EAE and
 RMI hub instances on your system.
+** Specifying instance
 
+*** Specifying the instance
+The script is made for being easy to use with multiple instances on
+the same host. You specify the instance you want to operate on using the
+-i parameter. E.g. to assemble and deploy the editor1 instance, you'd
+do:
+#+BEGIN_SRC sh
+$ ece -i editor1 assemble deploy restart
+#+END_SRC
+
+*** Using the default instance 
+However, on development systems and perhaps even test systems, you
+probably want to just use one instance on your host, though, and this
+is where the "default" instance comes in.
+
+To use the default instance, you must only have one instance installed
+on your system. More specifically, there must no instance specific
+configuration files in
+#+BEGIN_SRC sh
+/etc/escenic/engine/instance
+#+END_SRC 
+and that ece.conf, typically located in:
+#+BEGIN_SRC sh
+/etc/escenic/ece.conf
+#+END_SRC
+must contain all the settings required to run the instance.
+
+If you've ticked all these boxes, you can issue all ece commands
+without the -i parameter.
