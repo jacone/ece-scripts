@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-10-11 18:35:36 CST"/>
+<meta name="generated" content="2011-10-11 19:04:29 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -284,13 +284,9 @@ div.note {
 <li><a href="#sec-12">12 Example Output FAI </a></li>
 <li><a href="#sec-13">13 Restoring from backup </a>
 <ul>
-<li><a href="#sec-13-1">13.1 Location of the backup file </a>
-<ul>
-<li><a href="#sec-13-1-1">13.1.1 Running interactively </a></li>
-<li><a href="#sec-13-1-2">13.1.2 Running in FAI mode </a></li>
-</ul>
-</li>
-<li><a href="#sec-13-2">13.2 Data security </a></li>
+<li><a href="#sec-13-1">13.1 Running interactively </a></li>
+<li><a href="#sec-13-2">13.2 Running in FAI mode </a></li>
+<li><a href="#sec-13-3">13.3 Data security </a></li>
 </ul>
 </li>
 </ul>
@@ -1185,16 +1181,8 @@ what's available on the host where it's run):
 </div>
 
 <div id="outline-container-13-1" class="outline-3">
-<h3 id="sec-13-1"><span class="section-number-3">13.1</span> Location of the backup file </h3>
+<h3 id="sec-13-1"><span class="section-number-3">13.1</span> Running interactively </h3>
 <div class="outline-text-3" id="text-13-1">
-
-
-
-</div>
-
-<div id="outline-container-13-1-1" class="outline-4">
-<h4 id="sec-13-1-1"><span class="section-number-4">13.1.1</span> Running interactively </h4>
-<div class="outline-text-4" id="text-13-1-1">
 
 <p>The ece script will put backups in 
 </p>
@@ -1223,27 +1211,53 @@ Your choice [1]&gt;
 
 </div>
 
-<div id="outline-container-13-1-2" class="outline-4">
-<h4 id="sec-13-1-2"><span class="section-number-4">13.1.2</span> Running in FAI mode </h4>
-<div class="outline-text-4" id="text-13-1-2">
+<div id="outline-container-13-2" class="outline-3">
+<h3 id="sec-13-2"><span class="section-number-3">13.2</span> Running in FAI mode </h3>
+<div class="outline-text-3" id="text-13-2">
 
-<p>If you're running in FAI mode, you specify the file to restore from
-with:
+<p>If you're running in FAI mode, you can choose between these settings
+to decide what to restore and where to find the backup file to
+restore from:
+</p>
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<caption></caption>
+<colgroup><col class="left" /><col class="right" /><col class="left" />
+</colgroup>
+<thead>
+<tr><th scope="col" class="left">Parameter</th><th scope="col" class="right">Default</th><th scope="col" class="left">Description</th></tr>
+</thead>
+<tbody>
+<tr><td class="left">fai_restore_all</td><td class="right">0</td><td class="left">Restore everything found in the backup file</td></tr>
+<tr><td class="left">fai_restore_db</td><td class="right">0</td><td class="left">Install the DB server &amp; restore its contents</td></tr>
+<tr><td class="left">fai_restore_data_files</td><td class="right">0</td><td class="left">Restore the Solr &amp; ECE data files</td></tr>
+<tr><td class="left">fai_restore_configuration</td><td class="right">0</td><td class="left">Restore the Solr &amp; ECE configuration files</td></tr>
+<tr><td class="left">fai_restore_software_binaries</td><td class="right">0</td><td class="left">Restore the Escenic and Apache Tomcat software</td></tr>
+<tr><td class="left">fai_restore_from_file</td><td class="right">""</td><td class="left">The .tar.gz produced by "ece -i &lt;instance&gt; backup"</td></tr>
+</tbody>
+</table>
+
+
+<p>
+For example, to restore everything possible from a given tarball, you
+need this in your .ece-install.conf:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #a0522d;">fai_restore_from_file</span>=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
+<pre class="src src-sh"><span style="color: #a0522d;">fai_enabled</span>=1
+
+<span style="color: #a0522d;">fai_restore_from_backup</span>=1
+<span style="color: #a0522d;">fai_restore_all</span>=1
+<span style="color: #a0522d;">fai_restore_from_file</span>=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
 </pre>
 
 
 </div>
-</div>
 
 </div>
 
-<div id="outline-container-13-2" class="outline-3">
-<h3 id="sec-13-2"><span class="section-number-3">13.2</span> Data security </h3>
-<div class="outline-text-3" id="text-13-2">
+<div id="outline-container-13-3" class="outline-3">
+<h3 id="sec-13-3"><span class="section-number-3">13.3</span> Data security </h3>
+<div class="outline-text-3" id="text-13-3">
 
 <p>You should take heed when running restore, so that you're not
 restoring a system which you didn't want to change (yes, this mishap
@@ -1276,7 +1290,7 @@ ERROR 1007 (HY000) at line 1: Can<span style="color: #8b2252;">'t create databas
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-10-11 18:35:36 CST
+  Date: 2011-10-11 19:04:29 CST
 </p>
 </div>
 </body>
