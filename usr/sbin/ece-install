@@ -388,7 +388,6 @@ function set_up_ecedb()
         fi
     done
 
-    source /usr/sbin/drop-and-create-ecedb
     # TODO in future, it'll be possible to override db_user,
     # db_password and db_schema here by reading these via
     # get_conf_value
@@ -1335,6 +1334,8 @@ function read_user_input()
     echo "      (if available) or ECE/clean-demo."
     echo -n "  $PROFILE_MONITORING_SERVER - A monitoring server."
     echo "     This will install the Munin gatherer"
+    echo -n "  $PROFILE_RESTORE_FROM_BACKUP - Restore from a backup."
+    echo "     Allows you to restore parts of or an entire system."
     echo ""
     echo -n "Your choice [1]> "
     read install_profile_number
@@ -1487,9 +1488,13 @@ function add_next_step()
     fi
 }
 
+# $1 : optional parameter, binaries_only. If passed, $1=binaries_only,
+#      the ECE DB schema is not set up. 
 function install_database_server()
 {
     print "Installing the database server on $HOSTNAME ..."
+
+    source /usr/sbin/drop-and-create-ecedb
 
     if [ $on_debian_or_derivative -eq 1 ]; then
 
@@ -1535,10 +1540,12 @@ function install_database_server()
     fi
 
     assert_pre_prequesite mysql
-    
-    download_escenic_components
-    set_up_engine_and_plugins
-    set_up_ecedb
+
+    if [ -z "$1" ]; then
+        download_escenic_components
+        set_up_engine_and_plugins
+        set_up_ecedb
+    fi
 }
 
 # $1 is the default instance name, the calee is responsible for
@@ -2028,6 +2035,13 @@ function install_munin_node()
         -O $file
     run chmod 755 $file
 
+    if [ ! -e /etc/escenic/ece-*.conf -o -z "$type" -o -z "$instance" ]; then
+        print "No ECE instances found on $HOSTNAME, so I'm not adding"
+        print "additional Munin configuration"  
+        add_next_step "- A Munin node has been installed on $HOSTNAME"
+        return
+    fi
+    
     escenic_jstat_modules="_gc _gcoverhead _heap _uptime"
     for el in /etc/escenic/ece-*.conf; do
         current_instance=$(basename ${el} | \
@@ -2105,28 +2119,40 @@ function restore_from_backup()
     restore_conf=0
     backup_file=""
     
-    if [ $fai_enabled -eq 1 -a $fai_restore_from_backup -eq 1 ]; then
+    if [ $(get_boolean_conf_value fai_enabled) -eq 1 -a \
+        $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
         backup_file=${fai_restore_from_file}
+
+        if [ -z "$backup_file" ]; then
+            print "You must specifify fai_restore_from_file"
+            exit 1
+        fi
         
-        if [ $fai_restore_db -eq 1 -o $fai_restore_all -eq 1 ]; then
+        if [ $(get_boolean_conf_value fai_restore_db) -eq 1 -o \
+            $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
             restore_db=1
         fi
-        if [ $fai_restore_data_files -eq 1 -o $fai_restore_all -eq 1 ]; then
+        
+        if [ $(get_boolean_conf_value fai_restore_data_files) -eq 1 -o \
+            $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
             restore_data_files=1
         fi
-        if [ $fai_restore_software_binaries -eq 1 -o $fai_restore_all -eq 1 ]; then
+        
+        if [ $(get_boolean_conf_value fai_restore_software_binaries) -eq 1 -o \
+            $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
             restore_binaries=1
         fi
-        if [ $fai_restore_configuration -eq 1 -o $fai_restore_all -eq 1 ]; then
+        if [ $(get_boolean_conf_value fai_restore_configuration) -eq 1 -o \
+            $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
             restore_conf=1
         fi
-    else
+    elif [ $(get_boolean_conf_value fai_enabled) -eq 0 ]; then
         print "From which dataset do you wish to backup?"
         # TODO
     fi
 
-    if [ ! -r $backup_file ]; then
-        print $backup_file "either doesn't exist or cannot be read."
+    if [ ! -r "$backup_file" ]; then
+        print "$backup_file either doesn't exist or cannot be read."
         print "I cannot restore from it :-("
         exit 1
     fi
@@ -2134,38 +2160,51 @@ function restore_from_backup()
     dir=$(mktemp -d)
     
     if [ $restore_db -eq 1 ]; then
-        install_database_server
+        install_database_server "binaries_only"
+        print "Restoring the database contents on $HOSTNAME ..."
         run cd $dir
         run tar xzf $backup_file --wildcards var/backups/escenic/*.sql.gz
         # picking the DB backup file to restore
         sql_file=$(ls -tra var/backups/escenic/*.sql.gz | tail -1)
-        print "Selected the most recent database dump " $sql_file
-        run mysql < $sql_file
-        print "Database restored on $HOSTNAME from $sql_file"
+        print "Selecting the most recent database dump " $(basename $sql_file)
+
+        # methods in drop-and-create-ecedb to set up the database
+        # schema & user
+        pre_install_new_ecedb
+        create_schema
+
+        # db_schema is defined in drop-and-create-ecedb
+        gunzip < $sql_file | mysql $db_schema
+        exit_on_error "restoring from $sql_file"
+        
+        print "Successfully restored DB on $HOSTNAME from" $(basename $sql_file)
     fi
     
     if [ $restore_data_files -eq 1 ]; then
+        print "Restoring the Solr & ECE data files on $HOSTNAME ..."
         run cd $dir
-        run tar xzf $backup_file var/lib/escenic
-        run mv var/lib/escenic /var/lib
-        print "Restored data files on $HOSTNAME from $backup_file"
-        print "Check /var/lib/escenic to to see they're all there"
+        run tar -C / -xzf $backup_file var/lib/escenic
+        print "Successfully restored Solr & ECE data files on $HOSTNAME"
+        print "from backup:  $(basename $backup_file)"
+        print "Check /var/lib/escenic to verify they're all there"
     fi
     
     if [ $restore_conf -eq 1 ]; then
+        print "Restoring the ECE configuration files on $HOSTNAME ..."
         run cd $dir
-        run tar xzf $backup_file etc
-        run mv etc /
-        print "Restored configuration files on $HOSTNAME from $backup_file"
-        print "Check /etc to see that they're all there".
+        run tar -C / -xzf $backup_file etc
+        print "Successfully restored ECE configuration files on $HOSTNAME"
+        print "from backup: $(basename $backup_file)"
+        print "Check /etc to verify that they're all there".
     fi
     
     if [ $restore_binaries -eq 1 ]; then
+        print "Restoring the Escenic & Tomcat binaries on $HOSTNAME ..."
         run cd $dir
-        run tar xzf $backup_file opt
-        run mv opt /
-        print "Restored software binaries on $HOSTNAME from $backup_file"
-        print "Check /opt to see that they're all there".
+        run tar -C / -xzf $backup_file opt
+        print "Successfully restored Escenic & Tomcat binaries on $HOSTNAME"
+        print "from backup: $(basename $backup_file)"
+        print "Check /opt to verify that they're all there".
     fi
 }
 
@@ -2262,8 +2301,11 @@ else
         $PROFILE_MONITORING_SERVER)
         install_munin_gatherer
         ;;
+        $PROFILE_RESTORE_FROM_BACKUP)
+        restore_from_backup
+        ;;
         default)
-            print "You must select 1-7"
+            print "You must select 1-11"
             exit 1
             ;;
     esac
