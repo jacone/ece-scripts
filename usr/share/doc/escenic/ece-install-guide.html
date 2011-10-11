@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-09-15 15:29:55 CST"/>
+<meta name="generated" content="2011-10-11 18:35:36 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -44,6 +44,12 @@ lang="en" xml:lang="en">
   dt { font-weight: bold; }
   div.figure { padding: 0.5em; }
   div.figure p { text-align: center; }
+  div.inlinetask {
+    padding:10px;
+    border:2px solid gray;
+    margin:10px;
+    background: #ffffcc;
+  }
   textarea { overflow-x: auto; }
   .linenr { font-size:smaller }
   .code-highlighted {background-color:#ffff00;}
@@ -161,8 +167,8 @@ div.note {
 
 </head>
 <body>
-<div id="content">
 
+<div id="preamble">
 <svg
         id="vizrt-logo"
         version="1.1"
@@ -207,7 +213,12 @@ div.note {
     </g> 
   </g> 
 </svg>
-<h1>Welcome to the /usr/sbin/ece-install Guide</h1>
+
+</div>
+
+<div id="content">
+<h1 class="title">Welcome to the /usr/sbin/ece-install Guide</h1>
+
 
 <div id="table-of-contents">
 <h2>Table of Contents</h2>
@@ -239,16 +250,28 @@ div.note {
 <li><a href="#sec-5-2-7">5.2.7 Compression of content </a></li>
 </ul>
 </li>
-<li><a href="#sec-5-3">5.3 1 - Full Stack on One Host </a></li>
-<li><a href="#sec-5-4">5.4 2 - Editorial Server (Publication Server) </a></li>
-<li><a href="#sec-5-5">5.5 3 - Presentation Server </a></li>
-<li><a href="#sec-5-6">5.6 4 - Database Server </a></li>
-<li><a href="#sec-5-7">5.7 5 - Cache Server </a></li>
-<li><a href="#sec-5-8">5.8 8 - Install Widget Framework </a></li>
-<li><a href="#sec-5-9">5.9 9 - Create Publication </a></li>
+<li><a href="#sec-5-3">5.3 Profile - Full Stack on One Host </a></li>
+<li><a href="#sec-5-4">5.4 Profile - Editorial Server (Publication Server) </a></li>
+<li><a href="#sec-5-5">5.5 Profile - Presentation Server </a></li>
+<li><a href="#sec-5-6">5.6 Profile - Database Server </a></li>
+<li><a href="#sec-5-7">5.7 Profile - Cache Server </a></li>
+<li><a href="#sec-5-8">5.8 Profile - Install Widget Framework </a></li>
+<li><a href="#sec-5-9">5.9 Profile - Create Publication </a></li>
+<li><a href="#sec-5-10">5.10 Profile - Monitoring Server </a></li>
 </ul>
 </li>
-<li><a href="#sec-6">6 Full Automatic Install (FAI) </a></li>
+<li><a href="#sec-6">6 Full Automatic Install (FAI) </a>
+<ul>
+<li><a href="#sec-6-1">6.1 Overview of All FAI Parameters </a></li>
+<li><a href="#sec-6-2">6.2 Examples </a>
+<ul>
+<li><a href="#sec-6-2-1">6.2.1 Installing an Editorial Server &amp; Create a Publication </a></li>
+<li><a href="#sec-6-2-2">6.2.2 Installing Two Presentation Servers On a Single Host </a></li>
+</ul>
+</li>
+<li><a href="#sec-6-3">6.3 Verifying That the Script Is Running In FAI Mode </a></li>
+</ul>
+</li>
 <li><a href="#sec-7">7 Running More Than One Installation Process </a></li>
 <li><a href="#sec-8">8 Re-running ece-install (and How To Speed It Up) </a></li>
 <li><a href="#sec-9">9 Overview of File Paths Used by the ece-install script </a></li>
@@ -259,6 +282,17 @@ div.note {
 </li>
 <li><a href="#sec-11">11 Uninstalling Everything That the ece-install Set Up </a></li>
 <li><a href="#sec-12">12 Example Output FAI </a></li>
+<li><a href="#sec-13">13 Restoring from backup </a>
+<ul>
+<li><a href="#sec-13-1">13.1 Location of the backup file </a>
+<ul>
+<li><a href="#sec-13-1-1">13.1.1 Running interactively </a></li>
+<li><a href="#sec-13-1-2">13.1.2 Running in FAI mode </a></li>
+</ul>
+</li>
+<li><a href="#sec-13-2">13.2 Data security </a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -330,11 +364,8 @@ or be downloaded together with the other ece-scripts using git:
 </p>
 
 
-<pre class="example">$ git clone git@github.com:skybert/ece-scripts.git
-
+<pre class="src src-sh">$ git clone git@github.com:skybert/ece-scripts.git
 </pre>
-
-
 
 
 </div>
@@ -350,33 +381,24 @@ a regular user, it will complain:
 </p>
 
 
-<pre class="example">[ece-install] You must be root when running ece-install
-
+<pre class="src src-sh">[ece-install] You must be root when running ece-install
 </pre>
-
-
 
 <p>
 To become root on Ubuntu based systems and Mac OS X, do:
 </p>
 
 
-<pre class="example">$ sudo su
-
+<pre class="src src-sh">$ sudo su
 </pre>
-
-
 
 <p>
 On all other Unix like system, do:
 </p>
 
 
-<pre class="example">$ su
-
+<pre class="src src-sh">$ su
 </pre>
-
-
 
 
 <p>
@@ -387,11 +409,8 @@ you forget to provide such a configuration file:
 </p>
 
 
-<pre class="example">[ece-install] /root/.ece-install.conf doesn't exist, I cannot live without it :-(
-
+<pre class="src src-sh">[ece-install] /root/.ece-install.conf doesn<span style="color: #8b2252;">'t exist, I cannot live without it :-(</span>
 </pre>
-
-
 
 
 <p>
@@ -400,12 +419,9 @@ cannot find what it's looking for:
 </p>
 
 
-<pre class="example">[ece-install] Be sure to set technet_user and technet_password
-[ece-install] in /root/.ece-install.conf
-
+<pre class="src src-sh">[ece-install] Be sure to set technet_user and technet_password
+[ece-install]<span style="color: #a020f0;"> in</span> /root/.ece-install.conf
 </pre>
-
-
 
 
 <p>
@@ -413,12 +429,9 @@ The minimum .ece-install.conf file is thus:
 </p>
 
 
-<pre class="example">technet_user=&lt;user&gt;
-technet_password=&lt;password&gt;
-
+<pre class="src src-sh"><span style="color: #a0522d;">technet_user</span>=&lt;user&gt;
+<span style="color: #a0522d;">technet_password</span>=&lt;password&gt;
 </pre>
-
-
 
 
 <p>
@@ -433,11 +446,8 @@ With the configuration file in place, you're now ready to run it:
 </p>
 
 
-<pre class="example"># bash ece-install [-v|--verbose]
-
+<pre class="src src-sh"><span style="color: #b22222;"># </span><span style="color: #b22222;">bash ece-install [-v|--verbose]</span>
 </pre>
-
-
 
 
 <p>
@@ -446,12 +456,9 @@ error during its execution:
 </p>
 
 
-<pre class="example">[ece-install-1] The command [cd /does/not/exist] FAILED, exiting :-(
+<pre class="src src-sh">[ece-install-1] The command [cd /does/not/exist] FAILED, exiting :-(
 [ece-install-1] See /var/log/ece-install.log for further details.
-
 </pre>
-
-
 
 
 <p>
@@ -461,11 +468,8 @@ this is to run the BASH interpreter with the -x flag:
 </p>
 
 
-<pre class="example"># bash -x ece-install
-
+<pre class="src src-sh"><span style="color: #b22222;"># </span><span style="color: #b22222;">bash -x ece-install</span>
 </pre>
-
-
 
 
 <p>
@@ -486,24 +490,27 @@ want to install:
 </p>
 
 
-<pre class="example">Hi, which server profile do you wish to install?
+<pre class="src src-sh">Hi, which server profile do you wish to install?
 
-Select 1-7 and press ENTER
+Select 1-9 and press ENTER
 
-  1 - The full stack on one host. Suitable for development and
-      test environments (cache, ECE, assembly host &amp; database).
-  2 - Editorial (publication) server (ECE, assembly host).
-  3 - Presentation server (ECE, memcached).
+  1 - All<span style="color: #a020f0;"> in</span> one, the full stack on one host. 
+      Suitable for development and test environments.
+      It will install caching server, ECE, assembly host, database &amp;
+      Widget Framework as well as set up a new publication.
+  2 - Editorial (publication) server.
+      This will install ECE and an assembly host.
+  3 - Presentation server (ECE, memcached)<span style="color: #7a378b;">.</span>
   4 - Database server.
-  5 - Cache server (cache &amp; web server).
+  5 - Cache server (cache &amp; web server)<span style="color: #7a378b;">.</span>
   6 - RMI hub.
-  7 - Standalone search instance (solr + indexer-webapp).
-  8 - Install Widget Framework. This will also set up a WF based 
-      publication for you (repo.escenic.com user/pass required).
-
+  7 - Standalone search instance (solr + indexer-webapp)<span style="color: #7a378b;">.</span>
+  8 - Install the Widget Framework.
+      (You need user/pass for repo.escenic.com for this)<span style="color: #7a378b;">.</span>
+  9 - Create a new publication.
+      This profile will create new publication based on WF
+      (<span style="color: #a020f0;">if</span> available) or ECE/clean-demo.
 </pre>
-
-
 
 
 </div>
@@ -515,10 +522,6 @@ Select 1-7 and press ENTER
 <p>The script will install a Munin node on the host. It will also
 install the Escenic specific Munin plugins on hosts where there are
 any Escenic server components.
-</p>
-<p>
-TBD: there is currently an issue with the Escenic plugins not working
-properly with the new ece/ece-install scripts. We're working on this.
 </p>
 </div>
 
@@ -618,7 +621,7 @@ now.
 </div>
 
 <div id="outline-container-5-3" class="outline-3">
-<h3 id="sec-5-3"><span class="section-number-3">5.3</span> 1 - Full Stack on One Host </h3>
+<h3 id="sec-5-3"><span class="section-number-3">5.3</span> Profile - Full Stack on One Host </h3>
 <div class="outline-text-3" id="text-5-3">
 
 <p>This profile is suitable for developers and admins wanting to set up a
@@ -636,25 +639,23 @@ the different profile descriptions bellow.
 </div>
 
 <div id="outline-container-5-4" class="outline-3">
-<h3 id="sec-5-4"><span class="section-number-3">5.4</span> 2 - Editorial Server (Publication Server) </h3>
+<h3 id="sec-5-4"><span class="section-number-3">5.4</span> Profile - Editorial Server (Publication Server) </h3>
 <div class="outline-text-3" id="text-5-4">
 
-
-
+<p>Will set up a typical editorial server (often referred to as the
+publication server in Escenic literature).
+</p>
 </div>
 
 </div>
 
 <div id="outline-container-5-5" class="outline-3">
-<h3 id="sec-5-5"><span class="section-number-3">5.5</span> 3 - Presentation Server </h3>
+<h3 id="sec-5-5"><span class="section-number-3">5.5</span> Profile - Presentation Server </h3>
 <div class="outline-text-3" id="text-5-5">
 
 <p>This will set up a typical presentation server:
 </p><ul>
 <li>Memcached, distributed memory cache
-</li>
-<li>Escenic Assembly environment (which may be removed after the
-  installation). 
 </li>
 <li>Deployment setup to only deploy escenic-admin and the
   publication(s).
@@ -667,7 +668,7 @@ the different profile descriptions bellow.
 </div>
 
 <div id="outline-container-5-6" class="outline-3">
-<h3 id="sec-5-6"><span class="section-number-3">5.6</span> 4 - Database Server </h3>
+<h3 id="sec-5-6"><span class="section-number-3">5.6</span> Profile - Database Server </h3>
 <div class="outline-text-3" id="text-5-6">
 
 <p>If ece-install is run on a support version of Debian or Ubuntu, this
@@ -689,14 +690,11 @@ The script will fail by itself if the DB already exists:
 </p>
 
 
-<pre class="example">[ece-install] Setting up the ECE database schema ...
-ERROR 1007 (HY000) at line 1: Can't create database 'ece5db'; database exists
-ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already exists
-[ece-install] running tables FAILED, exiting :-(
-
+<pre class="src src-sh">[ece-install] Setting up the ECE database schema ...
+ERROR 1007 (HY000) at line 1: Can<span style="color: #8b2252;">'t create database '</span>ece5db<span style="color: #8b2252;">'; database exists</span>
+<span style="color: #8b2252;">ERROR 1050 (42S01) at line 2: Table '</span>DBChangeLog<span style="color: #8b2252;">' already exists</span>
+<span style="color: #8b2252;">[ece-install] running tables FAILED, exiting :-(</span>
 </pre>
-
-
 
 
 </div>
@@ -704,7 +702,7 @@ ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already exists
 </div>
 
 <div id="outline-container-5-7" class="outline-3">
-<h3 id="sec-5-7"><span class="section-number-3">5.7</span> 5 - Cache Server </h3>
+<h3 id="sec-5-7"><span class="section-number-3">5.7</span> Profile - Cache Server </h3>
 <div class="outline-text-3" id="text-5-7">
 
 <p>If ece-install is run on a support version of Debian or Ubuntu, it
@@ -744,9 +742,6 @@ The script will configure Varnish for a typical Escenic site:
   will configure Varnish accordingly. This will be very useful for
   Adactus servers wanting to pull content from your ECEs.
 </li>
-<li>will install a Munin gatherer and make its interface available 
-  when accesssing the web server directly (port 81) 
-</li>
 </ul>
 
 
@@ -768,7 +763,7 @@ TBD:
 </div>
 
 <div id="outline-container-5-8" class="outline-3">
-<h3 id="sec-5-8"><span class="section-number-3">5.8</span> 8 - Install Widget Framework </h3>
+<h3 id="sec-5-8"><span class="section-number-3">5.8</span> Profile - Install Widget Framework </h3>
 <div class="outline-text-3" id="text-5-8">
 
 <p>You'll need a user name and password for accessing the
@@ -782,19 +777,16 @@ complain:
 </p>
 
 
-<pre class="example">[ece-install] Be sure to set wf_user and wf_password in /root/.ece-install.conf
-[ece-install] If you don't have these, please contact support@escenic.com
-
+<pre class="src src-sh">[ece-install] Be sure to set wf_user and wf_password<span style="color: #a020f0;"> in</span> /root/.ece-install.conf
+[ece-install] If you don<span style="color: #8b2252;">'t have these, please contact support@escenic.com</span>
 </pre>
-
-
 
 </div>
 
 </div>
 
 <div id="outline-container-5-9" class="outline-3">
-<h3 id="sec-5-9"><span class="section-number-3">5.9</span> 9 - Create Publication </h3>
+<h3 id="sec-5-9"><span class="section-number-3">5.9</span> Profile - Create Publication </h3>
 <div class="outline-text-3" id="text-5-9">
 
 <p>This profile will create a publication for you, only asking you the
@@ -806,6 +798,21 @@ This installation profile will base the publication on the Widget
 Framework if its present on the system, if not, ECE's clean demo WAR
 is used as a basis.  
 </p></div>
+
+</div>
+
+<div id="outline-container-5-10" class="outline-3">
+<h3 id="sec-5-10"><span class="section-number-3">5.10</span> Profile - Monitoring Server </h3>
+<div class="outline-text-3" id="text-5-10">
+
+<p>This will install a Munin gatherer and make its interface available 
+when accesssing the web server directly (port 81).
+</p>
+<p>
+TBD: This profile will also install the Nagios interface for
+monitoring the different nodes. 
+</p>
+</div>
 </div>
 
 </div>
@@ -815,10 +822,23 @@ is used as a basis.
 <div class="outline-text-2" id="text-6">
 
 <p>The ece-install script has support for doing a full automatic install
-(FAI).
+(FAI). You can only install one profile at a time. The profiles are
+the parameters with "install" in their name, such as:
 </p>
-<p>
-The ece-install script understands for the following settings in the
+
+
+<pre class="src src-sh">fai_editor_install
+</pre>
+
+
+
+</div>
+
+<div id="outline-container-6-1" class="outline-3">
+<h3 id="sec-6-1"><span class="section-number-3">6.1</span> Overview of All FAI Parameters </h3>
+<div class="outline-text-3" id="text-6-1">
+
+<p>The ece-install script understands for the following settings in the
 $HOME/.ece-install.conf file of the root user:
 </p>
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
@@ -860,37 +880,91 @@ $HOME/.ece-install.conf file of the root user:
 <p>
 As you've probably have guessed, 0 means "false" and 1 means "true" :-)
 </p>
-<p>
-To automatically install an editorial server and create a publication
+</div>
+
+</div>
+
+<div id="outline-container-6-2" class="outline-3">
+<h3 id="sec-6-2"><span class="section-number-3">6.2</span> Examples </h3>
+<div class="outline-text-3" id="text-6-2">
+
+
+</div>
+
+<div id="outline-container-6-2-1" class="outline-4">
+<h4 id="sec-6-2-1"><span class="section-number-4">6.2.1</span> Installing an Editorial Server &amp; Create a Publication </h4>
+<div class="outline-text-4" id="text-6-2-1">
+
+<p>To automatically install an editorial server and create a publication
 called "jollygood", the minimal configuration in .ece-install.conf
 would be:
 </p>
 
 
 
-<pre class="example">fai_enabled=1
-fai_editor_install=1
-fai_publication_create=1
-fai_publication_name=jollygood
-
+<pre class="src src-sh"><span style="color: #a0522d;">fai_enabled</span>=1
+<span style="color: #a0522d;">fai_editor_install</span>=1
+<span style="color: #a0522d;">fai_publication_create</span>=1
+<span style="color: #a0522d;">fai_publication_name</span>=jollygood
 </pre>
 
 
+</div>
 
+</div>
 
-<p>
-When FAI is enabled, ece-install will report:
+<div id="outline-container-6-2-2" class="outline-4">
+<h4 id="sec-6-2-2"><span class="section-number-4">6.2.2</span> Installing Two Presentation Servers On a Single Host </h4>
+<div class="outline-text-4" id="text-6-2-2">
+
+<p>If you wish to only install two presentation servers called "web1" and
+"web2" on your host, you will first run ece-install with:
 </p>
 
 
-<pre class="example">[ece-install] Full Automatic Install (FAI) enabled.
-[ece-install] All user input will be read from /root/.ece-install.conf
-
+<pre class="src src-sh"><span style="color: #a0522d;">fai_enabled</span>=1
+<span style="color: #a0522d;">fai_presentation_install</span>=1
+<span style="color: #a0522d;">fai_presentation_name</span>=web1
 </pre>
 
 
+<p>
+And then re-issue ece-install with the following configuration:
+</p>
 
 
+<pre class="src src-sh"><span style="color: #a0522d;">fai_enabled</span>=1
+<span style="color: #a0522d;">fai_presentation_install</span>=1
+<span style="color: #a0522d;">fai_presentation_name</span>=web2
+<span style="color: #a0522d;">fai_presentation_port</span>=8081
+<span style="color: #a0522d;">fai_presentation_shutdown</span>=8105
+</pre>
+
+<p>
+Notice that this configuration has some extra options since the
+previous run of ece-install could run with the default settings,
+whereas the second one needs to override these.
+</p>
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-6-3" class="outline-3">
+<h3 id="sec-6-3"><span class="section-number-3">6.3</span> Verifying That the Script Is Running In FAI Mode </h3>
+<div class="outline-text-3" id="text-6-3">
+
+<p>When FAI is enabled, ece-install will report:
+</p>
+
+
+<pre class="src src-sh">[ece-install] Full Automatic Install (FAI) enabled.
+[ece-install] All user input will be read from /root/.ece-install.conf
+</pre>
+
+
+</div>
 </div>
 
 </div>
@@ -904,14 +978,11 @@ it will abort:
 </p>
 
 
-<pre class="example">[ece-install] There's already one ece-install process running. If you believe
-[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
-[ece-install] before it completed, you may delete /var/run/ece-install.pid and
-[ece-install] run ece-install again.
-
+<pre class="src src-sh">[ece-install] There<span style="color: #8b2252;">'s already one ece-install process running. If you believe</span>
+<span style="color: #8b2252;">[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted</span>
+<span style="color: #8b2252;">[ece-install] before it completed, you may delete /var/run/ece-install.pid and</span>
+<span style="color: #8b2252;">[ece-install] run ece-install again.</span>
 </pre>
-
-
 
 
 </div>
@@ -1060,31 +1131,153 @@ file:
 </p>
 
 
-<pre class="example">technet_user=apples
-technet_password=andoranges
-wf_user=foo
-wf_password=bar
+<pre class="src src-sh"><span style="color: #a0522d;">technet_user</span>=apples
+<span style="color: #a0522d;">technet_password</span>=andoranges
+<span style="color: #a0522d;">wf_user</span>=foo
+<span style="color: #a0522d;">wf_password</span>=bar
 
-fai_enabled=1
-fai_all_install=1
-
+<span style="color: #a0522d;">fai_enabled</span>=1
+<span style="color: #a0522d;">fai_all_install</span>=1
 </pre>
 
 
+<p>
+All the different components described in this guide are installed on
+the host that runs the install script.
+</p>
+<p>
+The following output is produced from ece-install:
+CANNOT INCLUDE FILE ~/tmp/ece-install.out
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-13" class="outline-2">
+<h2 id="sec-13"><span class="section-number-2">13</span> Restoring from backup </h2>
+<div class="outline-text-2" id="text-13">
+
+<p>ece-install can restore from a backup made by the ece script:
+</p>
+
+
+<pre class="src src-sh">$ ece -i &lt;instance&gt; backup
+</pre>
 
 
 <p>
-The following output is produced from ece-install:
-CANNOT INCLUDE FILE /tmp/ece-install.out
+As stated in the ece guide, this backup may contain (depending on
+what's available on the host where it's run):
+</p><ul>
+<li>database dump of the instance
+</li>
+<li>data files (pictures, video files and so on). This is often referred
+  to as the "multimedia archive" in Escenic literature.
+</li>
+<li>ECE, cache and web server configuration
+</li>
+<li>Escenic software
+</li>
+</ul>
+
+
+
+</div>
+
+<div id="outline-container-13-1" class="outline-3">
+<h3 id="sec-13-1"><span class="section-number-3">13.1</span> Location of the backup file </h3>
+<div class="outline-text-3" id="text-13-1">
+
+
+
+</div>
+
+<div id="outline-container-13-1-1" class="outline-4">
+<h4 id="sec-13-1-1"><span class="section-number-4">13.1.1</span> Running interactively </h4>
+<div class="outline-text-4" id="text-13-1-1">
+
+<p>The ece script will put backups in 
 </p>
+
+
+<pre class="src src-sh">/var/backups/escenic
+</pre>
+
+<p>
+and the ece-install script will hence expect to find them here (when
+running interactively), asking you from which one you wish to restore
+the system:
+</p>
+
+
+
+<pre class="src src-sh">[ece-install-5] From which dataset do you wish to backup?
+    1 - engine-dev1-backup-2011-10-10.tar.gz
+    2 - engine-dev1-backup-2011-10-11.tar.gz
+[ece-install-5] Enter the number next to the tarball, from 1 to 2
+Your choice [1]&gt;
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-13-1-2" class="outline-4">
+<h4 id="sec-13-1-2"><span class="section-number-4">13.1.2</span> Running in FAI mode </h4>
+<div class="outline-text-4" id="text-13-1-2">
+
+<p>If you're running in FAI mode, you specify the file to restore from
+with:
+</p>
+
+
+<pre class="src src-sh"><span style="color: #a0522d;">fai_restore_from_file</span>=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
+</pre>
+
+
 </div>
 </div>
+
+</div>
+
+<div id="outline-container-13-2" class="outline-3">
+<h3 id="sec-13-2"><span class="section-number-3">13.2</span> Data security </h3>
+<div class="outline-text-3" id="text-13-2">
+
+<p>You should take heed when running restore, so that you're not
+restoring a system which you didn't want to change (yes, this mishap
+does happen).
+</p>
+<p>
+The ece-install script will help you a bit on the way, but the final
+responsibility always lies with you as the user. 
+</p>
+<p>
+If you're trying to restore the DB and the ECE schema already exists,
+the restore will fail:
+</p>
+
+
+<pre class="src src-sh">[ece-install-8] Restoring the database contents on ubiquitous ...
+[ece-install-24] Selecting the most recent database dump ece5db-2011-10-10.sql.gz
+ERROR 1007 (HY000) at line 1: Can<span style="color: #8b2252;">'t create database '</span>ece5db<span style="color: #8b2252;">'; database exists</span>
+<span style="color: #8b2252;">ERROR 1050 (42S01) at line 25: Table '</span><span style="color: #ff00ff;">`ece5db`</span><span style="color: #7a378b;">.</span><span style="color: #ff00ff;">`AccessControlList`</span><span style="color: #8b2252;">' already exists</span>
+<span style="color: #8b2252;">[ece-install-24] The command [restoring from var/backups/escenic/ece5db-2011-10-10.sql.gz] FAILED, exiting :-(</span>
+<span style="color: #8b2252;">[ece-install-24] See /var/log/ece-install.log for further details.</span>
+</pre>
+
+</div>
+</div>
+</div>
+</div>
+
 <div id="postamble">
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-09-15 15:29:55 CST
-</p></div>
+  Date: 2011-10-11 18:35:36 CST
+</p>
 </div>
 </body>
 </html>
