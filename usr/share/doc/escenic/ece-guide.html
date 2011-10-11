@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Guide for the /usr/bin/ece Script</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-10-07 16:47:40 CST"/>
+<meta name="generated" content="2011-10-10 14:56:44 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -245,7 +245,17 @@ div.note {
 <li><a href="#sec-5-1">5.1 Overview of File Paths Used by the ece script </a></li>
 </ul>
 </li>
-<li><a href="#sec-6">6 Running the ece script </a></li>
+<li><a href="#sec-6">6 Running the ece script </a>
+<ul>
+<li><a href="#sec-6-1">6.1 You must run it as a non-privileged user </a></li>
+<li><a href="#sec-6-2">6.2 Specifying instance </a>
+<ul>
+<li><a href="#sec-6-2-1">6.2.1 Specifying the instance </a></li>
+<li><a href="#sec-6-2-2">6.2.2 Using the default instance </a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -482,7 +492,7 @@ you need to run
 </p>
 
 
-<pre class="src src-sh">$ ece clean assemble
+<pre class="src src-sh">$ ece -i clean assemble
 </pre>
 
 <p>
@@ -494,12 +504,12 @@ will try to take care of you though and warn you of such duplication:
 <pre class="src src-sh">[ece#engine] Multiple versions of ECE and/or 3rd party libraries found.
 [ece#engine] Remember, you need to run <span style="color: #8b2252;">'ece clean assemble'</span> when
 [ece#engine] upgrading either ECE or one of the plugins.
-[ece#engine] Press ENTER to run <span style="color: #8b2252;">'ece clean assemble'</span>
+[ece#engine] I will now clean it up for you and re-run the assembly.
+[ece#engine] Cleaning up generated files<span style="color: #a020f0;"> in</span> /opt/escenic/assemblytool ...
+[ece#engine] Assembling your EAR file ...
 </pre>
 
-<p>
-The script will then re-run the assembly by itself.
-</p>
+
 <p>
 If you're just re-running the assembly after just adding a new plugin
 or want to re-build your publications after template changes, you can
@@ -608,6 +618,13 @@ over time :-)
 <h2 id="sec-6"><span class="section-number-2">6</span> Running the ece script </h2>
 <div class="outline-text-2" id="text-6">
 
+
+</div>
+
+<div id="outline-container-6-1" class="outline-3">
+<h3 id="sec-6-1"><span class="section-number-3">6.1</span> You must run it as a non-privileged user </h3>
+<div class="outline-text-3" id="text-6-1">
+
 <p>You must be normal user to run the ece script, otherwise it will
 complain:
 </p>
@@ -622,7 +639,71 @@ complain:
 As it mentions, the root user may use the init.d script and the
 accompanying /etc/default/ece to command the different ECE, EAE and
 RMI hub instances on your system.
+</p></div>
+
+</div>
+
+<div id="outline-container-6-2" class="outline-3">
+<h3 id="sec-6-2"><span class="section-number-3">6.2</span> Specifying instance </h3>
+<div class="outline-text-3" id="text-6-2">
+
+
+
+</div>
+
+<div id="outline-container-6-2-1" class="outline-4">
+<h4 id="sec-6-2-1"><span class="section-number-4">6.2.1</span> Specifying the instance </h4>
+<div class="outline-text-4" id="text-6-2-1">
+
+<p>The script is made for being easy to use with multiple instances on
+the same host. You specify the instance you want to operate on using the
+-i parameter. E.g. to assemble and deploy the editor1 instance, you'd
+do:
 </p>
+
+
+<pre class="src src-sh">$ ece -i editor1 assemble deploy restart
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-6-2-2" class="outline-4">
+<h4 id="sec-6-2-2"><span class="section-number-4">6.2.2</span> Using the default instance </h4>
+<div class="outline-text-4" id="text-6-2-2">
+
+<p>However, on development systems and perhaps even test systems, you
+probably want to just use one instance on your host, though, and this
+is where the "default" instance comes in.
+</p>
+<p>
+To use the default instance, you must only have one instance installed
+on your system. More specifically, there must no instance specific
+configuration files in
+</p>
+
+
+<pre class="src src-sh">/etc/escenic/engine/instance
+</pre>
+
+<p>
+and that ece.conf, typically located in:
+</p>
+
+
+<pre class="src src-sh">/etc/escenic/ece.conf
+</pre>
+
+<p>
+must contain all the settings required to run the instance.
+</p>
+<p>
+If you've ticked all these boxes, you can issue all ece commands
+without the -i parameter.
+</p></div>
+</div>
 </div>
 </div>
 </div>
@@ -631,7 +712,7 @@ RMI hub instances on your system.
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-10-07 16:47:40 CST
+  Date: 2011-10-10 14:56:44 CST
 </p>
 </div>
 </body>
