@@ -1332,10 +1332,10 @@ function read_user_input()
     echo "  $PROFILE_CREATE_PUBLICATION - Create a new publication."
     echo "      This profile will create new publication based on WF"
     echo "      (if available) or ECE/clean-demo."
-    echo -n "  $PROFILE_MONITORING_SERVER - A monitoring server."
-    echo "     This will install the Munin gatherer"
-    echo -n "  $PROFILE_RESTORE_FROM_BACKUP - Restore from a backup."
-    echo "     Allows you to restore parts of or an entire system."
+    echo "  $PROFILE_MONITORING_SERVER - A monitoring server."
+    echo "       This will install the Munin gatherer."
+    echo "  $PROFILE_RESTORE_FROM_BACKUP - Restore from backup. Allows you to"
+    echo "       restore DB, data files, binaries & publication templates."
     echo ""
     echo -n "Your choice [1]> "
     read install_profile_number
@@ -2118,6 +2118,7 @@ function restore_from_backup()
     restore_data_files=0
     restore_conf=0
     backup_file=""
+    backup_dir=/var/backups/escenic
     
     if [ $(get_boolean_conf_value fai_enabled) -eq 1 -a \
         $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
@@ -2148,7 +2149,30 @@ function restore_from_backup()
         fi
     elif [ $(get_boolean_conf_value fai_enabled) -eq 0 ]; then
         print "From which dataset do you wish to backup?"
-        # TODO
+        if [ ! -d $backup_dir ]; then
+            print "Backup directory $backup_dir doesn't exist or insn't readable"
+            exit 1
+        fi
+
+        i=0
+        tarball_array=($(ls $backup_dir/*.tar.gz))
+        
+        for (( i = 0; i <${#tarball_array[@]}; i++ )); do
+            echo "   " $(( ${i} + 1 )) "-" $(basename  ${tarball_array[$i]})
+        done
+
+        print "Enter the number next to the tarball, from 1 to $i"
+        echo -n "Your choice [1]> "
+        read user_tarball
+
+        if [ -z "$user_tarball" ]; then
+            user_tarball=1
+        fi
+
+        backup_file=${tarball_array[$(( ${user_tarball} - 1 ))]}
+
+        print "Which part of the system do you wish to restore?"
+        
     fi
 
     if [ ! -r "$backup_file" ]; then
