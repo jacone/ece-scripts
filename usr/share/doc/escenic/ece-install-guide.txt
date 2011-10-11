@@ -2,7 +2,7 @@
               ==========================================
 
 Author: Torstein Krause Johansen
-Date: 2011-09-15 15:29:53 CST
+Date: 2011-10-11 18:38:25 CST
 
 
 Table of Contents
@@ -23,14 +23,20 @@ Table of Contents
         5.2.5 Escenic Assembly environment 
         5.2.6 Database driver 
         5.2.7 Compression of content 
-    5.3 1 - Full Stack on One Host 
-    5.4 2 - Editorial Server (Publication Server) 
-    5.5 3 - Presentation Server 
-    5.6 4 - Database Server 
-    5.7 5 - Cache Server 
-    5.8 8 - Install Widget Framework 
-    5.9 9 - Create Publication 
+    5.3 Profile - Full Stack on One Host 
+    5.4 Profile - Editorial Server (Publication Server) 
+    5.5 Profile - Presentation Server 
+    5.6 Profile - Database Server 
+    5.7 Profile - Cache Server 
+    5.8 Profile - Install Widget Framework 
+    5.9 Profile - Create Publication 
+    5.10 Profile - Monitoring Server 
 6 Full Automatic Install (FAI) 
+    6.1 Overview of All FAI Parameters 
+    6.2 Examples 
+        6.2.1 Installing an Editorial Server & Create a Publication 
+        6.2.2 Installing Two Presentation Servers On a Single Host 
+    6.3 Verifying That the Script Is Running In FAI Mode 
 7 Running More Than One Installation Process 
 8 Re-running ece-install (and How To Speed It Up) 
 9 Overview of File Paths Used by the ece-install script 
@@ -38,6 +44,11 @@ Table of Contents
     10.1 /etc/esecenic is shared 
 11 Uninstalling Everything That the ece-install Set Up 
 12 Example Output FAI 
+13 Restoring from backup 
+    13.1 Location of the backup file 
+        13.1.1 Running interactively 
+        13.1.2 Running in FAI mode 
+    13.2 Data security 
 
 
 1 Supported Operating Systems 
@@ -82,8 +93,6 @@ or be downloaded together with the other ece-scripts using git:
   $ git clone git@github.com:skybert/ece-scripts.git
 
 
-
-
 4 Running the ece-install Script 
 ---------------------------------
 You must run the script as the root user.  If you start the script as
@@ -92,21 +101,15 @@ a regular user, it will complain:
 
   [ece-install] You must be root when running ece-install
 
-
-
 To become root on Ubuntu based systems and Mac OS X, do:
 
 
   $ sudo su
 
-
-
 On all other Unix like system, do:
 
 
   $ su
-
-
 
 
 You will need access to [http://technet.escenic.com] and put these
@@ -118,8 +121,6 @@ you forget to provide such a configuration file:
   [ece-install] /root/.ece-install.conf doesn't exist, I cannot live without it :-(
 
 
-
-
 As for the technet credentials, the script will also tell you if it
 cannot find what it's looking for:
 
@@ -128,15 +129,11 @@ cannot find what it's looking for:
   [ece-install] in /root/.ece-install.conf
 
 
-
-
 The minimum .ece-install.conf file is thus:
 
 
   technet_user=<user>
   technet_password=<password>
-
-
 
 
 If you're installing WF as well, you'll need additional credentials
@@ -151,8 +148,6 @@ With the configuration file in place, you're now ready to run it:
   # bash ece-install [-v|--verbose]
 
 
-
-
 ece-install will try to "fail fast", exiting as soon as it detects an
 error during its execution:
 
@@ -161,16 +156,12 @@ error during its execution:
   [ece-install-1] See /var/log/ece-install.log for further details.
 
 
-
-
 As a last resort, if something goes astray with the script, and the
 log file cannot give you enough clues, the ultimate way of debugging
 this is to run the BASH interpreter with the -x flag:
 
 
   # bash -x ece-install
-
-
 
 
 Here you can see everything that BASH does when running the script,
@@ -185,29 +176,30 @@ want to install:
 
   Hi, which server profile do you wish to install?
   
-  Select 1-7 and press ENTER
+  Select 1-9 and press ENTER
   
-    1 - The full stack on one host. Suitable for development and
-        test environments (cache, ECE, assembly host & database).
-    2 - Editorial (publication) server (ECE, assembly host).
+    1 - All in one, the full stack on one host. 
+        Suitable for development and test environments.
+        It will install caching server, ECE, assembly host, database &
+        Widget Framework as well as set up a new publication.
+    2 - Editorial (publication) server.
+        This will install ECE and an assembly host.
     3 - Presentation server (ECE, memcached).
     4 - Database server.
     5 - Cache server (cache & web server).
     6 - RMI hub.
     7 - Standalone search instance (solr + indexer-webapp).
-    8 - Install Widget Framework. This will also set up a WF based 
-        publication for you (repo.escenic.com user/pass required).
-
-
+    8 - Install the Widget Framework.
+        (You need user/pass for repo.escenic.com for this).
+    9 - Create a new publication.
+        This profile will create new publication based on WF
+        (if available) or ECE/clean-demo.
 
 5.1 Common for All Server Profiles 
 ===================================
 The script will install a Munin node on the host. It will also
 install the Escenic specific Munin plugins on hosts where there are
 any Escenic server components.
-
-TBD: there is currently an issue with the Escenic plugins not working
-properly with the new ece/ece-install scripts. We're working on this.
 
 5.2 Common for Editorial, Presentation and Search Instances 
 ============================================================
@@ -251,8 +243,8 @@ compressed content (and many other things that we before needed Apache
 for). Thus, we'll let the application server do the compression for us
 now.
 
-5.3 1 - Full Stack on One Host 
-===============================
+5.3 Profile - Full Stack on One Host 
+=====================================
 This profile is suitable for developers and admins wanting to set up a
 test environment. It will install the full stack including caching
 server, application server, ECE, assembly host, database, Widget
@@ -262,21 +254,20 @@ For further details on each of the different server components, see
 the different profile descriptions bellow.
 
 
-5.4 2 - Editorial Server (Publication Server) 
-==============================================
+5.4 Profile - Editorial Server (Publication Server) 
+====================================================
+Will set up a typical editorial server (often referred to as the
+publication server in Escenic literature).
 
-
-5.5 3 - Presentation Server 
-============================
+5.5 Profile - Presentation Server 
+==================================
 This will set up a typical presentation server:
 - Memcached, distributed memory cache
-- Escenic Assembly environment (which may be removed after the
-  installation). 
 - Deployment setup to only deploy escenic-admin and the
   publication(s).
 
-5.6 4 - Database Server 
-========================
+5.6 Profile - Database Server 
+==============================
 If ece-install is run on a support version of Debian or Ubuntu, this
 will install the excellent Percona distribution of MySQL with their
 set of high performance patches.
@@ -298,10 +289,8 @@ The script will fail by itself if the DB already exists:
   [ece-install] running tables FAILED, exiting :-(
 
 
-
-
-5.7 5 - Cache Server 
-=====================
+5.7 Profile - Cache Server 
+===========================
 If ece-install is run on a support version of Debian or Ubuntu, it
 will install the latest Varnish 3.0 caching server from the Varnish
 APT repository.
@@ -329,8 +318,6 @@ The script will configure Varnish for a typical Escenic site:
 - will install the nginx web server for serving static content and
   will configure Varnish accordingly. This will be very useful for
   Adactus servers wanting to pull content from your ECEs.
-- will install a Munin gatherer and make its interface available 
-  when accesssing the web server directly (port 81) 
 
 TBD:
 - If run on a Linux platform, the script will tweak the kernel
@@ -339,8 +326,8 @@ TBD:
   to be in the staff network ACL, defined in the Varnish
   configuration. 
 
-5.8 8 - Install Widget Framework 
-=================================
+5.8 Profile - Install Widget Framework 
+=======================================
 You'll need a user name and password for accessing the
 repo.escenic.com Maven repository. You should get these credentials
 when you bought Widget Framework. If you for some reason do not have
@@ -353,10 +340,8 @@ complain:
   [ece-install] Be sure to set wf_user and wf_password in /root/.ece-install.conf
   [ece-install] If you don't have these, please contact support@escenic.com
 
-
-
-5.9 9 - Create Publication 
-===========================
+5.9 Profile - Create Publication 
+=================================
 This profile will create a publication for you, only asking you the
 name of the publication and which ECE instance to use for its
 creation.
@@ -365,11 +350,26 @@ This installation profile will base the publication on the Widget
 Framework if its present on the system, if not, ECE's clean demo WAR
 is used as a basis.  
 
+5.10 Profile - Monitoring Server 
+=================================
+This will install a Munin gatherer and make its interface available 
+when accesssing the web server directly (port 81).
+
+TBD: This profile will also install the Nagios interface for
+monitoring the different nodes. 
+
 6 Full Automatic Install (FAI) 
 -------------------------------
 The ece-install script has support for doing a full automatic install
-(FAI).
+(FAI). You can only install one profile at a time. The profiles are
+the parameters with "install" in their name, such as:
 
+
+  fai_editor_install
+
+
+6.1 Overview of All FAI Parameters 
+===================================
 The ece-install script understands for the following settings in the
 $HOME/.ece-install.conf file of the root user:
 
@@ -402,6 +402,11 @@ $HOME/.ece-install.conf file of the root user:
 
 As you've probably have guessed, 0 means "false" and 1 means "true" :-)
 
+6.2 Examples 
+=============
+
+6.2.1 Installing an Editorial Server & Create a Publication 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 To automatically install an editorial server and create a publication
 called "jollygood", the minimal configuration in .ece-install.conf
 would be:
@@ -414,15 +419,38 @@ would be:
   fai_publication_name=jollygood
 
 
+6.2.2 Installing Two Presentation Servers On a Single Host 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you wish to only install two presentation servers called "web1" and
+"web2" on your host, you will first run ece-install with:
 
 
+  fai_enabled=1
+  fai_presentation_install=1
+  fai_presentation_name=web1
+
+
+And then re-issue ece-install with the following configuration:
+
+
+  fai_enabled=1
+  fai_presentation_install=1
+  fai_presentation_name=web2
+  fai_presentation_port=8081
+  fai_presentation_shutdown=8105
+
+Notice that this configuration has some extra options since the
+previous run of ece-install could run with the default settings,
+whereas the second one needs to override these.
+
+
+6.3 Verifying That the Script Is Running In FAI Mode 
+=====================================================
 When FAI is enabled, ece-install will report:
 
 
   [ece-install] Full Automatic Install (FAI) enabled.
   [ece-install] All user input will be read from /root/.ece-install.conf
-
-
 
 
 7 Running More Than One Installation Process 
@@ -435,8 +463,6 @@ it will abort:
   [ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
   [ece-install] before it completed, you may delete /var/run/ece-install.pid and
   [ece-install] run ece-install again.
-
-
 
 
 8 Re-running ece-install (and How To Speed It Up) 
@@ -539,8 +565,77 @@ file:
   fai_all_install=1
 
 
-
+All the different components described in this guide are installed on
+the host that runs the install script.
 
 The following output is produced from ece-install:
-CANNOT INCLUDE FILE /tmp/ece-install.out
+CANNOT INCLUDE FILE ~/tmp/ece-install.out
+
+13 Restoring from backup 
+-------------------------
+ece-install can restore from a backup made by the ece script:
+
+
+  $ ece -i <instance> backup
+
+
+As stated in the ece guide, this backup may contain (depending on
+what's available on the host where it's run):
+- database dump of the instance
+- data files (pictures, video files and so on). This is often referred
+  to as the "multimedia archive" in Escenic literature.
+- ECE, cache and web server configuration
+- Escenic software
+
+13.1 Location of the backup file 
+=================================
+
+13.1.1 Running interactively 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ece script will put backups in 
+
+
+  /var/backups/escenic
+
+and the ece-install script will hence expect to find them here (when
+running interactively), asking you from which one you wish to restore
+the system:
+
+
+
+  [ece-install-5] From which dataset do you wish to backup?
+      1 - engine-dev1-backup-2011-10-10.tar.gz
+      2 - engine-dev1-backup-2011-10-11.tar.gz
+  [ece-install-5] Enter the number next to the tarball, from 1 to 2
+  Your choice [1]>
+
+
+13.1.2 Running in FAI mode 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you're running in FAI mode, you specify the file to restore from
+with:
+
+
+  fai_restore_from_file=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
+
+
+13.2 Data security 
+===================
+You should take heed when running restore, so that you're not
+restoring a system which you didn't want to change (yes, this mishap
+does happen).
+
+The ece-install script will help you a bit on the way, but the final
+responsibility always lies with you as the user. 
+
+If you're trying to restore the DB and the ECE schema already exists,
+the restore will fail:
+
+
+  [ece-install-8] Restoring the database contents on ubiquitous ...
+  [ece-install-24] Selecting the most recent database dump ece5db-2011-10-10.sql.gz
+  ERROR 1007 (HY000) at line 1: Can't create database 'ece5db'; database exists
+  ERROR 1050 (42S01) at line 25: Table '`ece5db`.`AccessControlList`' already exists
+  [ece-install-24] The command [restoring from var/backups/escenic/ece5db-2011-10-10.sql.gz] FAILED, exiting :-(
+  [ece-install-24] See /var/log/ece-install.log for further details.
 
