@@ -472,9 +472,7 @@ what's available on the host where it's run):
 - ECE, cache and web server configuration
 - Escenic software
 
-** Location of the backup file
-
-*** Running interactively
+** Running interactively
 The ece script will put backups in 
 #+BEGIN_SRC sh
 /var/backups/escenic
@@ -491,10 +489,29 @@ the system:
 Your choice [1]>
 #+END_SRC
 
-*** Running in FAI mode
-If you're running in FAI mode, you specify the file to restore from
-with:
+** Running in FAI mode
+If you're running in FAI mode, you can choose between these settings
+to decide what to restore and where to find the backup file to
+restore from:
+
+|----------------------------------+---------+------------------------------------------------|
+| Parameter                        | Default | Description                                    |
+|----------------------------------+---------+------------------------------------------------|
+| fai\_restore\_all                |       0 | Restore everything found in the backup file    |
+| fai\_restore\_db                 |       0 | Install the DB server & restore its contents   |
+| fai\_restore\_data\_files        |       0 | Restore the Solr & ECE data files              |
+| fai\_restore\_configuration      |       0 | Restore the Solr & ECE configuration files     |
+| fai\_restore\_software\_binaries |       0 | Restore the Escenic and Apache Tomcat software |
+| fai\_restore\_from\_file         |      "" | The .tar.gz produced by "ece -i <instance> backup" |
+|----------------------------------+---------+------------------------------------------------|
+
+For example, to restore everything possible from a given tarball, you
+need this in your .ece-install.conf:
 #+BEGIN_SRC sh
+fai_enabled=1
+
+fai_restore_from_backup=1
+fai_restore_all=1
 fai_restore_from_file=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
 #+END_SRC
 
