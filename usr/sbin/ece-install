@@ -2154,13 +2154,12 @@ function restore_from_backup()
             exit 1
         fi
 
-        i=0
-        tarball_array=($(ls $backup_dir/*.tar.gz))
+        tarball_array=($(ls -t $backup_dir/*.tar.gz))
         
         for (( i = 0; i <${#tarball_array[@]}; i++ )); do
             echo "   " $(( ${i} + 1 )) "-" $(basename  ${tarball_array[$i]})
         done
-
+        
         print "Enter the number next to the tarball, from 1 to $i"
         echo -n "Your choice [1]> "
         read user_tarball
@@ -2172,7 +2171,33 @@ function restore_from_backup()
         backup_file=${tarball_array[$(( ${user_tarball} - 1 ))]}
 
         print "Which part of the system do you wish to restore?"
+        restore_profiles=(
+            "The database"
+            "The Solr and ECE data files (multimedia archive)"
+            "The ECE configuration files"
+            "The Escenic and Tomcat software binaries + publication templates"
+        )
+        for (( i = 0; i <${#restore_profiles[@]}; i++ )); do
+            echo "   " $(( ${i} + 1 )) "-" ${restore_profiles[$i]}
+        done
         
+        print "Enter the number next to the tarball, from 1 to $i"
+        echo -n "Your choice [1]> "
+        read user_restore_profile
+
+        if [ -z "$user_restore_profile" ]; then
+            user_restore_profile=1
+        fi
+
+        if [ $user_restore_profile -eq 1 ]; then
+            restore_db=1
+        elif [ $user_restore_profile -eq 2 ]; then
+            restore_data_files=1
+        elif [ $user_restore_profile -eq 3 ]; then
+            restore_conf=1
+        elif [ $user_restore_profile -eq 4 ]; then
+            restore_binaries=1
+        fi
     fi
 
     if [ ! -r "$backup_file" ]; then
@@ -2287,6 +2312,10 @@ if [ $fai_enabled -eq 1 ]; then
     elif [ $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
         install_profile_number=$PROFILE_RESTORE_FROM_BACKUP
         restore_from_backup
+    else
+        print "No install profile selected, be sure to have one of the "
+        print "fai_<profile>_install=1 in your $conf_file"
+        exit 1
     fi
     
     common_post_install
