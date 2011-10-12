@@ -35,6 +35,7 @@ fi
 #######################################################################
 dir_list="
 /var/cache/escenic
+/var/backups/escenic
 /var/crash/escenic
 /var/log/escenic
 /var/run/escenic
