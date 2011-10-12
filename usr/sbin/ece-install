@@ -1,15 +1,21 @@
 #! /usr/bin/env bash
 
-# The goal of this script, is to have an ECE up and running within
-# five minutes. The setup the user is getting is suitable for a
-# production environment, except for the fact that with this script,
-# all ECE components are set up on the same host.
+# The goal of this script is install a complete production environment
+# for web sites using on Escenic Content Engine as their CMS. The
+# script is equally well suited for installing development, testing
+# and staging environments, in addition to recover from backups create
+# with the "ece -i <instance> backup" command.
+#
+# Always check for the latest version at
+# http://github.com/skybert/ece-scripts
 
-# by tkj@vizrt.com
+# echo comments and suggestions > tkj@vizrt.com
+# echo frustrations > /dev/null
 
 #####################################################################
-# User definable variables (the defaults are fine in most cases). Any
-# of these may be overridden in the .ece-isntall.conf file
+# User definable variables (the defaults are fine in most
+# cases). These are the most likely variables you want to change and
+# they can all be set in the .ece-isntall.conf file
 #####################################################################
 ece_user=escenic
 ece_group=escenic
@@ -20,7 +26,7 @@ tomcat_download=http://apache.stu.edu.tw/tomcat/tomcat-6/v6.0.33/bin/apache-tomc
 # The script will install the sun-java6-jdk package on Debian based
 # systems and this is the path of the JAVA home with this package. If
 # you're using a different system or have other preferences, change
-# java_home here.
+# java_home.
 java_home=/usr/lib/jvm/java-6-sun
 #####################################################################
 
@@ -168,9 +174,6 @@ function set_up_engine_directories()
     done
 }
 
-# TODO download documentation to
-# /usr/share/doc/escenic/content-engine-<version>/
-
 function download_escenic_components()
 {
     if [ $ece_software_setup_completed -eq 1 ]; then
@@ -194,7 +197,7 @@ function download_escenic_components()
 
 }
 
-# will intall the passed packages if these are not installed from
+# will install the passed packages if these are not installed from
 # before.
 #
 # parameters:
@@ -938,17 +941,22 @@ function print_status_and_next_steps()
 
     s="- The installation is now complete!"
     print $s" It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
-    add_next_step "- See /usr/share/doc/escenic/ece-install-guide.txt for"
-    add_next_step "  a full overview of files and directories set up by"
-    add_next_step "  $(basename $0)"
-    add_next_step "- type 'ece help' to see all the options of this script"
-    add_next_step "  which allows you to control all the Escenic components."
-    add_next_step "  Also, see /usr/share/doc/escenic/ece-guide.txt for"
-    add_next_step "  further information on the ece script."
-    add_next_step "- For further reading, in-depth guides on installing, "
-    add_next_step "  configuring and developing Escenic web sites can be "
-    add_next_step "  fount at http://documentation.vizrt.com/ece-5.3.html"
 
+    if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP -a \
+        $install_profile_number -ne $PROFILE_CACHE_SERVER -a \
+        $install_profile_number -ne $PROFILE_WIDGET_FRAMEWORK ]; then
+        add_next_step "- See /usr/share/doc/escenic/ece-install-guide.txt for"
+        add_next_step "  a full overview of files and directories set up by"
+        add_next_step "  $(basename $0)"
+        add_next_step "- type 'ece help' to see all the options of this script"
+        add_next_step "  which allows you to control all the ECE components."
+        add_next_step "  Also, see /usr/share/doc/escenic/ece-guide.txt for"
+        add_next_step "  further information on the ece script."
+        add_next_step "- For further reading, in-depth guides on installing, "
+        add_next_step "  configuring and developing Escenic web sites can be "
+        add_next_step "  fount at http://documentation.vizrt.com/ece-5.3.html"
+    fi
+    
 
     echo "$next_steps"
 
@@ -1160,7 +1168,9 @@ function stop_conflicting_processes()
 {
     print "Stopping conflicting processes ..."
      # TODO this is dirty
-    killall java 1>>$log 2>>$log
+    if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]; then
+        killall java 1>>$log 2>>$log
+    fi
 }
 
 function set_up_varnish()
@@ -2035,7 +2045,7 @@ function install_munin_node()
         -O $file
     run chmod 755 $file
 
-    if [ ! -e /etc/escenic/ece-*.conf -o -z "$type" -o -z "$instance" ]; then
+    if [ ! -e /etc/escenic -o ! -e /etc/escenic/ece-*.conf ]; then
         print "No ECE instances found on $HOSTNAME, so I'm not adding"
         print "additional Munin configuration"  
         add_next_step "- A Munin node has been installed on $HOSTNAME"
@@ -2215,7 +2225,7 @@ function restore_from_backup()
         run tar xzf $backup_file --wildcards var/backups/escenic/*.sql.gz
         # picking the DB backup file to restore
         sql_file=$(ls -tra var/backups/escenic/*.sql.gz | tail -1)
-        print "Selecting the most recent database dump " $(basename $sql_file)
+        print "Selecting the most recent database dump $(basename $sql_file)"
 
         # methods in drop-and-create-ecedb to set up the database
         # schema & user
@@ -2226,41 +2236,52 @@ function restore_from_backup()
         gunzip < $sql_file | mysql $db_schema
         exit_on_error "restoring from $sql_file"
         
-        print "Successfully restored DB on $HOSTNAME from" $(basename $sql_file)
+        add_next_step "Successfully restored DB from $(basename $sql_file)"
     fi
     
     if [ $restore_data_files -eq 1 ]; then
         print "Restoring the Solr & ECE data files on $HOSTNAME ..."
         run cd $dir
         run tar -C / -xzf $backup_file var/lib/escenic
-        print "Successfully restored Solr & ECE data files on $HOSTNAME"
-        print "from backup:  $(basename $backup_file)"
-        print "Check /var/lib/escenic to verify they're all there"
+        add_next_step "Successfully restored Solr & ECE data files"
+        add_next_step "from backup:  $(basename $backup_file)"
+        add_next_step "Check /var/lib/escenic to verify they're all there"
     fi
     
     if [ $restore_conf -eq 1 ]; then
         print "Restoring the ECE configuration files on $HOSTNAME ..."
         run cd $dir
         run tar -C / -xzf $backup_file etc
-        print "Successfully restored ECE configuration files on $HOSTNAME"
-        print "from backup: $(basename $backup_file)"
-        print "Check /etc to verify that they're all there".
+        add_next_step "Successfully restored ECE configuration files"
+        add_next_step "from backup: $(basename $backup_file)"
+        add_next_step "Check /etc to verify that they're all there".
     fi
     
     if [ $restore_binaries -eq 1 ]; then
         print "Restoring the Escenic & Tomcat binaries on $HOSTNAME ..."
         run cd $dir
         run tar -C / -xzf $backup_file opt
-        print "Successfully restored Escenic & Tomcat binaries on $HOSTNAME"
-        print "from backup: $(basename $backup_file)"
-        print "Check /opt to verify that they're all there".
+        add_next_step "Successfully restored Escenic & Tomcat binaries"
+        add_next_step "from backup: $(basename $backup_file)"
+        add_next_step "Check /opt to verify that they're all there".
     fi
 }
 
 function common_post_install()
 {
-    add_server_to_runlevels
-    install_munin_node
+    if [ $install_profile_number -eq $PROFILE_ALL_IN_ONE -o \
+        $install_profile_number -eq $PROFILE_PRESENTATION_SERVER -o \
+        $install_profile_number -eq $PROFILE_RMI_HUB -o \
+        $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+        add_server_to_runlevels
+    fi
+
+    if [ $install_profile_number -ne $PROFILE_WIDGET_FRAMEWORK -a \
+        $install_profile_number -ne $PROFILE_CREATE_PUBLICATION -a \
+        $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]; then
+        install_munin_node
+    fi
+
     print_status_and_next_steps
     rm $pid_file
 }
