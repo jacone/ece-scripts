@@ -52,7 +52,7 @@ NEW_LINE="
 "
 # the next steps printed when the user has installed his/her
 # components.
-next_steps=""
+next_steps=()
 
 function get_seconds_since_start()
 {
@@ -399,7 +399,7 @@ function set_up_ecedb()
     cd ~/
     run rm -rf /opt/escenic/engine/plugins
 
-    add_next_step "- DB is now set up on $HOSTNAME:3306"
+    add_next_step "DB is now set up on $HOSTNAME:3306"
 }
 
 # returns a string of asterixes with the same lenght as the inputted
@@ -896,8 +896,8 @@ function create_user_and_group_if_not_present()
        run adduser $ece_user \
            --disabled-password \
            --gecos "Escenic-user,Room,Work,Home,Other"
-       add_next_step "- Set a password for the new UNIX user $ece_user"
-       add_next_step "  You can do this by running [passwd $ece_user]"
+       add_next_step "Set a password for the new UNIX user $ece_user "\
+"(passwd $ece_user)"
    fi
    
    if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
@@ -939,30 +939,25 @@ function print_status_and_next_steps()
     minutes=$(( seconds_left / 60 ))
     seconds_left=$(( seconds_left - $minutes * 60 ))
 
-    s="The installation is now complete!"
+    if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]; then
+        s="The installation is now complete!"
+    else
+        s="The restore is now complete!"
+    fi
     print $s" It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 
     if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP -a \
         $install_profile_number -ne $PROFILE_CACHE_SERVER -a \
         $install_profile_number -ne $PROFILE_WIDGET_FRAMEWORK ]; then
-        add_next_step "- See /usr/share/doc/escenic/ece-install-guide.txt for"
-        add_next_step "  a full overview of files and directories set up by"
-        add_next_step "  $(basename $0)"
-        add_next_step "- Type 'ece help' to see all the options of this script"
-        add_next_step "  which allows you to control all the ECE components."
-        add_next_step "  Also, see /usr/share/doc/escenic/ece-guide.txt for"
-        add_next_step "  further information on the ece script."
-        add_next_step "- For further reading, in-depth guides on installing, "
-        add_next_step "  configuring and developing Escenic web sites can be "
-        add_next_step "  fount at http://documentation.vizrt.com/ece-5.3.html"
+        add_next_step "More info: /usr/share/doc/escenic/ece-install-guide.txt"
+        add_next_step "Guide books: http://documentation.vizrt.com/ece-5.3.html"
     fi
     
+    for (( i = 0; i < ${#next_steps[@]}; i++ )); do
+        print "  - " ${next_steps[$i]}
+    done
 
-    echo "$next_steps"
-
-    print ""
-    print "Enjoy your time with Escenic Content Engine!"
-    print ""
+    print $'\n'"Enjoy your time with Escenic Content Engine!"$'\n'
     print "-Vizrt Online"
 }
 
@@ -1480,19 +1475,20 @@ function install_cache_server()
 
     set_up_varnish $backend_servers
 
-    add_next_step "- Cache server is up and running at http://${HOSTNAME}:80/"
+    add_next_step "Cache server is up and running at http://${HOSTNAME}:80/"
 }
 
 # Parameters:
 # $1 : your added line
 function add_next_step()
 {
+    next_steps[${#next_steps[@]}]="${1}"
+    return
+    
     if [ -n "$next_steps" ]; then
-        # next_steps=${next_steps}${NEW_LINE}"[$(basename $0)] "${1}
-        next_steps=${next_steps}${NEW_LINE}"${1}"
+        next_steps=${next_steps}${NEW_LINE}"[$(basename $0)] "${1}
     else
-        # next_steps="[$(basename $0)] "${1}
-        next_steps=${1}
+         next_steps="[$(basename $0)] "${1}
     fi
 }
 
@@ -1655,18 +1651,14 @@ EOF
     set_conf_file_value ece_unix_user $ece_user /etc/default/ece
     set_conf_file_value ece_unix_group $ece_group /etc/default/ece
 
-    admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin
-    add_next_step "- New ECE instance $instance_name installed."
-    add_next_step "- Its admin interface is available at"
-    add_next_step "  $admin_uri"
-    add_next_step "- You can view all installed plugin & engine versions with:"
-    add_next_step "  ece -i $instance_name versions"
-    add_next_step "- type 'ece help' to see all the options of this script"
-    add_next_step "  which allows you to control all the Escenic components."
-    add_next_step "  Also, see /usr/share/doc/escenic/ece-guide.txt for"
-    add_next_step "  addtional information on the ece script."
-    add_next_step "- Verify that /etc/default/ece lists all the instances "
-    add_next_step "  on $HOSTNAME you wish to start at boot time."
+    admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin/
+    add_next_step "New ECE instance $instance_name installed."
+    add_next_step "Admin interface: $admin_uri"
+    add_next_step "View installed versions with:"\
+" ece -i $instance_name versions"
+    add_next_step "Type 'ece help' to see all the options of this script"
+    add_next_step "Read its guide: /usr/share/doc/escenic/ece-guide.txt"
+    add_next_step "/etc/default/ece lists all instances started at boot time"
 }
 
 function install_presentation_server()
@@ -1737,7 +1729,7 @@ function create_publication()
     create_publication_in_db $publication_war
     assemble_deploy_and_restart_type
 
-    add_next_step "- a new publication $publication_name has been created"
+    add_next_step "A new publication $publication_name has been created."
 }
 
 function install_editorial_server()
@@ -1768,11 +1760,7 @@ clientConfiguration=/neo/io/services/HubConnection
 pingTime=10000
 EOF
 
-    add_next_step "- Restart all your instances to make the hub seem them:"
-    for el in /etc/escenic/engine/instance/*; do
-        instance_name=$(basename $el)
-        add_next_step "   - $ ece -i ${instance_name} restart"
-    done
+    add_next_step "Restart all your instances to make the hub see them."
 
     print "Starting the RMI-hub on $HOSTNAME ..."
     ece_command="ece -t rmi-hub restart"
@@ -1894,8 +1882,8 @@ EOF
     
     cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
 
-    add_next_step "- Widget Framework has been installed into your local" 
-    add_next_step "  Maven repository and its ECE components have been installed"
+    add_next_step "Widget Framework has been installed into your local"\
+" Maven repository"
 }
 
 function install_search_instance()
@@ -1982,9 +1970,9 @@ server {
 EOF
     /etc/init.d/nginx restart 1>>$log 2>>$log
 
-    add_next_step "- Web server is install on http://${HOSTNAME}:81/"
-    add_next_step "  http://${HOSTNAME}:81/ gives you the munin interface"
-    add_next_step "  http://${HOSTNAME}:81/binary gives you the Adactus endpoint"
+    add_next_step "Web server is install on http://${HOSTNAME}:81/"
+    add_next_step "http://${HOSTNAME}:81/ gives you the munin interface"
+    add_next_step "http://${HOSTNAME}:81/binary gives you the Adactus endpoint"
 }
 
 function install_munin_gatherer()
@@ -2018,7 +2006,7 @@ function install_munin_gatherer()
     # TODO has a hard dependency on install_web_server, should perhaps
     # be called from this one?
 
-    add_next_step "- Munin interface available at http://$HOSTNAME:81/"
+    add_next_step "Munin interface is available at http://$HOSTNAME:81/"
 }
 
 function install_munin_node()
@@ -2043,10 +2031,11 @@ function install_munin_node()
         -O $file
     run chmod 755 $file
 
-    if [ ! -e /etc/escenic -o ! -e /etc/escenic/ece-*.conf ]; then
+    if [ ! -e /etc/escenic -o \
+        $(ls /etc/escenic/ | grep ece- | wc -l) -lt 1 ]; then
         print "No ECE instances found on $HOSTNAME, so I'm not adding"
         print "additional Munin configuration"  
-        add_next_step "- A Munin node has been installed on $HOSTNAME"
+        add_next_step "A Munin node has been installed on $HOSTNAME"
         return
     fi
     
@@ -2091,7 +2080,7 @@ EOF
             1>>$log 2>>$log
     fi
 
-    add_next_step "- A Munin node has been installed on $HOSTNAME"
+    add_next_step "A Munin node has been installed on $HOSTNAME"
 }
 
 function add_server_to_runlevels()
@@ -2109,8 +2098,8 @@ function add_server_to_runlevels()
         print "Adding the ece init.d script to the default run levels ..."
         run update-rc.d ece defaults
     else
-        add_next_step "- Remember to add /etc/intit.d/ece to the desired"
-        add_next_step "  run levels." 
+        add_next_step "Remember to add /etc/intit.d/ece to the desired "\
+"run levels." 
         # TODO add init.d to the default runlevels, for other
         # distributions too:
         # - RedHat/chekcconfig
@@ -2242,8 +2231,8 @@ function restore_from_backup()
         run cd $dir
         run tar -C / -xzf $backup_file var/lib/escenic
         add_next_step "Successfully restored Solr & ECE data files"
-        add_next_step "from backup:  $(basename $backup_file)"
-        add_next_step "Check /var/lib/escenic to verify they're all there"
+        add_next_step "Backup file used:  $(basename $backup_file)"
+        add_next_step "Check /var/lib/escenic to verify they're all there."
     fi
     
     if [ $restore_conf -eq 1 ]; then
@@ -2251,8 +2240,8 @@ function restore_from_backup()
         run cd $dir
         run tar -C / -xzf $backup_file etc
         add_next_step "Successfully restored ECE configuration files"
-        add_next_step "from backup: $(basename $backup_file)"
-        add_next_step "Check /etc to verify that they're all there".
+        add_next_step "Backup file used: $(basename $backup_file)"
+        add_next_step "Check /etc to verify that they're all there."
     fi
     
     if [ $restore_binaries -eq 1 ]; then
@@ -2260,7 +2249,7 @@ function restore_from_backup()
         run cd $dir
         run tar -C / -xzf $backup_file opt
         add_next_step "Successfully restored Escenic & Tomcat binaries"
-        add_next_step "from backup: $(basename $backup_file)"
+        add_next_step "Backup file used: $(basename $backup_file)"
         add_next_step "Check /opt to verify that they're all there".
     fi
 }
