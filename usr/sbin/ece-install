@@ -939,7 +939,7 @@ function print_status_and_next_steps()
     minutes=$(( seconds_left / 60 ))
     seconds_left=$(( seconds_left - $minutes * 60 ))
 
-    s="- The installation is now complete!"
+    s="The installation is now complete!"
     print $s" It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 
     if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP -a \
@@ -948,7 +948,7 @@ function print_status_and_next_steps()
         add_next_step "- See /usr/share/doc/escenic/ece-install-guide.txt for"
         add_next_step "  a full overview of files and directories set up by"
         add_next_step "  $(basename $0)"
-        add_next_step "- type 'ece help' to see all the options of this script"
+        add_next_step "- Type 'ece help' to see all the options of this script"
         add_next_step "  which allows you to control all the ECE components."
         add_next_step "  Also, see /usr/share/doc/escenic/ece-guide.txt for"
         add_next_step "  further information on the ece script."
@@ -1319,41 +1319,37 @@ EOF
 
 function read_user_input()
 {
-    echo "Hi, which server profile do you wish to install?"
-    echo ""
-    echo "Select 1-10 and press ENTER"
-    echo ""
-    echo "  $PROFILE_ALL_IN_ONE - All in one, the full stack on one host. "
-    echo "      Suitable for development and test environments."
-    echo "      It will install caching server, ECE, assembly host, database &"
-    echo "      Widget Framework as well as set up a new publication."
-    echo "  $PROFILE_EDITORIAL_SERVER - Editorial (publication) server."
-    echo "      This will install ECE and an assembly host."
-    echo -n "  $PROFILE_PRESENTATION_SERVER - Presentation server "
-    echo "(ECE, memcached)."
-    echo "  $PROFILE_DB_SERVER - Database server."
-    echo -n "  $PROFILE_CACHE_SERVER - Cache server "
-    echo "(cache & web server)."
-    echo "  $PROFILE_RMI_HUB - RMI hub."
-    echo -n "  $PROFILE_SEARCH_SERVER - Standalone search instance "
-    echo "(solr + indexer-webapp)."
-    echo "  $PROFILE_WIDGET_FRAMEWORK - Install the Widget Framework."
-    echo "      (You need user/pass for repo.escenic.com for this)."
-    echo "  $PROFILE_CREATE_PUBLICATION - Create a new publication."
-    echo "      This profile will create new publication based on WF"
-    echo "      (if available) or ECE/clean-demo."
-    echo "  $PROFILE_MONITORING_SERVER - A monitoring server."
-    echo "       This will install the Munin gatherer."
-    echo "  $PROFILE_RESTORE_FROM_BACKUP - Restore from backup. Allows you to"
-    echo "       restore DB, data files, binaries & publication templates."
-    echo ""
+    installation_profiles=(
+      "$PROFILE_ALL_IN_ONE - All in one, full stack on one host,"\
+" suitable for dev & test environments"
+      "$PROFILE_EDITORIAL_SERVER - Editorial (publication) server"
+      "$PROFILE_PRESENTATION_SERVER - Presentation server (ECE + memcached)."
+      "$PROFILE_DB_SERVER - Database server"
+      "$PROFILE_CACHE_SERVER - Cache server (cache and web server)"
+      "$PROFILE_RMI_HUB - RMI hub"
+      "$PROFILE_SEARCH_SERVER - Search server (Solr + indexer-webapp)"
+      "$PROFILE_WIDGET_FRAMEWORK - Install Widget Framework."
+      "$PROFILE_CREATE_PUBLICATION - Create a new publication"\
+" based on WF if available, ECE/clean-demo if not"
+      "$PROFILE_MONITORING_SERVER - A monitoring server (web server +"\
+" Munin gatherer)"
+      "$PROFILE_RESTORE_FROM_BACKUP - Restore from backup"\
+" (DB, data files, binaries, conf & publications)"
+    )
+    
+    echo "Hi, which server profile do you wish to install?"$'\n'
+
+    for (( i = 0; i < ${#installation_profiles[@]}; i++ )); do
+        echo "  " ${installation_profiles[$i]}
+    done
+
+    echo $'\n'"Select 1-${#installation_profiles[@]} and press ENTER"
     echo -n "Your choice [1]> "
     read install_profile_number
     
     if [ -z "$install_profile_number" ]; then
         install_profile_number=$PROFILE_ALL_IN_ONE
     fi
-    
 }
 
 function assert_correct_runtime_environment()
@@ -1492,9 +1488,11 @@ function install_cache_server()
 function add_next_step()
 {
     if [ -n "$next_steps" ]; then
-        next_steps=${next_steps}${NEW_LINE}"[$(basename $0)] "${1}
+        # next_steps=${next_steps}${NEW_LINE}"[$(basename $0)] "${1}
+        next_steps=${next_steps}${NEW_LINE}"${1}"
     else
-        next_steps="[$(basename $0)] "${1}
+        # next_steps="[$(basename $0)] "${1}
+        next_steps=${1}
     fi
 }
 
