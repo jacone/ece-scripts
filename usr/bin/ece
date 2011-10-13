@@ -861,8 +861,18 @@ function restart_type()
     start_type
 }    
 
+assemble_attempts=0
+
 function assemble()
 {
+    if [ $assemble_attempts -gt 1 ]; then
+        print "I've tried to assemble twice now and FAILED :-("
+        print "You probably have multiple versions of one or more plugins"
+        print "Check your plugins directory, sort it out and try again."
+        exit 1
+    fi
+    assemble_attempts=$(( $assemble_attempts + 1 ))
+    
     if [ ! $type = "engine" ]; then
         print "You cannot assemble $type"
         exit 1
