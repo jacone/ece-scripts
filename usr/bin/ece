@@ -21,6 +21,7 @@ quiet=0
 type=engine
 instance=default
 command=""
+backup_exclude_binaries=0
 
 type_list="
 engine
@@ -638,21 +639,21 @@ function backup_type()
 "
    actual_backup=""
    for el in $possible_backup; do
-       if [ -r $el ]; then
+       if [ $el = "/opt/escenic" -a $backup_exclude_binaries -eq 1 ]; then
+           continue
+       elif [ -r $el ]; then
            actual_backup="$el $actual_backup"
        fi
    done
 
-   if [ $appserver = "tomcat" ]; then
+   if [ $appserver = "tomcat" -a $backup_exclude_binaries -eq 0 ]; then
        actual_backup="$tomcat_home $tomcat_base $actual_backup"
    fi
 
    print "Creating snapshot ... (this will take a while)"
-   tar czf $archive_file \
+   run tar czf $archive_file \
        $actual_backup \
-       $db_backup_file \
-       1>>$log_file \
-       2>>$log_file
+       $db_backup_file
 
    message="Backup ready: $archive_file"
    print $message
@@ -660,8 +661,12 @@ function backup_type()
    print "The backup arhcive includes:"
    print "- Database snapshot"
    print "- All Solr & Escenic data files from /var/lib/escenic"
-   print "- All app servers in /opt"
-   print "- All Escenic binaries & publication templates in /opt/escenic"
+
+   if [ $backup_exclude_binaries -eq 0 ]; then
+       print "- All app servers in /opt"
+       print "- All Escenic binaries & publication templates in /opt/escenic"
+   fi
+   
    print "- All configuration in /etc/escenic and /etc/default/ece"
    print "- All bootstrap scripts from /etc/init.d"
    print "Enjoy!"
@@ -1055,6 +1060,11 @@ function set_type_command_and_instance()
             continue
         else
             next_is_resource=0
+        fi
+
+        if [ $el = "--exclude-binaries" ]; then
+            backup_exclude_binaries=1
+            continue
         fi
         
         # the only thing left at this point, is the command
