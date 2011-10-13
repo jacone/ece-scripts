@@ -2158,9 +2158,9 @@ function restore_from_backup()
             restore_conf=1
         fi
     elif [ $(get_boolean_conf_value fai_enabled) -eq 0 ]; then
-        print "From which dataset do you wish to backup?"
+        print "From which dataset do you wish to restore?"
         if [ ! -d $backup_dir ]; then
-            print "Backup directory $backup_dir doesn't exist or insn't readable"
+            print "Directory $backup_dir doesn't exist or isn't readable"
             exit 1
         fi
 
