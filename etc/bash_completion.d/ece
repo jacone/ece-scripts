@@ -11,13 +11,28 @@ _ece_commands()
     # default completions is the list of commands
     completions=$commands
 
-    long_options="--help"
-
-    # TODO make educated guesses on these.
     instances=""
+    dir=/etc/escenic/engine/instance
+    if [ -r $dir ] ; then
+        cd $dir
+        for el in *; do
+            instances=${el}" "$instances
+        done
+    fi
+    
     publications=""
+    dir=/opt/escenic/assemblytool/publications
+    if [ -r $dir ] ; then
+        cd $dir
+        for el in *.properties; do
+            publications=$(basename $el .properties)" "$publications
+        done
+    fi
 
     case "$prev" in
+        backup)
+            completions="--exclude-binaries"
+            ;;
         -t)
             completions=$types
             ;;
