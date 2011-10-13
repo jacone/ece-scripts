@@ -899,7 +899,7 @@ function assemble()
         if [ $(echo $known_unharmful_duplicates | grep $jar | wc -l) -gt 0 ]; then
             continue
         fi
-        if [ $(\ls *.jar | grep "$jar[0-9]" | wc -l) -gt 1 ]; then
+        if [ $(\ls *.jar | grep "^${jar}[0-9]" | wc -l) -gt 1 ]; then
             duplicates_found=1
             debug "More than one version of $jar"
         fi
