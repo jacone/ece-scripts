@@ -240,7 +240,7 @@ function install_common_os_packages()
         install_packages_if_missing $packages
     fi
 
-    for el in curl wget git unzip; do
+    for el in lsb_release curl wget git unzip; do
         assert_pre_prequesite $el
     done
 }
@@ -579,7 +579,18 @@ function install_ece_third_party_packages
     if [ $on_debian_or_derivative -eq 1 ]; then
 
         if [ $on_ubuntu -eq 1 ]; then
-            add_apt_source "deb http://archive.canonical.com/ $(lsb_release -s -c) partner"              
+            add_apt_source "deb http://archive.canonical.com/ $(lsb_release -s -c) partner"
+        elif [ $on_debian -eq 1 ]; then
+            code_name=$(lsb_release -s -c)
+            has_non_free=$(grep $(lsb_release -s  -c) \
+                /etc/apt/sources.list | \
+                egrep -v "^#|deb-src" | \
+                grep -v security | \
+                grep non-free | \
+                wc -l)
+            if [ $has_non_free -eq 0 ]; then
+                add_apt_source "deb http://ftp.tw.debian.org/debian/ $(lsb_release -s -c) contrib non-free"
+            fi
         fi
         
         echo "sun-java6-jdk shared/accepted-sun-dlj-v1-1 boolean true" | \
@@ -949,7 +960,7 @@ function print_status_and_next_steps()
     if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP -a \
         $install_profile_number -ne $PROFILE_CACHE_SERVER -a \
         $install_profile_number -ne $PROFILE_WIDGET_FRAMEWORK ]; then
-        add_next_step "More info: /usr/share/doc/escenic/ece-install-guide.txt"
+        add_next_step "Install info: "\ "/usr/share/doc/escenic/ece-install-guide.txt"
         add_next_step "Guide books: http://documentation.vizrt.com/ece-5.3.html"
     fi
     
@@ -1389,6 +1400,13 @@ function common_pre_install()
         export DEBIAN_FRONTEND=noninteractive
     fi
 
+    # chicken and the egg problem, we need lsb_release to install the
+    # packages later on, hence as soon as we know we've got a Debian
+    # based platform, we install lsb-release. Also note, the
+    # executable, lsb_release, is in the list of required binaries in
+    # install_common_os_packages.
+    install_packages_if_missing "lsb-release"
+    
     if [ $(lsb_release -i | grep Ubuntu | wc -l) -gt 0 ]; then
         on_ubuntu=1
     elif [ $(lsb_release -i | grep Debian | wc -l) -gt 0 ]; then
@@ -2110,6 +2128,7 @@ function add_server_to_runlevels()
 function restore_from_backup()
 {
     # locals
+    restore_all=0
     restore_db=0
     restore_binaries=0
     restore_data_files=0
@@ -2125,23 +2144,17 @@ function restore_from_backup()
             print "You must specifify fai_restore_from_file"
             exit 1
         fi
-        
-        if [ $(get_boolean_conf_value fai_restore_db) -eq 1 -o \
-            $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
+
+        if [ $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
+            restore_all=1
+        elif [ $(get_boolean_conf_value fai_restore_db) -eq 1 ]; then
             restore_db=1
-        fi
-        
-        if [ $(get_boolean_conf_value fai_restore_data_files) -eq 1 -o \
-            $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
+        elif [ $(get_boolean_conf_value fai_restore_data_files) -eq 1 ]; then
             restore_data_files=1
-        fi
-        
-        if [ $(get_boolean_conf_value fai_restore_software_binaries) -eq 1 -o \
-            $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
+        elif [ $(get_boolean_conf_value fai_restore_software_binaries) -eq 1 ]
+        then
             restore_binaries=1
-        fi
-        if [ $(get_boolean_conf_value fai_restore_configuration) -eq 1 -o \
-            $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
+        elif [ $(get_boolean_conf_value fai_restore_configuration) -eq 1 ]; then
             restore_conf=1
         fi
     elif [ $(get_boolean_conf_value fai_enabled) -eq 0 ]; then
@@ -2151,7 +2164,12 @@ function restore_from_backup()
             exit 1
         fi
 
-        tarball_array=($(ls -t $backup_dir/*.tar.gz))
+        if [ $(ls $backup_dir | grep .tar | wc -l) -lt 1 ]; then
+            print "No backup files (.tar) found in $backup_dir, exiting."
+            exit 0
+        fi
+        
+        tarball_array=($(ls -t $backup_dir/*.tar))
         
         for (( i = 0; i <${#tarball_array[@]}; i++ )); do
             echo "   " $(( ${i} + 1 )) "-" $(basename  ${tarball_array[$i]})
@@ -2173,6 +2191,7 @@ function restore_from_backup()
             "The Solr and ECE data files (multimedia archive)"
             "The ECE configuration files"
             "The Escenic and Tomcat software binaries + publication templates"
+            "Restore everything of the above"
         )
         for (( i = 0; i <${#restore_profiles[@]}; i++ )); do
             echo "   " $(( ${i} + 1 )) "-" ${restore_profiles[$i]}
@@ -2194,6 +2213,8 @@ function restore_from_backup()
             restore_conf=1
         elif [ $user_restore_profile -eq 4 ]; then
             restore_binaries=1
+        elif [ $user_restore_profile -eq 5 ]; then
+            restore_all=1
         fi
     fi
 
@@ -2205,11 +2226,11 @@ function restore_from_backup()
     
     dir=$(mktemp -d)
     
-    if [ $restore_db -eq 1 ]; then
+    if [ $restore_db -eq 1 -o $restore_all -eq 1 ]; then
         install_database_server "binaries_only"
         print "Restoring the database contents on $HOSTNAME ..."
         run cd $dir
-        run tar xzf $backup_file --wildcards var/backups/escenic/*.sql.gz
+        run tar xf $backup_file --wildcards var/backups/escenic/*.sql.gz
         # picking the DB backup file to restore
         sql_file=$(ls -tra var/backups/escenic/*.sql.gz | tail -1)
         print "Selecting the most recent database dump $(basename $sql_file)"
@@ -2226,31 +2247,32 @@ function restore_from_backup()
         add_next_step "Successfully restored DB from $(basename $sql_file)"
     fi
     
-    if [ $restore_data_files -eq 1 ]; then
+    if [ $restore_data_files -eq 1 -o $restore_all -eq 1 ]; then
         print "Restoring the Solr & ECE data files on $HOSTNAME ..."
         run cd $dir
-        run tar -C / -xzf $backup_file var/lib/escenic
+        run tar -C / -xf $backup_file var/lib/escenic
         add_next_step "Successfully restored Solr & ECE data files"
         add_next_step "Backup file used:  $(basename $backup_file)"
         add_next_step "Check /var/lib/escenic to verify they're all there."
     fi
     
-    if [ $restore_conf -eq 1 ]; then
+    if [ $restore_conf -eq 1 -o $restore_all -eq 1 ]; then
         print "Restoring the ECE configuration files on $HOSTNAME ..."
         run cd $dir
-        run tar -C / -xzf $backup_file etc
+        run tar -C / -xf $backup_file etc
         add_next_step "Successfully restored ECE configuration files"
         add_next_step "Backup file used: $(basename $backup_file)"
         add_next_step "Check /etc to verify that they're all there."
     fi
     
-    if [ $restore_binaries -eq 1 ]; then
+    if [ $restore_binaries -eq 1 -o $restore_all -eq 1 ]; then
         print "Restoring the Escenic & Tomcat binaries on $HOSTNAME ..."
         run cd $dir
-        run tar -C / -xzf $backup_file opt
+        run tar -C / -xf $backup_file opt
         add_next_step "Successfully restored Escenic & Tomcat binaries"
         add_next_step "Backup file used: $(basename $backup_file)"
         add_next_step "Check /opt to verify that they're all there".
+        install_ece_third_party_packages
     fi
 }
 
@@ -2330,6 +2352,7 @@ if [ $fai_enabled -eq 1 ]; then
 else
     read_user_input
     common_pre_install
+    
     case $install_profile_number in
         $PROFILE_ALL_IN_ONE)
         install_all_in_one_environment
