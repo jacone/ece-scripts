@@ -2233,7 +2233,7 @@ function restore_from_backup()
         run tar xf $backup_file --wildcards var/backups/escenic/*.sql.gz
         # picking the DB backup file to restore
         sql_file=$(ls -tra var/backups/escenic/*.sql.gz | tail -1)
-        print "Selecting the most recent database dump $(basename $sql_file)"
+        print "Selecting database dump: $(basename $sql_file)"
 
         # methods in drop-and-create-ecedb to set up the database
         # schema & user
