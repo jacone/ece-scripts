@@ -92,12 +92,18 @@ function print_and_log()
     log "$@"
 }
 
+function remove_pid_and_exit_in_error()
+{
+    rm $pid_file
+    exit 1
+}
+
 function exit_on_error()
 {
     if [ $? -gt 0 ]; then
         print "The command ["$@"] FAILED, exiting :-("
         print "See $log for further details."
-        exit 1
+        remove_pid_and_exit_in_error
     fi
 }
 
@@ -105,6 +111,22 @@ function run()
 {
     $@ 1>>$log 2>>$log
     exit_on_error $@
+}
+
+# Returns 1 if the passed value is a number, 0 if not
+#
+# $1 : what you want to test
+function is_number()
+{
+    if [ -z $1 ]; then
+        echo 0
+    elif [ $(echo $1 | grep [a-z] | wc -l) -gt 0 ]; then
+        echo 0
+    elif [ $(echo $1 | grep [A-Z] | wc -l) -gt 0 ]; then
+        echo 0
+    else
+        echo 1
+    fi
 }
 
 technet_download_list="
@@ -167,14 +189,14 @@ function make_ln()
             run ln -s $1 $2
         elif [ ! -e $1 ]; then
             print "Tried to make a symlink to $1, but it doesn't exist"
-            exit 1
+            remove_pid_and_exit_in_error
         fi
     else
         if [ -e $1 -a ! -h $(basename $1) ]; then
             run ln -s $1
         elif [ ! -e $1 ]; then
             print "Tried to make a symlink to $1, but it doesn't exist"
-            exit 1
+            remove_pid_and_exit_in_error
         fi
     fi
 }
@@ -1002,7 +1024,7 @@ function create_publication_in_db()
 
     if [ "$cookie" == "" ] ; then
         print "Unable to get a session cookie."
-        exit 1;
+        remove_pid_and_exit_in_error;
     fi
 
     run curl --silent \
@@ -1085,7 +1107,7 @@ function check_for_required_downloads()
             wc -l) \
             -lt 1 ]; then
             print "Couldn't find $el* in $download_dir"
-            exit 1
+            remove_pid_and_exit_in_error
         fi
     done
 }
@@ -1372,13 +1394,18 @@ function read_user_input()
     if [ -z "$install_profile_number" ]; then
         install_profile_number=$PROFILE_ALL_IN_ONE
     fi
+
+    if [ $(is_number $install_profile_number) -eq 0 ]; then
+        print "The profile number, $install_profile_number, is not a number"
+        remove_pid_and_exit_in_error
+    fi
 }
 
 function assert_correct_runtime_environment()
 {
     if [ $(whoami) != "root" ]; then
         print "You must be root when running $(basename $0)"
-        exit 1
+        remove_pid_and_exit_in_error
     fi
     
     if [ -e $pid_file ]; then
@@ -1386,7 +1413,7 @@ function assert_correct_runtime_environment()
         print "If you blelieve this is wrong, e.g. if a previous run of" 
         print "$(basename $0) was aborted before it completed, you"
         print "may remove ${pid_file} and run $(basename $0) again."
-        exit 1
+        remove_pid_and_exit_in_error
     else
         echo $BASHPID > $pid_file
         started=`stat -c %Y $pid_file`
@@ -1395,7 +1422,7 @@ function assert_correct_runtime_environment()
     if [ ! -e "$conf_file" ]; then
         print $conf_file "doesn't exist."
         print "I cannot live without it, so I'm exiting :-("
-        exit 1
+        remove_pid_and_exit_in_error
     fi
 }
 
@@ -1408,7 +1435,7 @@ function common_pre_install()
     if [ -z "$technet_user" -o -z "$technet_password" ]; then
         print "Be sure to set technet_user and technet_password "
         print "in $conf_file"
-        exit 1
+        remove_pid_and_exit_in_error
     fi
 
     if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
@@ -1441,7 +1468,7 @@ function assert_pre_prequesite()
 {
     if [ $(which $1 | wc -l) -lt 1 ]; then
         print "Please install $1 and then run $(basename $0) again."
-        exit 1
+        remove_pid_and_exit_in_error
     fi
 }
 
@@ -1750,7 +1777,7 @@ function create_publication()
         ! -e /opt/escenic/assemblytool ]; then
         print "Please install ECE and an assembly environment before"
         print "running this installation profile again."
-        exit 1
+        remove_pid_and_exit_in_error
     fi
 
     print "Getting ready to create a new publiation ..."
@@ -1826,7 +1853,7 @@ function get_conf_value()
 {
     if [ ! -e "$conf_file" ]; then
         print $conf_file "doesn't exist."
-        exit 1
+        remove_pid_and_exit_in_error
     fi
 
     if [ $(grep $1 $conf_file | grep -v ^# | wc -l) -gt 0 ]; then
@@ -1836,7 +1863,7 @@ function get_conf_value()
 
 # returns 0 for false, 1 for true
 #
-# paramaters: $1 : the conf key, see get_conf_value
+# parameters: $1 : the conf key, see get_conf_value
 function get_boolean_conf_value()
 {
     value=$(get_conf_value $1)
@@ -1862,7 +1889,7 @@ function install_widget_framework()
     if [ -z "$wf_user" -o -z "$wf_password" ]; then
         print "Missing wf_user and wf_password in $conf_file"
         print "If you don't have these, please contact support@escenic.com"
-        exit 1
+        remove_pid_and_exit_in_error
     fi
 
     print "Creating a Maven settings file: $HOME/.m2/settings.xml ..."
@@ -2175,7 +2202,7 @@ function restore_from_backup()
 
         if [ -z "$backup_file" ]; then
             print "You must specifify fai_restore_from_file"
-            exit 1
+            remove_pid_and_exit_in_error
         fi
 
         if [ $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
@@ -2194,7 +2221,7 @@ function restore_from_backup()
         print "From which dataset do you wish to restore?"
         if [ ! -d $backup_dir ]; then
             print "Directory $backup_dir doesn't exist or isn't readable"
-            exit 1
+            remove_pid_and_exit_in_error
         fi
 
         if [ $(ls $backup_dir | grep ".tar$" | wc -l) -lt 1 ]; then
@@ -2254,7 +2281,7 @@ function restore_from_backup()
     if [ ! -r "$backup_file" ]; then
         print "$backup_file either doesn't exist or cannot be read."
         print "I cannot restore from it :-("
-        exit 1
+        remove_pid_and_exit_in_error
     fi
     
     dir=$(mktemp -d)
@@ -2410,7 +2437,7 @@ if [ $fai_enabled -eq 1 ]; then
     else
         print "No install profile selected, be sure to have one of the "
         print "fai_<profile>_install=1 in your $conf_file"
-        exit 1
+        remove_pid_and_exit_in_error
     fi
     
     common_post_install
@@ -2453,9 +2480,9 @@ else
         $PROFILE_RESTORE_FROM_BACKUP)
         restore_from_backup
         ;;
-        default)
-            print "You must select 1-11"
-            exit 1
+        *)
+            print "Invalid profile number $install_profile_number, must be 1-11"
+            remove_pid_and_exit_in_error
             ;;
     esac
     common_post_install
