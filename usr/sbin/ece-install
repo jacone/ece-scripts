@@ -42,6 +42,7 @@ appserver_port=8080
 on_debian_or_derivative=0
 on_debian=0
 on_ubuntu=0
+force_packages=0
 
 # because the all in one profile will run database, search and app
 # server profiles, all of which needs downloading and setting up the
@@ -78,6 +79,17 @@ function debug()
 function print()
 {
     echo $(get_id) $@
+}
+
+function log()
+{
+    echo $(get_id) $@ >> $log
+}
+
+function print_and_log()
+{
+    print "$@"
+    log "$@"
 }
 
 function exit_on_error()
@@ -218,8 +230,12 @@ install_packages_if_missing()
         if [ $some_are_missing -eq 0 ]; then
             return
         fi
-        
-        run apt-get install -y $@
+
+        if [ $force_packages -eq 1 ]; then
+            run apt-get install --assume-yes --force-yes $@
+        else
+            run apt-get install --assume-yes $@
+        fi
     fi
 }
 
@@ -907,8 +923,8 @@ function create_user_and_group_if_not_present()
        run adduser $ece_user \
            --disabled-password \
            --gecos "Escenic-user,Room,Work,Home,Other"
-       add_next_step "Set a password for the new UNIX user $ece_user "\
-"(passwd $ece_user)"
+       add_next_step "I created a new UNIX user called $ece_user"
+       add_next_step "and you must set a password using: passwd $ece_user"
    fi
    
    if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
@@ -1539,18 +1555,35 @@ function install_database_server()
             print "Installing the Percona database ..."
 
             if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
-                run gpg --keyserver hkp://keys.gnupg.net \
-                    --recv-keys 1C4CBDCDCD2EFD2A
-                gpg --armor \
-                    -a \
-                    --export 1C4CBDCDCD2EFD2A | \
-                    apt-key add - \
-                    1>>$log 2>>$log
+                gpg --keyserver hkp://keys.gnupg.net \
+                    --recv-keys 1C4CBDCDCD2EFD2A \
+                     1>>$log 2>>$log
+                
+                # There has been twice now, during six months, that
+                # the key cannot be retrieved from
+                # keys.gnupg.net. Therefore, we're checking if it
+                # failed and if yes, force the package installation.
+                if [ $? -gt 0 ]; then
+                    s="Failed retrieving the Percona key from keys.gnupg.net"
+                    print_and_log $s
+                    s="Will install the Percona packages without the GPG key"
+                    print_and_log $s
+                    force_packages=1
+                else
+                    gpg --armor \
+                        -a \
+                        --export 1C4CBDCDCD2EFD2A | \
+                        apt-key add - \
+                        1>>$log 2>>$log
+                fi
+
                 run apt-get update
             fi
+            
             add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
             packages="percona-server-server percona-server-client"
             install_packages_if_missing $packages
+            force_packages=0
         else
             print "The Percona APT repsository doesn't have packages for your"
             print "Debian (or derivative) version with code name $code_name. "
@@ -2164,7 +2197,7 @@ function restore_from_backup()
             exit 1
         fi
 
-        if [ $(ls $backup_dir | grep .tar | wc -l) -lt 1 ]; then
+        if [ $(ls $backup_dir | grep ".tar$" | wc -l) -lt 1 ]; then
             print "No backup files (.tar) found in $backup_dir, exiting."
             exit 0
         fi
@@ -2273,6 +2306,38 @@ function restore_from_backup()
         add_next_step "Backup file used: $(basename $backup_file)"
         add_next_step "Check /opt to verify that they're all there".
         install_ece_third_party_packages
+        set_up_engine_directories
+
+        # doing some educated guessing on which tomcat_base/home as
+        # well as UNIX user/group to use for this.
+        file=/etc/default/ece
+        if [ -r $file ]; then
+            ece_user=$(grep ^ece_unix_user $file | \
+                cut -d'=' -f2 | \
+                sed -e "s/'//g" -e 's/"//g'
+            )
+            ece_group=$(grep ^ece_unix_group $file | \
+                cut -d'=' -f2 | \
+                sed -e "s/'//g" -e 's/"//g'
+            )
+            create_user_and_group_if_not_present
+            
+            if [ -d /etc/escenic -a \
+                $(ls /etc/escenic/ | grep ^ece- | wc -l) -gt 0 -a \
+                $(grep ^tomcat_base /etc/escenic/ece*.conf | wc -l) -gt 0 ]; then
+                directories=$(grep ^tomcat_base /etc/escenic/ece*.conf | \
+                    cut -d'=' -f2 | \
+                    sed -e "s/'//g" -e 's/"//g'
+                )
+                s="Setting file permissions according to /etc/default/ece"
+                print_and_log $s
+                s="and /etc/escenic/ece*.conf"
+                print_and_log $s
+                run chown -R ${ece_user}:${ece_group} ${directories}
+            fi
+        fi
+        
+        set_correct_permissions
     fi
 }
 
