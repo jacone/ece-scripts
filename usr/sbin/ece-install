@@ -1240,7 +1240,7 @@ EOF
     w | cut -d' ' -f7 | sort | uniq | while read l; do
         if [ $(echo $l | wc -c) -gt 8 ]; then
     cat >> /etc/varnish/default.vcl <<EOF
-  # The host which conducted the ece-install"
+  # The host which conducted the ece-install
   "${l}";
 EOF
         fi
@@ -1833,7 +1833,7 @@ function install_rmi_hub()
         "rmi://${hub_host}:1099/hub/Hub" \
         $file
 
-    cat > common/io/api/EventManager.properties <<EOF
+    cat > $common_nursery_dir/io/api/EventManager.properties <<EOF
 clientConfiguration=/neo/io/services/HubConnection
 pingTime=10000
 EOF
@@ -2007,7 +2007,7 @@ function install_all_in_one_environment()
     install_database_server
     install_ece_instance "dev1" 0
     install_cache_server
-    install_web_server
+    install_web_server 2
     install_munin_gatherer
     set_up_solr
 
@@ -2015,6 +2015,11 @@ function install_all_in_one_environment()
     create_publication
 }
 
+# parameters:
+# $1 - what kind of webserver. Available options are:
+#      * 0 - cache server
+#      * 1 - monitoring server
+#      * 2 - both cache & monitoring server
 function install_web_server()
 {
     print "Installing a web server on $HOSTNAME ..."
@@ -2029,10 +2034,42 @@ function install_web_server()
     
     file=/etc/nginx/sites-available/default
     run mv $file $file.orig
-    cat > $file <<EOF
+
+    if [ $1 -eq 0 ]; then
+        port=81
+        cat > $file <<EOF
 server {
-  listen 81 default;
+  listen ${port} default;
   access_log  /var/log/nginx/localhost.access.log;
+
+  # Typical endpoint for Adactus/Mobilize to get the videos to
+  # transcode.
+  location /binary {
+    root /var/lib/escenic;
+    index index.html;
+  }
+}
+EOF
+    elif [ $1 -eq 1 ]; then
+        port=80
+        cat > $file <<EOF
+server {
+  listen ${port} default;
+  access_log  /var/log/nginx/localhost.access.log;
+
+  location / {
+    root /var/cache/munin/www;
+    index index.html;
+  }
+}
+EOF
+    elif [ $1 -eq 3 ]; then
+        port=81
+        cat > $file <<EOF
+server {
+  listen ${port} default;
+  access_log  /var/log/nginx/localhost.access.log;
+
   location / {
     root /var/cache/munin/www;
     index index.html;
@@ -2046,11 +2083,18 @@ server {
   }
 }
 EOF
+    fi
+    
     /etc/init.d/nginx restart 1>>$log 2>>$log
 
-    add_next_step "Web server is install on http://${HOSTNAME}:81/"
-    add_next_step "http://${HOSTNAME}:81/ gives you the munin interface"
-    add_next_step "http://${HOSTNAME}:81/binary gives you the Adactus endpoint"
+    if [ $1 -eq 0 ]; then
+        add_next_step "http://${HOSTNAME}:${port}/binary gives the Adactus endpoint"
+    elif [ $1 -eq 1 ]; then
+        add_next_step "http://${HOSTNAME}:${port}/ gives the Munin interface"
+    elif [ $2 -eq 1 ]; then
+        add_next_step "http://${HOSTNAME}:${port}/       gives the Munin interface"
+        add_next_step "http://${HOSTNAME}:${port}/binary gives the Adactus endpoint"
+    fi
 }
 
 function install_munin_gatherer()
@@ -2080,17 +2124,77 @@ function install_munin_gatherer()
         node_list=$(get_conf_value fai_munin_node_list)
     fi
     
-    
-    # TODO has a hard dependency on install_web_server, should perhaps
-    # be called from this one?
+    if [ -z "$node_list" ]; then
+        return
+    fi
 
-    add_next_step "Munin interface is available at http://$HOSTNAME:81/"
+    for el in $node_list; do
+        print "Adding ${el} to the Muning gatherer on ${HOSTNAME} ..."
+        file=/etc/munin/munin-conf.d/escenic.conf
+        cat >> $file <<EOF
+[${el}]
+    address $(get_ip $el)
+    use_node_name yes
+EOF
+    done
+
+    add_next_step "Munin gatherer installed on $HOSTNAME."
+    add_next_step "Make sure all nodes allows my IP to connect to them."
+}
+
+# will return the IP of the host name. If not found, the host name
+# passed to the function will be returned.
+# parameters: $1 the host name
+function get_ip()
+{
+    ip=$(ping -c 1 $1 2>/dev/null | \
+        grep "bytes from" | \
+        cut -d'(' -f2 | \
+        cut -d ')' -f1)
+    
+    if [ -z "$ip" ]; then
+        echo $1
+    fi
+
+    echo $ip
+}
+
+# munin nodes need the IP of the munin gatherer to be escaped. Hence this function.
+# $parameters:
+# $1 : the IP
+function get_perl_escaped()
+{
+    local escaped_input=$(
+        echo $1 | sed 's/\./\\./g'
+    )
+    echo "^${escaped_input}$"
 }
 
 function install_munin_node()
 {
     print "Installing a Munin node on $HOSTNAME ..."
 
+    # the IP of the monitoring server
+    local default_ip=127.0.0.1
+    if [ $fai_enabled -eq 1 ]; then
+        if [ -n "fai_monitoring_server_ip" ]; then
+            monitoring_server_ip=${fai_monitoring_server_ip}
+        fi
+    elif [ $install_profile_number -ne $PROFILE_MONITORING_SERVER ]; then
+        print "What is the IP of your monitoring server? If you don't know"
+        print "this, don't worry and just press ENTER"
+        echo -n "Your choice [${default_ip}]> "
+        read user_monitoring_server
+
+        if [ -n "$user_monitoring_server" ]; then
+            monitoring_server_ip=$user_monitoring_server
+        fi
+    fi
+
+    if [ -z "$monitoring_server_ip" ]; then
+        monitoring_server_ip=$default_ip
+    fi
+    
     if [ $on_debian_or_derivative -eq 1 ]; then
         packages="munin-node munin-plugins-extra munin-java-plugins"
         install_packages_if_missing $packages
@@ -2099,6 +2203,17 @@ function install_munin_node()
         print "You will have to install it manually."
         return
     fi
+
+    if [ -n "$monitoring_server_ip" ]; then
+        escaped_munin_gather_ip=$(get_perl_escaped ${monitoring_server_ip})
+        file=/etc/munin/munin-node.conf
+        cat >> $file <<EOF
+
+# added by ece-install $(date)
+allow ${escaped_munin_gather_ip}
+EOF
+    fi
+    
 
     # install the escenic_jstat munin plugin
     file=/usr/share/munin/plugins/escenic_jstat_
@@ -2415,7 +2530,7 @@ if [ $fai_enabled -eq 1 ]; then
     elif [ $(get_boolean_conf_value fai_cache_install) -eq 1 ]; then
         install_profile_number=$PROFILE_CACHE_SERVER
         install_cache_server
-        install_web_server
+        install_web_server 0
     elif [ $(get_boolean_conf_value fai_rmi_install) -eq 1 ]; then
         install_profile_number=$PROFILE_RMI_HUB
         install_rmi_hub
@@ -2428,9 +2543,10 @@ if [ $fai_enabled -eq 1 ]; then
     elif [ $(get_boolean_conf_value fai_publication_create) -eq 1 ]; then
         install_profile_number=$PROFILE_CREATE_PUBLICATION
         create_publication
-    elif [ $(get_boolean_conf_value fai_munin_gatherer_create) -eq 1 ]; then
+    elif [ $(get_boolean_conf_value fai_monitoring_install) -eq 1 ]; then
         install_profile_number=$PROFILE_MONITORING_SERVER
         install_munin_gatherer
+        install_web_server 1
     elif [ $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
         install_profile_number=$PROFILE_RESTORE_FROM_BACKUP
         restore_from_backup
@@ -2451,7 +2567,7 @@ else
         ;;
         $PROFILE_CACHE_SERVER)
         install_cache_server
-        install_web_server
+        install_web_server 0
         ;;
         $PROFILE_DB_SERVER)
         install_database_server
@@ -2476,6 +2592,7 @@ else
         ;;
         $PROFILE_MONITORING_SERVER)
         install_munin_gatherer
+        install_web_server 1
         ;;
         $PROFILE_RESTORE_FROM_BACKUP)
         restore_from_backup
