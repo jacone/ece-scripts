@@ -903,9 +903,9 @@ function assemble()
         exit 1
     fi
 
-    message="Assembling your EAR file ..."
-    print $message
-    log $message >> $log_file
+    message="Assembling your EAR file"
+    print $message ".."
+    log $message "..." >> $log_file
     
     cd $assemblytool_home && \
         ant -q ear -DskipRedundancyCheck=true \
