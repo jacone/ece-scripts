@@ -26,16 +26,11 @@ https://github.com/skybert/ece-scripts/blob/master/usr/share/doc/escenic/ece-ins
 ===========================================
 Features of the /usr/bin/system-info script
 ===========================================
-Gives a overview of your system, especially useful when contacting
-Vizrt Online/Escenic Support.
+https://github.com/skybert/ece-scripts/blob/master/usr/share/doc/escenic/system-info-guide.org
 
-The script default wise produces a plain text report, but if you pass
--c or --confluence to it, it will generate Confluence Wiki markup
-instead.
-
-==========================
+========
 Feedback
-==========================
+========
 Hope you enjoy the ece /usr/bin and intit.d scripts. All feedback,
 come hither!
 
