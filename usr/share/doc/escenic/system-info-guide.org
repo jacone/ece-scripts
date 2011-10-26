@@ -1,0 +1,78 @@
+Welcome to the /usr/bin/system-info Guide
+
+This wee script gives a overview of your system, especially useful
+when contacting Vizrt Online/Escenic Support.
+
+The script will default wise produce a plain text report, but if you
+pass -c or --confluence to it, it will generate Confluence Wiki markup
+instead.
+
+* Example
+Here you can see an example of the output generated from system-info:
+
+#+BEGIN_SRC text
+#########################################################################
+System details for quanah
+#########################################################################
+
+#########################################################################
+Kernel version
+#########################################################################
+Linux quanah 3.0.0-1-amd64 #1 SMP Sat Aug 27 16:21:11 UTC 2011 x86_64 GNU/Linux
+
+#########################################################################
+Distribution information
+#########################################################################
+Debian or derivate, version wheezy/sid
+
+#########################################################################
+Database details
+#########################################################################
+/usr/sbin/mysqld  Ver 5.1.58-1 for debian-linux-gnu on x86_64 ((Debian))
+
+#########################################################################
+Java version
+#########################################################################
+java version "1.6.0_26"
+Java(TM) SE Runtime Environment (build 1.6.0_26-b03)
+Java HotSpot(TM) 64-Bit Server VM (build 20.1-b02, mixed mode)
+
+#########################################################################
+Important packages
+#########################################################################
+ant                                      1.8.2-4                              Java based build tool like make
+libapr1                                  1.4.5-1                              Apache Portable Runtime Library
+libmysql-java                            5.1.16-2                             Java database (JDBC) driver for MySQL
+libtcnative-1                            1.1.22-1                             Tomcat native library using the apache portable runtime
+maven2                                   2.2.1-10                             Java software project management and comprehension tool
+mysql-server                             5.1.58-1                             MySQL database server (metapackage depending on the latest version)
+nginx                                    1.1.4-2                              small, but very powerful and efficient web server and mail proxy
+sun-java6-jdk                            6.26-3                               Sun Java(TM) Development Kit (JDK) 6
+sun-java6-jre                            6.26-3                               Sun Java(TM) Runtime Environment (JRE) 6 (architecture independent files)
+tomcat6-user                             6.0.32-6                             Servlet and JSP engine -- tools to create user instances
+varnish                                  3.0.1-1~squeeze1                     state of the art, high-performance web accelerator
+
+#########################################################################
+Processors
+#########################################################################
+Processor type:  Intel(R) Core(TM)2 Duo CPU P8600 @ 2.40GHz
+Number of processors/cores: 1
+
+#########################################################################
+Memory
+#########################################################################
+Total memory:  3792504 kB
+Free memory:  339096 kB
+
+#########################################################################
+Disk Storage
+#########################################################################
+Filesystem     Type     Size  Used Avail Use% Mounted on
+/dev/sda3      ext3     141G  127G  7.2G  95% /
+tmpfs          tmpfs    5.0M  8.0K  5.0M   1% /lib/init/rw
+tmpfs          tmpfs    371M  812K  370M   1% /run
+udev           tmpfs    1.9G     0  1.9G   0% /dev
+tmpfs          tmpfs    741M  420K  741M   1% /run/shm
+shmfs          tmpfs    1.9G   12K  1.9G   1% /lib/init/rw/splashy
+/dev/sda2      hfsplus   96G   89G  6.3G  94% /mnt/mac
+#+END_SRC
