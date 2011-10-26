@@ -426,7 +426,9 @@ function sanity_check()
     # checks if the user is using the default instance when he/she
     # really wants to start one of the instances installed on the
     # system.
-    if [ $instance = "default" -a $type = "engine" ]; then
+    if [ $instance = "default" -a \
+        $type = "engine" -a \
+        $(echo $command | grep help | wc -l) -eq 0 ]; then
         instance_list=$(get_instance_list)
         if [ -n "$instance_list" ]; then
             print "You must specify the instance with -i <instance>"
