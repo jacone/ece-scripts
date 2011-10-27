@@ -300,9 +300,7 @@ function set_instance_settings()
     fi
 
     set_type_pid
-
-    set_type_port
-    
+   
     # if type is rmi-hub, we don't' need more configuration.
     if [ $type = "rmi-hub" ]; then
         return
@@ -1187,6 +1185,8 @@ function list_versions()
         exit 1
     fi
     
+    set_type_port
+    
     version_manager=escenic-admin/browser/Global/neo/io/managers/VersionManager
     url=http://$host:$port/$version_manager
         
@@ -1208,8 +1208,6 @@ function list_versions()
 
 function update_publication_resources()
 {
-    url=http://${host}:${port}/escenic-admin/publication-resources
-
     if [ ! -r $resource ]; then
         print $resource "doesn't exist. I will exit :-("
         exit 1
@@ -1220,6 +1218,9 @@ function update_publication_resources()
         exit 1
     fi
     
+    set_type_port
+    url=http://${host}:${port}/escenic-admin/publication-resources
+
     case "$(basename $resource)" in
         content-type)
             url=${url}/${publication}/escenic/content-type
