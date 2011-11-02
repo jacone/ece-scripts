@@ -5,12 +5,15 @@ _ece_commands()
     local cur=${COMP_WORDS[COMP_CWORD]}
     local prev=${COMP_WORDS[COMP_CWORD-1]}
 
-    commands="applog assemble backup clean deploy edit help kill log loglist outlog restart start status stop threaddump update versions"
+    commands="applog assemble backup clean deploy edit help kill log loglist \
+              outlog restart start status stop threaddump update versions"
+    options="-i --instance -p --publication -r --publication-resource \
+             -t --type"
     resources="content-type feature layout layout-group image-version menu"
     types="engine search analysis rmi-hub"
 
     # default completions is the list of commands
-    completions=$commands
+    completions=$commands" "$options
 
     instances=""
     dir=/etc/escenic/engine/instance
@@ -32,16 +35,16 @@ _ece_commands()
         backup)
             completions="--exclude-binaries"
             ;;
-        -t)
+        -t|--type)
             completions=$types
             ;;
-        -i)
+        -i|--instance)
             completions=$instances
             ;;
-        -p)
+        -p|--publication)
             completions=$publications
             ;;
-        -r)
+        -r|--publication-resource)
             completions=$resources
             ;;
     esac
