@@ -906,7 +906,7 @@ function assemble()
     message="Assembling your EAR file"
     print $message ".."
     log $message "..." >> $log_file
-    
+
     cd $assemblytool_home && \
         ant -q ear -DskipRedundancyCheck=true \
         1>>$log_file \
@@ -1213,7 +1213,7 @@ function update_publication_resources()
         exit 1
     fi
 
-    if [ -x $publication ]; then
+    if [ -z $publication ]; then
         print "You must specify which publication to update (-p <publication>)"
         exit 1
     fi
