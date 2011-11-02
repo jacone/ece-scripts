@@ -1,10 +1,11 @@
 # auto completion for the /usr/bin/ece command.
+
 _ece_commands()
 {
     local cur=${COMP_WORDS[COMP_CWORD]}
     local prev=${COMP_WORDS[COMP_CWORD-1]}
 
-    commands="applog assemble backup clean deploy help kill log loglist outlog restart start status stop threaddump update versions"
+    commands="applog assemble backup clean deploy edit help kill log loglist outlog restart start status stop threaddump update versions"
     resources="content-type feature layout layout-group image-version menu"
     types="engine search analysis rmi-hub"
 
@@ -14,17 +15,15 @@ _ece_commands()
     instances=""
     dir=/etc/escenic/engine/instance
     if [ -r $dir ] ; then
-        cd $dir
-        for el in *; do
-            instances=${el}" "$instances
+        for el in ${dir}/*; do
+            instances=$(basename ${el})" "$instances
         done
     fi
     
     publications=""
     dir=/opt/escenic/assemblytool/publications
     if [ -r $dir ] ; then
-        cd $dir
-        for el in *.properties; do
+        for el in ${dir}/*.properties; do
             publications=$(basename $el .properties)" "$publications
         done
     fi
