@@ -1341,6 +1341,7 @@ function print_help()
     echo "   backup     backs up an entire instance (takes time)"
     echo "   clean      removes temporary files created by $0 *)"
     echo "   deploy     deploys the assembled EAR *)"
+    echo "   edit       lets you edit a publication resource"
     echo "   help       prints this help screen"
     echo "   kill       uses force to stop the type"
     echo "   log        the type's log4j log **)"
