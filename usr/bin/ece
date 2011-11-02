@@ -1208,7 +1208,7 @@ function list_versions()
 
 function update_publication_resources()
 {
-    if [ ! -r $resource ]; then
+    if [[ ! -r $resource && -z "$1" ]]; then
         print $resource "doesn't exist. I will exit :-("
         exit 1
     fi
@@ -1248,15 +1248,41 @@ function update_publication_resources()
             exit 1
     esac        
 
+    local tmp_dir=$(mktemp -d)
+    
+    if [ $1 ]; then
+        if [[ -z "$EDITOR" || ! -x $(which $EDITOR) ]]; then
+            print "You must have a valid editor defined in your EDITOR variable"
+            exit 1
+        fi
+        
+        run cd $tmp_dir;
+        run wget $url
+        md5sum ${resource} > ${resource}.md5sum
+        exit_on_error "md5sum ${resource}"
+
+        $EDITOR ${resource}
+        md5sum -c ${resource}.md5sum \
+            1>>$log_file \
+            2>>$log_file
+        if [ $? -eq 0 ]; then
+            print "You didn't make any changes to ${resource}, I will exit."
+            exit 1
+        fi
+    fi
+    
     print "Updating the $(basename $resource) resource for the $publication" \
-        "publication"
+        "publication ..."
     
     debug POSTing $resource to $url
     wget -O - \
         --post-file ${resource} \
         $url \
         1>>$log_file 2>>$log_file
-        
+
+    if [ -d $tmp_dir ]; then
+        run rm -rf $tmp_dir
+    fi
 }
 
 function show_all_log_paths()
@@ -1378,6 +1404,9 @@ for el in $command; do
             ;;
         update)
             update_publication_resources
+            ;;
+        edit)
+            update_publication_resources "edit_first"
             ;;
         backup)
             clean_up
