@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Guide for the /usr/bin/ece Script</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-10-10 14:56:44 CST"/>
+<meta name="generated" content="2011-11-09 08:11:44 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -251,11 +251,12 @@ div.note {
 <li><a href="#sec-6-2">6.2 Specifying instance </a>
 <ul>
 <li><a href="#sec-6-2-1">6.2.1 Specifying the instance </a></li>
-<li><a href="#sec-6-2-2">6.2.2 Using the default instance </a></li>
 </ul>
 </li>
+<li><a href="#sec-6-3">6.3 TAB completion </a></li>
 </ul>
 </li>
+<li><a href="#sec-7">7 Backup </a></li>
 </ul>
 </div>
 </div>
@@ -666,44 +667,118 @@ do:
 </pre>
 
 
+<p>
+The script's TAB completion will also help you with completing the
+available instances on your system, so you can just type:
+</p>
+
+
+<pre class="src src-sh">$ ece -i TAB TAB
+mypub myotherpub
+</pre>
+
+
+<p>
+For this to work, the script assumes that you have installed the
+instance specific configuration in /etc/escenic/engine/instance, as is
+described in the Escenic Content Engine Installation Guide.
+</p>
+
+</div>
 </div>
 
 </div>
 
-<div id="outline-container-6-2-2" class="outline-4">
-<h4 id="sec-6-2-2"><span class="section-number-4">6.2.2</span> Using the default instance </h4>
-<div class="outline-text-4" id="text-6-2-2">
+<div id="outline-container-6-3" class="outline-3">
+<h3 id="sec-6-3"><span class="section-number-3">6.3</span> TAB completion </h3>
+<div class="outline-text-3" id="text-6-3">
 
-<p>However, on development systems and perhaps even test systems, you
-probably want to just use one instance on your host, though, and this
-is where the "default" instance comes in.
+<p>The ece script offers TAB completion of all commands, options and
+option values. For this to work, you need the completion file loaded
+from your .bashrc. 
 </p>
 <p>
-To use the default instance, you must only have one instance installed
-on your system. More specifically, there must no instance specific
-configuration files in
+This can either be done by enabling all BASH completions on your
+system (some systems have this set up per default), refer to your OS
+documentation for this.
+</p>
+<p>
+Alternatively, to just enable the ece completion, simply add the
+following line to your .bashrc:
 </p>
 
 
-<pre class="src src-sh">/etc/escenic/engine/instance
+<pre class="src src-sh"><span style="color: #7a378b;">.</span> /etc/bash_completion.d/ece
 </pre>
 
 <p>
-and that ece.conf, typically located in:
-</p>
-
-
-<pre class="src src-sh">/etc/escenic/ece.conf
-</pre>
-
-<p>
-must contain all the settings required to run the instance.
-</p>
-<p>
-If you've ticked all these boxes, you can issue all ece commands
-without the -i parameter.
+Naturally, the bash<sub>comletion</sub>.d needs to be in the above location :-)
 </p></div>
 </div>
+
+</div>
+
+<div id="outline-container-7" class="outline-2">
+<h2 id="sec-7"><span class="section-number-2">7</span> Backup </h2>
+<div class="outline-text-2" id="text-7">
+
+<p>One of the many features of the ece script, is that you can take a
+snapshot of your current running system, which can then be restored
+using the /usr/sbin/ece-install script. 
+</p>
+<p>
+The backup will include the database, the Nursery configuration, the
+DB configuration, the Varnish configuration, the nginx congiguration,
+all the Escenic software binaries, your publication and your
+application servers.
+</p>
+<p>
+To create the backup, you'll simply do:
+</p>
+
+
+<pre class="src src-sh">$ ece -i editor1 backup
+</pre>
+
+
+<p>
+It will then create tarball with everything and put it in 
+</p>
+
+
+<pre class="src src-sh">/var/backups/escenic
+</pre>
+
+
+<p>
+Sometimes, you only want to take a backup of the data files and are
+not so concerned with the Escenic and application server binaries as
+these are easily installed from elsewhere. If so, you may do the
+following:
+</p>
+
+
+<pre class="src src-sh">$ ece -i editor1 backup --exclude-binaries
+</pre>
+
+
+<p>
+When running in a production environment, it's advised to first stop
+the search instance which runs the Solr indexer, so that the Solr
+index isn't corrupted:
+</p>
+
+
+<pre class="src src-sh">$ ece -i search1 stop
+$ ece -i editor1 backup
+</pre>
+
+
+
+
+
+
+
 </div>
 </div>
 </div>
@@ -712,7 +787,7 @@ without the -i parameter.
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-10-10 14:56:44 CST
+  Date: 2011-11-09 08:11:44 CST
 </p>
 </div>
 </body>
