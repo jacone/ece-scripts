@@ -1350,6 +1350,15 @@ function show_all_log_paths()
     fi
 }
 
+function read_rc_file_if_present()
+{
+    local rc_file=$HOME/.ecerc
+    if [ -r $rc_file ]; then
+        source $rc_file
+    fi
+}
+
+read_rc_file_if_present
 set_type_command_and_instance $@
 set_id
 set_common_settings
