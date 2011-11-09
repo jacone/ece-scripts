@@ -222,22 +222,71 @@ do:
 $ ece -i editor1 assemble deploy restart
 #+END_SRC
 
-*** Using the default instance 
-However, on development systems and perhaps even test systems, you
-probably want to just use one instance on your host, though, and this
-is where the "default" instance comes in.
-
-To use the default instance, you must only have one instance installed
-on your system. More specifically, there must no instance specific
-configuration files in
+The script's TAB completion will also help you with completing the
+available instances on your system, so you can just type:
 #+BEGIN_SRC sh
-/etc/escenic/engine/instance
-#+END_SRC 
-and that ece.conf, typically located in:
-#+BEGIN_SRC sh
-/etc/escenic/ece.conf
+$ ece -i TAB TAB
+mypub myotherpub
 #+END_SRC
-must contain all the settings required to run the instance.
 
-If you've ticked all these boxes, you can issue all ece commands
-without the -i parameter.
+For this to work, the script assumes that you have installed the
+instance specific configuration in /etc/escenic/engine/instance, as is
+described in the Escenic Content Engine Installation Guide.
+
+
+** TAB completion
+The ece script offers TAB completion of all commands, options and
+option values. For this to work, you need the completion file loaded
+from your .bashrc. 
+
+This can either be done by enabling all BASH completions on your
+system (some systems have this set up per default), refer to your OS
+documentation for this.
+
+Alternatively, to just enable the ece completion, simply add the
+following line to your .bashrc:
+#+BEGIN_SRC sh
+. /etc/bash_completion.d/ece
+#+END_SRC
+Naturally, the bash_comletion.d needs to be in the above location :-)
+* Backup
+One of the many features of the ece script, is that you can take a
+snapshot of your current running system, which can then be restored
+using the /usr/sbin/ece-install script. 
+
+The backup will include the database, the Nursery configuration, the
+DB configuration, the Varnish configuration, the nginx congiguration,
+all the Escenic software binaries, your publication and your
+application servers.
+
+To create the backup, you'll simply do:
+#+BEGIN_SRC sh
+$ ece -i editor1 backup
+#+END_SRC
+
+It will then create tarball with everything and put it in 
+#+BEGIN_SRC sh
+/var/backups/escenic
+#+END_SRC
+
+Sometimes, you only want to take a backup of the data files and are
+not so concerned with the Escenic and application server binaries as
+these are easily installed from elsewhere. If so, you may do the
+following:
+#+BEGIN_SRC sh
+$ ece -i editor1 backup --exclude-binaries
+#+END_SRC
+
+When running in a production environment, it's advised to first stop
+the search instance which runs the Solr indexer, so that the Solr
+index isn't corrupted:
+#+BEGIN_SRC sh
+$ ece -i search1 stop
+$ ece -i editor1 backup
+#+END_SRC
+
+
+
+
+
+
