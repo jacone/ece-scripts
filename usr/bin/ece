@@ -22,6 +22,10 @@ type=engine
 instance=default
 command=""
 backup_exclude_binaries=0
+http_user=""
+http_password=""
+wget_auth=""
+curl_auth=""
 
 type_list="
 engine
@@ -210,6 +214,11 @@ function set_common_settings()
       $log_dir/messages
       $log_dir/Escenic-error.log
     "
+
+    if [[ -n "$http_user" && -n "$http_password" ]]; then
+        wget_auth="--http-user $http_user --http-password $http_password"
+        curl_auth="-u ${http_user}:${http_password}"
+    fi
 }
 
 function set_type_settings()
@@ -904,7 +913,7 @@ function assemble()
     fi
 
     message="Assembling your EAR file"
-    print $message ".."
+    print $message "..."
     log $message "..." >> $log_file
 
     cd $assemblytool_home && \
@@ -1030,16 +1039,20 @@ function set_type_command_and_instance()
     next_is_instance=0
     next_is_publication=0
     next_is_resource=0
+    next_is_http_user=0
+    next_is_http_password=0
     
     for el in $@; do
         if [ $el = "-v" -o $el = "--verbose" ]; then
             verbose=1
             continue
         fi
+        
         if [ $el = "-q" -o $el = "--quiet" ]; then
             quiet=1
             continue
         fi
+        
         if [ $el = "--help" ]; then
             command=help
             continue
@@ -1048,6 +1061,18 @@ function set_type_command_and_instance()
         if [ $next_is_type -eq 1 ]; then
             type=$el
             next_is_type=0
+            continue
+        fi
+        
+        if [ $next_is_http_user -eq 1 ]; then
+            http_user=$el
+            next_is_http_user=0
+            continue
+        fi
+        
+        if [ $next_is_http_password -eq 1 ]; then
+            http_password=$el
+            next_is_http_password=0
             continue
         fi
         
@@ -1095,6 +1120,20 @@ function set_type_command_and_instance()
             continue
         else
             next_is_resource=0
+        fi
+        
+        if [ $el = "-u" -o $el = "--user" ]; then
+            next_is_http_user=1
+            continue
+        else
+            next_is_http_user=0
+        fi
+        
+        if [ $el = "-w" -o $el = "--password" ]; then
+            next_is_http_password=1
+            continue
+        else
+            next_is_http_password=0
         fi
 
         if [ $el = "--exclude-binaries" ]; then
@@ -1191,7 +1230,7 @@ function list_versions()
     url=http://$host:$port/$version_manager
         
     print "Installed on the ${type} running on ${host}:${port} is:"
-    wget -O - $url  2>/dev/null | \
+    wget $wget_auth -O - $url  2>/dev/null | \
         grep "\[\[" | \
         sed 's/\[//g' | \
         sed 's/\]//g' | \
@@ -1243,6 +1282,11 @@ function update_publication_resources()
         security)
             url=${url}/${publication}/escenic/plugin/community/security
             ;;
+        root-section-parameters)
+            do_put=true
+            url=http://${host}:${port}/escenic-admin
+            url=${url}/section-parameters-declared/${publication}
+            ;;
         *)
             print "Invalid resource: $(basename $resource) :-("
             exit 1
@@ -1257,7 +1301,7 @@ function update_publication_resources()
         fi
         
         run cd $tmp_dir;
-        run wget $url
+        run wget $wget_auth $url -O ${resource}
         md5sum ${resource} > ${resource}.md5sum
         exit_on_error "md5sum ${resource}"
 
@@ -1275,10 +1319,18 @@ function update_publication_resources()
         "publication ..."
     
     debug POSTing $resource to $url
-    wget -O - \
-        --post-file ${resource} \
-        $url \
-        1>>$log_file 2>>$log_file
+    if [[ -n "$do_put" && $do_put = "true" ]]; then
+        curl -T ${resource} \
+          ${curl_auth} \
+            ${url} \
+            1>>$log_file 2>>$log_file
+    else
+        wget $wget_auth \
+            -O - \
+            --post-file ${resource} \
+            $url \
+            1>>$log_file 2>>$log_file
+    fi
 
     if [ -d $tmp_dir ]; then
         run rm -rf $tmp_dir
