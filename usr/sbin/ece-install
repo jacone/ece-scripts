@@ -2091,7 +2091,7 @@ EOF
         add_next_step "http://${HOSTNAME}:${port}/binary gives the Adactus endpoint"
     elif [ $1 -eq 1 ]; then
         add_next_step "http://${HOSTNAME}:${port}/ gives the Munin interface"
-    elif [ $2 -eq 1 ]; then
+    elif [ $1 -eq 2 ]; then
         add_next_step "http://${HOSTNAME}:${port}/       gives the Munin interface"
         add_next_step "http://${HOSTNAME}:${port}/binary gives the Adactus endpoint"
     fi
@@ -2291,7 +2291,7 @@ function add_server_to_runlevels()
         print "Adding the ece init.d script to the default run levels ..."
         run update-rc.d ece defaults
     else
-        add_next_step "Remember to add /etc/intit.d/ece to the desired "\
+        add_next_step "Remember to add /etc/init.d/ece to the desired "\
 "run levels." 
         # TODO add init.d to the default runlevels, for other
         # distributions too:
