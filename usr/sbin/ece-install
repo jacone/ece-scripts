@@ -1617,7 +1617,7 @@ function install_database_server()
             print "Debian (or derivative) version with code name $code_name. "
             print "I will use vanilla MySQL instead."
 
-            packages="mysql-server mysql-client libmysql-java"
+            packages="mysql-server mysql-client"
             install_packages_if_missing $packages
         fi
     fi
