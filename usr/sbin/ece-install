@@ -36,6 +36,7 @@ log=/var/log/$(basename $0).log
 conf_file=$HOME/.ece-install.conf
 common_nursery_dir=/etc/escenic/engine/common
 ece_scripts_git_source=git://github.com/skybert/ece-scripts.git
+maven_opts="--batch-mode"
 
 # globals will be set to correct values in run-time.
 appserver_port=8080
@@ -1072,7 +1073,7 @@ EOF
     if [ -d /opt/escenic/widget-framework-core-* ]; then
         print "Basing ${publication_name}.war on the Widget Framework Demo ..."
         run cd /opt/escenic/widget-framework-core-*/publications/demo-core
-        run mvn package
+        run mvn $maven_opts package
         run cp target/demo-core-*.war ${publication_war}
     else
         print "Basing your ${publication_name}.war on ECE/demo-clean ..."
@@ -1948,7 +1949,7 @@ EOF
     cd $wf_maven_dir
     print "Installing Widget Framework into your Maven repository ..."
     export JAVA_HOME=$java_home
-    mvn install \
+    mvn $maven_opts install \
         1>>$log 2>>$log
 
     # installing the widget-framework-common as a ECE plugin
