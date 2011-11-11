@@ -58,9 +58,14 @@ next_steps=()
 
 function get_seconds_since_start()
 {
-    now=`date +%s`
-    started=`stat -c %Y $pid_file`
-    seconds=$(( now - started ))
+    local seconds="n/a"
+    
+    if [ -r $pid_file ]; then
+        now=`date +%s`
+        started=`stat -c %Y $pid_file`
+        seconds=$(( now - started ))
+    fi
+    
     echo "$seconds"
 }
 
@@ -95,7 +100,10 @@ function print_and_log()
 
 function remove_pid_and_exit_in_error()
 {
-    rm $pid_file
+    if [ -e $pid_file ]; then
+        rm $pid_file
+    fi
+
     exit 1
 }
 
@@ -1230,7 +1238,8 @@ function stop_conflicting_processes()
 {
     print "Stopping conflicting processes ..."
      # TODO this is dirty
-    if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]; then
+    if [[ -n "$install_profile_number" && \
+        $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]]; then
         killall java 1>>$log 2>>$log
     fi
 }
@@ -2527,6 +2536,10 @@ for el in $@; do
         next_is_conf_file=1
     elif [[ -n $next_is_conf_file && $next_is_conf_file -eq 1 ]]; then
         conf_file=$el
+        if [ ! -e $conf_file ]; then
+            conf_file=$(pwd)/${conf_file}
+        fi
+
         next_is_conf_file=0
     fi
 done
