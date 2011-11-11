@@ -3,6 +3,10 @@ Welcome to the /usr/bin/system-info Guide
 This wee script gives a overview of your system, especially useful
 when contacting Vizrt Online/Escenic Support.
 
+#+BEGIN_SRC sh
+$ system-info
+#+END_SRC
+
 The script will default wise produce a plain text report, but if you
 pass -c or --confluence to it, it will generate Confluence Wiki markup
 instead.
