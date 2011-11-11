@@ -135,7 +135,7 @@ http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
 http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.6.0.zip
 http://technet.escenic.com/downloads/release/53/community-engine-3.6.1.0.zip
 http://technet.escenic.com/downloads/release/53/dashboard-1.0.0.0.zip
-http://technet.escenic.com/downloads/release/53/engine-5.3.3.2.zip
+http://hudson.dev.escenic.com/job/Engine-dist/ws/target/engine-trunk-SNAPSHOT-bin.zip
 http://technet.escenic.com/downloads/release/53/forum-3.0.0.0.zip
 http://technet.escenic.com/downloads/release/53/inpage-1.3.0.0.zip
 http://technet.escenic.com/downloads/release/53/lucy-dist-4.1.6.0.zip
@@ -356,13 +356,15 @@ function set_up_engine_and_plugins()
     cd /opt/escenic/
 
     for el in $technet_download_list; do
-        if [ $(basename $el | grep ^engine-[0-9] | wc -l) -gt 0 ]; then
+        if [ $(basename $el | \
+            grep -E "^engine-[0-9|^engine-trunk-SNAPSHOT"] | wc -l) -gt 0 ]; then
             engine_dir=$(get_base_dir_from_bundle $el)
+            engine_file=$(basename $el)
         fi
     done
     
     if [ ! -d ${engine_dir} ]; then
-        run unzip -u $download_dir/${engine_dir}.zip
+        run unzip -u $download_dir/${engine_file}
         if [ -h engine ]; then
             run rm engine
         fi
@@ -657,11 +659,26 @@ function install_ece_third_party_packages
 
 function get_base_dir_from_bundle()
 {
-    file_name=$(basename $1)
-    for el in .tar.gz .tar.bz2 .zip; do
-        file_name=${file_name%$el}
-    done
+    local file_name=$(basename $1)
+    suffix=${file_name##*.}
 
+    if [ ${suffix} = "zip" ]; then
+        # we'll look inside the archive to determine the base_dir
+        file_name=$(
+            unzip -t ${download_dir}/$file_name | \
+            awk '{print $2}' | \
+            cut -d'/' -f1 | \
+            sort | \
+            uniq | \
+            grep -v errors | \
+            grep [a-z]
+        )
+    else
+        for el in .tar.gz .tar.bz2 .zip; do
+            file_name=${file_name%$el}
+        done
+    fi
+    
     echo $file_name
 }
 
