@@ -907,8 +907,8 @@ function assemble()
     fi
     assemble_attempts=$(( $assemble_attempts + 1 ))
     
-    if [ ! $type = "engine" ]; then
-        print "You cannot assemble $type"
+    if [[ $type != "engine" && $type != "search" ]]; then
+        print "You cannot assemble instances of type $type"
         exit 1
     fi
 
