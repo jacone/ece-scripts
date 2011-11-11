@@ -37,6 +37,7 @@ conf_file=$HOME/.ece-install.conf
 common_nursery_dir=/etc/escenic/engine/common
 ece_scripts_git_source=git://github.com/skybert/ece-scripts.git
 maven_opts="--batch-mode"
+wget_opts="--continue --inet4-only --quiet"
 
 # globals will be set to correct values in run-time.
 appserver_port=8080
@@ -231,8 +232,7 @@ function download_escenic_components()
             continue
         fi
         
-        run wget --continue \
-            --inet4-only \
+        run wget $wget_opts \
             --http-user $technet_user \
             --http-password $technet_password \
             $el 
@@ -784,7 +784,7 @@ function set_up_app_server
     fi
     
     run cd $download_dir
-    run wget --continue --inet4-only $tomcat_download
+    run wget $wget_opts $tomcat_download
     tomcat_dir=$(get_base_dir_from_bundle $tomcat_download)
     
     run cd /opt/
@@ -1808,7 +1808,7 @@ function create_publication()
         remove_pid_and_exit_in_error
     fi
 
-    print "Getting ready to create a new publiation ..."
+    print "Getting ready to create a new publication ..."
     create_publication_definition_and_war
 
     # TODO make educated guesses about the available instances on
@@ -1959,8 +1959,7 @@ EOF
     print "Downloading Widget Framework from technet.escenic.com ..."
     for el in $wf_download_list; do
         cd $download_dir
-        wget --continue \
-            --inet4-only \
+        wget $wget_opts \
             --http-user $technet_user \
             --http-password $technet_password \
             $el \
@@ -2247,9 +2246,7 @@ EOF
 
     # install the escenic_jstat munin plugin
     file=/usr/share/munin/plugins/escenic_jstat_
-    run wget \
-        --continue \
-        --inet4-only \
+    run wget $wget_opts \
         https://github.com/mogsie/escenic-munin/raw/master/escenic_jstat_ \
         -O $file
     run chmod 755 $file
