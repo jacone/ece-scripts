@@ -1982,7 +1982,7 @@ EOF
 " Maven repository"
 }
 
-function install_search_instance()
+function install_search_server()
 {
     type=search
     install_ece_instance "search1" 0
@@ -2547,6 +2547,9 @@ if [ $fai_enabled -eq 1 ]; then
     elif [ $(get_boolean_conf_value fai_editor_install) -eq 1 ]; then
         install_profile_number=$PROFILE_EDITORIAL_SERVER
         install_editorial_server
+    elif [ $(get_boolean_conf_value fai_search_install) -eq 1 ]; then
+        install_profile_number=$PROFILE_SEARCH_SERVER
+        install_search_server
     elif [ $(get_boolean_conf_value fai_db_install) -eq 1 ]; then
         install_profile_number=$PROFILE_DB_SERVER
         install_database_server
@@ -2602,7 +2605,7 @@ else
         install_presentation_server
         ;;
         $PROFILE_SEARCH_SERVER)
-        install_search_instance
+        install_search_server
         ;;
         $PROFILE_RMI_HUB)
         install_rmi_hub
