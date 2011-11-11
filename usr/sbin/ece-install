@@ -2523,6 +2523,11 @@ function common_post_install()
 for el in $@; do
     if [ $el = "-v" -o $el = "--verbose" ]; then
         debug=1
+    elif [ $el = "-f" -o $el = "--conf-file" ]; then
+        next_is_conf_file=1
+    elif [[ -n $next_is_conf_file && $next_is_conf_file -eq 1 ]]; then
+        conf_file=$el
+        next_is_conf_file=0
     fi
 done
 
