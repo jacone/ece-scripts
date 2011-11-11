@@ -1,5 +1,0 @@
-See:
-https://github.com/skybert/ece-scripts/blob/master/usr/share/doc/escenic/ece-guide.org
-
-Or for the HTML version:
-http://download.escenic.com/ece-scripts/ece-install-guide.html
