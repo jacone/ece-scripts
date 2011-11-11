@@ -365,7 +365,8 @@ function set_up_engine_and_plugins()
 
     for el in $technet_download_list; do
         if [ $(basename $el | \
-            grep -E "^engine-[0-9|^engine-trunk-SNAPSHOT"] | wc -l) -gt 0 ]; then
+            grep -E "^engine-[0-9|^engine-trunk-SNAPSHOT|^engine-dist"] | \
+            wc -l) -gt 0 ]; then
             engine_dir=$(get_base_dir_from_bundle $el)
             engine_file=$(basename $el)
         fi
