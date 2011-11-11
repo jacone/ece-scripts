@@ -365,7 +365,7 @@ function set_up_engine_and_plugins()
 
     for el in $technet_download_list; do
         if [ $(basename $el | \
-            grep -E "^engine-[0-9|^engine-trunk-SNAPSHOT|^engine-dist"] | \
+            grep -E "^engine-[0-9]|^engine-trunk-SNAPSHOT|^engine-dist" | \
             wc -l) -gt 0 ]; then
             engine_dir=$(get_base_dir_from_bundle $el)
             engine_file=$(basename $el)
@@ -2556,43 +2556,78 @@ if [ $fai_enabled -eq 1 ]; then
     print "All user input will be read from $conf_file"
     
     common_pre_install
+
+    no_fai_profile=1
     
     if [ $(get_boolean_conf_value fai_all_install) -eq 1 ]; then
         install_profile_number=$PROFILE_ALL_IN_ONE
         install_all_in_one_environment
-    elif [ $(get_boolean_conf_value fai_editor_install) -eq 1 ]; then
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_editor_install) -eq 1 ]; then
         install_profile_number=$PROFILE_EDITORIAL_SERVER
         install_editorial_server
-    elif [ $(get_boolean_conf_value fai_search_install) -eq 1 ]; then
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_search_install) -eq 1 ]; then
         install_profile_number=$PROFILE_SEARCH_SERVER
         install_search_server
-    elif [ $(get_boolean_conf_value fai_db_install) -eq 1 ]; then
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_db_install) -eq 1 ]; then
         install_profile_number=$PROFILE_DB_SERVER
         install_database_server
-    elif [ $(get_boolean_conf_value fai_cache_install) -eq 1 ]; then
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_cache_install) -eq 1 ]; then
         install_profile_number=$PROFILE_CACHE_SERVER
         install_cache_server
         install_web_server 0
-    elif [ $(get_boolean_conf_value fai_rmi_install) -eq 1 ]; then
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_rmi_install) -eq 1 ]; then
         install_profile_number=$PROFILE_RMI_HUB
         install_rmi_hub
-    elif [ $(get_boolean_conf_value fai_wf_install) -eq 1 ]; then
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_wf_install) -eq 1 ]; then
         install_profile_number=$PROFILE_WIDGET_FRAMEWORK
         install_widget_framework
-    elif [ $(get_boolean_conf_value fai_presentation_install) -eq 1 ]; then
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_presentation_install) -eq 1 ]; then
         install_profile_number=$PROFILE_PRESENTATION_SERVER
         install_presentation_server
-    elif [ $(get_boolean_conf_value fai_publication_create) -eq 1 ]; then
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_publication_create) -eq 1 ]; then
         install_profile_number=$PROFILE_CREATE_PUBLICATION
         create_publication
-    elif [ $(get_boolean_conf_value fai_monitoring_install) -eq 1 ]; then
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_monitoring_install) -eq 1 ]; then
         install_profile_number=$PROFILE_MONITORING_SERVER
         install_munin_gatherer
         install_web_server 1
-    elif [ $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
         install_profile_number=$PROFILE_RESTORE_FROM_BACKUP
         restore_from_backup
-    else
+        no_fai_profile=0
+    fi
+    
+    if [ $no_fai_profile -eq 1 ]; then
         print "No install profile selected, be sure to have one of the "
         print "fai_<profile>_install=1 in your $conf_file"
         remove_pid_and_exit_in_error
