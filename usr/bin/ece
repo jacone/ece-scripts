@@ -437,7 +437,8 @@ function sanity_check()
         $type = "engine" -a \
         $(echo $command | grep help | wc -l) -eq 0 ]; then
         instance_list=$(get_instance_list)
-        if [ -n "$instance_list" ]; then
+        if [[ -n "$instance_list" && \
+            $(echo $instance_list | grep ' ' | wc -l) -gt 0 ]]; then
             print "You must specify the instance with -i <instance>"
             print "e.g. ece -i $(echo $instance_list | cut -d' ' -f1) $command"
             print "Instances available on $HOSTNAME: $instance_list"
@@ -1144,6 +1145,18 @@ function set_type_command_and_instance()
         # the only thing left at this point, is the command
         command="$command $el"
     done
+
+    # If the user didn't specify which instance to use and if there's
+    # only one available instance, use that instead of asking the user
+    # to provide it in sanity_check.
+    if [ $instance = "default" ]; then
+        local instance_list=$(get_instance_list)
+        
+        if [ $(echo $instance_list | grep ' ' | wc -l) -eq 0 ]; then
+            instance=$instance_list
+            debug "setting instance=$instance as there's only one"
+        fi
+    fi
 }
 
 function clean_up()
