@@ -1732,10 +1732,11 @@ function install_ece_instance()
     ask_for_instance_name $1
     download_escenic_components
     check_for_required_downloads
-
+    
     set_up_engine_directories
     set_up_engine_and_plugins
     set_up_assembly_tool
+    
     set_up_basic_nursery_configuration
     set_up_instance_specific_nursery_configuration
     
@@ -1778,11 +1779,6 @@ function assemble_deploy_and_restart_type()
 {
     print "Assembling, deploying & starting $instance_name ..."
 
-    # TODO clear strategy on when to add 'clean' to the command list
-    # For now, we'll omit it to make the install script run as fast as
-    # possible. It should in most cases work just fine, the exception
-    # being if the script is to cater for ECE/plugin upgrades and
-    # removal of existing publications.
     ece_command="ece -i $instance_name -t $type assemble deploy restart"
     su - $ece_user -c "$ece_command" 1>>$log 2>>$log
     exit_on_error "su - $ece_user -c \"$ece_command\""
