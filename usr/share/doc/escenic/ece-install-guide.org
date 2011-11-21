@@ -532,6 +532,16 @@ following variables:
 - wf\_download\_list
 - tomcat\_download
 
+Two other ways of speeding up the installation is (of course) to use
+the backup/restore feature or install from a EAR and configuration
+bundle, see the FAI section.
+
+* Using a Custom Configuration File for ece-install
+You can specify a different configuration by using the -f parameter: 
+#+BEGIN_SRC sh
+$ ece-install -f ece-install-presentation-server.conf
+#+END_SRC
+
 * Overview of File Paths Used by the ece-install script
 There are of course other paths involved when setting up your system,
 but these should be the most interesting ones.
