@@ -52,21 +52,21 @@ On all other Unix like system, do:
 #+END_SRC
 
 You will need access to http://technet.escenic.com and put these
-credentials in the root user's $HOME/.ece-install.conf, normally this
-means /root/.ece-install.conf, the script will also tell you this if
+credentials in the root user's $HOME/ece-install.conf, normally this
+means /root/ece-install.conf, the script will also tell you this if
 you forget to provide such a configuration file:
 #+BEGIN_SRC sh
-[ece-install] /root/.ece-install.conf doesn't exist, I cannot live without it :-(
+[ece-install] /root/ece-install.conf doesn't exist, I cannot live without it :-(
 #+END_SRC
 
 As for the technet credentials, the script will also tell you if it
 cannot find what it's looking for:
 #+BEGIN_SRC sh
 [ece-install] Be sure to set technet_user and technet_password
-[ece-install] in /root/.ece-install.conf
+[ece-install] in /root/ece-install.conf
 #+END_SRC
 
-The minimum .ece-install.conf file is thus:
+The minimum ece-install.conf file is thus:
 #+BEGIN_SRC sh
 technet_user=<user>
 technet_password=<password>
@@ -239,10 +239,10 @@ repo.escenic.com Maven repository. You should get these credentials
 when you bought Widget Framework. If you for some reason do not have
 these, please contact support@escenic.com. 
 
-If you don't have these ready in your .ece-install.conf, ece-install will
+If you don't have these ready in your ece-install.conf, ece-install will
 complain:
 #+BEGIN_SRC sh
-[ece-install] Be sure to set wf_user and wf_password in /root/.ece-install.conf
+[ece-install] Be sure to set wf_user and wf_password in /root/ece-install.conf
 [ece-install] If you don't have these, please contact support@escenic.com
 #+END_SRC
 ** Profile - Create Publication
@@ -332,7 +332,7 @@ restore from:
 |----------------------------------+---------+------------------------------------------------|
 
 For example, to restore everything possible from a given tarball, you
-need this in your .ece-install.conf:
+need this in your ece-install.conf:
 #+BEGIN_SRC conf
 fai_enabled=1
 
@@ -415,7 +415,7 @@ profiles, see the table below.
 
 ** Overview of All FAI Parameters
 The ece-install script understands for the following settings in the
-$HOME/.ece-install.conf file of the root user:
+$HOME/ece-install.conf file of the root user:
 
 |----------------------------------+------------------+-----------------------------------------------------|
 | Parameter                        |          Default | Description                                         |
@@ -459,7 +459,7 @@ As you've probably have guessed, 0 means "false" and 1 means "true" :-)
 ** Examples
 *** Installing an Editorial Server & Create a Publication
 To automatically install an editorial server and create a publication
-called "jollygood", the minimal configuration in .ece-install.conf
+called "jollygood", the minimal configuration in ece-install.conf
 would be:
 
 #+BEGIN_SRC sh
@@ -495,7 +495,7 @@ whereas the second one needs to override these.
 When FAI is enabled, ece-install will report:
 #+BEGIN_SRC sh
 [ece-install] Full Automatic Install (FAI) enabled.
-[ece-install] All user input will be read from /root/.ece-install.conf
+[ece-install] All user input will be read from /root/ece-install.conf
 #+END_SRC
 
 * Running More Than One Installation Process
@@ -589,7 +589,7 @@ things set up by the script.
 
 * Example Output FAI
 The ece-install will often be run in FAI mode where all the settings
-are read from ~/.ece-install.conf. Given the following entries in this
+are read from ~/ece-install.conf. Given the following entries in this
 file: 
 #+BEGIN_SRC sh
 technet_user=apples
