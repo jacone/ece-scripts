@@ -367,40 +367,92 @@ the parameters with "install" in their name, such as:
 fai_editor_install
 #+END_SRC
 
+** Installing from EARs instead of Binaries
+It is possible to get ece-install to use a supplied EAR and
+configuration archive instead of using the files provided with the
+Escenic Content Engine & plugins.
+
+The EAR to provide is the one you generate with:
+#+BEGIN_SRC sh
+$ ece -i <instance> assemble 
+#+END_SRC
+Normally, the EAR will then be available in:
+#+BEGIN_SRC sh
+/var/cache/escenic/engine.ear
+#+END_SRC
+
+The configuration bundle must contain:
+#+BEGIN_SRC sh
+engine/security
+engine/siteconfig/bootstrap-skeleton
+engine/siteconfig/config-skeleton
+assemblytool/plugins/<plugin>/siteconfig
+#+END_SRC
+
+A simple way to create this bundle, is to use a server which has the
+assembly environment set up and then do:
+
+#+BEGIN_SRC sh
+$ cd /opt/escenic/engine
+$ tar czf /tmp/nursery-skeleton-and-security.tar.gz \
+  engine/security \
+  engine/siteconfig/config-skeleton/ \
+  engine/siteconfig/bootstrap-skeleton/ \
+  `find -L  assemblytool/plugins/ -name siteconfig`
+#+END_SRC
+
+/tmp/nursery-skeleton-and-security.tar.gz should now have everything
+you need. You can now configure your FAI installation to use these by,
+e.g.:
+
+#+BEGIN_SRC sh
+fai_presentation_ear=/tmp/engine.ear
+fai_presentation_conf_archive=/tmp/nursery-skeleton-and-security.tar.gz
+#+END_SRC
+
+Corresponding configuration options are available for the other server
+profiles, see the table below.
+
 ** Overview of All FAI Parameters
 The ece-install script understands for the following settings in the
 $HOME/.ece-install.conf file of the root user:
 
-|----------------------------------+------------------+-----------------------------------------------|
-| Parameter                        |          Default | Description                                   |
-|----------------------------------+------------------+-----------------------------------------------|
-| fai\_all\_install                |                0 | Install all components on your server.        |
-| fai\_cache\_install              |                0 | Install cache server profile                  |
-| fai\_cache\_backends             | ${HOSTNAME}:8080 | Space separated, e.g. "app1:8080 app2:8080"   |
-| fai\_db\_install                 |                0 | Install db profile                            |
-| fai\_db\_host                    |        $HOSTNAME | Useful for editor & presentation profiles     |
-| fai\_db\_port                    |             3306 | Useful for editor & presentation profiles     |
-| fai\_editor\_install             |                0 | Install the editorial profile                 |
-| fai\_editor\_name                |          editor1 | Name of the editor instance                   |
-| fai\_editor\_port                |             8080 | HTTP port of the editor instance              |
-| fai\_editor\_shutdown            |             8005 | Shutdown port of the editor instance          |
-| fai\_enabled                     |                0 | Whether or not to run ece-install in FAI mode |
-| fai\_public\_host\_name          | ${HOSTNAME}:8080 | The public address for your website           |
-| fai\_presentation\_install       |                0 | Install the presentation server profile       |
-| fai\_monitoring\_server\_install |                0 | Install the monitoring server profile.        |
-| fai\_monitoring\_server\_ip      |        127.0.0.1 | The IP of the monitoring server.              |
-| fai\_presentation\_name          |             web1 | Name of the presentation server instance      |
-| fai\_presentation\_port          |             8080 | HTTP port of the presentation server instance |
-| fai\_presentation\_shutdown      |             8005 | Shutdown port of the presentation instance    |
-| fai\_publication\_create         |                0 | Create a new publication                      |
-| fai\_publication\_name           |            mypub | Name of the publication                       |
-| fai\_publication\_use\_instance  |             dev1 | Name of local instance to use for creation    |
-| fai\_rmi\_install                |                0 | Install RMI hub profile                       |
-| fai\_search\_name                |          search1 | Name of the search instance                   |
-| fai\_search\_port                |             8080 | HTTP port of the search instance              |
-| fai\_search\_shutdown            |             8005 | Shutdown port of the search instance          |
-| fai\_wf\_install                 |                0 | Install Widget Framework profile              |
-|----------------------------------+------------------+-----------------------------------------------|
+|----------------------------------+------------------+-----------------------------------------------------|
+| Parameter                        |          Default | Description                                         |
+|----------------------------------+------------------+-----------------------------------------------------|
+| fai\_all\_install                |                0 | Install all components on your server.              |
+| fai\_cache\_backends             | ${HOSTNAME}:8080 | Space separated, e.g. "app1:8080 app2:8080"         |
+| fai\_cache\_install              |                0 | Install cache server profile                        |
+| fai\_db\_host                    |        $HOSTNAME | Useful for editor & presentation profiles           |
+| fai\_db\_install                 |                0 | Install db profile                                  |
+| fai\_db\_port                    |             3306 | Useful for editor & presentation profiles           |
+| fai\_editor\_conf\_archive       |               "" | conf.tar.gz to use for Nursery & JAAS configuration |
+| fai\_editor\_ear                 |               "" | EAR to use instead of the Escenic binaries          |
+| fai\_editor\_install             |                0 | Install the editorial profile                       |
+| fai\_editor\_name                |          editor1 | Name of the editor instance                         |
+| fai\_editor\_port                |             8080 | HTTP port of the editor instance                    |
+| fai\_editor\_shutdown            |             8005 | Shutdown port of the editor instance                |
+| fai\_enabled                     |                0 | Whether or not to run ece-install in FAI mode       |
+| fai\_monitoring\_server\_install |                0 | Install the monitoring server profile.              |
+| fai\_monitoring\_server\_ip      |        127.0.0.1 | The IP of the monitoring server.                    |
+| fai\_presentation\_conf\_archive |               "" | conf.tar.gz to use for Nursery & JAAS configuration |
+| fai\_presentation\_ear           |               "" | EAR to use instead of the Escenic binaries          |
+| fai\_presentation\_install       |                0 | Install the presentation server profile             |
+| fai\_presentation\_name          |             web1 | Name of the presentation server instance            |
+| fai\_presentation\_port          |             8080 | HTTP port of the presentation server instance       |
+| fai\_presentation\_shutdown      |             8005 | Shutdown port of the presentation instance          |
+| fai\_public\_host\_name          | ${HOSTNAME}:8080 | The public address for your website                 |
+| fai\_publication\_create         |                0 | Create a new publication                            |
+| fai\_publication\_name           |            mypub | Name of the publication                             |
+| fai\_publication\_use\_instance  |             dev1 | Name of local instance to use for creation          |
+| fai\_rmi\_install                |                0 | Install RMI hub profile                             |
+| fai\_search\_conf\_archive       |               "" | conf.tar.gz to use for Nursery & JAAS configuration |
+| fai\_search\_ear                 |               "" | EAR to use instead of the Escenic binaries          |
+| fai\_search\_name                |          search1 | Name of the search instance                         |
+| fai\_search\_port                |             8080 | HTTP port of the search instance                    |
+| fai\_search\_shutdown            |             8005 | Shutdown port of the search instance                |
+| fai\_wf\_install                 |                0 | Install Widget Framework profile                    |
+|----------------------------------+------------------+-----------------------------------------------------|
 
 As you've probably have guessed, 0 means "false" and 1 means "true" :-)
 
