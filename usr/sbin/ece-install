@@ -33,7 +33,7 @@ java_home=/usr/lib/jvm/java-6-sun
 pid_file=/var/run/$(basename $0).pid
 download_dir=/tmp/ece-downloads
 log=/var/log/$(basename $0).log
-conf_file=$HOME/.ece-install.conf
+conf_file=$HOME/ece-install.conf
 common_nursery_dir=/etc/escenic/engine/common
 ece_scripts_git_source=git://github.com/skybert/ece-scripts.git
 maven_opts="--batch-mode"
@@ -469,15 +469,26 @@ function get_asterixes()
 function set_up_basic_nursery_configuration()
 {
     print "Setting up the basic Nursery configuration ..."
+
+    local escenic_home=/opt/escenic
     
-    run cp -r /opt/escenic/engine/siteconfig/config-skeleton/* \
+    if [ $(is_installing_from_archives) -eq 1 ]; then
+        print "Using the supplied Nursery & JAAS configuration from bundle:"
+        print "$ece_instance_conf_archive"
+        local dir=$(mktemp -d)
+        escenic_home=$dir
+        run cd $dir
+        run tar xzf $ece_instance_conf_archive
+    fi
+    
+    run cp -r $escenic_home/engine/siteconfig/config-skeleton/* \
         $common_nursery_dir/
-    run cp -r /opt/escenic/engine/security/ \
+    run cp -r $escenic_home/engine/security/ \
         $common_nursery_dir/
 
     make_dir /etc/escenic/engine/instance
 
-    for el in /opt/escenic/assemblytool/plugins/*; do
+    for el in $escenic_home/assemblytool/plugins/*; do
         if [ ! -d $el/misc/siteconfig/ ]; then
             continue
         fi
@@ -1723,6 +1734,57 @@ function update_type_instances_to_start_up()
     fi
 }
 
+ece_instance_ear_file=""
+ece_instance_conf_archive=""
+
+function set_archive_files_depending_on_profile()
+{
+    if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+        ece_instance_ear_file=$fai_presentation_ear
+        ece_instance_conf_archive=$fai_presentation_conf_archive
+    elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+        ece_instance_ear_file=$fai_editor_ear
+        ece_instance_conf_archive=$fai_editor_conf_archive
+    elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+        ece_instance_ear_file=$fai_search_ear
+        ece_instance_conf_archive=$fai_search_conf_archive
+    fi
+}
+
+
+# Returns 1 if we're installing the ECE instances from a provided EAR
+# file and tarball with Nursery & JAAS configuration.
+#
+function is_installing_from_archives()
+{
+    log install_profile_number=$install_profile_number
+    log ece_instance_ear_file=$ece_instance_ear_file
+    log ece_instance_conf_archive=$ece_instance_conf_archive
+
+    if [[ -z "$ece_instance_ear_file" || -z "$ece_instance_conf_archive" ]]; then
+        echo 0
+    fi
+
+    echo 1
+}
+
+# verifies that the passed file(s) exist and are readable, depends on
+# set_archive_files_depending_on_profile
+function verify_that_files_exist_and_are_readable()
+{
+    debug "Verifying that the file(s) exist(s) and are readable: $@"
+    
+    for el in $@; do
+        if [ ! -e $el ]; then
+            print "The file" $el "doesn't exist. I will exit now."
+            remove_pid_and_exit_in_error
+        elif [ ! -r $el ]; then
+            print "The file" $el "isn't readable. I will exit now."
+            remove_pid_and_exit_in_error
+        fi
+    done
+}   
+        
 # $1=<default instance name>
 # $2=<editorial server=0 | presentation server=1>
 function install_ece_instance()
@@ -1730,12 +1792,22 @@ function install_ece_instance()
     install_ece_third_party_packages
     
     ask_for_instance_name $1
-    download_escenic_components
-    check_for_required_downloads
-    
     set_up_engine_directories
-    set_up_engine_and_plugins
-    set_up_assembly_tool
+
+    set_archive_files_depending_on_profile
+    
+    # most likely, the user is _not_ installing from archives (EAR +
+    # configuration bundle), hence the false test goes first.
+    if [ $(is_installing_from_archives) -eq 0 ]; then
+        download_escenic_components
+        check_for_required_downloads
+        set_up_engine_and_plugins
+        set_up_assembly_tool
+    else
+        verify_that_files_exist_and_are_readable \
+            $ece_instance_ear_file \
+            $ece_instance_conf_archive
+    fi
     
     set_up_basic_nursery_configuration
     set_up_instance_specific_nursery_configuration
@@ -1780,6 +1852,12 @@ function assemble_deploy_and_restart_type()
     print "Assembling, deploying & starting $instance_name ..."
 
     ece_command="ece -i $instance_name -t $type assemble deploy restart"
+    if [ $(is_installing_from_archives) -eq 1 ]; then
+        run cp $ece_instance_ear_file /var/cache/escenic/engine.ear
+        ece_command="ece -i $instance_name -t $type deploy restart"
+        print "Using the supplied EAR instead of running an assembly."
+    fi
+    
     su - $ece_user -c "$ece_command" 1>>$log 2>>$log
     exit_on_error "su - $ece_user -c \"$ece_command\""
 }
