@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-10-20 18:36:20 CST"/>
+<meta name="generated" content="2011-11-21 19:24:36 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -273,14 +273,15 @@ div.note {
 </li>
 <li><a href="#sec-6">6 Full Automatic Install (FAI) </a>
 <ul>
-<li><a href="#sec-6-1">6.1 Overview of All FAI Parameters </a></li>
-<li><a href="#sec-6-2">6.2 Examples </a>
+<li><a href="#sec-6-1">6.1 Installing from EARs instead of Binaries </a></li>
+<li><a href="#sec-6-2">6.2 Overview of All FAI Parameters </a></li>
+<li><a href="#sec-6-3">6.3 Examples </a>
 <ul>
-<li><a href="#sec-6-2-1">6.2.1 Installing an Editorial Server &amp; Create a Publication </a></li>
-<li><a href="#sec-6-2-2">6.2.2 Installing Two Presentation Servers On a Single Host </a></li>
+<li><a href="#sec-6-3-1">6.3.1 Installing an Editorial Server &amp; Create a Publication </a></li>
+<li><a href="#sec-6-3-2">6.3.2 Installing Two Presentation Servers On a Single Host </a></li>
 </ul>
 </li>
-<li><a href="#sec-6-3">6.3 Verifying That the Script Is Running In FAI Mode </a></li>
+<li><a href="#sec-6-4">6.4 Verifying That the Script Is Running In FAI Mode </a></li>
 </ul>
 </li>
 <li><a href="#sec-7">7 Running More Than One Installation Process </a></li>
@@ -492,9 +493,9 @@ want to install:
 
 <pre class="src src-sh">Hi, which server profile do you wish to install?
 
-   1 - All<span style="color: #a020f0;"> in</span> one, full stack on one host, suitable for dev &amp; <span style="color: #7a378b;">test</span> environments
+   1 - All<span style="color: #a020f0;"> in</span> one, full stack on one host, suitable for dev &amp; <span style="color: #483d8b;">test</span> environments
    2 - Editorial (publication) server
-   3 - Presentation server (ECE + memcached)<span style="color: #7a378b;">.</span>
+   3 - Presentation server (ECE + memcached)<span style="color: #483d8b;">.</span>
    4 - Database server
    5 - Cache server (cache and web server)
    6 - RMI hub
@@ -1030,8 +1031,82 @@ the parameters with "install" in their name, such as:
 </div>
 
 <div id="outline-container-6-1" class="outline-3">
-<h3 id="sec-6-1"><span class="section-number-3">6.1</span> Overview of All FAI Parameters </h3>
+<h3 id="sec-6-1"><span class="section-number-3">6.1</span> Installing from EARs instead of Binaries </h3>
 <div class="outline-text-3" id="text-6-1">
+
+<p>It is possible to get ece-install to use a supplied EAR and
+configuration archive instead of using the files provided with the
+Escenic Content Engine &amp; plugins.
+</p>
+<p>
+The EAR to provide is the one you generate with:
+</p>
+
+
+<pre class="src src-sh">$ ece -i &lt;instance&gt; assemble 
+</pre>
+
+<p>
+Normally, the EAR will then be available in:
+</p>
+
+
+<pre class="src src-sh">/var/cache/escenic/engine.ear
+</pre>
+
+
+<p>
+The configuration bundle must contain:
+</p>
+
+
+<pre class="src src-sh">engine/security
+engine/siteconfig/bootstrap-skeleton
+engine/siteconfig/config-skeleton
+assemblytool/plugins/&lt;plugin&gt;/siteconfig
+</pre>
+
+
+<p>
+A simple way to create this bundle, is to use a server which has the
+assembly environment set up and then do:
+</p>
+
+
+
+<pre class="src src-sh">$ cd /opt/escenic/engine
+$ tar czf /tmp/nursery-skeleton-and-security.tar.gz <span style="color: #8b2252;">\</span>
+  engine/security <span style="color: #8b2252;">\</span>
+  engine/siteconfig/config-skeleton/ <span style="color: #8b2252;">\</span>
+  engine/siteconfig/bootstrap-skeleton/ <span style="color: #8b2252;">\</span>
+  <span style="color: #ff00ff;">`find -L  assemblytool/plugins/ -name siteconfig`</span>
+</pre>
+
+
+<p>
+/tmp/nursery-skeleton-and-security.tar.gz should now have everything
+you need. You can now configure your FAI installation to use these by,
+e.g.:
+</p>
+
+
+
+<pre class="src src-sh"><span style="color: #a0522d;">fai_presentation_ear</span>=/tmp/engine.ear
+<span style="color: #a0522d;">fai_presentation_conf_archive</span>=/tmp/nursery-skeleton-and-security.tar.gz
+</pre>
+
+
+<p>
+Corresponding configuration options are available for the other server
+profiles, see the table below.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-6-2" class="outline-3">
+<h3 id="sec-6-2"><span class="section-number-3">6.2</span> Overview of All FAI Parameters </h3>
+<div class="outline-text-3" id="text-6-2">
 
 <p>The ece-install script understands for the following settings in the
 $HOME/.ece-install.conf file of the root user:
@@ -1045,27 +1120,33 @@ $HOME/.ece-install.conf file of the root user:
 </thead>
 <tbody>
 <tr><td class="left">fai_all_install</td><td class="right">0</td><td class="left">Install all components on your server.</td></tr>
-<tr><td class="left">fai_cache_install</td><td class="right">0</td><td class="left">Install cache server profile</td></tr>
 <tr><td class="left">fai_cache_backends</td><td class="right">${HOSTNAME}:8080</td><td class="left">Space separated, e.g. "app1:8080 app2:8080"</td></tr>
-<tr><td class="left">fai_db_install</td><td class="right">0</td><td class="left">Install db profile</td></tr>
+<tr><td class="left">fai_cache_install</td><td class="right">0</td><td class="left">Install cache server profile</td></tr>
 <tr><td class="left">fai_db_host</td><td class="right">$HOSTNAME</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
+<tr><td class="left">fai_db_install</td><td class="right">0</td><td class="left">Install db profile</td></tr>
 <tr><td class="left">fai_db_port</td><td class="right">3306</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
+<tr><td class="left">fai_editor_conf_archive</td><td class="right">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
+<tr><td class="left">fai_editor_ear</td><td class="right">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
 <tr><td class="left">fai_editor_install</td><td class="right">0</td><td class="left">Install the editorial profile</td></tr>
 <tr><td class="left">fai_editor_name</td><td class="right">editor1</td><td class="left">Name of the editor instance</td></tr>
 <tr><td class="left">fai_editor_port</td><td class="right">8080</td><td class="left">HTTP port of the editor instance</td></tr>
 <tr><td class="left">fai_editor_shutdown</td><td class="right">8005</td><td class="left">Shutdown port of the editor instance</td></tr>
 <tr><td class="left">fai_enabled</td><td class="right">0</td><td class="left">Whether or not to run ece-install in FAI mode</td></tr>
-<tr><td class="left">fai_public_host_name</td><td class="right">${HOSTNAME}:8080</td><td class="left">The public address for your website</td></tr>
-<tr><td class="left">fai_presentation_install</td><td class="right">0</td><td class="left">Install the presentation server profile</td></tr>
 <tr><td class="left">fai_monitoring_server_install</td><td class="right">0</td><td class="left">Install the monitoring server profile.</td></tr>
 <tr><td class="left">fai_monitoring_server_ip</td><td class="right">127.0.0.1</td><td class="left">The IP of the monitoring server.</td></tr>
+<tr><td class="left">fai_presentation_conf_archive</td><td class="right">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
+<tr><td class="left">fai_presentation_ear</td><td class="right">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
+<tr><td class="left">fai_presentation_install</td><td class="right">0</td><td class="left">Install the presentation server profile</td></tr>
 <tr><td class="left">fai_presentation_name</td><td class="right">web1</td><td class="left">Name of the presentation server instance</td></tr>
 <tr><td class="left">fai_presentation_port</td><td class="right">8080</td><td class="left">HTTP port of the presentation server instance</td></tr>
 <tr><td class="left">fai_presentation_shutdown</td><td class="right">8005</td><td class="left">Shutdown port of the presentation instance</td></tr>
+<tr><td class="left">fai_public_host_name</td><td class="right">${HOSTNAME}:8080</td><td class="left">The public address for your website</td></tr>
 <tr><td class="left">fai_publication_create</td><td class="right">0</td><td class="left">Create a new publication</td></tr>
 <tr><td class="left">fai_publication_name</td><td class="right">mypub</td><td class="left">Name of the publication</td></tr>
 <tr><td class="left">fai_publication_use_instance</td><td class="right">dev1</td><td class="left">Name of local instance to use for creation</td></tr>
 <tr><td class="left">fai_rmi_install</td><td class="right">0</td><td class="left">Install RMI hub profile</td></tr>
+<tr><td class="left">fai_search_conf_archive</td><td class="right">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
+<tr><td class="left">fai_search_ear</td><td class="right">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
 <tr><td class="left">fai_search_name</td><td class="right">search1</td><td class="left">Name of the search instance</td></tr>
 <tr><td class="left">fai_search_port</td><td class="right">8080</td><td class="left">HTTP port of the search instance</td></tr>
 <tr><td class="left">fai_search_shutdown</td><td class="right">8005</td><td class="left">Shutdown port of the search instance</td></tr>
@@ -1081,16 +1162,16 @@ As you've probably have guessed, 0 means "false" and 1 means "true" :-)
 
 </div>
 
-<div id="outline-container-6-2" class="outline-3">
-<h3 id="sec-6-2"><span class="section-number-3">6.2</span> Examples </h3>
-<div class="outline-text-3" id="text-6-2">
+<div id="outline-container-6-3" class="outline-3">
+<h3 id="sec-6-3"><span class="section-number-3">6.3</span> Examples </h3>
+<div class="outline-text-3" id="text-6-3">
 
 
 </div>
 
-<div id="outline-container-6-2-1" class="outline-4">
-<h4 id="sec-6-2-1"><span class="section-number-4">6.2.1</span> Installing an Editorial Server &amp; Create a Publication </h4>
-<div class="outline-text-4" id="text-6-2-1">
+<div id="outline-container-6-3-1" class="outline-4">
+<h4 id="sec-6-3-1"><span class="section-number-4">6.3.1</span> Installing an Editorial Server &amp; Create a Publication </h4>
+<div class="outline-text-4" id="text-6-3-1">
 
 <p>To automatically install an editorial server and create a publication
 called "jollygood", the minimal configuration in .ece-install.conf
@@ -1110,9 +1191,9 @@ would be:
 
 </div>
 
-<div id="outline-container-6-2-2" class="outline-4">
-<h4 id="sec-6-2-2"><span class="section-number-4">6.2.2</span> Installing Two Presentation Servers On a Single Host </h4>
-<div class="outline-text-4" id="text-6-2-2">
+<div id="outline-container-6-3-2" class="outline-4">
+<h4 id="sec-6-3-2"><span class="section-number-4">6.3.2</span> Installing Two Presentation Servers On a Single Host </h4>
+<div class="outline-text-4" id="text-6-3-2">
 
 <p>If you wish to only install two presentation servers called "web1" and
 "web2" on your host, you will first run ece-install with:
@@ -1148,9 +1229,9 @@ whereas the second one needs to override these.
 
 </div>
 
-<div id="outline-container-6-3" class="outline-3">
-<h3 id="sec-6-3"><span class="section-number-3">6.3</span> Verifying That the Script Is Running In FAI Mode </h3>
-<div class="outline-text-3" id="text-6-3">
+<div id="outline-container-6-4" class="outline-3">
+<h3 id="sec-6-4"><span class="section-number-3">6.4</span> Verifying That the Script Is Running In FAI Mode </h3>
+<div class="outline-text-3" id="text-6-4">
 
 <p>When FAI is enabled, ece-install will report:
 </p>
@@ -1344,8 +1425,44 @@ the host that runs the install script.
 </p>
 <p>
 The following output is produced from ece-install:
-CANNOT INCLUDE FILE ~/tmp/ece-install.out
 </p>
+
+
+<pre class="src src-text">[ece-install-0] Full Automatic Install (FAI) enabled.
+[ece-install-0] All user input will be read from /root/ece-install.conf
+[ece-install-0] I'm logging to /var/log/ece-install.log
+[ece-install-1] Stopping conflicting processes ...
+[ece-install-1] Installing 3rd party packages needed by ece-install ...
+[ece-install-1] Setting up the ece UNIX scripts ...
+[ece-install-2] Setting up the torstein user's UNIX environment ...
+[ece-install-2] Installing a presentation server on quanah ...
+[ece-install-2] Installing 3rd party packages needed by ECE ...
+[ece-install-4] Setting up the basic Nursery configuration ...
+[ece-install-4] Using the supplied Nursery &amp; JAAS configuration
+[ece-install-4] from the bundle: /tmp/nursery-skeleton-and-security.tar.gz
+[ece-install-4] Setting up the application server ...
+[ece-install-5] Setting up proper log4j &amp; Java logging configuration ...
+[ece-install-5] Setting correct permissions on ECE related directories ...
+[ece-install-6] Assembling, deploying &amp; starting pres1 ...
+[ece-install-7] I'm using the supplied EAR instead of running an assembly.
+[ece-install-24] Adding the ece init.d script to the default run levels ...
+[ece-install-24] Installing a Munin node on quanah ...
+[ece-install-30] The installation is now complete! It took 0d 0h 0m 30s
+[ece-install-30] - New ECE instance pres1 installed.
+[ece-install-30] - Admin interface: http://quanah:9980/escenic-admin/
+[ece-install-30] - View installed versions with: ece -i pres1 versions
+[ece-install-30] - Type 'ece help' to see all the options of this script
+[ece-install-30] - Read its guide: /usr/share/doc/escenic/ece-guide.txt
+[ece-install-30] - /etc/default/ece lists all instances started at boot time
+[ece-install-30] - A Munin node has been installed on quanah
+[ece-install-30] - Install info: /usr/share/doc/escenic/ece-install-guide.txt
+[ece-install-30] - Guide books: http://documentation.vizrt.com/ece-5.3.html
+[ece-install-30] Enjoy your time with Escenic Content Engine!
+[ece-install-30] -Vizrt Online
+
+</pre>
+
+
 </div>
 </div>
 </div>
@@ -1354,7 +1471,7 @@ CANNOT INCLUDE FILE ~/tmp/ece-install.out
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-10-20 18:36:20 CST
+  Date: 2011-11-21 19:24:36 CST
 </p>
 </div>
 </body>
