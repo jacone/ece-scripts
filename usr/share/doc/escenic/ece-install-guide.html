@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-11-21 19:24:36 CST"/>
+<meta name="generated" content="2011-11-21 19:38:40 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -286,14 +286,15 @@ div.note {
 </li>
 <li><a href="#sec-7">7 Running More Than One Installation Process </a></li>
 <li><a href="#sec-8">8 Re-running ece-install (and How To Speed It Up) </a></li>
-<li><a href="#sec-9">9 Overview of File Paths Used by the ece-install script </a></li>
-<li><a href="#sec-10">10 Assumptions </a>
+<li><a href="#sec-9">9 Using a Custom Configuration File for ece-install </a></li>
+<li><a href="#sec-10">10 Overview of File Paths Used by the ece-install script </a></li>
+<li><a href="#sec-11">11 Assumptions </a>
 <ul>
-<li><a href="#sec-10-1">10.1 /etc/esecenic is shared </a></li>
+<li><a href="#sec-11-1">11.1 /etc/esecenic is shared </a></li>
 </ul>
 </li>
-<li><a href="#sec-11">11 Uninstalling Everything That the ece-install Set Up </a></li>
-<li><a href="#sec-12">12 Example Output FAI </a></li>
+<li><a href="#sec-12">12 Uninstalling Everything That the ece-install Set Up </a></li>
+<li><a href="#sec-13">13 Example Output FAI </a></li>
 </ul>
 </div>
 </div>
@@ -404,13 +405,13 @@ On all other Unix like system, do:
 
 <p>
 You will need access to <a href="http://technet.escenic.com">http://technet.escenic.com</a> and put these
-credentials in the root user's $HOME/.ece-install.conf, normally this
-means <i>root</i>.ece-install.conf, the script will also tell you this if
+credentials in the root user's $HOME/ece-install.conf, normally this
+means /root/ece-install.conf, the script will also tell you this if
 you forget to provide such a configuration file:
 </p>
 
 
-<pre class="src src-sh">[ece-install] /root/.ece-install.conf doesn<span style="color: #8b2252;">'t exist, I cannot live without it :-(</span>
+<pre class="src src-sh">[ece-install] /root/ece-install.conf doesn<span style="color: #8b2252;">'t exist, I cannot live without it :-(</span>
 </pre>
 
 
@@ -421,12 +422,12 @@ cannot find what it's looking for:
 
 
 <pre class="src src-sh">[ece-install] Be sure to set technet_user and technet_password
-[ece-install]<span style="color: #a020f0;"> in</span> /root/.ece-install.conf
+[ece-install]<span style="color: #a020f0;"> in</span> /root/ece-install.conf
 </pre>
 
 
 <p>
-The minimum .ece-install.conf file is thus:
+The minimum ece-install.conf file is thus:
 </p>
 
 
@@ -769,12 +770,12 @@ when you bought Widget Framework. If you for some reason do not have
 these, please contact support@escenic.com. 
 </p>
 <p>
-If you don't have these ready in your .ece-install.conf, ece-install will
+If you don't have these ready in your ece-install.conf, ece-install will
 complain:
 </p>
 
 
-<pre class="src src-sh">[ece-install] Be sure to set wf_user and wf_password<span style="color: #a020f0;"> in</span> /root/.ece-install.conf
+<pre class="src src-sh">[ece-install] Be sure to set wf_user and wf_password<span style="color: #a020f0;"> in</span> /root/ece-install.conf
 [ece-install] If you don<span style="color: #8b2252;">'t have these, please contact support@escenic.com</span>
 </pre>
 
@@ -966,7 +967,7 @@ restore from:
 
 <p>
 For example, to restore everything possible from a given tarball, you
-need this in your .ece-install.conf:
+need this in your ece-install.conf:
 </p>
 
 
@@ -1109,7 +1110,7 @@ profiles, see the table below.
 <div class="outline-text-3" id="text-6-2">
 
 <p>The ece-install script understands for the following settings in the
-$HOME/.ece-install.conf file of the root user:
+$HOME/ece-install.conf file of the root user:
 </p>
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 <caption></caption>
@@ -1174,7 +1175,7 @@ As you've probably have guessed, 0 means "false" and 1 means "true" :-)
 <div class="outline-text-4" id="text-6-3-1">
 
 <p>To automatically install an editorial server and create a publication
-called "jollygood", the minimal configuration in .ece-install.conf
+called "jollygood", the minimal configuration in ece-install.conf
 would be:
 </p>
 
@@ -1238,7 +1239,7 @@ whereas the second one needs to override these.
 
 
 <pre class="src src-sh">[ece-install] Full Automatic Install (FAI) enabled.
-[ece-install] All user input will be read from /root/.ece-install.conf
+[ece-install] All user input will be read from /root/ece-install.conf
 </pre>
 
 
@@ -1303,13 +1304,34 @@ following variables:
 </ul>
 
 
+<p>
+Two other ways of speeding up the installation is (of course) to use
+the backup/restore feature or install from a EAR and configuration
+bundle, see the FAI section.
+</p>
 </div>
 
 </div>
 
 <div id="outline-container-9" class="outline-2">
-<h2 id="sec-9"><span class="section-number-2">9</span> Overview of File Paths Used by the ece-install script </h2>
+<h2 id="sec-9"><span class="section-number-2">9</span> Using a Custom Configuration File for ece-install </h2>
 <div class="outline-text-2" id="text-9">
+
+<p>You can specify a different configuration by using the -f parameter: 
+</p>
+
+
+<pre class="src src-sh">$ ece-install -f ece-install-presentation-server.conf
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-10" class="outline-2">
+<h2 id="sec-10"><span class="section-number-2">10</span> Overview of File Paths Used by the ece-install script </h2>
+<div class="outline-text-2" id="text-10">
 
 <p>There are of course other paths involved when setting up your system,
 but these should be the most interesting ones.
@@ -1359,16 +1381,16 @@ but these should be the most interesting ones.
 
 </div>
 
-<div id="outline-container-10" class="outline-2">
-<h2 id="sec-10"><span class="section-number-2">10</span> Assumptions </h2>
-<div class="outline-text-2" id="text-10">
+<div id="outline-container-11" class="outline-2">
+<h2 id="sec-11"><span class="section-number-2">11</span> Assumptions </h2>
+<div class="outline-text-2" id="text-11">
 
 
 </div>
 
-<div id="outline-container-10-1" class="outline-3">
-<h3 id="sec-10-1"><span class="section-number-3">10.1</span> /etc/esecenic is shared </h3>
-<div class="outline-text-3" id="text-10-1">
+<div id="outline-container-11-1" class="outline-3">
+<h3 id="sec-11-1"><span class="section-number-3">11.1</span> /etc/esecenic is shared </h3>
+<div class="outline-text-3" id="text-11-1">
 
 <p>It's assumed that the /etc/escenic directory is either on a shared
 file system or rsync-ed among the hosts that are running the ECE
@@ -1379,9 +1401,9 @@ instances (the exception being database and cache servers).
 
 </div>
 
-<div id="outline-container-11" class="outline-2">
-<h2 id="sec-11"><span class="section-number-2">11</span> Uninstalling Everything That the ece-install Set Up </h2>
-<div class="outline-text-2" id="text-11">
+<div id="outline-container-12" class="outline-2">
+<h2 id="sec-12"><span class="section-number-2">12</span> Uninstalling Everything That the ece-install Set Up </h2>
+<div class="outline-text-2" id="text-12">
 
 <p>WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
@@ -1399,12 +1421,12 @@ things set up by the script.
 
 </div>
 
-<div id="outline-container-12" class="outline-2">
-<h2 id="sec-12"><span class="section-number-2">12</span> Example Output FAI </h2>
-<div class="outline-text-2" id="text-12">
+<div id="outline-container-13" class="outline-2">
+<h2 id="sec-13"><span class="section-number-2">13</span> Example Output FAI </h2>
+<div class="outline-text-2" id="text-13">
 
 <p>The ece-install will often be run in FAI mode where all the settings
-are read from ~/.ece-install.conf. Given the following entries in this
+are read from ~/ece-install.conf. Given the following entries in this
 file: 
 </p>
 
@@ -1471,7 +1493,7 @@ The following output is produced from ece-install:
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-11-21 19:24:36 CST
+  Date: 2011-11-21 19:38:40 CST
 </p>
 </div>
 </body>
