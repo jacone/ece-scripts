@@ -46,9 +46,11 @@ To become root on Ubuntu based systems and Mac OS X, do:
 #+BEGIN_SRC sh
    $ sudo su
 #+END_SRC
+Please note that just doing "sudo ece-install" may not work.
+
 On all other Unix like system, do:
 #+BEGIN_SRC sh
-   $ su
+   $ su -
 #+END_SRC
 
 You will need access to http://technet.escenic.com and put these
@@ -81,13 +83,6 @@ below.
 With the configuration file in place, you're now ready to run it:
 #+BEGIN_SRC sh
 # bash ece-install [-v|--verbose]
-#+END_SRC
-
-If your systmem uses sudo to provide access to the root user, we
-recommend becoming root before running ece-install. To become root on
-a system using sudo, do:
-#+BEGIN_SRC sh
-$ sudo su -
 #+END_SRC
 
 ece-install will try to "fail fast", exiting as soon as it detects an
