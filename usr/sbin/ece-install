@@ -2070,8 +2070,8 @@ EOF
     
     cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
 
-    add_next_step "Widget Framework has been installed into your local"\
-" Maven repository"
+    add_next_step "Widget Framework has been installed into your "\
+" Maven repo"
 }
 
 function install_search_server()
