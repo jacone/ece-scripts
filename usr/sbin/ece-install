@@ -38,6 +38,7 @@ common_nursery_dir=/etc/escenic/engine/common
 ece_scripts_git_source=git://github.com/skybert/ece-scripts.git
 maven_opts="--batch-mode"
 wget_opts="--continue --inet4-only --quiet"
+apt_opts="--no-install-recommends"
 
 # globals will be set to correct values in run-time.
 appserver_port=8080
@@ -263,9 +264,9 @@ install_packages_if_missing()
         fi
 
         if [ $force_packages -eq 1 ]; then
-            run apt-get install --assume-yes --force-yes $@
+            run apt-get install $apt_opts --assume-yes --force-yes $@
         else
-            run apt-get install --assume-yes $@
+            run apt-get install $apt_opts --assume-yes $@
         fi
     fi
 }
@@ -1452,7 +1453,7 @@ function assert_correct_runtime_environment()
         print "If you blelieve this is wrong, e.g. if a previous run of" 
         print "$(basename $0) was aborted before it completed, you"
         print "may remove ${pid_file} and run $(basename $0) again."
-        remove_pid_and_exit_in_error
+        exit 1
     else
         echo $BASHPID > $pid_file
         started=`stat -c %Y $pid_file`
@@ -1763,6 +1764,7 @@ function is_installing_from_archives()
 
     if [[ -z "$ece_instance_ear_file" || -z "$ece_instance_conf_archive" ]]; then
         echo 0
+        return
     fi
 
     echo 1
