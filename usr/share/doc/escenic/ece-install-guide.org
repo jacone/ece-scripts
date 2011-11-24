@@ -83,6 +83,13 @@ With the configuration file in place, you're now ready to run it:
 # bash ece-install [-v|--verbose]
 #+END_SRC
 
+If your systmem uses sudo to provide access to the root user, we
+recommend becoming root before running ece-install. To become root on
+a system using sudo, do:
+#+BEGIN_SRC sh
+$ sudo su -
+#+END_SRC
+
 ece-install will try to "fail fast", exiting as soon as it detects an
 error during its execution:
 #+BEGIN_SRC sh
@@ -366,6 +373,20 @@ the parameters with "install" in their name, such as:
 #+BEGIN_SRC sh
 fai_editor_install
 #+END_SRC
+
+When running in FAI mode, you probably want to redirect standard
+output to a log file for easy reading later on:
+#+BEGIN_SRC sh
+# bash ece-install > ece-install.out &
+#+END_SRC
+
+Alternatively, you may do:
+#+BEGIN_SRC sh
+# nohup bash ece-install > ece-install.out &
+#+END_SRC
+The "nohup" at the beginning and the ampersand at the end lets you log
+out of the SSH/X session to your Linux/Unix box while the script keeps
+running in the background.
 
 ** Installing from EARs instead of Binaries
 It is possible to get ece-install to use a supplied EAR and
