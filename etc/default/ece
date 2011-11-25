@@ -4,8 +4,8 @@
 # instances. If you only have one # instance, use "default" as its
 # name. If you don't have any instances of that type on this host,
 # then just set the variable to an empty string.
-engine_instance_list="editor1 web1"
-search_instance_list="search1"
+engine_instance_list=""
+search_instance_list=""
 analysis_instance_list=""
 
 # You only need one hub in an ECE cluster, so only set this one to
