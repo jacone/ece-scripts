@@ -154,12 +154,15 @@ function ensure_that_required_fields_are_set()
     fi
 }
 
+ece_conf_files_read=()
+
 function read_conf_file()
 {
     for el in $conf_file_location_list; do
         if [ -r $el/$1 ]; then
             debug "found $1 in $el, reading it"
             source $el/$1
+            ece_conf_files_read=($el/$1 ${ece_conf_files_read})
             break
         fi
     done
@@ -435,7 +438,7 @@ function sanity_check()
     # system.
     if [ $instance = "default" -a \
         $type = "engine" -a \
-        $(echo $command | grep help | wc -l) -eq 0 ]; then
+        $(echo $command | egrep 'help' | wc -l) -eq 0 ]; then
         instance_list=$(get_instance_list)
         if [[ -n "$instance_list" && \
             $(echo $instance_list | grep ' ' | wc -l) -gt 0 ]]; then
@@ -872,6 +875,39 @@ function kill_type()
     exit_on_error "kill_type"
 }
 
+function get_info_for_type()
+{
+    print "Current instance:    ${instance}"
+    print "Instances available on $HOSTNAME: $(get_instance_list)"
+    print "Conf files parsed: ${ece_conf_files_read[@]}"
+    
+    if [ -n "${ece_home}" ]; then
+        print "ECE location: $ece_home"
+    fi
+    if [[ -n "${assemblytool_home}" && -e "${assemblytool_home}" ]]; then
+        print "Assembly Tool location: $assemblytool_home"
+    fi
+    if [ -n "${java_home}" ]; then
+        print "Java location: $java_home"
+    fi
+    if [ -n "${appserver}" ]; then
+        print "Application server: $appserver"
+        case "$appserver" in
+            tomcat)
+                if [ -n "${tomcat_home}" ]; then
+                    print "Tomcat home:" $tomcat_home
+                    print "Tomcat base:" $tomcat_base
+                fi
+            ;;
+            resin)
+                if [ -n "${resin_home}" ]; then
+                    print "Resin home:" $resin_home
+                fi
+                ;;
+        esac
+    fi
+}
+
 function restart_type()
 {
     stop_type
@@ -881,7 +917,7 @@ function restart_type()
     # properly before starting the new one.
     sleep 8
 
-    # sometimes the JVM refuses to shot down when doing a graceful
+    # sometimes the JVM refuses to shut down when doing a graceful
     # kill, therefore, if it's still running after the sleep above, we
     # use brute force to kill it.
     set_type_pid
@@ -1417,6 +1453,7 @@ function print_help()
     echo "   deploy     deploys the assembled EAR *)"
     echo "   edit       lets you edit a publication resource"
     echo "   help       prints this help screen"
+    echo "   info       prints various info about the selected ECE instance"
     echo "   kill       uses force to stop the type"
     echo "   log        the type's log4j log **)"
     echo "   loglist    list all the log paths"
@@ -1446,6 +1483,9 @@ for el in $command; do
             ;;
         restart)
             restart_type
+            ;;
+        info)
+            get_info_for_type
             ;;
         log)
             tail_messages_log
