@@ -454,20 +454,6 @@ function set_up_ecedb()
     add_next_step "DB is now set up on $HOSTNAME:3306"
 }
 
-# returns a string of asterixes with the same lenght as the inputted
-# string.
-function get_asterixes()
-{
-    s=""
-    j=$(echo $1 | wc -c)
-
-    # wc -c always returns the length + 1, hence we start on index=1
-    for (( i=1; i<$j; i++ )); do
-        s=${s}"-"
-    done
-    echo "$s"
-}
-
 function set_up_basic_nursery_configuration()
 {
     print_and_log "Setting up the basic Nursery configuration ..."
