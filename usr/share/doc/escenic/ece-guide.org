@@ -213,8 +213,8 @@ accompanying /etc/default/ece to command the different ECE, EAE and
 RMI hub instances on your system.
 ** Specifying the instance
 The script is made for being easy to use with multiple instances on
-the same host. You specify the instance you want to operate on using the
- -i parameter. E.g. to assemble and deploy the editor1 instance, you'd
+the same host. You specify the instance you want to operate on using
+the -i parameter. E.g. to assemble and deploy the editor1 instance, you'd
 do:
 #+BEGIN_SRC sh
 $ ece -i editor1 assemble deploy restart
@@ -231,8 +231,8 @@ For this to work, the script assumes that you have installed the
 instance specific configuration in /etc/escenic/engine/instance, as is
 described in the Escenic Content Engine Installation Guide.
 
-If you only have one instance installed, you may omit the
- --instance/-i parameter. However, if you're running ece from another
+If you only have one instance installed, you may omit
+the --instance/-i parameter. However, if you're running ece from another
 script (e.g. an init.d or a deployment script), we recommend you to
 always specify the --instance/-i parameter to make sure that future
 additions of instances don't break your old scripts which assumed that
