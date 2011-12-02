@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-11-21 19:38:40 CST"/>
+<meta name="generated" content="2011-12-02 11:07:01 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -395,11 +395,14 @@ To become root on Ubuntu based systems and Mac OS X, do:
 </pre>
 
 <p>
+Please note that just doing "sudo ece-install" may not work.
+</p>
+<p>
 On all other Unix like system, do:
 </p>
 
 
-<pre class="src src-sh">$ su
+<pre class="src src-sh">$ su -
 </pre>
 
 
@@ -1028,6 +1031,29 @@ the parameters with "install" in their name, such as:
 </pre>
 
 
+<p>
+When running in FAI mode, you probably want to redirect standard
+output to a log file for easy reading later on:
+</p>
+
+
+<pre class="src src-sh"><span style="color: #b22222;"># </span><span style="color: #b22222;">bash ece-install &gt; ece-install.out &amp;</span>
+</pre>
+
+
+<p>
+Alternatively, you may do:
+</p>
+
+
+<pre class="src src-sh"><span style="color: #b22222;"># </span><span style="color: #b22222;">nohup bash ece-install &gt; ece-install.out &amp;</span>
+</pre>
+
+<p>
+The "nohup" at the beginning and the ampersand at the end lets you log
+out of the SSH/X session to your Linux/Unix box while the script keeps
+running in the background.
+</p>
 
 </div>
 
@@ -1145,6 +1171,7 @@ $HOME/ece-install.conf file of the root user:
 <tr><td class="left">fai_publication_create</td><td class="right">0</td><td class="left">Create a new publication</td></tr>
 <tr><td class="left">fai_publication_name</td><td class="right">mypub</td><td class="left">Name of the publication</td></tr>
 <tr><td class="left">fai_publication_use_instance</td><td class="right">dev1</td><td class="left">Name of local instance to use for creation</td></tr>
+<tr><td class="left">fai_publication_war</td><td class="right">"WF or ECE demo WAR"</td><td class="left">WAR to to base the new publication on</td></tr>
 <tr><td class="left">fai_rmi_install</td><td class="right">0</td><td class="left">Install RMI hub profile</td></tr>
 <tr><td class="left">fai_search_conf_archive</td><td class="right">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
 <tr><td class="left">fai_search_ear</td><td class="right">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
@@ -1493,7 +1520,7 @@ The following output is produced from ece-install:
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-11-21 19:38:40 CST
+  Date: 2011-12-02 11:07:01 CST
 </p>
 </div>
 </body>
