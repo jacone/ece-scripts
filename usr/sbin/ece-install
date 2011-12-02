@@ -1095,7 +1095,10 @@ context-root: ${publication_name}
 EOF
 
     publication_war=/opt/escenic/assemblytool/publications/${publication_name}.war
-    if [ -d /opt/escenic/widget-framework-core-* ]; then
+    if [[ $fai_enabled -eq 1 && -n "${fai_publication_war}" ]]; then
+        print_and_log "Basing ${publication_name}.war on the one specified in $conf_file"
+        run cp ${fai_publication_war} ${publication_war}
+    elif [ -d /opt/escenic/widget-framework-core-* ]; then
         print_and_log "Basing ${publication_name}.war on Widget Framework Demo ..."
         run cd /opt/escenic/widget-framework-core-*/publications/demo-core
         run mvn $maven_opts package
@@ -1172,9 +1175,10 @@ function set_up_user_enviornment()
 
     export JAVA_HOME=$java_home
 
-    if [ $(grep bash_completion.d/ece /home/$ece_user/.bashrc 2>/dev/null | \
+    bashrc=/home/${ece_user}/.bashrc
+    if [ $(grep bash_completion.d/ece ${bashrc}  2>/dev/null | \
         wc -l) -lt 1 ]; then
-        run echo ". /etc/bash_completion.d/ece"
+        echo ". /etc/bash_completion.d/ece" > ${bashrc}
     fi
 }
 
