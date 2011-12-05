@@ -2641,6 +2641,12 @@ if [ $fai_enabled -eq 1 ]; then
         no_fai_profile=0
     fi
     
+    if [ $(get_boolean_conf_value fai_db_install) -eq 1 ]; then
+        install_profile_number=$PROFILE_DB_SERVER
+        install_database_server
+        no_fai_profile=0
+    fi
+    
     if [ $(get_boolean_conf_value fai_editor_install) -eq 1 ]; then
         install_profile_number=$PROFILE_EDITORIAL_SERVER
         install_editorial_server
@@ -2653,22 +2659,10 @@ if [ $fai_enabled -eq 1 ]; then
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_db_install) -eq 1 ]; then
-        install_profile_number=$PROFILE_DB_SERVER
-        install_database_server
-        no_fai_profile=0
-    fi
-    
     if [ $(get_boolean_conf_value fai_cache_install) -eq 1 ]; then
         install_profile_number=$PROFILE_CACHE_SERVER
         install_cache_server
         install_web_server 0
-        no_fai_profile=0
-    fi
-    
-    if [ $(get_boolean_conf_value fai_rmi_install) -eq 1 ]; then
-        install_profile_number=$PROFILE_RMI_HUB
-        install_rmi_hub
         no_fai_profile=0
     fi
     
@@ -2700,6 +2694,12 @@ if [ $fai_enabled -eq 1 ]; then
     if [ $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
         install_profile_number=$PROFILE_RESTORE_FROM_BACKUP
         restore_from_backup
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_rmi_install) -eq 1 ]; then
+        install_profile_number=$PROFILE_RMI_HUB
+        install_rmi_hub
         no_fai_profile=0
     fi
     
