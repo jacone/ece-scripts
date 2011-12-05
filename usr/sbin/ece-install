@@ -511,8 +511,14 @@ updateConnector=/connector/UpdateConnector
 EOF
 
     file=$common_nursery_dir/com/escenic/community/CommunityEngine.properties
-    sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
-    exit_on_error "sed on $file"
+    if [ -w ${file} ]; then
+        sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
+        exit_on_error "sed on $file"
+    else
+        print_and_log "Could not find/write to ${file},"
+        print_and_log "have you installed the Community Engine plugin?"
+        remove_pid_and_exit_in_error
+    fi
 
     file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
     cat >> $file <<EOF
