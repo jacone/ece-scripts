@@ -994,6 +994,90 @@ function assemble()
     debug $assemblytool_home/dist/engine.ear "is now ready"
 }
 
+# creates DEB and RPM packages suitable for deploying any kind of ECE
+# instance that was previously assembled.
+function create_packages()
+{
+    local ear=$cache_dir/engine.ear
+    if [ ! -e $ear ]; then
+        print "$ear does not exist. Did you run '"`basename $0`" assemble'?"
+        exit 1
+    fi
+
+    local dir=$(mktemp -d)
+    local package_dir=$dir/debian
+    local package_name=escenic-${type}-${instance}
+    # TODO the version might be a bit on the extreme side. Could come
+    # from the SCM (if available)
+    local version=$(date +%s)
+
+    run mkdir -p $package_dir/DEBIAN
+    cat > $package_dir/DEBIAN/control <<EOF
+Package: $package_name
+Version: $version
+Section: base
+Priority: optional
+Architecture: all
+Maintainer: Torstein Krause Johansen <tkj@vizrt.com>
+Description: The Escenic Content Engine of type ${type}
+  for the ${instance} instance. Built on $HOSTNAME
+EOF
+
+    case $appserver in
+        tomcat)
+            local tomcat_dir=${package_dir}${tomcat_base}
+            local tomcat_escenic_dir=${tomcat_dir}/escenic
+
+            # lib
+            run mkdir -p ${tomcat_escenic_dir}
+            run cd ${tomcat_escenic_dir}
+            run jar xf ${ear} lib
+
+            # war
+            run mkdir -p ${tomcat_dir}/webapps
+            run cd ${tomcat_dir}/webapps
+            for el in $(jar tf ${ear} | grep .war$); do
+                if [ -n "${deploy_webapp_white_list}" ]; then
+                    for ele in $deploy_webapp_white_list; do
+                        if [ ${el} = ${ele} ]; then
+                            run jar xf ${ear} ${el}
+                        fi
+                    done
+                else
+                    run jar xf ${ear} ${el}
+                fi
+            done
+
+            # copy these from the current configuration: bin, conf
+            run cp -r ${tomcat_base}/{bin,conf} ${tomcat_dir}
+
+            # these just need to be there: logs, temp
+            run mkdir ${tomcat_dir}/{logs,temp}
+
+            # build the packages
+            cd ${dir}
+            run dpkg-deb --build debian
+            run mv debian.deb ${package_name}-${version}.deb
+            
+            if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
+                run fakeroot alien --to-rpm --scripts ${package_name}-${version}.deb
+                mv *.rpm ${cache_dir}
+                print "RPM package of your $instance $type instance with with build"
+                print "version $version is now available in ${cache_dir}"
+            fi
+            
+            mv *.deb ${cache_dir}
+            print "DEB package of your $instance $type instance with with build"
+            print "version $version is now available in ${cache_dir}"
+            ;;
+        *)
+            print "Only supported on Tomcat so far"
+            ;;
+    esac
+    
+    run -rf ${dir}
+}
+
 function get_log4j_log()
 {
     for el in $log_file_list; do
@@ -1533,6 +1617,9 @@ for el in $command; do
             ;;
         assemble)
             assemble
+            ;;
+        package)
+            create_packages
             ;;
         clean)
             clean_up
