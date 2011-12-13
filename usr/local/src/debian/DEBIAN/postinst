@@ -2,7 +2,7 @@
 set -e
 
 chmod +x /usr/sbin/ece-install /usr/bin/{ece,system-info}
-/usr/sbin/ece-install
+echo "You can now run ece-install to install Escenic Content Engine & friends"
 
 exit 0
 
