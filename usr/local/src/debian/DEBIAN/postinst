@@ -1,4 +1,8 @@
 #! /usr/bin/env bash
 set -e
 
+chmod +x /usr/sbin/ece-install /usr/bin/{ece,system-info}
 /usr/sbin/ece-install
+
+exit 0
+
