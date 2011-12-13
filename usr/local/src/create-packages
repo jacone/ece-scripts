@@ -1,0 +1,23 @@
+#! /usr/bin/env bash
+
+rm -rf debian/{etc,usr}
+
+target_dir=debian
+package_name=escenic-content-engine-installer
+version=5.3.3.3
+
+cp -r ../../../etc $target_dir
+
+mkdir -p $target_dir/usr
+cp -r ../../../usr/bin $target_dir/usr
+cp -r ../../../usr/sbin $target_dir/usr
+cp -r ../../../usr/share $target_dir/usr
+
+sed -i "s#VERSION#${version}#g" $target_dir/DEBIAN/control
+
+dpkg-deb --build debian
+mv debian.deb ${package_name}-${version}.deb
+
+if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
+    fakeroot alien --to-rpm --scripts ${package_name}-${version}.deb
+fi
