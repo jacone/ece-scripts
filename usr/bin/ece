@@ -1006,7 +1006,18 @@ function create_packages()
 
     local dir=$(mktemp -d)
     local package_dir=$dir/debian
-    local package_name=escenic-${type}-${instance}
+    local package_name=""
+    
+    if [ $type = "engine" ]; then
+        package_name="escenic-content-engine-${instance}"
+    elif [ $type = "search" ]; then
+        package_name="escenic-search-engine-${instance}"
+    elif [ $type = "rmi-hub" ]; then
+        package_name="escenic-rmi-hub"
+    elif [ $type = "analysis" ]; then
+        package_name="escenic-analysis-engine-${instance}"
+    fi
+    
     # TODO the version might be a bit on the extreme side. Could come
     # from the SCM (if available)
     local version=$(date +%s)
@@ -1039,7 +1050,7 @@ EOF
             for el in $(jar tf ${ear} | grep .war$); do
                 if [ -n "${deploy_webapp_white_list}" ]; then
                     for ele in $deploy_webapp_white_list; do
-                        if [ ${el} = ${ele} ]; then
+                        if [ ${el} = ${ele}.war ]; then
                             run jar xf ${ear} ${el}
                         fi
                     done
@@ -1057,25 +1068,28 @@ EOF
             # build the packages
             cd ${dir}
             run dpkg-deb --build debian
-            run mv debian.deb ${package_name}-${version}.deb
+            local deb_package=${package_name}-${version}.deb
+            run mv debian.deb ${deb_package}
             
             if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
-                run fakeroot alien --to-rpm --scripts ${package_name}-${version}.deb
+                run fakeroot alien --to-rpm --scripts ${deb_package}
                 mv *.rpm ${cache_dir}
                 print "RPM package of your $instance $type instance with with build"
-                print "version $version is now available in ${cache_dir}"
+                print "version $version is now available:"
+                print $(echo /var/cache/escenic/${package_name}-${version}*.rpm)
             fi
             
             mv *.deb ${cache_dir}
             print "DEB package of your $instance $type instance with with build"
-            print "version $version is now available in ${cache_dir}"
+            print "version $version is now available:"
+            print /var/cache/escenic/${deb_package}
             ;;
         *)
-            print "Only supported on Tomcat so far"
+            print "Package creation is only supported on Tomcat so far."
             ;;
     esac
-    
-    run -rf ${dir}
+
+    run rm -rf ${dir}
 }
 
 function get_log4j_log()
@@ -1295,14 +1309,12 @@ function clean_up()
             2>>$log_file
     fi
     
-    if [ -e /var/cache/escenic/ -a \
-        `ls  /var/cache/escenic | grep ece- | wc -l` -gt 0 ]; then
-        print "Cleaning up "`basename $0`" files in /var/cache/escenic/ ..." 
-        rm -rf /var/cache/escenic/* \
+    if [ -d /var/cache/escenic ]; then
+        print "Cleaning up ear, deb and rpm files in /var/cache/escenic ..." 
+        rm -rf /var/cache/escenic/*.{rpm,deb,ear} \
             1>>$log_file \
             2>>$log_file
     fi
-    
 }
 
 function set_id()
