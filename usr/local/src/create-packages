@@ -41,6 +41,11 @@ sed -i "s#MAINTAINER_EMAIL#$(get_email)#g" $target_dir/DEBIAN/control
 # fix permissions
 chmod 755 $target_dir/DEBIAN/postinst
 
+if [ ! -x /usr/bin/dpkg-deb ]; then
+    echo "You must have dpkg-deb installed"
+    exit 1
+fi
+
 dpkg-deb --build debian
 mv debian.deb ${package_name}-${version}.deb
 
