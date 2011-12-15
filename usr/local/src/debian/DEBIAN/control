@@ -1,10 +1,14 @@
 Package: escenic-content-engine-installer
-Version: 5.3.3.3
+Version: VERSION
 Section: base
 Priority: optional
 Architecture: all
-Maintainer: Torstein Krause Johansen <tkj@vizrt.com>
+Maintainer: MAINTAINER_NAME <MAINTAINER_EMAIL>
 Description: The Escenic Content Engine Installer.
-  This script lets you install the Escenic Content Engine, its plugins
-  and Widget Framwork. It will also allow you to install the database,
-  cache and web servers.
+  The ece-install script lets you install the Escenic Content Engine,
+  its plugins and Widget Framwork. It will also allow you to install
+  the database, cache and web servers.
+  .
+  The script can run in both interactive or full automatic mode (FAI). See the
+  documentation in /usr/share/doc/escenic/ for further details.
+ 
