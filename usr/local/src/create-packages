@@ -4,7 +4,26 @@ rm -rf debian/{etc,usr}
 
 target_dir=debian
 package_name=escenic-content-engine-installer
-version=5.3.3.3
+
+function get_version()
+{
+    engine_file=$(grep http ../../sbin/ece-install | grep "/engine")
+    version=$(basename $engine_file .zip | cut -d'-' -f2)
+    echo $version
+}
+
+function get_name()
+{
+    name=$(grep $USER /etc/passwd | cut -d':' -f5 | cut -d',' -f1)
+    echo "${name}"
+}
+
+function get_email()
+{
+    echo ${USER}@${HOSTNAME}
+}
+
+version=$(get_version)
 
 cp -r ../../../etc $target_dir
 
@@ -13,7 +32,11 @@ cp -r ../../../usr/bin $target_dir/usr
 cp -r ../../../usr/sbin $target_dir/usr
 cp -r ../../../usr/share $target_dir/usr
 
+cp $target_dir/DEBIAN/control $target_dir/DEBIAN/control.orig
+
 sed -i "s#VERSION#${version}#g" $target_dir/DEBIAN/control
+sed -i "s#MAINTAINER_NAME#$(get_name)#g" $target_dir/DEBIAN/control
+sed -i "s#MAINTAINER_EMAIL#$(get_email)#g" $target_dir/DEBIAN/control
 
 # fix permissions
 chmod 755 $target_dir/DEBIAN/postinst
@@ -24,3 +47,6 @@ mv debian.deb ${package_name}-${version}.deb
 if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
     fakeroot alien --to-rpm --scripts ${package_name}-${version}.deb
 fi
+
+# cleanup
+cp $target_dir/DEBIAN/control.orig $target_dir/DEBIAN/control
