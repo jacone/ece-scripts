@@ -1,4 +1,4 @@
-# auto completion for the /usr/bin/ece command.
+# auto completion for the /usr/bin/ece command.       Emacs: -*- sh -*- mode
 
 _ece_commands()
 {
