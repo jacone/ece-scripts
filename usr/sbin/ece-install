@@ -146,7 +146,7 @@ http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
 http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.6.0.zip
 http://technet.escenic.com/downloads/release/53/community-engine-3.6.1.0.zip
 http://technet.escenic.com/downloads/release/53/dashboard-1.0.0.0.zip
-http://technet.escenic.com/downloads/release/53/engine-5.3.4.3.zip
+http://technet.escenic.com/downloads/release/53/engine-5.3.4.7.zip
 http://technet.escenic.com/downloads/release/53/forum-3.0.0.0.zip
 http://technet.escenic.com/downloads/release/53/inpage-1.3.0.0.zip
 http://technet.escenic.com/downloads/release/53/lucy-dist-4.1.6.0.zip
@@ -810,6 +810,7 @@ function set_up_app_server
 
     set_ece_instance_conf tomcat_base $tomcat_base   
     set_ece_instance_conf tomcat_home /opt/tomcat   
+    set_ece_instance_conf appserver_port $appserver_port
    
     run cd $tomcat_base/lib
     make_ln $jdbc_driver
@@ -1761,7 +1762,9 @@ function is_installing_from_archives()
     log ece_instance_ear_file=$ece_instance_ear_file
     log ece_instance_conf_archive=$ece_instance_conf_archive
 
-    if [[ -z "$ece_instance_ear_file" || -z "$ece_instance_conf_archive" ]]; then
+    if [[ -z "$ece_instance_ear_file" || \
+        -z "$ece_instance_conf_archive" || \
+        $fai_enabled -eq 0 ]]; then
         echo 0
         return
     fi
@@ -1845,7 +1848,7 @@ function install_presentation_server()
 {
     print_and_log "Installing a presentation server on $HOSTNAME ..."
     type=engine
-    install_ece_instance "web1" 1
+    install_ece_instance "web1" $PROFILE_PRESENTATION_SERVER
 }
 
 function assemble_deploy_and_restart_type()
