@@ -15,6 +15,9 @@ cp -r ../../../usr/share $target_dir/usr
 
 sed -i "s#VERSION#${version}#g" $target_dir/DEBIAN/control
 
+# fix permissions
+chmod 755 $target_dir/DEBIAN/postinst
+
 dpkg-deb --build debian
 mv debian.deb ${package_name}-${version}.deb
 
