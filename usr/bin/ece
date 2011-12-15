@@ -13,6 +13,7 @@
 verbose=0
 force_ipv4=0
 quiet=0
+everything_but_the_kitchen_sink=0
 
 ######################################################################
 # Dear user, don't touch anyting in this script, especially below this
@@ -259,7 +260,11 @@ function set_type_pid()
 function set_type_port()
 {
     host=localhost
-    if [ $appserver != "tomcat" ]; then
+    # port set in ece[-instance].conf takes precedence
+    if [ -n "${appserver_port}" ]; then
+        port=${appserver_port}
+        debug "appserver_port set in .conf files=${port}"
+    elif [ $appserver != "tomcat" ]; then
         debug "Only tomcat is supported for reading host/port right now, "
         debug "trying to make an educated guess"
         port=8080
@@ -1036,8 +1041,8 @@ EOF
 
     case $appserver in
         tomcat)
-            local tomcat_dir=${package_dir}${tomcat_base}
-            local tomcat_escenic_dir=${tomcat_dir}/escenic
+            local tomcat_base_dir=${package_dir}${tomcat_base}
+            local tomcat_escenic_dir=${tomcat_base_dir}/escenic
 
             # lib
             run mkdir -p ${tomcat_escenic_dir}
@@ -1045,8 +1050,8 @@ EOF
             run jar xf ${ear} lib
 
             # war
-            run mkdir -p ${tomcat_dir}/webapps
-            run cd ${tomcat_dir}/webapps
+            run mkdir -p ${tomcat_base_dir}/webapps
+            run cd ${tomcat_base_dir}/webapps
             for el in $(jar tf ${ear} | grep .war$); do
                 if [ -n "${deploy_webapp_white_list}" ]; then
                     for ele in $deploy_webapp_white_list; do
@@ -1059,11 +1064,36 @@ EOF
                 fi
             done
 
+            # putting this block here so that anything overridden in
+            # tomcat_base takes precedence over tomcat_home
+            if [ ${everything_but_the_kitchen_sink} -eq 1 ]; then
+                (
+                    local tomcat_home_dir=${package_dir}${tomcat_home}
+                    run mkdir -p ${tomcat_home_dir}
+                    run cd ${tomcat_home_dir}
+                    run cp -r ${tomcat_home}/{bin,lib} ${tomcat_home_dir}
+
+                    local etc_escenic_dir=${package_dir}/etc/escenic
+                    run mkdir -p ${etc_escenic_dir}
+                    cd ${etc_escenic_dir}
+                    run cp -r /etc/escenic/{ece,ece-${instance}}.conf \
+                        ${etc_escenic_dir}
+
+                    run mkdir -p ${etc_escenic_dir}/engine
+                    run cp -r /etc/escenic/engine/common \
+                        ${etc_escenic_dir}
+                    
+                    run mkdir -p ${etc_escenic_dir}/engine/instance
+                    run cp -r /etc/escenic/engine/instance/${instance} \
+                        ${etc_escenic_dir}
+                )
+            fi
+            
             # copy these from the current configuration: bin, conf
-            run cp -r ${tomcat_base}/{bin,conf} ${tomcat_dir}
+            run cp -r ${tomcat_base}/{bin,conf} ${tomcat_base_dir}
 
             # these just need to be there: logs, temp
-            run mkdir ${tomcat_dir}/{logs,temp}
+            run mkdir ${tomcat_base_dir}/{logs,temp}
 
             # build the packages
             cd ${dir}
@@ -1180,6 +1210,11 @@ function set_type_command_and_instance()
     for el in $@; do
         if [ $el = "-v" -o $el = "--verbose" ]; then
             verbose=1
+            continue
+        fi
+        
+        if [ $el  = "--full" ]; then
+            everything_but_the_kitchen_sink=1
             continue
         fi
         
