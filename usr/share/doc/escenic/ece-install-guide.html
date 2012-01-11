@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2011-12-02 11:07:01 CST"/>
+<meta name="generated" content="2012-01-11 18:24:53 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -414,7 +414,7 @@ you forget to provide such a configuration file:
 </p>
 
 
-<pre class="src src-sh">[ece-install] /root/ece-install.conf doesn<span style="color: #8b2252;">'t exist, I cannot live without it :-(</span>
+<pre class="src src-sh">[ece-install] /root/ece-install.conf doesn<span style="color: #ffa07a;">'t exist, I cannot live without it :-(</span>
 </pre>
 
 
@@ -425,7 +425,7 @@ cannot find what it's looking for:
 
 
 <pre class="src src-sh">[ece-install] Be sure to set technet_user and technet_password
-[ece-install]<span style="color: #a020f0;"> in</span> /root/ece-install.conf
+[ece-install]<span style="color: #00ffff;"> in</span> /root/ece-install.conf
 </pre>
 
 
@@ -434,8 +434,8 @@ The minimum ece-install.conf file is thus:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #a0522d;">technet_user</span>=&lt;user&gt;
-<span style="color: #a0522d;">technet_password</span>=&lt;password&gt;
+<pre class="src src-sh"><span style="color: #f0dfaf;">technet_user</span>=&lt;user&gt;
+<span style="color: #f0dfaf;">technet_password</span>=&lt;password&gt;
 </pre>
 
 
@@ -451,7 +451,7 @@ With the configuration file in place, you're now ready to run it:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #b22222;"># </span><span style="color: #b22222;">bash ece-install [-v|--verbose]</span>
+<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash ece-install [-v|--verbose]</span>
 </pre>
 
 
@@ -473,7 +473,7 @@ this is to run the BASH interpreter with the -x flag:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #b22222;"># </span><span style="color: #b22222;">bash -x ece-install</span>
+<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash -x ece-install</span>
 </pre>
 
 
@@ -497,9 +497,9 @@ want to install:
 
 <pre class="src src-sh">Hi, which server profile do you wish to install?
 
-   1 - All<span style="color: #a020f0;"> in</span> one, full stack on one host, suitable for dev &amp; <span style="color: #483d8b;">test</span> environments
+   1 - All<span style="color: #00ffff;"> in</span> one, full stack on one host, suitable for dev &amp; <span style="color: #b0c4de;">test</span> environments
    2 - Editorial (publication) server
-   3 - Presentation server (ECE + memcached)<span style="color: #483d8b;">.</span>
+   3 - Presentation server (ECE + memcached)<span style="color: #b0c4de;">.</span>
    4 - Database server
    5 - Cache server (cache and web server)
    6 - RMI hub
@@ -691,10 +691,10 @@ The script will fail by itself if the DB already exists:
 </p>
 
 
-<pre class="src src-conf">[<span style="color: #228b22;">ece-install</span>] Setting up the ECE database schema ...
-<span style="color: #a0522d;">ERROR 1007 (HY000) at line 1</span>: Can<span style="color: #8b2252;">'t create database '</span>ece5db<span style="color: #8b2252;">'; database exists</span>
-<span style="color: #8b2252;">ERROR 1050 (42S01) at line 2: Table '</span>DBChangeLog<span style="color: #8b2252;">' already exists</span>
-<span style="color: #8b2252;">[ece-install] running tables FAILED, exiting :-(</span>
+<pre class="src src-conf">[<span style="color: #98fb98;">ece-install</span>] Setting up the ECE database schema ...
+<span style="color: #f0dfaf;">ERROR 1007 (HY000) at line 1</span>: Can<span style="color: #ffa07a;">'t create database '</span>ece5db<span style="color: #ffa07a;">'; database exists</span>
+<span style="color: #ffa07a;">ERROR 1050 (42S01) at line 2: Table '</span>DBChangeLog<span style="color: #ffa07a;">' already exists</span>
+<span style="color: #ffa07a;">[ece-install] running tables FAILED, exiting :-(</span>
 </pre>
 
 
@@ -778,8 +778,8 @@ complain:
 </p>
 
 
-<pre class="src src-sh">[ece-install] Be sure to set wf_user and wf_password<span style="color: #a020f0;"> in</span> /root/ece-install.conf
-[ece-install] If you don<span style="color: #8b2252;">'t have these, please contact support@escenic.com</span>
+<pre class="src src-sh">[ece-install] Be sure to set wf_user and wf_password<span style="color: #00ffff;"> in</span> /root/ece-install.conf
+[ece-install] If you don<span style="color: #ffa07a;">'t have these, please contact support@escenic.com</span>
 </pre>
 
 </div>
@@ -974,11 +974,11 @@ need this in your ece-install.conf:
 </p>
 
 
-<pre class="src src-conf"><span style="color: #a0522d;">fai_enabled</span>=1
+<pre class="src src-conf"><span style="color: #f0dfaf;">fai_enabled</span>=1
 
-<span style="color: #a0522d;">fai_restore_from_backup</span>=1
-<span style="color: #a0522d;">fai_restore_all</span>=1
-<span style="color: #a0522d;">fai_restore_from_file</span>=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
+<span style="color: #f0dfaf;">fai_restore_from_backup</span>=1
+<span style="color: #f0dfaf;">fai_restore_all</span>=1
+<span style="color: #f0dfaf;">fai_restore_from_file</span>=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
 </pre>
 
 
@@ -1037,7 +1037,7 @@ output to a log file for easy reading later on:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #b22222;"># </span><span style="color: #b22222;">bash ece-install &gt; ece-install.out &amp;</span>
+<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash ece-install &gt; ece-install.out &amp;</span>
 </pre>
 
 
@@ -1046,7 +1046,7 @@ Alternatively, you may do:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #b22222;"># </span><span style="color: #b22222;">nohup bash ece-install &gt; ece-install.out &amp;</span>
+<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">nohup bash ece-install &gt; ece-install.out &amp;</span>
 </pre>
 
 <p>
@@ -1102,11 +1102,11 @@ assembly environment set up and then do:
 
 
 <pre class="src src-sh">$ cd /opt/escenic/engine
-$ tar czf /tmp/nursery-skeleton-and-security.tar.gz <span style="color: #8b2252;">\</span>
-  engine/security <span style="color: #8b2252;">\</span>
-  engine/siteconfig/config-skeleton/ <span style="color: #8b2252;">\</span>
-  engine/siteconfig/bootstrap-skeleton/ <span style="color: #8b2252;">\</span>
-  <span style="color: #ff00ff;">`find -L  assemblytool/plugins/ -name siteconfig`</span>
+$ tar czf /tmp/nursery-skeleton-and-security.tar.gz <span style="color: #ffa07a;">\</span>
+  engine/security <span style="color: #ffa07a;">\</span>
+  engine/siteconfig/config-skeleton/ <span style="color: #ffa07a;">\</span>
+  engine/siteconfig/bootstrap-skeleton/ <span style="color: #ffa07a;">\</span>
+  <span style="color: #fa8072;">`find -L  assemblytool/plugins/ -name siteconfig`</span>
 </pre>
 
 
@@ -1118,8 +1118,8 @@ e.g.:
 
 
 
-<pre class="src src-sh"><span style="color: #a0522d;">fai_presentation_ear</span>=/tmp/engine.ear
-<span style="color: #a0522d;">fai_presentation_conf_archive</span>=/tmp/nursery-skeleton-and-security.tar.gz
+<pre class="src src-sh"><span style="color: #f0dfaf;">fai_presentation_ear</span>=/tmp/engine.ear
+<span style="color: #f0dfaf;">fai_presentation_conf_archive</span>=/tmp/nursery-skeleton-and-security.tar.gz
 </pre>
 
 
@@ -1208,10 +1208,10 @@ would be:
 
 
 
-<pre class="src src-sh"><span style="color: #a0522d;">fai_enabled</span>=1
-<span style="color: #a0522d;">fai_editor_install</span>=1
-<span style="color: #a0522d;">fai_publication_create</span>=1
-<span style="color: #a0522d;">fai_publication_name</span>=jollygood
+<pre class="src src-sh"><span style="color: #f0dfaf;">fai_enabled</span>=1
+<span style="color: #f0dfaf;">fai_editor_install</span>=1
+<span style="color: #f0dfaf;">fai_publication_create</span>=1
+<span style="color: #f0dfaf;">fai_publication_name</span>=jollygood
 </pre>
 
 
@@ -1228,9 +1228,9 @@ would be:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #a0522d;">fai_enabled</span>=1
-<span style="color: #a0522d;">fai_presentation_install</span>=1
-<span style="color: #a0522d;">fai_presentation_name</span>=web1
+<pre class="src src-sh"><span style="color: #f0dfaf;">fai_enabled</span>=1
+<span style="color: #f0dfaf;">fai_presentation_install</span>=1
+<span style="color: #f0dfaf;">fai_presentation_name</span>=web1
 </pre>
 
 
@@ -1239,11 +1239,11 @@ And then re-issue ece-install with the following configuration:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #a0522d;">fai_enabled</span>=1
-<span style="color: #a0522d;">fai_presentation_install</span>=1
-<span style="color: #a0522d;">fai_presentation_name</span>=web2
-<span style="color: #a0522d;">fai_presentation_port</span>=8081
-<span style="color: #a0522d;">fai_presentation_shutdown</span>=8105
+<pre class="src src-sh"><span style="color: #f0dfaf;">fai_enabled</span>=1
+<span style="color: #f0dfaf;">fai_presentation_install</span>=1
+<span style="color: #f0dfaf;">fai_presentation_name</span>=web2
+<span style="color: #f0dfaf;">fai_presentation_port</span>=8081
+<span style="color: #f0dfaf;">fai_presentation_shutdown</span>=8105
 </pre>
 
 <p>
@@ -1284,10 +1284,10 @@ it will abort:
 </p>
 
 
-<pre class="src src-sh">[ece-install] There<span style="color: #8b2252;">'s already one ece-install process running. If you believe</span>
-<span style="color: #8b2252;">[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted</span>
-<span style="color: #8b2252;">[ece-install] before it completed, you may delete /var/run/ece-install.pid and</span>
-<span style="color: #8b2252;">[ece-install] run ece-install again.</span>
+<pre class="src src-sh">[ece-install] There<span style="color: #ffa07a;">'s already one ece-install process running. If you believe</span>
+<span style="color: #ffa07a;">[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted</span>
+<span style="color: #ffa07a;">[ece-install] before it completed, you may delete /var/run/ece-install.pid and</span>
+<span style="color: #ffa07a;">[ece-install] run ece-install again.</span>
 </pre>
 
 
@@ -1404,6 +1404,25 @@ but these should be the most interesting ones.
 <p>
 *) Applies only to Debian based systems.
 </p>
+<p>
+The root directory of all Escenic software binaries, /opt/escenic,
+together with the root directory for the configuration files may be
+overwritten in ece-install.conf by setting these variables:
+</p>
+
+
+
+<pre class="src src-sh"><span style="color: #f0dfaf;">escenic_root_dir</span>=/opt/escenic-parallel-env
+<span style="color: #f0dfaf;">escenic_conf_dir</span>=/etc/escenic-parallel-env
+</pre>
+
+
+<p>
+Note, this is only needed if you are running two completely separate
+environments on the same host. A use case is if you're setting up a
+test environment and want to separate stacks of Escenic Content Engine
+and plugins.
+</p>
 </div>
 
 </div>
@@ -1458,13 +1477,13 @@ file:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #a0522d;">technet_user</span>=apples
-<span style="color: #a0522d;">technet_password</span>=andoranges
-<span style="color: #a0522d;">wf_user</span>=foo
-<span style="color: #a0522d;">wf_password</span>=bar
+<pre class="src src-sh"><span style="color: #f0dfaf;">technet_user</span>=apples
+<span style="color: #f0dfaf;">technet_password</span>=andoranges
+<span style="color: #f0dfaf;">wf_user</span>=foo
+<span style="color: #f0dfaf;">wf_password</span>=bar
 
-<span style="color: #a0522d;">fai_enabled</span>=1
-<span style="color: #a0522d;">fai_all_install</span>=1
+<span style="color: #f0dfaf;">fai_enabled</span>=1
+<span style="color: #f0dfaf;">fai_all_install</span>=1
 </pre>
 
 
@@ -1520,7 +1539,7 @@ The following output is produced from ece-install:
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2011-12-02 11:07:01 CST
+  Date: 2012-01-11 18:24:53 CST
 </p>
 </div>
 </body>
