@@ -596,6 +596,20 @@ but these should be the most interesting ones.
 
 *) Applies only to Debian based systems.
 
+The root directory of all Escenic software binaries, /opt/escenic,
+together with the root directory for the configuration files may be
+overwritten in ece-install.conf by setting these variables:
+
+#+BEGIN_SRC sh
+escenic_root_dir=/opt/escenic-parallel-env
+escenic_conf_dir=/etc/escenic-parallel-env
+#+END_SRC
+
+Note, this is only needed if you are running two completely separate
+environments on the same host. A use case is if you're setting up a
+test environment and want to separate stacks of Escenic Content Engine
+and plugins.
+
 * Assumptions
 ** /etc/esecenic is shared
 It's assumed that the /etc/escenic directory is either on a shared
