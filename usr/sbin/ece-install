@@ -15,13 +15,15 @@
 #####################################################################
 # User definable variables (the defaults are fine in most
 # cases). These are the most likely variables you want to change and
-# they can all be set in the .ece-isntall.conf file
+# they can all be set in the ece-install.conf file
 #####################################################################
 ece_user=escenic
 ece_group=escenic
 jdbc_driver=/usr/share/java/mysql.jar
 debug=0
 tomcat_download=http://apache.stu.edu.tw/tomcat/tomcat-6/v6.0.33/bin/apache-tomcat-6.0.33.tar.gz
+escenic_root_dir=/opt/escenic
+escenic_conf_dir=/etc/escenic
 
 # The script will install the sun-java6-jdk package on Debian based
 # systems and this is the path of the JAVA home with this package. If
@@ -175,9 +177,9 @@ PROFILE_RESTORE_FROM_BACKUP=11
 # directories.
 engine_dir_list="
 $common_nursery_dir
-/etc/escenic/engine/family/default
-/etc/escenic/engine/host/localhost
-/opt/escenic
+$escenic_conf_dir/engine/family/default
+$escenic_conf_dir/engine/host/localhost
+$escenic_root_dir
 /var/cache/escenic
 /var/crash/escenic
 /var/lib/escenic
@@ -300,27 +302,27 @@ function set_up_assembly_tool()
 {
     print_and_log "Setting up the Assembly Tool ..."
     
-    make_dir /opt/escenic/assemblytool/
-    cd /opt/escenic/assemblytool/
+    make_dir $escenic_root_dir/assemblytool/
+    cd $escenic_root_dir/assemblytool/
     
     if [ -e $download_dir/assemblytool*zip ]; then
         run unzip -u $download_dir/assemblytool*zip
     fi
 
     # adding an instance layer to the Nursery configuration
-    cp -r /opt/escenic/engine/siteconfig/bootstrap-skeleton \
-        /opt/escenic/assemblytool/conf
-    cd /opt/escenic/assemblytool/conf/
+    cp -r $escenic_root_dir/engine/siteconfig/bootstrap-skeleton \
+        $escenic_root_dir/assemblytool/conf
+    cd $escenic_root_dir/assemblytool/conf/
     cp -r layers/host layers/instance
     cat > layers/instance/Files.properties <<EOF
 \$class=neo.nursery.FileSystemDepot
-fileSystemRoot = /etc/escenic/engine/instance/\${com.escenic.instance}/
+fileSystemRoot = $escenic_conf_dir/engine/instance/\${com.escenic.instance}/
 EOF
     echo "" >> Nursery.properties
     echo "layer.06 = /layers/instance/Layer" >> Nursery.properties
     
     # set up which plugins to use
-    cd /opt/escenic/assemblytool/
+    cd $escenic_root_dir/assemblytool/
     make_dir plugins
     cd plugins
     find ../../ -maxdepth 1 -type d | \
@@ -341,7 +343,7 @@ EOF
         make_ln $directory
     done
 
-    run cd /opt/escenic/assemblytool/
+    run cd $escenic_root_dir/assemblytool/
     run ant -q initialize
     sed -i 's/#\ engine.root\ =\ \./engine.root=\/opt\/escenic\/engine/g' \
         assemble.properties \
@@ -362,8 +364,8 @@ function set_up_engine_and_plugins()
     
     print_and_log "Setting up the Escenic Content Engine & its plugins ..."
 
-    make_dir /opt/escenic
-    cd /opt/escenic/
+    make_dir $escenic_root_dir
+    cd $escenic_root_dir/
 
     for el in $technet_download_list; do
         if [ $(basename $el | \
@@ -385,9 +387,9 @@ function set_up_engine_and_plugins()
         debug "${engine_dir} is already there, skipping to next step."
     fi
 
-    # we now extract all the plugins. We extract them in /opt/escenic
+    # we now extract all the plugins. We extract them in $escenic_root_dir
     # as we want to re-use them between minor updates of ECE.
-    cd /opt/escenic/
+    cd $escenic_root_dir/
     for el in $download_dir/*.zip; do
         if [ $(basename $el | grep ^engine-.*.zip | wc -l) -gt 0 ]; then
             continue
@@ -421,8 +423,8 @@ function set_up_ecedb()
 {
     print_and_log "Setting up the ECE database schema ..."
 
-    make_dir /opt/escenic/engine/plugins
-    run cd /opt/escenic/engine/plugins
+    make_dir $escenic_root_dir/engine/plugins
+    run cd $escenic_root_dir/engine/plugins
     
     find ../../ -maxdepth 1 -type d | \
         grep -v assemblytool | \
@@ -449,7 +451,7 @@ function set_up_ecedb()
     create_ecedb
     
     cd ~/
-    run rm -rf /opt/escenic/engine/plugins
+    run rm -rf $escenic_root_dir/engine/plugins
 
     add_next_step "DB is now set up on $HOSTNAME:3306"
 }
@@ -458,25 +460,25 @@ function set_up_basic_nursery_configuration()
 {
     print_and_log "Setting up the basic Nursery configuration ..."
 
-    local escenic_home=/opt/escenic
+    local escenic_root_dir=$escenic_root_dir
     
     if [ $(is_installing_from_archives) -eq 1 ]; then
         print_and_log "Using the supplied Nursery & JAAS configuration from" 
         print_and_log "bundle: $ece_instance_conf_archive"
         local dir=$(mktemp -d)
-        escenic_home=$dir
+        escenic_root_dir=$dir
         run cd $dir
         run tar xzf $ece_instance_conf_archive
     fi
     
-    run cp -r $escenic_home/engine/siteconfig/config-skeleton/* \
+    run cp -r $escenic_root_dir/engine/siteconfig/config-skeleton/* \
         $common_nursery_dir/
-    run cp -r $escenic_home/engine/security/ \
+    run cp -r $escenic_root_dir/engine/security/ \
         $common_nursery_dir/
 
-    make_dir /etc/escenic/engine/instance
+    make_dir $escenic_conf_dir/engine/instance
 
-    for el in $escenic_home/assemblytool/plugins/*; do
+    for el in $escenic_root_dir/assemblytool/plugins/*; do
         if [ ! -d $el/misc/siteconfig/ ]; then
             continue
         fi
@@ -532,7 +534,7 @@ EOF
 
 function set_up_instance_specific_nursery_configuration()
 {
-    for el in /etc/escenic/engine/instance/*; do
+    for el in $escenic_conf_dir/engine/instance/*; do
        i=$(( i + 1 ))
        if [ $(basename $el) = $instance_name ]; then
            rmi_port="8${i}23"
@@ -541,7 +543,7 @@ function set_up_instance_specific_nursery_configuration()
     done
 
     nursery_context=neo/io/managers/HubConnectionManager.properties
-    file=/etc/escenic/engine/instance/$instance_name/$nursery_context
+    file=$escenic_conf_dir/engine/instance/$instance_name/$nursery_context
     make_dir $(dirname $file)
     
     # we don't touch it if the file already exists.
@@ -620,7 +622,7 @@ function set_conf_file_value()
 # the value already is set, it will replace it with this one.
 function set_ece_instance_conf()
 {
-    instance_conf_file=/etc/escenic/ece-$instance_name.conf
+    instance_conf_file=$escenic_conf_dir/ece-$instance_name.conf
     set_conf_file_value $1 $2 $instance_conf_file
 }
 
@@ -1093,26 +1095,26 @@ function create_publication_definition_and_war()
     fi
 
     print_and_log "Setting up the ${publication_name} publication ..."
-    make_dir /opt/escenic/assemblytool/publications/
-    run cd /opt/escenic/assemblytool/publications/
-    cat > /opt/escenic/assemblytool/publications/${publication_name}.properties <<EOF
+    make_dir $escenic_root_dir/assemblytool/publications/
+    run cd $escenic_root_dir/assemblytool/publications/
+    cat > $escenic_root_dir/assemblytool/publications/${publication_name}.properties <<EOF
 name: ${publication_name}
 source-war: ${publication_name}.war
 context-root: ${publication_name}
 EOF
 
-    publication_war=/opt/escenic/assemblytool/publications/${publication_name}.war
+    publication_war=$escenic_root_dir/assemblytool/publications/${publication_name}.war
     if [[ $fai_enabled -eq 1 && -n "${fai_publication_war}" ]]; then
         print_and_log "Basing ${publication_name}.war on the one specified in $conf_file"
         run cp ${fai_publication_war} ${publication_war}
-    elif [ -d /opt/escenic/widget-framework-core-* ]; then
+    elif [ -d $escenic_root_dir/widget-framework-core-* ]; then
         print_and_log "Basing ${publication_name}.war on Widget Framework Demo ..."
-        run cd /opt/escenic/widget-framework-core-*/publications/demo-core
+        run cd $escenic_root_dir/widget-framework-core-*/publications/demo-core
         run mvn $maven_opts package
         run cp target/demo-core-*.war ${publication_war}
     else
         print_and_log "Basing your ${publication_name}.war on ECE/demo-clean ..."
-        run cp /opt/escenic/engine/contrib/wars/demo-clean.war ${publication_war}
+        run cp $escenic_root_dir/engine/contrib/wars/demo-clean.war ${publication_war}
     fi
 
     # TODO add support for the community widgets
@@ -1158,7 +1160,7 @@ function install_memcached()
      # 2) configure PresenationArticle cache for the publication
      # 3) build and re-deploy
     
-    cat >> /etc/escenic/engine/common/Initial.properties <<EOF
+    cat >> $escenic_conf_dir/engine/common/Initial.properties <<EOF
 
 # using memcached
 service.0.0-memcached-socket-pool=/com/danga/SockIOPool
@@ -1192,14 +1194,14 @@ function set_up_user_enviornment()
 function set_up_solr()
 {
     print_and_log "Setting up solr ..."
-    if [ ! -d /etc/escenic/solr ]; then
-        run cp -r /opt/escenic/engine/solr/conf /etc/escenic/solr
+    if [ ! -d $escenic_conf_dir/solr ]; then
+        run cp -r $escenic_root_dir/engine/solr/conf $escenic_conf_dir/solr
     fi
     
     make_dir /var/lib/escenic/solr/
     run cd /var/lib/escenic/solr/
     if  [ ! -h conf ]; then
-        run ln -s /etc/escenic/solr conf
+        run ln -s $escenic_conf_dir/solr conf
     fi
 }
 
@@ -1210,12 +1212,12 @@ function un_install_ece()
 {
     print_and_log "Uninstalling ECE ..."
      # TODO safety, warnings++
-    rm -rf /etc/escenic/ \
+    rm -rf $escenic_conf_dir/ \
         /opt/*tomcat* \
-        /opt/escenic \
+        $escenic_root_dir \
         /var/lib/escenic \
         /var/run/escenic/ \
-        /etc/escenic/ \
+        $escenic_conf_dir/ \
         /usr/bin/ece \
         /var/log/escenic/ \
         /etc/apt/sources.list.d/escenic.list \
@@ -1692,7 +1694,7 @@ function ask_for_instance_name()
     if [ -z "$instance_name" ]; then
         instance_name=$1
     fi
-    make_dir /etc/escenic/engine/instance/${instance_name}
+    make_dir $escenic_conf_dir/engine/instance/${instance_name}
 }
 
 # Will update /etc/default/instance with the type instances which are
@@ -1701,7 +1703,7 @@ function ask_for_instance_name()
 function update_type_instances_to_start_up()
 {
     if [ $type = "engine" ]; then
-        for el in /etc/escenic/ece-*.conf; do
+        for el in $escenic_conf_dir/ece-*.conf; do
             if [ $(echo el | grep analysis | wc -l) -gt 0 ]; then
                 continue
             elif [ $(echo el | grep search | wc -l) -gt 0 ]; then
@@ -1718,7 +1720,7 @@ function update_type_instances_to_start_up()
                 /etc/default/ece
         done
     elif [ $type = "search" ]; then
-        for el in /etc/escenic/ece-*.conf; do
+        for el in $escenic_conf_dir/ece-*.conf; do
             if [ $(echo el | grep search | wc -l) -lt 1 ]; then
                 continue
             fi
@@ -1821,7 +1823,7 @@ function install_ece_instance()
 
     # special treatment for presentation servers
     if [ $2 -eq $PROFILE_PRESENTATION_SERVER ]; then
-        file=/etc/escenic/ece-${instance_name}.conf
+        file=$escenic_conf_dir/ece-${instance_name}.conf
         print_and_log "Creating instance specific conf: $file ..."
         cat >> $file <<EOF
 deploy_webapp_white_list="escenic-admin ${publication_name}"
@@ -1879,8 +1881,8 @@ function ensure_that_instance_is_running()
 
 function create_publication()
 {
-    if [ ! -e /opt/escenic/engine -o \
-        ! -e /opt/escenic/assemblytool ]; then
+    if [ ! -e $escenic_root_dir/engine -o \
+        ! -e $escenic_root_dir/assemblytool ]; then
         print_and_log "Please install ECE and an assembly environment before"
         print_and_log "running this installation profile again."
         remove_pid_and_exit_in_error
@@ -1890,7 +1892,7 @@ function create_publication()
     create_publication_definition_and_war
 
     # TODO make educated guesses about the available instances on
-    # $HOSTNAME by looking in /etc/escenic/ece-*.conf
+    # $HOSTNAME by looking in $escenic_conf_dir/ece-*.conf
     
     default_instance=dev1
 
@@ -1925,10 +1927,10 @@ function install_editorial_server()
 
 function install_rmi_hub()
 {
-    make_dir /etc/escenic/rmi-hub
+    make_dir $escenic_conf_dir/rmi-hub
     
-    run cp -r /opt/escenic/engine/contrib/rmi-hub/config/* \
-        /etc/escenic/rmi-hub/
+    run cp -r $escenic_root_dir/engine/contrib/rmi-hub/config/* \
+        $escenic_conf_dir/rmi-hub/
 
     hub_host=$HOSTNAME
     file=$common_nursery_dir
@@ -2044,14 +2046,14 @@ EOF
             $el \
             1>>$log 2>>$log
         
-        cd /opt/escenic/
+        cd $escenic_root_dir/
         unzip -u $download_dir/$(basename $el) \
             1>>$log 2>>$log
     done
 
     assert_pre_prequesite mvn
     export JAVA_HOME=$java_home
-    wf_maven_dir=$(echo /opt/escenic/widget-framework-core-*/maven)
+    wf_maven_dir=$(echo $escenic_root_dir/widget-framework-core-*/maven)
     run cd $wf_maven_dir
     
     print_and_log "Installing Widget Framework into your Maven repository ..."
@@ -2062,7 +2064,7 @@ EOF
 
     # installing the widget-framework-common as a ECE plugin
     wf_dist_dir=$(echo $wf_maven_dir/widget-framework-common/target/widget-framework-common-*-dist/widget-framework-common-*)
-    cd /opt/escenic/assemblytool/plugins
+    cd $escenic_root_dir/assemblytool/plugins
     if [ ! -h $(basename $wf_dist_dir) ]; then
         ln -s $wf_dist_dir
     fi
@@ -2079,7 +2081,7 @@ function install_search_server()
     type=search
     install_ece_instance "search1" 0
     
-    file=/etc/escenic/ece-${instance_name}.conf
+    file=$escenic_conf_dir/ece-${instance_name}.conf
     print_and_log "Creating instance specific conf: $file ..."
     cat >> $file <<EOF
 deploy_webapp_white_list="escenic-admin solr indexer-webapp"
@@ -2333,8 +2335,8 @@ EOF
         -O $file
     run chmod 755 $file
 
-    if [ ! -e /etc/escenic -o \
-        $(ls /etc/escenic/ | grep ece- | wc -l) -lt 1 ]; then
+    if [ ! -e $escenic_conf_dir -o \
+        $(ls $escenic_conf_dir/ | grep ece- | wc -l) -lt 1 ]; then
         print_and_log "No ECE instances found on $HOSTNAME, so I'm not adding"
         print_and_log "additional Munin configuration"  
         add_next_step "A Munin node has been installed on $HOSTNAME"
@@ -2342,7 +2344,7 @@ EOF
     fi
     
     escenic_jstat_modules="_gc _gcoverhead _heap _uptime"
-    for el in /etc/escenic/ece-*.conf; do
+    for el in $escenic_conf_dir/ece-*.conf; do
         current_instance=$(basename ${el} | \
             sed -e 's/ece-//g' -e 's/engine-//g' | \
             cut -d'.' -f1)
@@ -2573,16 +2575,16 @@ function restore_from_backup()
             )
             create_user_and_group_if_not_present
             
-            if [ -d /etc/escenic -a \
-                $(ls /etc/escenic/ | grep ^ece- | wc -l) -gt 0 -a \
-                $(grep ^tomcat_base /etc/escenic/ece*.conf | wc -l) -gt 0 ]; then
-                directories=$(grep ^tomcat_base /etc/escenic/ece*.conf | \
+            if [ -d $escenic_conf_dir -a \
+                $(ls $escenic_conf_dir/ | grep ^ece- | wc -l) -gt 0 -a \
+                $(grep ^tomcat_base $escenic_conf_dir/ece*.conf | wc -l) -gt 0 ]; then
+                directories=$(grep ^tomcat_base $escenic_conf_dir/ece*.conf | \
                     cut -d'=' -f2 | \
                     sed -e "s/'//g" -e 's/"//g'
                 )
                 s="Setting file permissions according to /etc/default/ece"
                 print_and_log $s
-                s="and /etc/escenic/ece*.conf"
+                s="and $escenic_conf_dir/ece*.conf"
                 print_and_log $s
                 run chown -R ${ece_user}:${ece_group} ${directories}
             fi
