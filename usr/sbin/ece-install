@@ -22,8 +22,16 @@ ece_group=escenic
 jdbc_driver=/usr/share/java/mysql.jar
 debug=0
 tomcat_download=http://apache.stu.edu.tw/tomcat/tomcat-6/v6.0.33/bin/apache-tomcat-6.0.33.tar.gz
+
+# These variables govern where software is installed and data and run
+# time files are written.
 escenic_root_dir=/opt/escenic
 escenic_conf_dir=/etc/escenic
+escenic_log_dir=/var/log/escenic
+escenic_data_dir=/var/lib/escenic
+escenic_run_dir=/var/run/escenic
+escenic_backups_dir=/var/backups/escenic
+appserver_root_dir=/opt
 
 # The script will install the sun-java6-jdk package on Debian based
 # systems and this is the path of the JAVA home with this package. If
@@ -182,10 +190,10 @@ $escenic_conf_dir/engine/host/localhost
 $escenic_root_dir
 /var/cache/escenic
 /var/crash/escenic
-/var/lib/escenic
-/var/lib/escenic/solr/data
-/var/log/escenic
-/var/run/escenic
+$escenic_data_dir
+$escenic_data_dir/solr/data
+$escenic_log_dir
+$escenic_run_dir
 /var/spool/escenic/migration
 "
 
@@ -345,12 +353,12 @@ EOF
 
     run cd $escenic_root_dir/assemblytool/
     run ant -q initialize
-    sed -i 's/#\ engine.root\ =\ \./engine.root=\/opt\/escenic\/engine/g' \
+    sed -i "s~#\ engine.root\ =\ \.~engine.root=${escenic_root_dir}/engine~g" \
         assemble.properties \
         1>>$log 2>>$log
     exit_on_error "sed on assemble.properties"
 
-    sed -i 's/\#\# plugins\ =\ \/path\/to\/plugins/plugins=\/opt\/escenic\/assemblytool\/plugins/g' \
+    sed -i "s~\#\# plugins\ =\ /path/to/plugins~plugins=${escenic_root_dir}/assemblytool/plugins~g" \
         assemble.properties \
         1>>$log 2>>$log
     exit_on_error "sed on assemble.properties"
@@ -504,7 +512,7 @@ function set_up_basic_nursery_configuration()
     
     cat > $common_nursery_dir/ServerConfig.properties <<EOF
 databaseProductName=MySQL
-filePublicationRoot=/var/lib/escenic/engine/
+filePublicationRoot=$escenic_data_dir/engine/
 webPublicationRoot=http://${public_host_name}/
 EOF
     cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
@@ -560,7 +568,7 @@ function set_up_proper_logging_configuration()
     cat > $common_nursery_dir/trace.properties <<EOF
 log4j.rootLogger=ERROR, ECELOG
 log4j.appender.ECELOG=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.ECELOG.File=/var/log/escenic/\${escenic.server}-messages
+log4j.appender.ECELOG.File=$escenic_log_dir/\${escenic.server}-messages
 log4j.appender.ECELOG.layout=org.apache.log4j.PatternLayout
 log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
 EOF
@@ -585,7 +593,7 @@ java.util.logging.ConsoleHandler.level = FINE
 java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
 
 6localhost.org.apache.juli.FileHandler.level = FINE
-6localhost.org.apache.juli.FileHandler.directory = /var/log/escenic
+6localhost.org.apache.juli.FileHandler.directory = $escenic_log_dir
 6localhost.org.apache.juli.FileHandler.prefix = solr.
 
 org.apache.solr.level=INFO
@@ -794,7 +802,7 @@ function set_up_app_server
     run wget $wget_opts $tomcat_download
     tomcat_dir=$(get_base_dir_from_bundle $tomcat_download)
     
-    run cd /opt/
+    run cd $appserver_root_dir
     run tar xzf $download_dir/${tomcat_dir}.tar.gz
 
     if [ -e tomcat ]; then
@@ -802,16 +810,16 @@ function set_up_app_server
     fi
     run ln -sf ${tomcat_dir} tomcat
 
-    tomcat_base=/opt/tomcat-${instance_name}
+    tomcat_base=${appserver_root_dir}-${instance_name}
     make_dir $tomcat_base
 
-    run cp -r /opt/${tomcat_dir}/conf $tomcat_base
+    run cp -r ${appserver_root_dir}/${tomcat_dir}/conf $tomcat_base
     for el in bin escenic/lib lib work logs temp webapps; do
         make_dir $tomcat_base/$el
     done
 
     set_ece_instance_conf tomcat_base $tomcat_base   
-    set_ece_instance_conf tomcat_home /opt/tomcat   
+    set_ece_instance_conf tomcat_home ${appserver_root_dir/tomcat   
     set_ece_instance_conf appserver_port $appserver_port
    
     run cd $tomcat_base/lib
@@ -957,13 +965,13 @@ EOF
 
   <Environment
       name="escenic/head-tail-storage-file"
-      value="/var/lib/escenic/engine/head-tail.index"
+      value="$escenic_data_dir/engine/head-tail.index"
       type="java.lang.String"
       override="false"/>
 
   <Environment
       name="escenic/failing-documents-storage-file"
-      value="/var/lib/escenic/engine/failures.index"
+      value="$escenic_data_dir/engine/failures.index"
       type="java.lang.String"
       override="false"/>
 
@@ -1198,8 +1206,8 @@ function set_up_solr()
         run cp -r $escenic_root_dir/engine/solr/conf $escenic_conf_dir/solr
     fi
     
-    make_dir /var/lib/escenic/solr/
-    run cd /var/lib/escenic/solr/
+    make_dir $escenic_data_dir/solr/
+    run cd $escenic_data_dir/solr/
     if  [ ! -h conf ]; then
         run ln -s $escenic_conf_dir/solr conf
     fi
@@ -1213,13 +1221,13 @@ function un_install_ece()
     print_and_log "Uninstalling ECE ..."
      # TODO safety, warnings++
     rm -rf $escenic_conf_dir/ \
-        /opt/*tomcat* \
+        ${appserver_root_dir}/*tomcat* \
         $escenic_root_dir \
-        /var/lib/escenic \
-        /var/run/escenic/ \
+        $escenic_data_dir \
+        $escenic_run_dir/ \
         $escenic_conf_dir/ \
         /usr/bin/ece \
-        /var/log/escenic/ \
+        $escenic_log_dir/ \
         /etc/apt/sources.list.d/escenic.list \
         /var/run/ece-install.pid
 #        $HOME/.m2 \
@@ -2158,7 +2166,7 @@ server {
   # Typical endpoint for Adactus/Mobilize to get the videos to
   # transcode.
   location /binary {
-    root /var/lib/escenic;
+    root $escenic_data_dir;
     index index.html;
   }
 }
@@ -2191,7 +2199,7 @@ server {
   # Typical endpoint for Adactus/Mobilize to get the videos to
   # transcode.
   location /binary {
-    root /var/lib/escenic;
+    root $escenic_data_dir;
     index index.html;
   }
 }
@@ -2354,9 +2362,9 @@ EOF
         done
 
         # we need to hack a bit since escenic_jstat_ looks for
-        # instance PIDs in /var/run/escenic ece-<instance>.pid. It's
+        # instance PIDs in $escenic_run_dir ece-<instance>.pid. It's
         # now <type>-<instance>.pid
-        file=/var/run/escenic/$type-${instance_name}.pid
+        file=$escenic_run_dir/$type-${instance_name}.pid
         if [ ! -e $file ]; then
             run touch $file
         fi
@@ -2420,7 +2428,7 @@ function restore_from_backup()
     restore_data_files=0
     restore_conf=0
     backup_file=""
-    backup_dir=/var/backups/escenic
+    backup_dir=$escenic_backups_dir
     
     if [ $(get_boolean_conf_value fai_enabled) -eq 1 -a \
         $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
@@ -2539,7 +2547,7 @@ function restore_from_backup()
         run tar -C / -xf $backup_file var/lib/escenic
         add_next_step "Successfully restored Solr & ECE data files"
         add_next_step "Backup file used:  $(basename $backup_file)"
-        add_next_step "Check /var/lib/escenic to verify they're all there."
+        add_next_step "Check $escenic_data_dir to verify they're all there."
     fi
     
     if [ $restore_conf -eq 1 -o $restore_all -eq 1 ]; then
@@ -2557,7 +2565,7 @@ function restore_from_backup()
         run tar -C / -xf $backup_file opt
         add_next_step "Successfully restored Escenic & Tomcat binaries"
         add_next_step "Backup file used: $(basename $backup_file)"
-        add_next_step "Check /opt to verify that they're all there".
+        add_next_step "Check ${appserver_root_dir} to verify that they're all there".
         install_ece_third_party_packages
         set_up_engine_directories
 
