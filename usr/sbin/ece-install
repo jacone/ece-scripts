@@ -31,6 +31,9 @@ escenic_log_dir=/var/log/escenic
 escenic_data_dir=/var/lib/escenic
 escenic_run_dir=/var/run/escenic
 escenic_backups_dir=/var/backups/escenic
+escenic_spool_dir=/var/spool/escenic
+escenic_cache_dir=/var/cache/escenic
+escenic_crash_dir=/var/crash/escenic
 appserver_root_dir=/opt
 
 # The script will install the sun-java6-jdk package on Debian based
@@ -44,7 +47,6 @@ pid_file=/var/run/$(basename $0).pid
 download_dir=/tmp/ece-downloads
 log=/var/log/$(basename $0).log
 conf_file=$HOME/ece-install.conf
-common_nursery_dir=/etc/escenic/engine/common
 ece_scripts_git_source=git://github.com/skybert/ece-scripts.git
 maven_opts="--batch-mode"
 wget_opts="--continue --inet4-only --quiet"
@@ -180,22 +182,6 @@ PROFILE_WIDGET_FRAMEWORK=8
 PROFILE_CREATE_PUBLICATION=9
 PROFILE_MONITORING_SERVER=10
 PROFILE_RESTORE_FROM_BACKUP=11
-
-# Because of issue VF-3559, we also create the default family and host
-# directories.
-engine_dir_list="
-$common_nursery_dir
-$escenic_conf_dir/engine/family/default
-$escenic_conf_dir/engine/host/localhost
-$escenic_root_dir
-/var/cache/escenic
-/var/crash/escenic
-$escenic_data_dir
-$escenic_data_dir/solr/data
-$escenic_log_dir
-$escenic_run_dir
-/var/spool/escenic/migration
-"
 
 function make_dir()
 {
@@ -1479,6 +1465,26 @@ function common_pre_install()
 
     run source $conf_file
 
+    # These variables are placed here as all the directories can be
+    # overridden in ece-install.conf
+    common_nursery_dir=$escenic_conf_dir/engine/common
+    
+    # Because of issue VF-3559, we also
+    # create the default family and host directories.
+    engine_dir_list="
+      $common_nursery_dir
+      $escenic_conf_dir/engine/family/default
+      $escenic_conf_dir/engine/host/localhost
+      $escenic_root_dir
+      $escenic_cache_dir
+      $escenic_crash_dir
+      $escenic_data_dir
+      $escenic_data_dir/solr/data
+      $escenic_log_dir
+      $escenic_run_dir
+      $escenic_spool_dir/migration
+    "
+    
     if [ -z "$technet_user" -o -z "$technet_password" ]; then
         print_and_log "Be sure to set technet_user and technet_password "
         print_and_log "in $conf_file"
@@ -1865,7 +1871,7 @@ function assemble_deploy_and_restart_type()
 
     ece_command="ece -i $instance_name -t $type assemble deploy restart"
     if [ $(is_installing_from_archives) -eq 1 ]; then
-        run cp $ece_instance_ear_file /var/cache/escenic/engine.ear
+        run cp $ece_instance_ear_file $escenic_cache_dir/engine.ear
         ece_command="ece -i $instance_name -t $type deploy restart"
         print_and_log "Using the supplied EAR instead of running an assembly."
     fi
@@ -2152,7 +2158,11 @@ function install_web_server()
     fi
     
     file=/etc/nginx/sites-available/default
-    run mv $file $file.orig
+    # in some very unusual cases, this file will not exist (can occur
+    # when re-running ece-install several times).
+    if [ -e $file ]; then
+        run mv $file $file.orig
+    fi
 
     if [ $1 -eq 0 ]; then
         port=81
