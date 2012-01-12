@@ -7,7 +7,7 @@ lang="en" xml:lang="en">
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2012-01-11 18:24:53 CST"/>
+<meta name="generated" content="2012-01-12 14:20:21 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -288,13 +288,14 @@ div.note {
 <li><a href="#sec-8">8 Re-running ece-install (and How To Speed It Up) </a></li>
 <li><a href="#sec-9">9 Using a Custom Configuration File for ece-install </a></li>
 <li><a href="#sec-10">10 Overview of File Paths Used by the ece-install script </a></li>
-<li><a href="#sec-11">11 Assumptions </a>
+<li><a href="#sec-11">11 Overriding the Escenic directories </a></li>
+<li><a href="#sec-12">12 Assumptions </a>
 <ul>
-<li><a href="#sec-11-1">11.1 /etc/esecenic is shared </a></li>
+<li><a href="#sec-12-1">12.1 /etc/esecenic is shared </a></li>
 </ul>
 </li>
-<li><a href="#sec-12">12 Uninstalling Everything That the ece-install Set Up </a></li>
-<li><a href="#sec-13">13 Example Output FAI </a></li>
+<li><a href="#sec-13">13 Uninstalling Everything That the ece-install Set Up </a></li>
+<li><a href="#sec-14">14 Example Output FAI </a></li>
 </ul>
 </div>
 </div>
@@ -366,7 +367,7 @@ or be downloaded together with the other ece-scripts using git:
 </p>
 
 
-<pre class="src src-sh">$ git clone git@github.com:skybert/ece-scripts.git
+<pre class="src src-conf"><span style="color: #f0dfaf;">$ git clone git@github.com</span>:skybert/ece-scripts.git
 </pre>
 
 
@@ -383,7 +384,7 @@ a regular user, it will complain:
 </p>
 
 
-<pre class="src src-sh">[ece-install] You must be root when running ece-install
+<pre class="src src-conf">[<span style="color: #98fb98;">ece-install</span>] You must be root when running ece-install
 </pre>
 
 <p>
@@ -391,7 +392,7 @@ To become root on Ubuntu based systems and Mac OS X, do:
 </p>
 
 
-<pre class="src src-sh">$ sudo su
+<pre class="src src-conf"><span style="color: #f0dfaf;">$</span> sudo su
 </pre>
 
 <p>
@@ -402,7 +403,7 @@ On all other Unix like system, do:
 </p>
 
 
-<pre class="src src-sh">$ su -
+<pre class="src src-conf"><span style="color: #f0dfaf;">$</span> su -
 </pre>
 
 
@@ -414,7 +415,7 @@ you forget to provide such a configuration file:
 </p>
 
 
-<pre class="src src-sh">[ece-install] /root/ece-install.conf doesn<span style="color: #ffa07a;">'t exist, I cannot live without it :-(</span>
+<pre class="src src-conf">[<span style="color: #98fb98;">ece-install</span>] /root/ece-install.conf doesn<span style="color: #ffa07a;">'t exist, I cannot live without it :-(</span>
 </pre>
 
 
@@ -424,8 +425,8 @@ cannot find what it's looking for:
 </p>
 
 
-<pre class="src src-sh">[ece-install] Be sure to set technet_user and technet_password
-[ece-install]<span style="color: #00ffff;"> in</span> /root/ece-install.conf
+<pre class="src src-conf">[<span style="color: #98fb98;">ece-install</span>] Be sure to set technet_user and technet_password
+[<span style="color: #98fb98;">ece-install</span>] in /root/ece-install.conf
 </pre>
 
 
@@ -434,7 +435,7 @@ The minimum ece-install.conf file is thus:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #f0dfaf;">technet_user</span>=&lt;user&gt;
+<pre class="src src-conf"><span style="color: #f0dfaf;">technet_user</span>=&lt;user&gt;
 <span style="color: #f0dfaf;">technet_password</span>=&lt;password&gt;
 </pre>
 
@@ -451,7 +452,7 @@ With the configuration file in place, you're now ready to run it:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash ece-install [-v|--verbose]</span>
+<pre class="src src-conf"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash ece-install [-v|--verbose]</span>
 </pre>
 
 
@@ -461,8 +462,8 @@ error during its execution:
 </p>
 
 
-<pre class="src src-sh">[ece-install-1] The command [cd /does/not/exist] FAILED, exiting :-(
-[ece-install-1] See /var/log/ece-install.log for further details.
+<pre class="src src-conf">[<span style="color: #98fb98;">ece-install-1] The command [cd /does/not/exist</span>] FAILED, exiting :-(
+[<span style="color: #98fb98;">ece-install-1</span>] See /var/log/ece-install.log for further details.
 </pre>
 
 
@@ -473,7 +474,7 @@ this is to run the BASH interpreter with the -x flag:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash -x ece-install</span>
+<pre class="src src-conf"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash -x ece-install</span>
 </pre>
 
 
@@ -495,22 +496,22 @@ want to install:
 </p>
 
 
-<pre class="src src-sh">Hi, which server profile do you wish to install?
+<pre class="src src-conf"><span style="color: #f0dfaf;">Hi,</span> which server profile do you wish to install?
 
-   1 - All<span style="color: #00ffff;"> in</span> one, full stack on one host, suitable for dev &amp; <span style="color: #b0c4de;">test</span> environments
-   2 - Editorial (publication) server
-   3 - Presentation server (ECE + memcached)<span style="color: #b0c4de;">.</span>
-   4 - Database server
-   5 - Cache server (cache and web server)
-   6 - RMI hub
-   7 - Search server (Solr + indexer-webapp)
-   8 - Install Widget Framework.
-   9 - Create a new publication based on WF if available, ECE/clean-demo if not
-   10 - A monitoring server (web server + Munin gatherer)
-   11 - Restore from backup (DB, data files, binaries, conf &amp; publications)
+   <span style="color: #f0dfaf;">1</span> - All in one, full stack on one host, suitable for dev &amp; test environments
+   <span style="color: #f0dfaf;">2</span> - Editorial (publication) server
+   <span style="color: #f0dfaf;">3</span> - Presentation server (ECE + memcached).
+   <span style="color: #f0dfaf;">4</span> - Database server
+   <span style="color: #f0dfaf;">5</span> - Cache server (cache and web server)
+   <span style="color: #f0dfaf;">6</span> - RMI hub
+   <span style="color: #f0dfaf;">7</span> - Search server (Solr + indexer-webapp)
+   <span style="color: #f0dfaf;">8</span> - Install Widget Framework.
+   <span style="color: #f0dfaf;">9</span> - Create a new publication based on WF if available, ECE/clean-demo if not
+   <span style="color: #f0dfaf;">10</span> - A monitoring server (web server + Munin gatherer)
+   <span style="color: #f0dfaf;">11</span> - Restore from backup (DB, data files, binaries, conf &amp; publications)
 
-Select 1-11 and press ENTER
-Your choice [1]&gt; 
+<span style="color: #f0dfaf;">Select</span> 1-11 and press ENTER
+<span style="color: #f0dfaf;">Your</span> choice [1]&gt; 
 </pre>
 
 
@@ -778,8 +779,8 @@ complain:
 </p>
 
 
-<pre class="src src-sh">[ece-install] Be sure to set wf_user and wf_password<span style="color: #00ffff;"> in</span> /root/ece-install.conf
-[ece-install] If you don<span style="color: #ffa07a;">'t have these, please contact support@escenic.com</span>
+<pre class="src src-conf">[<span style="color: #98fb98;">ece-install</span>] Be sure to set wf_user and wf_password in /root/ece-install.conf
+[<span style="color: #98fb98;">ece-install</span>] If you don<span style="color: #ffa07a;">'t have these, please contact support@escenic.com</span>
 </pre>
 
 </div>
@@ -825,7 +826,7 @@ monitoring the different nodes.
 </p>
 
 
-<pre class="src src-sh">$ ece -i &lt;instance&gt; backup
+<pre class="src src-conf"><span style="color: #f0dfaf;">$</span> ece -i &lt;instance&gt; backup
 </pre>
 
 
@@ -892,7 +893,7 @@ The ece script mentioned above will create backups in
 </p>
 
 
-<pre class="src src-sh">/var/backups/escenic
+<pre class="src src-conf"><span style="color: #f0dfaf;">/var/backups/escenic</span>
 </pre>
 
 <p>
@@ -1027,7 +1028,7 @@ the parameters with "install" in their name, such as:
 </p>
 
 
-<pre class="src src-sh">fai_editor_install
+<pre class="src src-conf"><span style="color: #f0dfaf;">fai_editor_install</span>
 </pre>
 
 
@@ -1037,7 +1038,7 @@ output to a log file for easy reading later on:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash ece-install &gt; ece-install.out &amp;</span>
+<pre class="src src-conf"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash ece-install &gt; ece-install.out &amp;</span>
 </pre>
 
 
@@ -1046,7 +1047,7 @@ Alternatively, you may do:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">nohup bash ece-install &gt; ece-install.out &amp;</span>
+<pre class="src src-conf"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">nohup bash ece-install &gt; ece-install.out &amp;</span>
 </pre>
 
 <p>
@@ -1070,7 +1071,7 @@ The EAR to provide is the one you generate with:
 </p>
 
 
-<pre class="src src-sh">$ ece -i &lt;instance&gt; assemble 
+<pre class="src src-conf"><span style="color: #f0dfaf;">$</span> ece -i &lt;instance&gt; assemble 
 </pre>
 
 <p>
@@ -1078,7 +1079,7 @@ Normally, the EAR will then be available in:
 </p>
 
 
-<pre class="src src-sh">/var/cache/escenic/engine.ear
+<pre class="src src-conf"><span style="color: #f0dfaf;">/var/cache/escenic/engine.ear</span>
 </pre>
 
 
@@ -1087,10 +1088,10 @@ The configuration bundle must contain:
 </p>
 
 
-<pre class="src src-sh">engine/security
-engine/siteconfig/bootstrap-skeleton
-engine/siteconfig/config-skeleton
-assemblytool/plugins/&lt;plugin&gt;/siteconfig
+<pre class="src src-conf"><span style="color: #f0dfaf;">engine/security</span>
+<span style="color: #f0dfaf;">engine/siteconfig/bootstrap-skeleton</span>
+<span style="color: #f0dfaf;">engine/siteconfig/config-skeleton</span>
+<span style="color: #f0dfaf;">assemblytool/plugins/&lt;plugin&gt;/siteconfig</span>
 </pre>
 
 
@@ -1101,12 +1102,12 @@ assembly environment set up and then do:
 
 
 
-<pre class="src src-sh">$ cd /opt/escenic/engine
-$ tar czf /tmp/nursery-skeleton-and-security.tar.gz <span style="color: #ffa07a;">\</span>
-  engine/security <span style="color: #ffa07a;">\</span>
-  engine/siteconfig/config-skeleton/ <span style="color: #ffa07a;">\</span>
-  engine/siteconfig/bootstrap-skeleton/ <span style="color: #ffa07a;">\</span>
-  <span style="color: #fa8072;">`find -L  assemblytool/plugins/ -name siteconfig`</span>
+<pre class="src src-conf"><span style="color: #f0dfaf;">$</span> cd /opt/escenic/engine
+<span style="color: #f0dfaf;">$</span> tar czf /tmp/nursery-skeleton-and-security.tar.gz \
+  <span style="color: #f0dfaf;">engine/security</span> \
+  <span style="color: #f0dfaf;">engine/siteconfig/config-skeleton/</span> \
+  <span style="color: #f0dfaf;">engine/siteconfig/bootstrap-skeleton/</span> \
+  <span style="color: #f0dfaf;">`find</span> -L  assemblytool/plugins/ -name siteconfig`
 </pre>
 
 
@@ -1118,7 +1119,7 @@ e.g.:
 
 
 
-<pre class="src src-sh"><span style="color: #f0dfaf;">fai_presentation_ear</span>=/tmp/engine.ear
+<pre class="src src-conf"><span style="color: #f0dfaf;">fai_presentation_ear</span>=/tmp/engine.ear
 <span style="color: #f0dfaf;">fai_presentation_conf_archive</span>=/tmp/nursery-skeleton-and-security.tar.gz
 </pre>
 
@@ -1208,7 +1209,7 @@ would be:
 
 
 
-<pre class="src src-sh"><span style="color: #f0dfaf;">fai_enabled</span>=1
+<pre class="src src-conf"><span style="color: #f0dfaf;">fai_enabled</span>=1
 <span style="color: #f0dfaf;">fai_editor_install</span>=1
 <span style="color: #f0dfaf;">fai_publication_create</span>=1
 <span style="color: #f0dfaf;">fai_publication_name</span>=jollygood
@@ -1228,7 +1229,7 @@ would be:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #f0dfaf;">fai_enabled</span>=1
+<pre class="src src-conf"><span style="color: #f0dfaf;">fai_enabled</span>=1
 <span style="color: #f0dfaf;">fai_presentation_install</span>=1
 <span style="color: #f0dfaf;">fai_presentation_name</span>=web1
 </pre>
@@ -1239,7 +1240,7 @@ And then re-issue ece-install with the following configuration:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #f0dfaf;">fai_enabled</span>=1
+<pre class="src src-conf"><span style="color: #f0dfaf;">fai_enabled</span>=1
 <span style="color: #f0dfaf;">fai_presentation_install</span>=1
 <span style="color: #f0dfaf;">fai_presentation_name</span>=web2
 <span style="color: #f0dfaf;">fai_presentation_port</span>=8081
@@ -1265,8 +1266,8 @@ whereas the second one needs to override these.
 </p>
 
 
-<pre class="src src-sh">[ece-install] Full Automatic Install (FAI) enabled.
-[ece-install] All user input will be read from /root/ece-install.conf
+<pre class="src src-conf">[<span style="color: #98fb98;">ece-install</span>] Full Automatic Install (FAI) enabled.
+[<span style="color: #98fb98;">ece-install</span>] All user input will be read from /root/ece-install.conf
 </pre>
 
 
@@ -1284,7 +1285,7 @@ it will abort:
 </p>
 
 
-<pre class="src src-sh">[ece-install] There<span style="color: #ffa07a;">'s already one ece-install process running. If you believe</span>
+<pre class="src src-conf">[<span style="color: #98fb98;">ece-install</span>] There<span style="color: #ffa07a;">'s already one ece-install process running. If you believe</span>
 <span style="color: #ffa07a;">[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted</span>
 <span style="color: #ffa07a;">[ece-install] before it completed, you may delete /var/run/ece-install.pid and</span>
 <span style="color: #ffa07a;">[ece-install] run ece-install again.</span>
@@ -1348,7 +1349,7 @@ bundle, see the FAI section.
 </p>
 
 
-<pre class="src src-sh">$ ece-install -f ece-install-presentation-server.conf
+<pre class="src src-conf"><span style="color: #f0dfaf;">$</span> ece-install -f ece-install-presentation-server.conf
 </pre>
 
 
@@ -1404,16 +1405,32 @@ but these should be the most interesting ones.
 <p>
 *) Applies only to Debian based systems.
 </p>
-<p>
-The root directory of all Escenic software binaries, /opt/escenic,
-together with the root directory for the configuration files may be
-overwritten in ece-install.conf by setting these variables:
+</div>
+
+</div>
+
+<div id="outline-container-11" class="outline-2">
+<h2 id="sec-11"><span class="section-number-2">11</span> Overriding the Escenic directories </h2>
+<div class="outline-text-2" id="text-11">
+
+<p>All of the Escenic specific directories may be overwritten in
+ece-install.conf. Here's an example of changing all the paths possible
+with the same suffix.
 </p>
 
 
 
-<pre class="src src-sh"><span style="color: #f0dfaf;">escenic_root_dir</span>=/opt/escenic-parallel-env
-<span style="color: #f0dfaf;">escenic_conf_dir</span>=/etc/escenic-parallel-env
+<pre class="src src-conf"><span style="color: #f0dfaf;">suffix</span>=escenic-parallel
+
+<span style="color: #f0dfaf;">escenic_root_dir</span>=/opt/$suffix
+<span style="color: #f0dfaf;">escenic_conf_dir</span>=/etc/$suffix
+<span style="color: #f0dfaf;">escenic_log_dir</span>=/var/log/$suffix
+<span style="color: #f0dfaf;">escenic_data_dir</span>=/var/lib/$suffix
+<span style="color: #f0dfaf;">escenic_run_dir</span>=/var/run/$suffix
+<span style="color: #f0dfaf;">escenic_backups_dir</span>=/var/backups/$suffix
+<span style="color: #f0dfaf;">escenic_spool_dir</span>=/var/spool/$suffix
+<span style="color: #f0dfaf;">escenic_cache_dir</span>=/var/cache/$suffix
+<span style="color: #f0dfaf;">escenic_crash_dir</span>=/var/crash/$suffix
 </pre>
 
 
@@ -1427,16 +1444,16 @@ and plugins.
 
 </div>
 
-<div id="outline-container-11" class="outline-2">
-<h2 id="sec-11"><span class="section-number-2">11</span> Assumptions </h2>
-<div class="outline-text-2" id="text-11">
+<div id="outline-container-12" class="outline-2">
+<h2 id="sec-12"><span class="section-number-2">12</span> Assumptions </h2>
+<div class="outline-text-2" id="text-12">
 
 
 </div>
 
-<div id="outline-container-11-1" class="outline-3">
-<h3 id="sec-11-1"><span class="section-number-3">11.1</span> /etc/esecenic is shared </h3>
-<div class="outline-text-3" id="text-11-1">
+<div id="outline-container-12-1" class="outline-3">
+<h3 id="sec-12-1"><span class="section-number-3">12.1</span> /etc/esecenic is shared </h3>
+<div class="outline-text-3" id="text-12-1">
 
 <p>It's assumed that the /etc/escenic directory is either on a shared
 file system or rsync-ed among the hosts that are running the ECE
@@ -1447,9 +1464,9 @@ instances (the exception being database and cache servers).
 
 </div>
 
-<div id="outline-container-12" class="outline-2">
-<h2 id="sec-12"><span class="section-number-2">12</span> Uninstalling Everything That the ece-install Set Up </h2>
-<div class="outline-text-2" id="text-12">
+<div id="outline-container-13" class="outline-2">
+<h2 id="sec-13"><span class="section-number-2">13</span> Uninstalling Everything That the ece-install Set Up </h2>
+<div class="outline-text-2" id="text-13">
 
 <p>WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
@@ -1467,9 +1484,9 @@ things set up by the script.
 
 </div>
 
-<div id="outline-container-13" class="outline-2">
-<h2 id="sec-13"><span class="section-number-2">13</span> Example Output FAI </h2>
-<div class="outline-text-2" id="text-13">
+<div id="outline-container-14" class="outline-2">
+<h2 id="sec-14"><span class="section-number-2">14</span> Example Output FAI </h2>
+<div class="outline-text-2" id="text-14">
 
 <p>The ece-install will often be run in FAI mode where all the settings
 are read from ~/ece-install.conf. Given the following entries in this
@@ -1477,7 +1494,7 @@ file:
 </p>
 
 
-<pre class="src src-sh"><span style="color: #f0dfaf;">technet_user</span>=apples
+<pre class="src src-conf"><span style="color: #f0dfaf;">technet_user</span>=apples
 <span style="color: #f0dfaf;">technet_password</span>=andoranges
 <span style="color: #f0dfaf;">wf_user</span>=foo
 <span style="color: #f0dfaf;">wf_password</span>=bar
@@ -1539,7 +1556,7 @@ The following output is produced from ece-install:
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2012-01-11 18:24:53 CST
+  Date: 2012-01-12 14:20:21 CST
 </p>
 </div>
 </body>
