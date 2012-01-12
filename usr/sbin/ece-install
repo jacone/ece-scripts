@@ -304,8 +304,6 @@ function install_common_os_packages()
     done
 }
 
-make_dir $ece_directories
-
 function set_up_assembly_tool()
 {
     print_and_log "Setting up the Assembly Tool ..."
@@ -819,7 +817,7 @@ function set_up_app_server
     done
 
     set_ece_instance_conf tomcat_base $tomcat_base   
-    set_ece_instance_conf tomcat_home ${appserver_root_dir/tomcat   
+    set_ece_instance_conf tomcat_home ${appserver_root_dir}/tomcat   
     set_ece_instance_conf appserver_port $appserver_port
    
     run cd $tomcat_base/lib
