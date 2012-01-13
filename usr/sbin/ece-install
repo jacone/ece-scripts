@@ -36,6 +36,8 @@ escenic_cache_dir=/var/cache/escenic
 escenic_crash_dir=/var/crash/escenic
 appserver_root_dir=/opt
 
+mirror_country_suffix=jp
+
 # The script will install the sun-java6-jdk package on Debian based
 # systems and this is the path of the JAVA home with this package. If
 # you're using a different system or have other preferences, change
@@ -298,7 +300,7 @@ function set_up_assembly_tool()
     cd $escenic_root_dir/assemblytool/
     
     if [ -e $download_dir/assemblytool*zip ]; then
-        run unzip -u $download_dir/assemblytool*zip
+        run unzip --quiet --update $download_dir/assemblytool*zip
     fi
 
     # adding an instance layer to the Nursery configuration
@@ -369,7 +371,7 @@ function set_up_engine_and_plugins()
     done
     
     if [ ! -d ${engine_dir} ]; then
-        run unzip -u $download_dir/${engine_file}
+        run unzip --quiet --update $download_dir/${engine_file}
         if [ -h engine ]; then
             run rm engine
         fi
@@ -389,7 +391,7 @@ function set_up_engine_and_plugins()
             continue
         fi
         
-        run unzip -u $el
+        run unzip --quiet --update $el
     done
 
     ece_software_setup_completed=1
@@ -638,7 +640,7 @@ function install_ece_third_party_packages
                 grep non-free | \
                 wc -l)
             if [ $has_non_free -eq 0 ]; then
-                add_apt_source "deb http://ftp.tw.debian.org/debian/ $(lsb_release -s -c) contrib non-free"
+                add_apt_source "deb http://ftp.${mirror_country_suffix}.debian.org/debian/ $(lsb_release -s -c) contrib non-free"
             fi
         fi
         
@@ -1484,7 +1486,7 @@ function common_pre_install()
       $escenic_run_dir
       $escenic_spool_dir/migration
     "
-    
+
     if [ -z "$technet_user" -o -z "$technet_password" ]; then
         print_and_log "Be sure to set technet_user and technet_password "
         print_and_log "in $conf_file"
@@ -2059,7 +2061,7 @@ EOF
             1>>$log 2>>$log
         
         cd $escenic_root_dir/
-        unzip -u $download_dir/$(basename $el) \
+        unzip --quiet --update $download_dir/$(basename $el) \
             1>>$log 2>>$log
     done
 
