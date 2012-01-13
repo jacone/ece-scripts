@@ -796,7 +796,7 @@ function set_up_app_server
     fi
     run ln -sf ${tomcat_dir} tomcat
 
-    tomcat_base=${appserver_root_dir}-${instance_name}
+    tomcat_base=${appserver_root_dir}/tomcat-${instance_name}
     make_dir $tomcat_base
 
     run cp -r ${appserver_root_dir}/${tomcat_dir}/conf $tomcat_base
