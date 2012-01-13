@@ -1,5 +1,10 @@
 #! /usr/bin/env bash
 
+# script fro creating DEB and RPM packages of the ece-install and ece
+# scripts.
+
+# by tkj@vizrt.com
+
 rm -rf debian/{etc,usr}
 
 target_dir=debian
