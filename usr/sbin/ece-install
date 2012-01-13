@@ -410,7 +410,7 @@ function set_up_ece_scripts()
     fi
     
     run cp -r ece-scripts/usr/* /usr/
-    run cp -r ece-scripts/etc/* /etc/
+    run cp -r ece-scripts/etc/escenic/* ${escenic_conf_dir}/
 }
 
 function set_up_ecedb()
@@ -511,7 +511,7 @@ EOF
         sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
         exit_on_error "sed on $file"
     elif [ ! -e ${file} ]; then
-        print_and_log "Could not find ${file},"
+        print_and_log "I Could not find ECOME configuration file,"
         print_and_log "I assume you have not installed Community Engine."
     else
         print_and_log "Could not write to ${file},"
@@ -1175,24 +1175,13 @@ function set_up_user_enviornment()
         bashrc=/Users/${ece_user}/.bashrc
     fi
     
-    if [ $(grep JAVA_HOME ${bashrc} 2>/dev/null | wc -l) \
-        -lt 1 ]; then
-        run echo JAVA_HOME=$java_home >> ${bashrc}
-    fi
-    
-    if [ $(grep JAVA_HOME /root/.bashrc 2>/dev/null | wc -l) -lt 1 ]; then
-        run echo JAVA_HOME=$java_home >> /root/.bashrc
-    fi
-
-    export JAVA_HOME=$java_home
-
     if [ $(grep bash_completion.d/ece ${bashrc}  2>/dev/null | \
         wc -l) -lt 1 ]; then
-        echo ". /etc/bash_completion.d/ece" > ${bashrc}
+        echo ". /etc/bash_completion.d/ece" >> ${bashrc}
     fi
 
     if [ $(grep ECE_CONF_LOCATIONS ${bashrc} | wc -l) -eq 0 ]; then
-        echo "export ECE_CONF_LOCATIONS=\"$escenic_conf_dir\"" > ${bashrc}
+        echo "export ECE_CONF_LOCATIONS=\"$escenic_conf_dir\"" >> ${bashrc}
     fi
 }
 
@@ -1525,7 +1514,6 @@ function common_pre_install()
     make_dir $download_dir
     stop_conflicting_processes
     install_common_os_packages
-    set_up_ece_scripts
     create_user_and_group_if_not_present
     set_up_user_enviornment
 }
@@ -1824,6 +1812,7 @@ function install_ece_instance()
     
     ask_for_instance_name $1
     set_up_engine_directories
+    set_up_ece_scripts
 
     set_archive_files_depending_on_profile
     
