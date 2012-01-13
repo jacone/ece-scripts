@@ -411,6 +411,20 @@ function set_up_ece_scripts()
     
     run cp -r ece-scripts/usr/* /usr/
     run cp -r ece-scripts/etc/escenic/* ${escenic_conf_dir}/
+
+    local file=${escenic_conf_dir}/ece.conf
+    set_conf_file_value assemblytool_home ${escenic_root_dir}/assemblytool $file
+    set_conf_file_value backup_dir ${escenic_backups_dir} $file
+    set_conf_file_value cache_dir ${escenic_cache_dir} ${file}
+    set_conf_file_value ece_home ${escenic_root_dir}/engine ${file}
+    set_conf_file_value heap_dump_dir ${escenic_crash_dir} ${file}
+    set_conf_file_value log_dir ${escenic_log_dir} ${file}
+    set_conf_file_value pid_dir ${escenic_run_dir} ${file}
+    set_conf_file_value rmi_hub_conf ${escenic_conf_dir}/rmi-hub ${file}
+    set_conf_file_value solr_home ${escenic_data_dir}/solr ${file}
+    set_conf_file_value ece_security_configuration_dir \
+        ${escenic_conf_dir}/engine/common/security \
+        ${file}
 }
 
 function set_up_ecedb()
@@ -511,7 +525,7 @@ EOF
         sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
         exit_on_error "sed on $file"
     elif [ ! -e ${file} ]; then
-        print_and_log "I Could not find ECOME configuration file,"
+        print_and_log "I Could not find an ECOME configuration file,"
         print_and_log "I assume you have not installed Community Engine."
     else
         print_and_log "Could not write to ${file},"
