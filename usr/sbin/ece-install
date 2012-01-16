@@ -314,6 +314,13 @@ fileSystemRoot = $escenic_conf_dir/engine/instance/\${com.escenic.instance}/
 EOF
     echo "" >> Nursery.properties
     echo "layer.06 = /layers/instance/Layer" >> Nursery.properties
+
+    # fixing the path to the Nursery configuration according to
+    # escenic_conf_dir which may have been overridden by the user.
+    for el in $(find $escenic_root_dir/assemblytool/conf -name Files.properties)
+    do
+        sed -i "s#/etc/escenic#${escenic_conf_dir}#g" $el
+    done
     
     # set up which plugins to use
     cd $escenic_root_dir/assemblytool/
