@@ -411,7 +411,8 @@ function set_up_ece_scripts()
     
     run cp -r ece-scripts/usr/* /usr/
     run cp -r ece-scripts/etc/escenic/* ${escenic_conf_dir}/
-
+    run cp -r ece-scripts/bash_completion.d/ece /etc/bash_completion.d/
+    
     local file=${escenic_conf_dir}/ece.conf
     set_conf_file_value assemblytool_home ${escenic_root_dir}/assemblytool $file
     set_conf_file_value backup_dir ${escenic_backups_dir} $file
@@ -425,6 +426,9 @@ function set_up_ece_scripts()
     set_conf_file_value ece_security_configuration_dir \
         ${escenic_conf_dir}/engine/common/security \
         ${file}
+
+    run sed -i "s#/etc/escenic#${escenic_conf_dir}#g" /etc/bash_completion.d/ece
+    run sed -i "s#/opt/escenic#${escenic_root_dir}#g" /etc/bash_completion.d/ece
 }
 
 function set_up_ecedb()
