@@ -418,7 +418,7 @@ function set_up_ece_scripts()
     
     run cp -r ece-scripts/usr/* /usr/
     run cp -r ece-scripts/etc/escenic/* ${escenic_conf_dir}/
-    run cp -r ece-scripts/bash_completion.d/ece /etc/bash_completion.d/
+    run cp -r ece-scripts/etc/bash_completion.d/ece /etc/bash_completion.d/
     
     local file=${escenic_conf_dir}/ece.conf
     set_conf_file_value assemblytool_home ${escenic_root_dir}/assemblytool $file
