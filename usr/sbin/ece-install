@@ -425,6 +425,7 @@ function set_up_ece_scripts()
     set_conf_file_value backup_dir ${escenic_backups_dir} $file
     set_conf_file_value cache_dir ${escenic_cache_dir} ${file}
     set_conf_file_value ece_home ${escenic_root_dir}/engine ${file}
+    set_conf_file_value escenic_conf_dir ${escenic_conf_dir} ${file}
     set_conf_file_value heap_dump_dir ${escenic_crash_dir} ${file}
     set_conf_file_value log_dir ${escenic_log_dir} ${file}
     set_conf_file_value pid_dir ${escenic_run_dir} ${file}
