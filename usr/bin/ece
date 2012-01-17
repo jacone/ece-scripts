@@ -14,6 +14,7 @@ verbose=0
 force_ipv4=0
 quiet=0
 everything_but_the_kitchen_sink=0
+escenic_conf_dir=/etc/escenic
 
 ######################################################################
 # Dear user, don't touch anyting in this script, especially below this
@@ -44,6 +45,7 @@ engine_required_fields="
 appserver
 assemblytool_home
 cache_dir
+escenic_conf_dir
 ece_home
 ece_security_configuration_dir
 enable_heap_dump
@@ -164,13 +166,13 @@ function read_conf_file()
 
 # If the system is installed using the recommended paths, the method
 # will return a list of the instances configured in
-# /etc/escenic/engine/instance
+# ${escenic_conf_dir}/engine/instance
 function get_instance_list()
 {
     instance_list=""
 
-    if [ -r /etc/escenic/engine/instance ]; then
-        instance_list=$(ls /etc/escenic/engine/instance)
+    if [ -r ${escenic_conf_dir}/engine/instance ]; then
+        instance_list=$(ls ${escenic_conf_dir}/engine/instance)
     fi
 
     echo $instance_list
@@ -185,11 +187,11 @@ function set_common_settings()
     else
         conf_file_location_list="
           `dirname $0`
-          /etc/escenic/$type/instance/$instance
-          /etc/escenic/$type/host/`echo $HOSTNAME | tr '[A-Z]' '[a-z]'`
-          /etc/escenic/$type/common
-          /etc/escenic/$type
-          /etc/escenic
+          ${escenic_conf_dir}/$type/instance/$instance
+          ${escenic_conf_dir}/$type/host/`echo $HOSTNAME | tr '[A-Z]' '[a-z]'`
+          ${escenic_conf_dir}/$type/common
+          ${escenic_conf_dir}/$type
+          ${escenic_conf_dir}
           `dirname $0`/../etc
         "
     fi
@@ -666,7 +668,7 @@ function backup_type()
    
    archive_file=$backup_dir/${type}-${instance}-backup-$(date --iso).tar
    possible_backup="
-/etc/escenic 
+${escenic_conf_dir} 
 /opt/escenic 
 /etc/init.d/ece
 /etc/default/ece
@@ -703,7 +705,7 @@ function backup_type()
        print "- All Escenic binaries & publication templates in /opt/escenic"
    fi
    
-   print "- All configuration in /etc/escenic and /etc/default/ece"
+   print "- All configuration in ${escenic_conf_dir} and /etc/default/ece"
    print "- All bootstrap scripts from /etc/init.d"
    print "Enjoy!"
  }
@@ -1066,18 +1068,18 @@ EOF
                     run cd ${tomcat_home_dir}
                     run cp -r ${tomcat_home}/{bin,lib} ${tomcat_home_dir}
 
-                    local etc_escenic_dir=${package_dir}/etc/escenic
+                    local etc_escenic_dir=${package_dir}${escenic_conf_dir}
                     run mkdir -p ${etc_escenic_dir}
                     cd ${etc_escenic_dir}
-                    run cp -r /etc/escenic/{ece,ece-${instance}}.conf \
+                    run cp -r ${escenic_conf_dir}/{ece,ece-${instance}}.conf \
                         ${etc_escenic_dir}
 
                     run mkdir -p ${etc_escenic_dir}/engine
-                    run cp -r /etc/escenic/engine/common \
+                    run cp -r ${escenic_conf_dir}/engine/common \
                         ${etc_escenic_dir}
                     
                     run mkdir -p ${etc_escenic_dir}/engine/instance
-                    run cp -r /etc/escenic/engine/instance/${instance} \
+                    run cp -r ${escenic_conf_dir}/engine/instance/${instance} \
                         ${etc_escenic_dir}
                 )
             fi
