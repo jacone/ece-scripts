@@ -487,7 +487,6 @@ function set_up_ecedb()
 
     # the port isn't fully supported. The user must himself update the
     # mysql configuration to run it on a non standard port.
-    
     if [ -n "${fai_db_port}" ]; then
         db_port=${fai_db_port}
     else
