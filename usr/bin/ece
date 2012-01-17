@@ -34,13 +34,6 @@ search
 rmi-hub
 "
 
-common_settings_list="
-ece_home
-java_home
-log_dir
-pid_dir
-"
-
 hub_required_fields="
 ece_server_hostname
 rmi_hub_conf
