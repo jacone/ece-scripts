@@ -439,6 +439,63 @@ function set_up_ece_scripts()
     run sed -i "s#/opt/escenic#${escenic_root_dir}#g" /etc/bash_completion.d/ece
 }
 
+
+# Method used both from interactive mode to set any missing values
+# (defaults)
+function set_db_defaults_if_not_set()
+{
+    if [ -z "$db_host" ]; then
+        db_host=localhost
+    fi
+    
+    if [ -z "$db_port" ]; then
+        db_port=3306
+    fi
+    
+    if [ -z "$db_user" ]; then
+        db_user=ece5user
+    fi
+    
+    if [ -z "$db_password" ]; then
+        db_user=ece5password
+    fi
+    
+    if [ -z "$db_schema" ]; then
+        db_schema=ece5db
+    fi
+}
+
+function set_db_settings_from_fai_conf()
+{
+    # the port isn't fully supported. The user must himself update the
+    # mysql configuration to run it on a non standard port.
+    if [ -n "${fai_db_port}" ]; then
+        db_port=${fai_db_port}
+    fi
+    
+    if [ -n "${fai_db_host}" ]; then
+        db_host=${fai_db_host}
+    fi
+    
+    if [ -n "${fai_db_user}" ]; then
+        db_user=${fai_db_user}
+    fi
+    
+    if [ -n "${fai_db_password}" ]; then
+        db_password=${fai_db_password}
+    fi
+    
+    if [ -n "${fai_db_schema}" ]; then
+        db_schema=${fai_db_schema}
+    fi
+    
+    if [ -n "${fai_db_drop_old_db_first}" ]; then
+        drop_db_first=${fai_db_drop_old_db_first}
+        print_and_log "WARNING: I hope you know what you're doing!"
+        print_and_log "WARNING: fai_db_drop_old_db_first is 1 (true)"
+    fi
+}
+
 function set_up_ecedb()
 {
     print_and_log "Setting up the ECE database schema ..."
@@ -466,33 +523,11 @@ function set_up_ecedb()
     done
 
     # the user may override standard DB settings in ece-install.conf
-    if [ -n "${fai_db_host}" ]; then
-        db_host=${fai_db_host}
-    fi
-    if [ -n "${fai_db_user}" ]; then
-        db_user=${fai_db_user}
-    fi
-    if [ -n "${fai_db_password}" ]; then
-        db_password=${fai_db_password}
-    fi
-    if [ -n "${fai_db_schema}" ]; then
-        db_schema=${fai_db_schema}
-    fi
-    if [ -n "${fai_db_drop_old_db_first}" ]; then
-        drop_db_first=${fai_db_drop_old_db_first}
-        print_and_log "WARNING: I hope you know what you're doing!"
-        print_and_log "WARNING: fai_db_drop_old_db_first is 1 (true)"
-    fi
-    ece_home=${escenic_root_dir}/engine
+    set_db_settings_from_fai_conf
+    set_db_defaults_if_not_set
 
-    # the port isn't fully supported. The user must himself update the
-    # mysql configuration to run it on a non standard port.
-    if [ -n "${fai_db_port}" ]; then
-        db_port=${fai_db_port}
-    else
-        db_port=3306
-    fi
-    
+    # the methods in drop-and-create-ecedb needs ece_home to be set
+    ece_home=${escenic_root_dir}/engine
     pre_install_new_ecedb
     create_ecedb
     
@@ -798,24 +833,19 @@ function set_up_app_server
     
     if [ $fai_enabled -eq 0 ]; then
         print "Another question: Where does the database run?"
-        print "Press ENTER to accept the default ($HOSTNAME:3306)"
-        print "Or enter: <host>:<port>, e.g.: 'db1:3306'"
-        echo -n "Your choice [$HOSTNAME:3306]> "
+        print "Press ENTER to accept the default ($HOSTNAME:3306:ece5db)"
+        print "Or enter: <host>:<port>:<schema>, e.g.: 'db1:3306:mydb'"
+        echo -n "Your choice [$HOSTNAME:3306:schema]> "
         read user_database
-    else
-        user_database=$(get_conf_value fai_db_host)
-        if [ -n "${user_database}" ]; then
-            user_database=$user_database":"$(get_conf_value fai_db_port)
-        fi
-    fi
-
-    if [ -z "$user_database" ]; then
-        db_host=$HOSTNAME
-        db_port=3306
-    else
+        
         db_host=$(echo $user_database | cut -d':' -f1)
         db_port=$(echo $user_database | cut -d':' -f2)
+        db_schema=$(echo $user_database | cut -d':' -f3)
+    else
+        set_db_settings_from_fai_conf
     fi
+
+    set_db_defaults_if_not_set
 
     if [ $fai_enabled -eq 0 ]; then
         print "Last question: Where does the search instance run?"
