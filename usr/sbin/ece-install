@@ -355,6 +355,39 @@ EOF
         assemble.properties \
         1>>$log 2>>$log
     exit_on_error "sed on assemble.properties"
+
+    make_dir $escenic_root_dir/assemblytool/publications
+
+    # set up user publication definitions
+    if [ -n "${fai_publication_war_uri_list}" ]; then
+        run cd $escenic_root_dir/assemblytool/publications
+        
+        for el in ${fai_publication_war_uri_list}; do
+            if [[ $el == http* ]]; then
+                run wget $wget_opts $el
+            elif [[ $el == file://* ]]; then
+                local file_with_path=$(echo $el | sed "s#file://##g")
+                run cp $file_with_path .
+            else
+                run cp ${el} .
+            fi
+            
+            if [ ! -e $(basename $el) ]; then
+                print_and_log "Failed to get user publication $el."
+                print_and_log "I will skip it and continue to the next one."
+                continue
+            fi
+
+            local short_name=$(basename $el .war)
+            cat > ${short_name}.properties <<EOF
+name: ${short_name}
+source-war: ${short_name}.war
+context-root: ${short_name}
+EOF
+            
+        done
+    fi
+    
 }
 
 function set_up_engine_and_plugins()
