@@ -930,7 +930,7 @@ url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useU
         username="ece5user"
         password="ece5password"
         driverClassName="com.mysql.jdbc.Driver"
-        url="jdbc:mysql://localhost:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
+        url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
         removeAbandoned="true"
         removeAbandonedTimeout="120"
         logAbandoned="true"
