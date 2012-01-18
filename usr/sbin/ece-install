@@ -491,8 +491,10 @@ function set_db_settings_from_fai_conf()
     
     if [ -n "${fai_db_drop_old_db_first}" ]; then
         drop_db_first=${fai_db_drop_old_db_first}
-        print_and_log "WARNING: I hope you know what you're doing!"
-        print_and_log "WARNING: fai_db_drop_old_db_first is 1 (true)"
+        if [ $fai_db_drop_old_db_first -eq 1 ]; then
+            print_and_log "WARNING: I hope you know what you're doing!"
+            print_and_log "WARNING: fai_db_drop_old_db_first is 1 (true)"
+        fi
     fi
 }
 
