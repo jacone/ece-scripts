@@ -718,18 +718,34 @@ EOF
 
 # Parameters:
 # $1 is the property
-# $2 is the value
-# $3 is the file
+# $2 ... to the (last - 1) is the value
+# The last argument is the file
+#
+# e.g.:
+# set_conf_file_value \
+#   mykey \
+#   myvalue1 myvalue2 myvalue3 \
+#   /etc/myfile.conf
+
 function set_conf_file_value()
 {
-    if [ -r $3 ]; then
-        if [ $(grep ^$1 $3 | wc -l) -gt 0 ]; then
-            sed -i "s~$1=.*~$1=\"$2\"~g" $3
+    if [ $# -lt 3 ]; then
+        return
+    fi
+    
+    local file=${@:${#@}}
+    local key=${@:1:1}
+    local value_end_index=$(( $# - 2 ))
+    local value=${@:2:${value_end_index}}
+    
+    if [ -r $file ]; then
+        if [ $(grep ^$1 $file | wc -l) -gt 0 ]; then
+            sed -i "s~$key=.*~$key=\"$value\"~g" $file
         else
-            echo "$1=\"$2\"" >> $3
+            echo "$key=\"$value\"" >> $file
         fi
     else
-        echo "$1=\"$2\"" >> $3
+        echo "$key=\"$value\"" >> $file
     fi
 }
 
@@ -1952,13 +1968,15 @@ function install_ece_instance()
     set_up_app_server
     set_up_proper_logging_configuration
 
-    # special treatment for presentation servers
-    if [ $2 -eq $PROFILE_PRESENTATION_SERVER ]; then
+    # We set a WAR white list for all profiles except all in one
+    if [ $install_profile_number -ne $PROFILE_ALL_IN_ONE -a \
+        $install_profile_number -ne $PROFILE_EDITORIAL_SERVER ]; then
         file=$escenic_conf_dir/ece-${instance_name}.conf
-        print_and_log "Creating instance specific conf: $file ..."
-        cat >> $file <<EOF
-deploy_webapp_white_list="escenic-admin ${publication_name}"
-EOF
+        print_and_log "Creating deployment white list in $file ..."
+        set_conf_file_value \
+            deploy_webapp_white_list \
+            $(get_deploy_white_list) \
+            $file
     fi
 
     set_correct_permissions
@@ -1975,6 +1993,30 @@ EOF
     add_next_step "Type 'ece help' to see all the options of this script"
     add_next_step "Read its guide: /usr/share/doc/escenic/ece-guide.txt"
     add_next_step "/etc/default/ece lists all instances started at boot time"
+}
+
+function get_deploy_white_list()
+{
+    local white_list="escenic_admin"
+    if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER \
+        -a -n "${publication_name}" ]; then
+        white_list="${white_list} ${publication_name} "
+    elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then 
+        white_list="${white_list} solr indexer-webapp"
+    elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+        local publication_def_dir=${escenic_root_dir}/assemblytool/publications
+        if [ $(ls ${publication_def_dir} | grep .properties$ | wc -l) -eq 0 ]; then
+            echo ${white_list}
+            return
+        fi
+
+        for el in $(find ${publication_def_dir} -name "*.properties"); do
+            local short_name=$(basename $el .properties)
+            white_list="${white_list} ${short_name}"
+        done
+    fi
+
+    echo ${white_list}
 }
 
 function install_presentation_server()
@@ -2214,9 +2256,10 @@ function install_search_server()
     
     file=$escenic_conf_dir/ece-${instance_name}.conf
     print_and_log "Creating instance specific conf: $file ..."
-    cat >> $file <<EOF
-deploy_webapp_white_list="escenic-admin solr indexer-webapp"
-EOF
+    set_conf_file_value \
+        deploy_webapp_white_list \
+        $(get_deploy_white_list) \
+        $file
 
     # TODO update instead of append
     dir=$common_nursery_dir/com/escenic/framework/search/solr
