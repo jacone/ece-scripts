@@ -21,8 +21,8 @@ ece_user=escenic
 ece_group=escenic
 jdbc_driver=/usr/share/java/mysql.jar
 debug=0
-tomcat_download=http://apache.stu.edu.tw/tomcat/tomcat-6/v6.0.33/bin/apache-tomcat-6.0.33.tar.gz
-
+tomcat_download=http://ftp.mirror.tw/pub/apache/tomcat/tomcat-6/v6.0.35/bin/apache-tomcat-6.0.35.tar.gz
+                
 # These variables govern where software is installed and data and run
 # time files are written.
 escenic_root_dir=/opt/escenic
@@ -36,6 +36,7 @@ escenic_cache_dir=/var/cache/escenic
 escenic_crash_dir=/var/crash/escenic
 appserver_root_dir=/opt
 
+# country code for selecting the correct (APT) mirror.
 mirror_country_suffix=jp
 
 # The script will install the sun-java6-jdk package on Debian based
@@ -54,6 +55,10 @@ maven_opts="--batch-mode"
 wget_opts="--continue --inet4-only --quiet"
 apt_opts="--no-install-recommends"
 curl_opts="--silent"
+
+# hook scripts
+ece_install_scripts_dir=$HOME/ece-install.d
+
 
 # globals will be set to correct values in run-time.
 appserver_port=8080
@@ -184,6 +189,7 @@ PROFILE_WIDGET_FRAMEWORK=8
 PROFILE_CREATE_PUBLICATION=9
 PROFILE_MONITORING_SERVER=10
 PROFILE_RESTORE_FROM_BACKUP=11
+PROFILE_ANALYSIS_SERVER=12
 
 function make_dir()
 {
@@ -849,7 +855,7 @@ function get_escaped_bash_string()
     echo $result
 }
 
-function set_up_app_server
+function set_up_app_server()
 {
     print_and_log "Setting up the application server ..."
 
@@ -874,6 +880,9 @@ function set_up_app_server
         elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
             appserver_port=$(get_conf_value fai_search_port)
             shutdown_port=$(get_conf_value fai_search_shutdown)
+        elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
+            appserver_port=$(get_conf_value fai_analysis_port)
+            shutdown_port=$(get_conf_value fai_analysis_shutdown)
         fi
     fi
 
@@ -1983,7 +1992,11 @@ function install_ece_instance()
     fi
 
     set_correct_permissions
-    assemble_deploy_and_restart_type
+
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+        assemble_deploy_and_restart_type
+    fi
+    
     update_type_instances_to_start_up
     set_conf_file_value ece_unix_user $ece_user /etc/default/ece
     set_conf_file_value ece_unix_group $ece_group /etc/default/ece
@@ -2099,6 +2112,58 @@ function install_editorial_server()
     print_and_log "Installing an editorial server on $HOSTNAME ..."
     type=engine
     install_ece_instance "editor1" 0
+}
+
+function run_hook()
+{
+    if [ -e $ece_install_scripts_dir -a \
+        ${ece_install_scripts_dir}/{$1} ]; then
+        print_and_log "Started hook  $1 ..."
+        bash ${ece_install_scripts_dir}/${1}
+        print_and_log "Finished hook $1 ..."
+    fi
+}
+
+function install_analysis_server()
+{
+    run_hook install_analysis_server.preinst
+    
+    print_and_log "Installing an analysis server on $HOSTNAME ..."
+    type=analysis
+    
+    install_ece_instance "analysis1"
+
+    run cp ${escenic_root_dir}/analysis-engine-*/wars/*.war \
+        ${tomcat_base}/webapps
+
+    local analysis_host=localhost
+    if [ -n "${fai_analysis_host}" ]; then
+        analysis_host=${fai_analysis_host}
+    fi
+    
+    
+    # deploy the EAE WARs
+    run cp ${escenic_root_dir}/analysis-engine-*/wars/*.war \
+        ${tomcat_base}/webapps
+
+    local ece_command="ece -i ${instance_name} -t ${type} start"
+    su - $ece_user -c "$ece_command" \
+        1>>$log 2>>$log
+    exit_on_error "su - $ece_user -c \"$ece_command\""
+
+    local seconds=3
+    print_and_log "Waiting ${seconds} seconds for EAE to come up ..."
+    sleep 10
+    
+    # set QS host:port in EAE Reports
+    print_and_log "Configuring EAE Reports ..."
+    local file=${tomcat_base}/webapps/analysis-reports/WEB-INF/config/reports.cfg
+    sed -i "s#host:port#${analysis_host}:${appserver_port}#g" $file \
+        1>>$log 2>>$log
+    exit_on_error "Configuring EAE Reports in $file"
+    
+    run touch ${tomcat_base}/webapps/analysis-reports/WEB-INF/web.xml
+    run_hook install_analysis_server.postinst
 }
 
 function install_rmi_hub()
@@ -2886,6 +2951,12 @@ if [ $fai_enabled -eq 1 ]; then
     if [ $(get_boolean_conf_value fai_rmi_install) -eq 1 ]; then
         install_profile_number=$PROFILE_RMI_HUB
         install_rmi_hub
+        no_fai_profile=0
+    fi
+
+    if [ $(get_boolean_conf_value fai_analysis_install) -eq 1 ]; then
+        install_profile_number=$PROFILE_ANALYSIS_SERVER
+        install_analysis_server
         no_fai_profile=0
     fi
     
