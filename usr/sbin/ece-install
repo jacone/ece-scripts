@@ -334,13 +334,16 @@ EOF
             continue
         fi
         
-        # nuisance to get the community engine, but not the engine
-        if [ $(echo $directory | grep engine | wc -l) -gt 0 ]; then
-            if [ $(echo $directory | grep community | wc -l) -lt 1 ]; then
-                continue
-            fi
+        # nuisance to get the community engine and analysis engine,
+        # but not the engine
+        if [ $(echo $directory | \
+            grep engine | \
+            grep -v community | \
+            grep -v analysis | \
+            wc -l) -gt 0 ]; then
+            continue
         fi
-        
+
         make_ln $directory
     done
 
