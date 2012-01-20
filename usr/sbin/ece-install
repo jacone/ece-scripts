@@ -1138,10 +1138,24 @@ function set_correct_permissions()
     print_and_log "Setting correct permissions on ECE related directories ..."
 
     for el in $engine_dir_list; do
-        if [ -d $el ]; then
-            run chown -R ${ece_user}:${ece_group} $el \
-                1>>$log 2>>$log                
+        if [ ! -d $el ]; then
+            continue
         fi
+        
+        if [ ${el} = ${escenic_data_dir} ]; then
+            local correct_permission=$(find ${el} \
+                -maxdepth 0 \
+                -user ${ece_user} | \
+                wc -l)
+            if [ $correct_permission -gt 0 ]; then
+                print_and_log "Data directory root, $el,"
+                print_and_log "has correct permissions, skiping sub directories."
+                continue
+            fi
+        fi
+
+        run chown -R ${ece_user}:${ece_group} $el \
+            1>>$log 2>>$log                
     done
     
     if [ -d "$tomcat_base" ]; then
