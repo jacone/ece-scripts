@@ -162,7 +162,7 @@ function is_number()
 
 technet_download_list="
 http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
-http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.6.0.zip
+http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.7.0.zip
 http://technet.escenic.com/downloads/release/53/community-engine-3.6.1.0.zip
 http://technet.escenic.com/downloads/release/53/dashboard-1.0.0.0.zip
 http://technet.escenic.com/downloads/release/53/engine-5.3.4.7.zip
@@ -587,7 +587,7 @@ function set_up_basic_nursery_configuration()
 
     local escenic_root_dir=$escenic_root_dir
     
-    if [ $(is_installing_from_archives) -eq 1 ]; then
+    if [ $(is_using_conf_archive) -eq 1 ]; then
         print_and_log "Using the supplied Nursery & JAAS configuration from" 
         print_and_log "bundle: $ece_instance_conf_archive"
         local dir=$(mktemp -d)
@@ -631,6 +631,10 @@ function set_up_basic_nursery_configuration()
 databaseProductName=MySQL
 filePublicationRoot=$escenic_data_dir/engine/
 webPublicationRoot=http://${public_host_name}/
+
+# These two LDAP settings can be ignored on systems with ECE >= 5.3
+ldapProductName=OpenLdap
+ldapProductVersion=2.2.26
 EOF
     cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
 readConnector=/connector/ReadConnector
@@ -1928,16 +1932,27 @@ function set_archive_files_depending_on_profile()
 
 
 # Returns 1 if we're installing the ECE instances from a provided EAR
-# file and tarball with Nursery & JAAS configuration.
-#
-function is_installing_from_archives()
+# file
+function is_installing_from_ear()
 {
     log install_profile_number=$install_profile_number
     log ece_instance_ear_file=$ece_instance_ear_file
-    log ece_instance_conf_archive=$ece_instance_conf_archive
 
     if [[ -z "$ece_instance_ear_file" || \
-        -z "$ece_instance_conf_archive" || \
+        $fai_enabled -eq 0 ]]; then
+        echo 0
+        return
+    fi
+
+    echo 1
+}
+
+# Returns 1 if we're using a tarball with the Nursery & JAAS configuration.
+function is_using_conf_archive(){
+    log install_profile_number=$install_profile_number
+    log ece_instance_conf_archive=$ece_instance_conf_archive
+
+    if [[ -z "$ece_instance_conf_archive" || \
         $fai_enabled -eq 0 ]]; then
         echo 0
         return
@@ -1977,7 +1992,7 @@ function install_ece_instance()
     
     # most likely, the user is _not_ installing from archives (EAR +
     # configuration bundle), hence the false test goes first.
-    if [ $(is_installing_from_archives) -eq 0 ]; then
+    if [ $(is_installing_from_ear) -eq 0 ]; then
         download_escenic_components
         check_for_required_downloads
         set_up_engine_and_plugins
@@ -2004,8 +2019,6 @@ function install_ece_instance()
             $(get_deploy_white_list) \
             $file
     fi
-
-    set_correct_permissions
 
     if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
         assemble_deploy_and_restart_type
@@ -2059,9 +2072,11 @@ function install_presentation_server()
 function assemble_deploy_and_restart_type()
 {
     print_and_log "Assembling, deploying & starting $instance_name ..."
+    
+    set_correct_permissions
 
     ece_command="ece -i $instance_name -t $type assemble deploy restart"
-    if [ $(is_installing_from_archives) -eq 1 ]; then
+    if [ $(is_installing_from_ear) -eq 1 ]; then
         run cp $ece_instance_ear_file $escenic_cache_dir/engine.ear
         ece_command="ece -i $instance_name -t $type deploy restart"
         print_and_log "Using the supplied EAR instead of running an assembly."
@@ -2849,8 +2864,6 @@ function restore_from_backup()
                 run chown -R ${ece_user}:${ece_group} ${directories}
             fi
         fi
-        
-        set_correct_permissions
     fi
 }
 
@@ -2869,6 +2882,8 @@ function common_post_install()
         install_munin_node
     fi
 
+    set_correct_permissions
+    
     print_status_and_next_steps
     rm $pid_file
 }
