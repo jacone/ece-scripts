@@ -1099,7 +1099,7 @@ EOF
             if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
                 run fakeroot alien --to-rpm --scripts ${deb_package}
                 mv *.rpm ${cache_dir}
-                print "RPM package of your $instance $type instance with with build"
+                print "RPM package of your $instance $type instance with build"
                 print "version $version is now available:"
                 print $(echo /var/cache/escenic/${package_name}-${version}*.rpm)
             fi
