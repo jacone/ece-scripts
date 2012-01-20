@@ -105,6 +105,12 @@ function log()
     echo "$id" `date` $@ 2>/dev/null >> $log_file 
 }
 
+function print_and_log()
+{
+    print "$@"
+    log "$@"
+}
+
 function verify_that_directory_and_file_are_writeable()
 {
     dir=`dirname $1`
@@ -454,7 +460,8 @@ function deploy()
 {
     ear=$cache_dir/engine.ear
     if [ ! -e $ear ]; then
-        print "$ear does not exist. Did you run '"`basename $0`" assemble'?"
+        print_and_log "$ear does not exist. "
+        print_and_log "Did you run '"`basename $0`" -i" $instance "assemble'?"
         exit 1
     fi
     
@@ -1000,7 +1007,8 @@ function create_packages()
 {
     local ear=$cache_dir/engine.ear
     if [ ! -e $ear ]; then
-        print "$ear does not exist. Did you run '"`basename $0`" assemble'?"
+        print_and_log "$ear does not exist. "
+        print_and_log "Did you run '"`basename $0`" -i" $instance "assemble'?"
         exit 1
     fi
 
@@ -1098,7 +1106,7 @@ EOF
             
             if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
                 run fakeroot alien --to-rpm --scripts ${deb_package}
-                mv *.rpm ${cache_dir}
+                run mv *.rpm ${cache_dir}
                 print "RPM package of your $instance $type instance with build"
                 print "version $version is now available:"
                 print $(echo /var/cache/escenic/${package_name}-${version}*.rpm)
