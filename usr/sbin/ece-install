@@ -2013,7 +2013,7 @@ function install_ece_instance()
 
 function get_deploy_white_list()
 {
-    local white_list="escenic_admin"
+    local white_list="escenic-admin"
     if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER \
         -a -n "${publication_name}" ]; then
         white_list="${white_list} ${publication_name} "
