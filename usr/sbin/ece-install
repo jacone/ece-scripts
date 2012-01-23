@@ -58,7 +58,7 @@ curl_opts="--silent"
 
 # hook scripts
 ece_install_scripts_dir=$HOME/ece-install.d
-
+ece_install_env=${escenic_cache_dir}/$(basename $0).env
 
 # globals will be set to correct values in run-time.
 appserver_port=8080
@@ -2148,7 +2148,15 @@ function install_editorial_server()
 function run_hook()
 {
     if [ -e $ece_install_scripts_dir -a \
-        ${ece_install_scripts_dir}/{$1} ]; then
+        -e ${ece_install_scripts_dir}/${1} ]; then
+
+        # Dumping all set variables (no functions) to a file from
+        # which the hooks can pick them up. We do this to avoid
+        # running "export" in front of all local variables which may
+        # or may not be useful. Furthermore, we filter out upper case
+        # variables as these are environment variables.
+        set | grep ^[a-z] | grep \= > ${ece_install_env}
+        
         print_and_log "Started hook  $1 ..."
         bash ${ece_install_scripts_dir}/${1}
         print_and_log "Finished hook $1 ..."
