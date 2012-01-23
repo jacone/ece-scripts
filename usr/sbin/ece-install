@@ -2075,7 +2075,9 @@ function assemble_deploy_and_restart_type()
     
     set_correct_permissions
 
-    ece_command="ece -i $instance_name -t $type assemble deploy restart"
+    # need to run clean here since we might be running multiple
+    # profiles in the same ece-install process.
+    ece_command="ece -i $instance_name -t $type clean assemble deploy restart"
     if [ $(is_installing_from_ear) -eq 1 ]; then
         run cp $ece_instance_ear_file $escenic_cache_dir/engine.ear
         ece_command="ece -i $instance_name -t $type deploy restart"
