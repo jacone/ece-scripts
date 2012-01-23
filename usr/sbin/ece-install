@@ -61,6 +61,7 @@ ece_install_scripts_dir=$HOME/ece-install.d
 ece_install_env=${escenic_cache_dir}/$(basename $0).env
 
 # globals will be set to correct values in run-time.
+appserver_host=localhost
 appserver_port=8080
 on_debian_or_derivative=0
 on_debian=0
@@ -729,6 +730,11 @@ org.apache.catalina.core.ContainerBase.[Catalina].[localhost].handlers = 2localh
 EOF
 }
 
+# don't quote values when setting conf file values with
+# set_conf_file_value. This is a hack-ish variable due to EAE's
+# handling of .cfg files.
+dont_quote_conf_values=0
+
 # Parameters:
 # $1 is the property
 # $2 ... to the (last - 1) is the value
@@ -739,7 +745,6 @@ EOF
 #   mykey \
 #   myvalue1 myvalue2 myvalue3 \
 #   /etc/myfile.conf
-
 function set_conf_file_value()
 {
     if [ $# -lt 3 ]; then
@@ -750,15 +755,34 @@ function set_conf_file_value()
     local key=${@:1:1}
     local value_end_index=$(( $# - 2 ))
     local value=${@:2:${value_end_index}}
+
+    local parent_dir=$(dirname $file)
+    if [ ! -d ${parent_dir} ]; then
+        print ${parent_dir} "doesn't exist, something is wrong :-("
+        remove_pid_and_exit_in_error
+    fi
     
     if [ -r $file ]; then
         if [ $(grep ^$1 $file | wc -l) -gt 0 ]; then
-            sed -i "s~$key=.*~$key=\"$value\"~g" $file
+            if [ $dont_quote_conf_values -eq 0 ]; then
+                sed -i "s~$key=.*~$key=\"$value\"~g" $file
+            else
+                sed -i "s~$key=.*~$key=$value~g" $file
+            fi    
         else
-            echo "$key=\"$value\"" >> $file
+            if [ $dont_quote_conf_values -eq 0 ]; then
+                echo "$key=\"$value\"" >> $file
+            else
+                echo "$key=$value" >> $file
+            fi
+            
         fi
     else
-        echo "$key=\"$value\"" >> $file
+        if [ $dont_quote_conf_values -eq 0 ]; then
+            echo "$key=\"$value\"" >> $file
+        else
+            echo "$key=$value" >> $file
+        fi
     fi
 }
 
@@ -991,7 +1015,11 @@ function set_up_app_server()
               type="org.apache.catalina.UserDatabase"
               description="User database that can be updated and saved"
               factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
-              pathname="conf/tomcat-users.xml" />
+              pathname="conf/tomcat-users.xml"
+    />
+EOF
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+        cat >> $tomcat_base/conf/server.xml <<EOF
     <Resource
         name="jdbc/ECE_READ_DS"
         auth="Container"
@@ -1003,8 +1031,7 @@ function set_up_app_server()
         username="${db_user}"
         password="${db_password}"
         driverClassName="com.mysql.jdbc.Driver"
-
-url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
+        url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
         removeAbandoned="true"
         removeAbandonedTimeout="120"
         logAbandoned="true"
@@ -1015,7 +1042,7 @@ url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useU
         minEvictableIdleTimeMillis="30000"
         testWhileIdle="true"
         validationQuery="select now()"
-        />
+    />
     <Resource
         name="jdbc/ECE_UPDATE_DS"
         auth="Container"
@@ -1038,7 +1065,60 @@ url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useU
         minEvictableIdleTimeMillis="30000"
         testWhileIdle="true"
         validationQuery="select now()"
-        />
+    />
+EOF
+    else
+        cat >> $tomcat_base/conf/server.xml <<EOF
+    <Resource
+        name="jdbc/eae-qs/qs"
+        auth="Container"
+        type="javax.sql.DataSource"
+        maxActive="400"
+        maxIdle="8"
+        maxWait="2000"
+        initialSize="20"
+        username="${db_user}"
+        password="${db_password}"
+        driverClassName="com.mysql.jdbc.Driver"
+        url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
+        removeAbandoned="true"
+        removeAbandonedTimeout="120"
+        logAbandoned="true"
+        testOnBorrow="false"
+        testOnReturn="false"
+        timeBetweenEvictionRunsMillis="60000"
+        numTestsPerEvictionRun="5"
+        minEvictableIdleTimeMillis="30000"
+        testWhileIdle="true"
+        validationQuery="select now()"
+    />
+    <Resource
+        name="jdbc/eae-logger/logger"
+        auth="Container"
+        type="javax.sql.DataSource"
+        maxActive="100"
+        maxIdle="8"
+        maxWait="2000"
+        initialSize="20"
+        username="${db_user}"
+        password="${db_password}"
+        driverClassName="com.mysql.jdbc.Driver"
+        url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
+        removeAbandoned="true"
+        removeAbandonedTimeout="120"
+        logAbandoned="true"
+        testOnBorrow="false"
+        testOnReturn="false"
+        timeBetweenEvictionRunsMillis="60000"
+        numTestsPerEvictionRun="5"
+        minEvictableIdleTimeMillis="30000"
+        testWhileIdle="true"
+        validationQuery="select now()"
+    />
+EOF
+    fi
+    
+    cat >> $tomcat_base/conf/server.xml <<EOF
   </GlobalNamingResources>
 
   <Service name="Catalina">
@@ -1047,7 +1127,8 @@ url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useU
                connectionTimeout="20000" 
                URIEncoding="UTF-8"
                compression="on"
-               redirectPort="8543" />
+               redirectPort="8543"
+    />
     <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
       <Valve className="org.apache.catalina.valves.AccessLogValve"
              prefix="access."
@@ -1072,50 +1153,67 @@ EOF
 <Context>
 
   <WatchedResource>WEB-INF/web.xml</WatchedResource>
+EOF
 
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+        cat >> $tomcat_base/conf/context.xml <<EOF
   <ResourceLink
       global="jdbc/ECE_READ_DS"
       name="jdbc/ECE_READ_DS"
-      type="javax.sql.DataSource"/>
-  
+      type="javax.sql.DataSource"
+  />
   <ResourceLink
       global="jdbc/ECE_UPDATE_DS"
       name="jdbc/ECE_UPDATE_DS"
-      type="javax.sql.DataSource"/>
-  
+      type="javax.sql.DataSource"
+  />
   <Environment
       name="escenic/indexer-webservice"
-      value="http://localhost:${appserver_port}/indexer-webservice/index/"
+      value="http://${search_host}:${search_port}/indexer-webservice/index/"
       type="java.lang.String"
-      override="false"/>
-
+      override="false"
+  />
   <Environment
       name="escenic/index-update-uri"
       value="http://${search_host}:${search_port}/solr/update/"
       type="java.lang.String"
-      override="false"/>
-
+      override="false"
+  />
   <Environment
       name="escenic/solr-base-uri"
       value="http://${search_host}:${search_port}/solr/"
       type="java.lang.String"
-      override="false"/>
-
+      override="false"
+  />
   <Environment
       name="escenic/head-tail-storage-file"
       value="$escenic_data_dir/engine/head-tail.index"
       type="java.lang.String"
-      override="false"/>
-
+      override="false"
+  />
   <Environment
       name="escenic/failing-documents-storage-file"
       value="$escenic_data_dir/engine/failures.index"
       type="java.lang.String"
-      override="false"/>
-
+      override="false"
+  />
 </Context>
 EOF
-
+    else
+        cat >> $tomcat_base/conf/context.xml <<EOF
+  <ResourceLink
+      global="jdbc/eae-logger/logger"
+      name="jdbc/eae-logger/logger"
+      type="javax.sql.DataSource"
+  />
+  <ResourceLink
+      global="jdbc/eae-qs/qs"
+      name="jdbc/ECE_UPDATE_DS"
+      type="javax.sql.DataSource"
+  />
+</Context>
+EOF
+    fi
 }
 
 function create_user_and_group_if_not_present()
@@ -1411,7 +1509,7 @@ function stop_conflicting_processes()
      # TODO this is dirty
     if [[ -n "$install_profile_number" && \
         $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]]; then
-        killall java 1>>$log 2>>$log
+        killall -9 java 1>>$log 2>>$log
     fi
 }
 
@@ -2175,16 +2273,19 @@ function install_analysis_server()
     run cp ${escenic_root_dir}/analysis-engine-*/wars/*.war \
         ${tomcat_base}/webapps
 
-    local analysis_host=localhost
     if [ -n "${fai_analysis_host}" ]; then
-        analysis_host=${fai_analysis_host}
+        appserver_host=${fai_analysis_host}
     fi
-    
+    if [ -n "${fai_analysis_port}" ]; then
+        appserver_port=${fai_analysis_port}
+    fi
     
     # deploy the EAE WARs
     run cp ${escenic_root_dir}/analysis-engine-*/wars/*.war \
         ${tomcat_base}/webapps
 
+    set_correct_permissions
+    
     local ece_command="ece -i ${instance_name} -t ${type} start"
     su - $ece_user -c "$ece_command" \
         1>>$log 2>>$log
@@ -2194,12 +2295,30 @@ function install_analysis_server()
     print_and_log "Waiting ${seconds} seconds for EAE to come up ..."
     sleep 10
     
-    # set QS host:port in EAE Reports
+    # EAE cannot handle .cfg files with quotes values (!)
+    dont_quote_conf_values=1
+    
     print_and_log "Configuring EAE Reports ..."
     local file=${tomcat_base}/webapps/analysis-reports/WEB-INF/config/reports.cfg
-    sed -i "s#host:port#${analysis_host}:${appserver_port}#g" $file \
-        1>>$log 2>>$log
-    exit_on_error "Configuring EAE Reports in $file"
+    set_conf_file_value queryServiceUrl \
+        http://${appserver_host}:${appserver_port}/analysis-qs/QueryService \
+        ${file}
+
+    print_and_log "Configuring EAE Logger ..."
+    local file=${tomcat_base}/webapps/analysis-logger/WEB-INF/config/logger.cfg
+    set_conf_file_value databaseQueueManager.reinsertcount \
+        6 \
+        ${file}
+    set_conf_file_value pageview.maintenance.cron.expr '0 0 4 * * ? *' $file
+    set_conf_file_value pageview.aggr.hour.cron.expr '0 10 * * * ?' $file
+    set_conf_file_value imageResponse false $file
+    set_conf_file_value pageview.maintenance.older.than.months 6 $file
+    set_conf_file_value pageview.aggr.day.older.than.days 7 $file
+    set_conf_file_value pageview.aggr.day.cron.expr '0 0 5 * * ? *' $file
+    set_conf_file_value pageview.aggr.hour.older.than.hours 2 $file
+    set_conf_file_value pageview.maintenance.older.than.days 0 $file
+
+    dont_quote_conf_values=0
     
     run touch ${tomcat_base}/webapps/analysis-reports/WEB-INF/web.xml
     run_hook install_analysis_server.postinst
