@@ -58,7 +58,7 @@ curl_opts="--silent"
 
 # hook scripts
 ece_install_scripts_dir=$HOME/ece-install.d
-ece_install_env=${escenic_cache_dir}/$(basename $0).env
+ece_install_env=${escenic_run_dir}/$(basename $0).env
 
 # globals will be set to correct values in run-time.
 appserver_host=localhost
