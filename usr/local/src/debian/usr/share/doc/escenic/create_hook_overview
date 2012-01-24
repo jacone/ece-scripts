@@ -1,0 +1,14 @@
+#! /usr/bin/env bash
+
+dir=~/src/ece-scripts
+
+echo "" > $dir/usr/share/doc/escenic/ece-install-hooks.org
+
+grep run_hook $dir/usr/sbin/ece-install | \
+    grep -v function | \
+    awk '{print $2}' | \
+    while read l; do
+    echo "- $l" >> $dir/usr/share/doc/escenic/ece-install-hooks.org
+done
+
+
