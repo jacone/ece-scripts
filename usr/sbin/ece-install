@@ -3024,10 +3024,14 @@ for el in $@; do
         next_is_conf_file=1
     elif [[ -n $next_is_conf_file && $next_is_conf_file -eq 1 ]]; then
         conf_file=$el
-        if [ ! -e $conf_file ]; then
-            conf_file=$(pwd)/${conf_file}
-        fi
-
+        case ${conf_file} in
+            /*)
+                ;;
+            *)
+                conf_file=$(pwd)/${conf_file}
+                ;;
+        esac
+        
         next_is_conf_file=0
     fi
 done
