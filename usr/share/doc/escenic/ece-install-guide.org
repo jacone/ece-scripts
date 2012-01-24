@@ -626,6 +626,46 @@ environments on the same host. A use case is if you're setting up a
 test environment and want to separate stacks of Escenic Content Engine
 and plugins.
 
+* Extending ece-install by Writing Hooks
+ece-install  has a number of hooks on which you can hook on your own
+scripts. The scripts are to reside in $HOME/ece-conf.d/ and have names
+inspired by Debian's package scripts:
+
+#+BEGIN_SRC conf
+<hook name>.<phase>
+#+END_SRC
+
+e.g.:
+
+#+BEGIN_SRC conf
+install_analysis_server.preinst
+#+END_SRC
+
+Will be run before the body of the hook, just the corresponding
+.postinst hook will be run after.
+
+** Accessing ece-install variables
+Before running the hook, ece-install will make all its local variables
+available in /var/run/escenic/ece-install.env, which can then be used
+by the hook scripts.
+
+** Example hook
+Here is an example hook which will be run after the EAE is installed.
+
+#+BEGIN_SRC sh
+# Put this in is $HOME/ece-install.d/install_analysis_server.postinst
+
+# read ece-install's current variables
+source /var/run/escenic/ece-install.env
+
+# do something useful
+echo "Hello from $0, EAE is installed in ${tomcat_base}" > /tmp/hello.txt
+#+END_SRC
+
+** Available hooks
+Currently, the following hooks are available:
+#+INCLUDE: "ece-install-hooks.org"
+
 * Assumptions
 ** /etc/esecenic is shared
 It's assumed that the /etc/escenic directory is either on a shared
