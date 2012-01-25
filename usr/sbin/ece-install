@@ -121,12 +121,26 @@ function print_and_log()
     log "$@"
 }
 
+function log_call_stack()
+{
+    log "Call stack:"
+
+    # skipping i=0 as this is log_call_stack itself
+    for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
+        echo -n  ${FUNCNAME[$i]}:${BASH_LINENO[$i-1]} " " >> $log
+        sed -n "${BASH_LINENO[$i-1]}p" $0 >> $log
+    done
+}
+
 function remove_pid_and_exit_in_error()
 {
     if [ -e $pid_file ]; then
         rm $pid_file
     fi
 
+    print "Have a look in $log for the error call stack."
+    log_call_stack
+    
     exit 1
 }
 
@@ -1700,8 +1714,8 @@ function read_user_input()
 function assert_correct_runtime_environment()
 {
     if [ $(whoami) != "root" ]; then
-        print_and_log "You must be root when running $(basename $0)"
-        remove_pid_and_exit_in_error
+        print "You must be root when running $(basename $0)"
+        exit 1
     fi
     
     if [ -e $pid_file ]; then
