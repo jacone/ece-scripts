@@ -127,8 +127,12 @@ function log_call_stack()
 
     # skipping i=0 as this is log_call_stack itself
     for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
-        echo -n  ${FUNCNAME[$i]}:${BASH_LINENO[$i-1]} " " >> $log
-        sed -n "${BASH_LINENO[$i-1]}p" $0 >> $log
+        echo -n  ${0}:${BASH_LINENO[$i-1]}:"inside "${FUNCNAME[$i]}"() " >> $log
+        if [ -e $0 ]; then
+            sed -n "${BASH_LINENO[$i-1]}p" $0 >> log
+        else
+            echo "" >> $log
+        fi
     done
 }
 
@@ -138,7 +142,7 @@ function remove_pid_and_exit_in_error()
         rm $pid_file
     fi
 
-    print "Have a look in $log for the error call stack."
+    print "See $log for the error call stack."
     log_call_stack
     
     exit 1
