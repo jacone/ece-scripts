@@ -127,9 +127,9 @@ function log_call_stack()
 
     # skipping i=0 as this is log_call_stack itself
     for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
-        echo -n  ${0}:${BASH_LINENO[$i-1]}:"inside "${FUNCNAME[$i]}"() " >> $log
-        if [ -e $0 ]; then
-            sed -n "${BASH_LINENO[$i-1]}p" $0 >> log
+        echo -n  ${BASH_SOURCE[$i]}:${BASH_LINENO[$i-1]}:"inside "${FUNCNAME[$i]}"() " >> $log
+        if [ -e ${BASH_SOURCE[$i]} ]; then
+            sed -n "${BASH_LINENO[$i-1]}p" ${BASH_SOURCE[$i]} >> $log
         else
             echo "" >> $log
         fi
