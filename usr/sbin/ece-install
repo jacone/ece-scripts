@@ -123,13 +123,15 @@ function print_and_log()
 
 function log_call_stack()
 {
-    log "Call stack:"
+    log "Call stack (top most is the last one, main is the first):"
 
     # skipping i=0 as this is log_call_stack itself
     for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
-        echo -n  ${BASH_SOURCE[$i]}:${BASH_LINENO[$i-1]}:${FUNCNAME[$i]}"() => " >> $log
+        echo -n  ${BASH_SOURCE[$i]}:${BASH_LINENO[$i-1]}:${FUNCNAME[$i]}"()" >> $log
         if [ -e ${BASH_SOURCE[$i]} ]; then
-            sed -n "${BASH_LINENO[$i-1]}p" ${BASH_SOURCE[$i]} >> $log
+            echo -n " => " >> $log
+            sed -n "${BASH_LINENO[$i-1]}p" ${BASH_SOURCE[$i]} | \
+                sed "s#^[ \t]*##g" >> $log
         else
             echo "" >> $log
         fi
@@ -142,7 +144,6 @@ function remove_pid_and_exit_in_error()
         rm $pid_file
     fi
 
-    print "See $log for the error call stack."
     log_call_stack
     
     exit 1
@@ -1521,16 +1522,6 @@ function un_install_ece()
     apt-get clean
 }
 
-function stop_conflicting_processes()
-{
-    print_and_log "Stopping conflicting processes ..."
-     # TODO this is dirty
-    if [[ -n "$install_profile_number" && \
-        $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]]; then
-        killall -9 java 1>>$log 2>>$log
-    fi
-}
-
 function set_up_varnish()
 {
     print_and_log "Setting up Varnish to match your environment ..."
@@ -1791,7 +1782,6 @@ function common_pre_install()
     fi
 
     make_dir $download_dir
-    stop_conflicting_processes
     install_common_os_packages
     create_user_and_group_if_not_present
     set_up_user_enviornment
