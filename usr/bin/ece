@@ -91,14 +91,14 @@ function run()
 ####################################################################
 function debug()
 {
-    if [ $verbose -eq 1 ]; then
+    if [ "$verbose" -eq 1 ]; then
         print $@
     fi
 }
 
 function print()
 {
-    if [ $quiet -eq 0 ]; then
+    if [ "$quiet" -eq 0 ]; then
         echo "$id" $@
     fi
 }
@@ -154,7 +154,7 @@ function ensure_that_required_fields_are_set()
         requirements_failed=1
     done
 
-    if [ $requirements_failed -eq 1 ]; then
+    if [ "$requirements_failed" -eq 1 ]; then
         exit 1
     fi
 }
@@ -209,7 +209,7 @@ function set_common_settings()
     # instance specific ones.
     read_conf_file `basename $0`.conf
 
-    if [ $instance = "default" ]; then
+    if [ "$instance" == "default" ]; then
         log_file=$log_dir/$type.out
         pid_file=$pid_dir/$type.pid
     else
@@ -238,7 +238,7 @@ function set_type_settings()
 
 function set_type_pid()
 {
-    if [ $(uname) = "Linux" ]; then
+    if [ "$(uname)" == "Linux" ]; then
         ps_options="auxww"
     else
         ps_options="-ef"
@@ -247,7 +247,7 @@ function set_type_pid()
     # Get a hold of the PID of the process. Although we've got the PID
     # file, we stil get the PID from the OS here as we used it for
     # sanity checking later on, see stop_type().
-    if [ $type = "rmi-hub" ]; then
+    if [ "$type" == "rmi-hub" ]; then
         # we need to be able to differentiate between an ECE instance
         # and an rmi hub, for this we use java.security.policy which
         # the hub doesn't have.
@@ -268,7 +268,7 @@ function set_type_port()
     if [ -n "${appserver_port}" ]; then
         port=${appserver_port}
         debug "appserver_port set in .conf files=${port}"
-    elif [ $appserver != "tomcat" ]; then
+    elif [ "$appserver" != "tomcat" ]; then
         debug "Only tomcat is supported for reading host/port right now, "
         debug "trying to make an educated guess"
         port=8080
@@ -302,18 +302,18 @@ function set_instance_settings()
     # at this point in the script flow, we have now read all the
     # possible combinations of conf files (common, type and instance)
     # and can now ensure that required fields are set and apply them.
-    if [ $type = "rmi-hub" ]; then
+    if [ "$type" == "rmi-hub" ]; then
         ensure_that_required_fields_are_set $hub_required_fields
-    elif [ $type = "search" ]; then
+    elif [ "$type" == "search" ]; then
         ensure_that_required_fields_are_set $search_required_fields
-    elif [ $type = "engine" ]; then
+    elif [ "$type" == "engine" ]; then
         ensure_that_required_fields_are_set $engine_required_fields
     fi
 
     # We respect ece_server if it's set in any of the configuration
     # files. If it's not set there, it sets some sensible defaults.
-    if [ -z $ece_server ]; then
-        if [ $instance = "default" ]; then
+    if [ -z "$ece_server" ]; then
+        if [ "$instance" == "default" ]; then
             ece_server=${HOSTNAME}
         else
             ece_server=${HOSTNAME}-${instance}
@@ -323,7 +323,7 @@ function set_instance_settings()
     set_type_pid
    
     # if type is rmi-hub, we don't' need more configuration.
-    if [ $type = "rmi-hub" ]; then
+    if [ "$type" == "rmi-hub" ]; then
         return
     fi
 
@@ -342,63 +342,63 @@ function set_instance_settings()
               -Djava.security.auth.login.config=$ece_security_configuration_dir/jaas.config\
               -Djava.security.policy=$ece_security_configuration_dir/java.policy"
 
-    if [ $instance != "default" ]; then
+    if [ "$instance" != "default" ]; then
         ece_args=$ece_args" -Dcom.escenic.instance=$instance"
     fi
 
-    if [ $ece_server_hostname ]; then
+    if [ "$ece_server_hostname" ]; then
         ece_args=$ece_args" -Djava.rmi.server.hostname=$ece_server_hostname"
     fi
 
-    if [ $apr_lib_dir ]; then
+    if [ "$apr_lib_dir" ]; then
         ece_args=$ece_args" -Djava.library.path=$apr_lib_dir"
     fi
 
-    if [ $min_heap_size ]; then
+    if [ "$min_heap_size" ]; then
         ece_args=$ece_args" -Xms$min_heap_size"
     fi
 
-    if [ $max_heap_size ]; then
+    if [ "$max_heap_size" ]; then
         ece_args=$ece_args" -Xmx$max_heap_size"
     fi
 
-    if [ $min_permgen_size ]; then
+    if [ "$min_permgen_size" ]; then
         ece_args=$ece_args" -XX:PermSize=$min_permgen_size"
     fi
 
-    if [ $max_permgen_size ]; then
+    if [ "$max_permgen_size" ]; then
         ece_args=$ece_args" -XX:MaxPermSize=$max_permgen_size"
     fi
     
-    if [ $jvm_encoding ]; then
+    if [ "$jvm_encoding" ]; then
         ece_args=$ece_args" -Dsun.jnu.encoding=$jvm_encoding"
         ece_args=$ece_args" -Dfile.encoding=$jvm_encoding"
     fi
 
-    if [ $enable_remote_debugging -eq 1 ]; then
+    if [ "$enable_remote_debugging" -eq 1 ]; then
         ece_args=$ece_args" -Xdebug -Xnoagent -Djava.compiler=NONE \
                             -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=$remote_debugging_port"
     fi          
 
-    if [ $enable_remote_monitoring -eq 1 ]; then
+    if [ "$enable_remote_monitoring" -eq 1 ]; then
         ece_args=$ece_args" -Dcom.sun.management.jmxremote"
         ece_args=$ece_args" -Dcom.sun.management.jmxremote.authenticate=false"
         ece_args=$ece_args" -Dcom.sun.management.jmxremote.ssl=false"
         ece_args=$ece_args" -Dcom.sun.management.jmxremote.port=$remote_monitoring_port" 
     fi
 
-    if [ $enable_heap_dump -eq 1 ]; then
+    if [ "$enable_heap_dump" -eq 1 ]; then
         ece_args=$ece_args" -XX:+HeapDumpOnOutOfMemoryError"
         ece_args=$ece_args" -XX:HeapDumpPath=$heap_dump_dir"
     fi
 
-    if [ $force_ipv4 -eq 1 ]; then
+    if [ "$force_ipv4" -eq 1 ]; then
         ece_args=$ece_args" -Djava.net.preferIPv4Stack=true"
     fi
     
     # Resin needs some more arguments as its XML parser is not
     # compatible with ECE.
-    if [ $appserver = "resin" ]; then
+    if [ "$appserver" == "resin" ]; then
         ece_args="$ece_args\
            -Dorg.xml.sax.driver=org.apache.xerces.parsers.SAXParser
            -Djavax.xml.stream.XMLInputFactory=com.sun.xml.stream.ZephyrParserFactory
@@ -407,8 +407,8 @@ function set_instance_settings()
            -Djavax.xml.transform.TransformerFactory=org.apache.xalan.processor.TransformerFactoryImpl"
         debug "resin_home=$resin_home"
 
-    elif [ $appserver = "tomcat" ]; then
-        if [ -z $tomcat_base ]; then
+    elif [ "$appserver" == "tomcat" ]; then
+        if [ -z "$tomcat_base" ]; then
             tomcat_base=$tomcat_home
         else
             export CATALINA_BASE=$tomcat_base
@@ -428,7 +428,7 @@ function set_instance_settings()
 
 function sanity_check()
 {
-    if [ $(whoami) = "root" ]; then
+    if [ "$(whoami)" == "root" ]; then
         print "Sorry, you cannot be root when running $(basename $0)"
         print "The root user can only use /etc/init.d/ece"
         exit 1
@@ -445,8 +445,8 @@ function sanity_check()
     # checks if the user is using the default instance when he/she
     # really wants to start one of the instances installed on the
     # system.
-    if [ $instance = "default" -a \
-        $type = "engine" -a \
+    if [ "$instance" == "default" -a \
+        "$type" == "engine" -a \
         $(echo $command | egrep 'help' | wc -l) -eq 0 ]; then
         instance_list=$(get_instance_list)
         if [[ -n "$instance_list" && \
@@ -462,7 +462,7 @@ function sanity_check()
 function deploy()
 {
     ear=$cache_dir/engine.ear
-    if [ ! -e $ear ]; then
+    if [ ! -e "$ear" ]; then
         print_and_log "$ear does not exist. "
         print_and_log "Did you run '"`basename $0`" -i" $instance "assemble'?"
         exit 1
@@ -542,14 +542,14 @@ function deploy()
                     deploy_this_war=0
 
                     for el in $deploy_webapp_white_list; do
-                        if [ $el = $name ]; then
+                        if [ "$el" == $name ]; then
                             debug "found $war in white list, will deploy it"
                             deploy_this_war=1
                         fi
                     done
                 fi
 
-                if [ $deploy_this_war -eq 0 ]; then
+                if [ "$deploy_this_war" -eq 0 ]; then
                     continue
                 fi
                 
@@ -616,15 +616,15 @@ function backup_type()
    print $message
    log $message
 
-   if [ $type = "rmi-hub" ]; then
+   if [ "$type" == "rmi-hub" ]; then
        ensure_that_required_fields_are_set $hub_required_fields
-   elif [ $type = "search" ]; then
+   elif [ "$type" == "search" ]; then
         # TODO trim & tun the default parameters for the search
         # instance.
        ensure_that_required_fields_are_set $engine_required_fields
-   elif [ $type = "engine" ]; then
+   elif [ "$type" == "engine" ]; then
        ensure_that_required_fields_are_set $engine_required_fields
-   elif [ $type = "analysis" ]; then
+   elif [ "$type" == "analysis" ]; then
        ensure_that_required_fields_are_set $analysis_required_fields
    fi
     
@@ -637,7 +637,7 @@ function backup_type()
        exit 1
    fi
 
-   if [ $appserver = "tomcat" ]; then
+   if [ "$appserver" == "tomcat" ]; then
        if [ ! -d $tomcat_base/conf ]; then
            print $tomcat_base/conf "doesn't exist :-("
            print "check your ece.conf the $instance instance of type $type"
@@ -687,14 +687,14 @@ ${escenic_conf_dir}
 "
    actual_backup=""
    for el in $possible_backup; do
-       if [ $el = "/opt/escenic" -a $backup_exclude_binaries -eq 1 ]; then
+       if [ "$el" == "/opt/escenic" -a $backup_exclude_binaries -eq 1 ]; then
            continue
-       elif [ -r $el ]; then
+       elif [ -r "$el" ]; then
            actual_backup="$el $actual_backup"
        fi
    done
 
-   if [ $appserver = "tomcat" -a $backup_exclude_binaries -eq 0 ]; then
+   if [ "$appserver" == "tomcat" -a "$backup_exclude_binaries" -eq 0 ]; then
        actual_backup="$(get_actual_file $tomcat_home) $tomcat_base $actual_backup"
    fi
 
@@ -710,7 +710,7 @@ ${escenic_conf_dir}
    print "- Database snapshot"
    print "- All Solr & Escenic data files from /var/lib/escenic"
 
-   if [ $backup_exclude_binaries -eq 0 ]; then
+   if [ "$backup_exclude_binaries" -eq 0 ]; then
        print "- All app servers in /opt"
        print "- All Escenic binaries & publication templates in /opt/escenic"
    fi
@@ -728,7 +728,7 @@ function start_type()
     print $message
     log $message
     
-    if [ $type = "rmi-hub" ]; then
+    if [ "$type" == "rmi-hub" ]; then
         ensure_that_required_fields_are_set $hub_required_fields
 
         if [ -r $rmi_hub_conf ]; then
@@ -754,13 +754,13 @@ function start_type()
         echo $pid > $pid_file
         exit 0
 
-    elif [ $type = "search" ]; then
+    elif [ "$type" == "search" ]; then
         # TODO trim & tun the default parameters for the search
         # instance.
         ensure_that_required_fields_are_set $engine_required_fields
-    elif [ $type = "engine" ]; then
+    elif [ "$type" == "engine" ]; then
         ensure_that_required_fields_are_set $engine_required_fields
-    elif [ $type = "analysis" ]; then
+    elif [ "$type" == "analysis" ]; then
         ensure_that_required_fields_are_set $analysis_required_fields
     fi
 
@@ -946,7 +946,7 @@ assemble_attempts=0
 
 function assemble()
 {
-    if [ $assemble_attempts -gt 1 ]; then
+    if [ "$assemble_attempts" -gt 1 ]; then
         print "I've tried to assemble twice now and FAILED :-("
         print "You probably have multiple versions of one or more plugins"
         print "Check your plugins directory, sort it out and try again."
@@ -954,7 +954,7 @@ function assemble()
     fi
     assemble_attempts=$(( $assemble_attempts + 1 ))
     
-    if [[ $type != "engine" && $type != "search" ]]; then
+    if [[ "$type" != "engine" && "$type" != "search" ]]; then
         print "You cannot assemble instances of type $type"
         exit 1
     fi
@@ -986,7 +986,7 @@ function assemble()
         fi
     done
 
-    if [ $duplicates_found -eq 1 ]; then
+    if [ "$duplicates_found" -eq 1 ]; then
         print "Multiple versions of ECE and/or 3rd party libraries found."
         print "Remember, you need to run '$(basename $0) clean assemble' when "
         print "upgrading either ECE or one of the plugins."
@@ -1019,13 +1019,13 @@ function create_packages()
     local package_dir=$dir/debian
     local package_name=""
     
-    if [ $type = "engine" ]; then
+    if [ "$type" == "engine" ]; then
         package_name="escenic-content-engine-${instance}"
-    elif [ $type = "search" ]; then
+    elif [ "$type" == "search" ]; then
         package_name="escenic-search-engine-${instance}"
-    elif [ $type = "rmi-hub" ]; then
+    elif [ "$type" == "rmi-hub" ]; then
         package_name="escenic-rmi-hub"
-    elif [ $type = "analysis" ]; then
+    elif [ "$type" == "analysis" ]; then
         package_name="escenic-analysis-engine-${instance}"
     fi
     
@@ -1061,7 +1061,7 @@ EOF
             for el in $(jar tf ${ear} | grep .war$); do
                 if [ -n "${deploy_webapp_white_list}" ]; then
                     for ele in $deploy_webapp_white_list; do
-                        if [ ${el} = ${ele}.war ]; then
+                        if [ ${el} == ${ele}.war ]; then
                             run jar xf ${ear} ${el}
                         fi
                     done
@@ -1072,7 +1072,7 @@ EOF
 
             # putting this block here so that anything overridden in
             # tomcat_base takes precedence over tomcat_home
-            if [ ${everything_but_the_kitchen_sink} -eq 1 ]; then
+            if [ "${everything_but_the_kitchen_sink}" -eq 1 ]; then
                 (
                     local tomcat_home_dir=${package_dir}${tomcat_home}
                     run mkdir -p ${tomcat_home_dir}
@@ -1160,9 +1160,9 @@ function tail_out_log()
 
 function get_app_log()
 {
-    if [ $appserver = "tomcat" ]; then
+    if [ "$appserver" == "tomcat" ]; then
         log_file=$tomcat_base/logs/localhost.`date +%F`.log
-    elif [ $appserver = "resin" -a -e $resin_home/log/jvm-default.log ]; then
+    elif [ "$appserver" == "resin" -a -e $resin_home/log/jvm-default.log ]; then
         log_file=$resin_home/log/jvm-default.log
     else
         print "I don't know where the logs for $appserver are."
@@ -1177,7 +1177,7 @@ function get_app_log()
 
 function tail_app_log()
 {
-    if [ $type = "rmi-hub" ]; then
+    if [ "$type" == "rmi-hub" ]; then
         print "There is no application server log for $type"
         exit 1
     fi
@@ -1214,105 +1214,105 @@ function set_type_command_and_instance()
     next_is_http_password=0
     
     for el in $@; do
-        if [ $el = "-v" -o $el = "--verbose" ]; then
+        if [ "$el" == "-v" -o "$el" == "--verbose" ]; then
             verbose=1
             continue
         fi
         
-        if [ $el  = "--full" ]; then
+        if [ "$el" == "--full" ]; then
             everything_but_the_kitchen_sink=1
             continue
         fi
         
-        if [ $el = "-q" -o $el = "--quiet" ]; then
+        if [ "$el" == "-q" -o $el == "--quiet" ]; then
             quiet=1
             continue
         fi
         
-        if [ $el = "--help" ]; then
+        if [ "$el" == "--help" ]; then
             command=help
             continue
         fi
 
-        if [ $next_is_type -eq 1 ]; then
+        if [ "$next_is_type" -eq 1 ]; then
             type=$el
             next_is_type=0
             continue
         fi
         
-        if [ $next_is_http_user -eq 1 ]; then
+        if [ "$next_is_http_user" -eq 1 ]; then
             http_user=$el
             next_is_http_user=0
             continue
         fi
         
-        if [ $next_is_http_password -eq 1 ]; then
+        if [ "$next_is_http_password" -eq 1 ]; then
             http_password=$el
             next_is_http_password=0
             continue
         fi
         
-        if [ $next_is_instance -eq 1 ]; then
+        if [ "$next_is_instance" -eq 1 ]; then
             instance=$el
             next_is_instance=0
             continue
         fi
         
-        if [ $next_is_publication -eq 1 ]; then
+        if [ "$next_is_publication" -eq 1 ]; then
             publication=$el
             next_is_publication=0
             continue
         fi
         
-        if [ $next_is_resource -eq 1 ]; then
+        if [ "$next_is_resource" -eq 1 ]; then
             resource=$el
             next_is_resource=0
             continue
         fi
         
-        if [ $el = "-t" -o $el  = "--type" ]; then
+        if [ "$el" == "-t" -o "$el"  == "--type" ]; then
             next_is_type=1
             continue
         else
             next_is_type=0
         fi
 
-        if [ $el = "-i" -o $el = "--instance" ]; then
+        if [ "$el" == "-i" -o "$el" == "--instance" ]; then
             next_is_instance=1
             continue
         else
             next_is_instance=0
         fi
 
-        if [ $el = "-p" -o $el = "--publication" ]; then
+        if [ "$el" == "-p" -o "$el" == "--publication" ]; then
             next_is_publication=1
             continue
         else
             next_is_publication=0
         fi
         
-        if [ $el = "-r" -o $el = "--publication-resource" ]; then
+        if [ "$el" == "-r" -o "$el" == "--publication-resource" ]; then
             next_is_resource=1
             continue
         else
             next_is_resource=0
         fi
         
-        if [ $el = "-u" -o $el = "--user" ]; then
+        if [ "$el" == "-u" -o "$el" == "--user" ]; then
             next_is_http_user=1
             continue
         else
             next_is_http_user=0
         fi
         
-        if [ $el = "-w" -o $el = "--password" ]; then
+        if [ "$el" == "-w" -o "$el" == "--password" ]; then
             next_is_http_password=1
             continue
         else
             next_is_http_password=0
         fi
 
-        if [ $el = "--exclude-binaries" ]; then
+        if [ "$el" == "--exclude-binaries" ]; then
             backup_exclude_binaries=1
             continue
         fi
@@ -1324,7 +1324,7 @@ function set_type_command_and_instance()
     # If the user didn't specify which instance to use and if there's
     # only one available instance, use that instead of asking the user
     # to provide it in sanity_check.
-    if [ $instance = "default" ]; then
+    if [ "$instance" == "default" ]; then
         local instance_list=$(get_instance_list)
         
         if [ $(echo $instance_list | grep ' ' | wc -l) -eq 0 ]; then
@@ -1336,7 +1336,7 @@ function set_type_command_and_instance()
 
 function clean_up()
 {
-    if [ $type = "engine" ]; then
+    if [ "$type" == "engine" ]; then
         print "Cleaning up generated files in $assemblytool_home ..." 
         run cd $assemblytool_home
         run ant clean
@@ -1360,7 +1360,7 @@ function clean_up()
 
 function set_id()
 {
-    if [ $instance = "default" ]; then
+    if [ "$instance" == "default" ]; then
         id="["`basename $0`"#${type}]"
     else
         id="["`basename $0`"#${type}-${instance}]"
@@ -1504,7 +1504,7 @@ function update_publication_resources()
         "publication ..."
     
     debug POSTing $resource to $url
-    if [[ -n "$do_put" && $do_put = "true" ]]; then
+    if [[ -n "$do_put" && "$do_put" == "true" ]]; then
         curl -T ${resource} \
           ${curl_auth} \
             ${url} \
@@ -1524,7 +1524,7 @@ function update_publication_resources()
 
 function show_all_log_paths()
 {
-    if [ $quiet -eq 0 ]; then
+    if [ "$quiet" -eq 0 ]; then
         print "System out log: "$log_file
         print "App server log: "$(get_app_log)
         print "log4j log:  "$(get_log4j_log)
@@ -1552,7 +1552,7 @@ function get_escenic_admin_url()
 
 function flush_caches()
 {
-    if [ ${type} != "engine" ]; then
+    if [ "${type}" != "engine" ]; then
         print "You cannot flush the caches of a ${type} instance"
         return
     fi
