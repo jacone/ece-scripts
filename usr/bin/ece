@@ -53,6 +53,8 @@ enable_remote_debugging
 enable_remote_monitoring
 java_home
 solr_home
+log_dir
+pid_dir
 "
 
 search_required_fields="
