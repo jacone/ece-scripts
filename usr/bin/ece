@@ -299,18 +299,18 @@ function set_instance_settings()
     # at this point in the script flow, we have now read all the
     # possible combinations of conf files (common, type and instance)
     # and can now ensure that required fields are set and apply them.
-    if [ $type = "rmi-hub" ]; then
+    if [ "$type" = "rmi-hub" ]; then
         ensure_that_required_fields_are_set $hub_required_fields
-    elif [ $type = "search" ]; then
+    elif [ "$type" = "search" ]; then
         ensure_that_required_fields_are_set $search_required_fields
-    elif [ $type = "engine" ]; then
+    elif [ "$type" = "engine" ]; then
         ensure_that_required_fields_are_set $engine_required_fields
     fi
 
     # We respect ece_server if it's set in any of the configuration
     # files. If it's not set there, it sets some sensible defaults.
-    if [ -z $ece_server ]; then
-        if [ $instance = "default" ]; then
+    if [ -z "$ece_server" ]; then
+        if [ "$instance" = "default" ]; then
             ece_server=${HOSTNAME}
         else
             ece_server=${HOSTNAME}-${instance}
@@ -320,7 +320,7 @@ function set_instance_settings()
     set_type_pid
    
     # if type is rmi-hub, we don't' need more configuration.
-    if [ $type = "rmi-hub" ]; then
+    if [ "$type" = "rmi-hub" ]; then
         return
     fi
 
