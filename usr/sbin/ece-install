@@ -2118,8 +2118,7 @@ function install_ece_instance()
     set_up_proper_logging_configuration
 
     # We set a WAR white list for all profiles except all in one
-    if [ $install_profile_number -ne $PROFILE_ALL_IN_ONE -a \
-        $install_profile_number -ne $PROFILE_EDITORIAL_SERVER ]; then
+    if [ $install_profile_number -ne $PROFILE_ALL_IN_ONE ]; then
         file=$escenic_conf_dir/ece-${instance_name}.conf
         print_and_log "Creating deployment white list in $file ..."
         set_conf_file_value \
@@ -2146,25 +2145,38 @@ function install_ece_instance()
     add_next_step "/etc/default/ece lists all instances started at boot time"
 }
 
+function get_publication_short_name_list()
+{
+    local short_name_list=""
+    
+    local publication_def_dir=${escenic_root_dir}/assemblytool/publications
+    if [ $(ls ${publication_def_dir} | grep .properties$ | wc -l) -eq 0 ]; then
+        echo ${short_name_list}
+        return
+    fi
+
+    for el in $(find ${publication_def_dir} -name "*.properties"); do
+        local short_name=$(basename $el .properties)
+        short_name_list="${short_name_list} ${short_name}"
+    done
+
+    echo ${short_name_list}
+ }
+
 function get_deploy_white_list()
 {
     local white_list="escenic-admin"
+    
     if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER \
         -a -n "${publication_name}" ]; then
         white_list="${white_list} ${publication_name} "
     elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then 
         white_list="${white_list} solr indexer-webapp"
     elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
-        local publication_def_dir=${escenic_root_dir}/assemblytool/publications
-        if [ $(ls ${publication_def_dir} | grep .properties$ | wc -l) -eq 0 ]; then
-            echo ${white_list}
-            return
-        fi
-
-        for el in $(find ${publication_def_dir} -name "*.properties"); do
-            local short_name=$(basename $el .properties)
-            white_list="${white_list} ${short_name}"
-        done
+        white_list="${white_list} "$(get_publication_short_name_list)
+    elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+        white_list="${white_list} escenic studio indexer-webservice"
+        white_list="${white_list} "$(get_publication_short_name_list)
     fi
 
     echo ${white_list}

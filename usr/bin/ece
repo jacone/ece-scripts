@@ -55,17 +55,20 @@ java_home
 solr_home
 log_dir
 pid_dir
+tmp_dir
 "
 
 search_required_fields="
 appserver
 java_home
 solr_home
+tmp_dir
 "
 
 analysis_required_fields="
 appserver
 java_home
+tmp_dir
 "
 ####################################################################
 # Will exit the ece execution if the last operation failed. While
