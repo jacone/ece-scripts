@@ -115,11 +115,11 @@ function verify_that_directory_and_file_are_writeable()
 {
     dir=`dirname $1`
     if [ ! -e $dir ]; then
-        print $dir " doesn't exist"
+        print $1: $dir " doesn't exist"
         exit 1
     fi
     if [ ! -w $dir ]; then
-        print $dir " isn't writable for user $USER"
+        print $1: $dir " isn't writable for user $USER"
         exit 1
     fi
 
