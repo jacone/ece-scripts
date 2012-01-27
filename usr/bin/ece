@@ -759,6 +759,12 @@ function start_type()
         ensure_that_required_fields_are_set $engine_required_fields
     elif [ "$type" == "engine" ]; then
         ensure_that_required_fields_are_set $engine_required_fields
+        if [ ! -d "$ece_security_configuration_dir" ] ; then
+            print "ece_security_configuration_dir $ece_security_configuration_dir"
+            print "did not exist."
+            print "Exiting :-("
+            exit 1
+        fi
     elif [ "$type" == "analysis" ]; then
         ensure_that_required_fields_are_set $analysis_required_fields
     fi
