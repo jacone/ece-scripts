@@ -1322,10 +1322,14 @@ function set_type_command_and_instance()
     # only one available instance, use that instead of asking the user
     # to provide it in sanity_check.
     if [ "$instance" == "default" ]; then
+        debug "Trying to determine instance name"
         local instance_list=$(get_instance_list)
         
         if [ $(echo $instance_list | grep ' ' | wc -l) -eq 0 ]; then
             instance=$instance_list
+            if [ -z "$instance" ] ; then
+              instance=default
+            fi
             debug "setting instance=$instance as there's only one"
         fi
     fi
