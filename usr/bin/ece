@@ -727,8 +727,7 @@ function start_type()
 {
     unset CLASSPATH
     message="Starting the $instance instance of $type on $HOSTNAME ..."
-    print $message
-    log $message
+    print_and_log $message
     
     if [ "$type" == "rmi-hub" ]; then
         ensure_that_required_fields_are_set $hub_required_fields
@@ -944,11 +943,6 @@ function get_info_for_type()
 function restart_type()
 {
     stop_type
-    
-    # I've tested this with various values, 8 seconds seems to
-    # guarantee that the previous JVM process has stopped
-    # properly before starting the new one.
-    sleep 8
 
     # sometimes the JVM refuses to shut down when doing a graceful
     # kill, therefore, if it's still running after the sleep above, we
@@ -956,9 +950,7 @@ function restart_type()
     set_type_pid
     if [ -n "$type_pid" ]; then
         message="The $instance instance of $type failed to stop gracefully"
-        debug $message
-        log $message >> $log_file
-        print $message
+        print_and_log $message
         kill_type
     fi
     
