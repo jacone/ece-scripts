@@ -428,11 +428,11 @@ function set_instance_settings()
 
 function sanity_check()
 {
-    if [ "$(whoami)" == "root" ]; then
-        print "Sorry, you cannot be root when running $(basename $0)"
-        print "The root user can only use /etc/init.d/ece"
-        exit 1
-    fi
+#    if [ "$(whoami)" == "root" ]; then
+#        print "Sorry, you cannot be root when running $(basename $0)"
+#        print "The root user can only use /etc/init.d/ece"
+#        exit 1
+#    fi
     
     verify_that_directory_and_file_are_writeable $log_file
     verify_that_directory_and_file_are_writeable $pid_file
@@ -846,20 +846,35 @@ function stop_type()
                 print "removing dangling PID file $pid_file. "
                 print "In future, be sure to use $0 to start "
                 print "and stop your $type"
-                kill $type_pid 1>>$log_file 2>>$log_file
+                run kill $type_pid
                 rm $pid_file
                 return
             fi
         fi
+
+        for i in {0..5}; do
+            set_type_pid
+            
+            if [ -n "$type_pid" ]; then
+                run kill $type_pid
+            else
+                debug "Previous gracious kill attempt of $instance succeeded."
+                break
+            fi
+            
+            sleep 1
+        done
+
+        set_type_pid
+        if [ -n "$type_pid" ]; then
+            print_and_log "I could not stop $type instance $instance gracefully,"
+            print_and_log "I will now use force."
+            run kill -9 $type_pid
+        fi
         
-        kill $type_pid \
-            1>>$log_file \
-            2>>$log_file
 
         if [ -e $pid_file ]; then
-            rm $pid_file \
-                1>>$log_file \
-                2>>$log_file
+            run rm $pid_file
         fi
     else
         print "The $instance instance of $type on $HOSTNAME is NOT running"
