@@ -53,6 +53,8 @@ enable_remote_debugging
 enable_remote_monitoring
 java_home
 solr_home
+log_dir
+pid_dir
 tmp_dir
 "
 
@@ -118,11 +120,11 @@ function verify_that_directory_and_file_are_writeable()
 {
     dir=`dirname $1`
     if [ ! -e $dir ]; then
-        print $dir " doesn't exist"
+        print $1: $dir " doesn't exist"
         exit 1
     fi
     if [ ! -w $dir ]; then
-        print $dir " isn't writable for user $USER"
+        print $1: $dir " isn't writable for user $USER"
         exit 1
     fi
 
@@ -760,6 +762,12 @@ function start_type()
         ensure_that_required_fields_are_set $engine_required_fields
     elif [ "$type" == "engine" ]; then
         ensure_that_required_fields_are_set $engine_required_fields
+        if [ ! -d "$ece_security_configuration_dir" ] ; then
+            print "ece_security_configuration_dir $ece_security_configuration_dir"
+            print "did not exist."
+            print "Exiting :-("
+            exit 1
+        fi
     elif [ "$type" == "analysis" ]; then
         ensure_that_required_fields_are_set $analysis_required_fields
     fi
@@ -1340,10 +1348,14 @@ function set_type_command_and_instance()
     # only one available instance, use that instead of asking the user
     # to provide it in sanity_check.
     if [ "$instance" == "default" ]; then
+        debug "Trying to determine instance name"
         local instance_list=$(get_instance_list)
         
         if [ $(echo $instance_list | grep ' ' | wc -l) -eq 0 ]; then
             instance=$instance_list
+            if [ -z "$instance" ] ; then
+              instance=default
+            fi
             debug "setting instance=$instance as there's only one"
         fi
     fi
