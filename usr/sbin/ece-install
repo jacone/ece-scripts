@@ -1226,7 +1226,7 @@ EOF
   />
   <ResourceLink
       global="jdbc/eae-qs/qs"
-      name="jdbc/ECE_UPDATE_DS"
+      name="jdbc/eae-qs/qs"
       type="javax.sql.DataSource"
   />
 </Context>
