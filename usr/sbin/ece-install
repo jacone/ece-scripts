@@ -957,7 +957,24 @@ function set_up_app_server()
     set_db_defaults_if_not_set
 
     if [ $fai_enabled -eq 0 ]; then
-        print "Last question: Where does the search instance run?"
+        print "Awfully sorry to bug you with so many questions, but:"
+        print "What's the URI to the indexer-webservice? (this is typically"
+        print "something like http://editor1/indexer-webservice/index/)"
+        echo -n "Your choice [http://${HOSTNAME}:8080/indexer-webservice/index/]> "
+        read user_indexer_ws_uri
+    else
+        user_indexer_ws_uri=${fai_search_indexer_ws_uri}
+    fi
+
+    if [ -n "$user_indexer_ws_uri" ]; then
+        indexer_ws_uri=$user_indexer_ws_uri
+    else
+        indexer_ws_uri=http://${HOSTNAME}:${appserver_port}/indexer-webservice/index/
+    fi
+    
+    
+    if [ $fai_enabled -eq 0 ]; then
+        print "Last question, I promise!: Where does the search instance run?"
         print "Press ENTER to accept the default ($HOSTNAME:8080)"
         print "If you're in doubt, just press ENTER :-)"
         print "Or enter: <host>:<port>, e.g.: 'search1:8080'"
@@ -1036,7 +1053,8 @@ function set_up_app_server()
               pathname="conf/tomcat-users.xml"
     />
 EOF
-    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER \
+        -a $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
         cat >> $tomcat_base/conf/server.xml <<EOF
     <Resource
         name="jdbc/ECE_READ_DS"
@@ -1085,7 +1103,7 @@ EOF
         validationQuery="select now()"
     />
 EOF
-    else
+    elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
         cat >> $tomcat_base/conf/server.xml <<EOF
     <Resource
         name="jdbc/eae-qs/qs"
@@ -1173,7 +1191,8 @@ EOF
   <WatchedResource>WEB-INF/web.xml</WatchedResource>
 EOF
 
-    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
+        $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
         cat >> $tomcat_base/conf/context.xml <<EOF
   <ResourceLink
       global="jdbc/ECE_READ_DS"
@@ -1185,21 +1204,31 @@ EOF
       name="jdbc/ECE_UPDATE_DS"
       type="javax.sql.DataSource"
   />
+EOF
+    fi
+
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+        cat >> $tomcat_base/conf/context.xml <<EOF
+  <Environment
+      name="escenic/solr-base-uri"
+      value="http://${search_host}:${search_port}/solr/"
+      type="java.lang.String"
+      override="false"
+  />
+EOF
+    fi
+
+    if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+        cat >> $tomcat_base/conf/context.xml <<EOF
   <Environment
       name="escenic/indexer-webservice"
-      value="http://${search_host}:${search_port}/indexer-webservice/index/"
+      value="http://${indexer_ws_uri}"
       type="java.lang.String"
       override="false"
   />
   <Environment
       name="escenic/index-update-uri"
       value="http://${search_host}:${search_port}/solr/update/"
-      type="java.lang.String"
-      override="false"
-  />
-  <Environment
-      name="escenic/solr-base-uri"
-      value="http://${search_host}:${search_port}/solr/"
       type="java.lang.String"
       override="false"
   />
@@ -1217,7 +1246,7 @@ EOF
   />
 </Context>
 EOF
-    else
+    elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
         cat >> $tomcat_base/conf/context.xml <<EOF
   <ResourceLink
       global="jdbc/eae-logger/logger"
