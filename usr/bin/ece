@@ -471,7 +471,7 @@ function deploy()
     fi
     
     # extract EAR to a temporary area
-    dir=$tmp_dir/`basename $0`-`date +%s`
+    local dir=$(mktemp -d)
     (mkdir -p $dir && cd $dir && jar xf $ear)
     exit_on_error "extracting $ear to $dir"
 
@@ -579,6 +579,8 @@ function deploy()
             print "Deployment is only implemented for Resin and Tomcat so far."
             ;;
     esac
+
+    run rm -rf ${dir}
 }
 
 # Returns the file (can be a directory) passed to the function only
@@ -1361,19 +1363,9 @@ function clean_up()
         run ant clean
     fi
 
-    tmp_dir_prefix="`basename $0`-"
-    if [ `ls  $tmp_dir | grep $tmp_dir_prefix | wc -l` -gt 0 ]; then
-        print "Cleaning up generated files in $tmp_dir ..." 
-        rm -rf $tmp_dir/$tmp_dir_prefix[0-9]* \
-            1>>$log_file \
-            2>>$log_file
-    fi
-    
     if [ -d /var/cache/escenic ]; then
         print "Cleaning up ear, deb and rpm files in /var/cache/escenic ..." 
-        rm -rf /var/cache/escenic/*.{rpm,deb,ear} \
-            1>>$log_file \
-            2>>$log_file
+        run rm -rf /var/cache/escenic/*.{rpm,deb,ear}
     fi
 }
 
