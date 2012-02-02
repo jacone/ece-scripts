@@ -7,7 +7,7 @@
 # with the "ece -i <instance> backup" command.
 #
 # Always check for the latest version at
-# http://github.com/skybert/ece-scripts
+# http://github.com/escenic/ece-scripts
 
 # echo comments and suggestions > tkj@vizrt.com
 # echo frustrations > /dev/null
@@ -21,19 +21,20 @@ ece_user=escenic
 ece_group=escenic
 jdbc_driver=/usr/share/java/mysql.jar
 debug=0
-tomcat_download=http://ftp.mirror.tw/pub/apache/tomcat/tomcat-6/v6.0.35/bin/apache-tomcat-6.0.35.tar.gz
-                
+tomcat_download=http://ftp.stut.edu.tw/var/ftp/pub/OpenSource/apache/tomcat/tomcat-6/v6.0.35/bin/apache-tomcat-6.0.35.tar.gz
+
 # These variables govern where software is installed and data and run
 # time files are written.
-escenic_root_dir=/opt/escenic
-escenic_conf_dir=/etc/escenic
-escenic_log_dir=/var/log/escenic
-escenic_data_dir=/var/lib/escenic
-escenic_run_dir=/var/run/escenic
-escenic_backups_dir=/var/backups/escenic
-escenic_spool_dir=/var/spool/escenic
-escenic_cache_dir=/var/cache/escenic
-escenic_crash_dir=/var/crash/escenic
+dir_suffix=escenic
+escenic_root_dir=/opt${dir_suffix}
+escenic_conf_dir=/etc${dir_suffix}
+escenic_log_dir=/var/log${dir_suffix}
+escenic_data_dir=/var/lib${dir_suffix}
+escenic_run_dir=/var/run${dir_suffix}
+escenic_backups_dir=/var/backups${dir_suffix}
+escenic_spool_dir=/var/spool${dir_suffix}
+escenic_cache_dir=/var/cache${dir_suffix}
+escenic_crash_dir=/var/crash${dir_suffix}
 appserver_root_dir=/opt
 
 # country code for selecting the correct (APT) mirror.
@@ -1495,6 +1496,8 @@ function set_up_user_enviornment()
 
 function set_up_solr()
 {
+    run_hook set_up_solr.preinst
+    
     print_and_log "Setting up solr ..."
     if [ ! -d $escenic_conf_dir/solr ]; then
         run cp -r $escenic_root_dir/engine/solr/conf $escenic_conf_dir/solr
@@ -1505,6 +1508,16 @@ function set_up_solr()
     if  [ ! -h conf ]; then
         run ln -s $escenic_conf_dir/solr conf
     fi
+
+    local editorial_search_instance=${fai_search_for_editor-0}
+    local file=$escenic_conf_dir/solr/solrconfig.xml
+    if [ $editorial_search_instance -eq 1 ]; then
+        run sed -i "s#<maxTime>[0-9]*</maxTime>#<maxTime>5000</maxTime>#g" $file
+    else
+        run sed -i "s#<maxTime>[0-9]*</maxTime>#<maxTime>60000</maxTime>#g" $file
+    fi
+
+    run_hook set_up_solr.postinst
 }
 
 # So far, I've used this method for copy/past-ing it into the shell
@@ -2156,7 +2169,8 @@ function install_ece_instance()
             $file
     fi
 
-    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
+        $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
         assemble_deploy_and_restart_type
     fi
     
