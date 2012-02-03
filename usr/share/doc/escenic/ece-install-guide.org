@@ -405,6 +405,11 @@ engine/siteconfig/config-skeleton
 assemblytool/plugins/<plugin>/siteconfig
 #+END_SRC
 
+and optionally also:
+#+BEGIN_SRC sh
+engine/solr/conf
+#+END_SRC
+
 A simple way to create this bundle, is to use a server which has the
 assembly environment set up and then do:
 
