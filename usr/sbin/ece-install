@@ -26,15 +26,15 @@ tomcat_download=http://ftp.stut.edu.tw/var/ftp/pub/OpenSource/apache/tomcat/tomc
 # These variables govern where software is installed and data and run
 # time files are written.
 dir_suffix=escenic
-escenic_root_dir=/opt${dir_suffix}
-escenic_conf_dir=/etc${dir_suffix}
-escenic_log_dir=/var/log${dir_suffix}
-escenic_data_dir=/var/lib${dir_suffix}
-escenic_run_dir=/var/run${dir_suffix}
-escenic_backups_dir=/var/backups${dir_suffix}
-escenic_spool_dir=/var/spool${dir_suffix}
-escenic_cache_dir=/var/cache${dir_suffix}
-escenic_crash_dir=/var/crash${dir_suffix}
+escenic_root_dir=/opt/${dir_suffix}
+escenic_conf_dir=/etc/${dir_suffix}
+escenic_log_dir=/var/log/${dir_suffix}
+escenic_data_dir=/var/lib/${dir_suffix}
+escenic_run_dir=/var/run/${dir_suffix}
+escenic_backups_dir=/var/backups/${dir_suffix}
+escenic_spool_dir=/var/spool/${dir_suffix}
+escenic_cache_dir=/var/cache/${dir_suffix}
+escenic_crash_dir=/var/crash/${dir_suffix}
 appserver_root_dir=/opt
 
 # country code for selecting the correct (APT) mirror.
