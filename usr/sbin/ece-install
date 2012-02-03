@@ -21,7 +21,7 @@ ece_user=escenic
 ece_group=escenic
 jdbc_driver=/usr/share/java/mysql.jar
 debug=0
-tomcat_download=http://ftp.stut.edu.tw/var/ftp/pub/OpenSource/apache/tomcat/tomcat-6/v6.0.35/bin/apache-tomcat-6.0.35.tar.gz
+tomcat_download=http://ftp.mirror.tw/pub/apache/tomcat/tomcat-6/v6.0.35/bin/apache-tomcat-6.0.35.tar.gz
 
 # These variables govern where software is installed and data and run
 # time files are written.
@@ -481,6 +481,8 @@ function set_up_ece_scripts()
     run cp -r ece-scripts/usr/* /usr/
     run cp -r ece-scripts/etc/escenic/* ${escenic_conf_dir}/
     run cp -r ece-scripts/etc/bash_completion.d/ece /etc/bash_completion.d/
+    run cp -r ece-scripts/etc/init.d/* /etc/init.d/
+    run cp -r ece-scripts/etc/default/* /etc/default/
     
     local file=${escenic_conf_dir}/ece.conf
     set_conf_file_value assemblytool_home ${escenic_root_dir}/assemblytool $file
@@ -610,9 +612,9 @@ function set_up_basic_nursery_configuration()
     if [ $(is_using_conf_archive) -eq 1 ]; then
         print_and_log "Using the supplied Nursery & JAAS configuration from" 
         print_and_log "bundle: $ece_instance_conf_archive"
-        local dir=$(mktemp -d)
-        escenic_root_dir=$dir
-        run cd $dir
+        local a_tmp_dir=$(mktemp -d)
+        escenic_root_dir=$a_tmp_dir
+        run cd $a_tmp_dir
         run tar xzf $ece_instance_conf_archive
     fi
     
@@ -630,6 +632,8 @@ function set_up_basic_nursery_configuration()
 
         run cp -r $el/misc/siteconfig/* $common_nursery_dir/
     done
+
+    run rm -r ${a_tmp_dir}
 
     public_host_name=$HOSTNAME:${appserver_port}
     if [ $fai_enabled -eq 1 ]; then
@@ -1500,9 +1504,22 @@ function set_up_solr()
     
     print_and_log "Setting up solr ..."
     if [ ! -d $escenic_conf_dir/solr ]; then
-        run cp -r $escenic_root_dir/engine/solr/conf $escenic_conf_dir/solr
+        if [ $(is_using_conf_archive) -eq 1 ]; then
+            print_and_log "Using the supplied Solr configuration from" 
+            print_and_log "bundle: $ece_instance_conf_archive"
+            local a_tmp_dir=$(mktemp -d)
+            run cd $a_tmp_dir
+            run tar xzf $ece_instance_conf_archive engine/solr/conf
+            run cp -r engine/solr/conf $escenic_conf_dir/solr
+            run rm -r $a_tmp_dir
+        else
+            print_and_log "Installing default Solr conf shipped with ECE ..."
+            run cp -r $escenic_root_dir/engine/solr/conf $escenic_conf_dir/solr
+        fi
+    else
+        print_and_log "$escenic_conf_dir/solr already exists, not touching it."
     fi
-    
+
     make_dir $escenic_data_dir/solr/
     run cd $escenic_data_dir/solr/
     if  [ ! -h conf ]; then
@@ -2861,7 +2878,6 @@ function add_server_to_runlevels()
     # no need to add init.d scripts to the runlevel(s) for these
     # profiles
     if [ $install_profile_number -eq $PROFILE_WIDGET_FRAMEWORK -o \
-         $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
          $install_profile_number -eq $PROFILE_DB_SERVER -o \
          $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
         return
