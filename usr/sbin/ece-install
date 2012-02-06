@@ -633,8 +633,10 @@ function set_up_basic_nursery_configuration()
         run cp -r $el/misc/siteconfig/* $common_nursery_dir/
     done
 
-    run rm -r ${a_tmp_dir}
-
+    if [ -n "${a_tmp_dir}" ]; then
+        run rm -rf ${a_tmp_dir}
+    fi
+    
     public_host_name=$HOSTNAME:${appserver_port}
     if [ $fai_enabled -eq 1 ]; then
         if [ -n "$fai_public_host_name" ]; then
