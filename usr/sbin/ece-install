@@ -925,17 +925,17 @@ function set_up_app_server()
         fi
     else
         if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
-            appserver_port=$(get_conf_value fai_editor_port)
-            shutdown_port=$(get_conf_value fai_editor_shutdown)
+            appserver_port=${fai_editor_port-8080}
+            shutdown_port=${fai_editor_shutdown-8005}
         elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
-            appserver_port=$(get_conf_value fai_presentation_port)
-            shutdown_port=$(get_conf_value fai_presentation_shutdown)
+            appserver_port=${fai_presentation_port-8080}
+            shutdown_port=${fai_presentation_shutdown-8005}
         elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
-            appserver_port=$(get_conf_value fai_search_port)
-            shutdown_port=$(get_conf_value fai_search_shutdown)
+            appserver_port=${fai_search_port-8080}
+            shutdown_port=${fai_search_shutdown-8005}
         elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
-            appserver_port=$(get_conf_value fai_analysis_port)
-            shutdown_port=$(get_conf_value fai_analysis_shutdown)
+            appserver_port=${fai_analysis_port-8080}
+            shutdown_port=${fai_analysis_shutdown-8005}
         fi
     fi
 
