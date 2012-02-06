@@ -503,54 +503,54 @@ function set_up_ece_scripts()
     run sed -i "s#/opt/escenic#${escenic_root_dir}#g" /etc/bash_completion.d/ece
 }
 
+default_db_port=3306
+default_db_host=localhost
+default_db_user=ece5user
+default_db_password=ece5password
+default_db_schema=ece5db
 
 # Method used both from interactive mode to set any missing values
 # (defaults)
 function set_db_defaults_if_not_set()
 {
     if [ -z "$db_host" ]; then
-        db_host=localhost
+        db_host=${default_db_host}
     fi
     
     if [ -z "$db_port" ]; then
-        db_port=3306
+        db_port=${default_db_port}
     fi
     
     if [ -z "$db_user" ]; then
-        db_user=ece5user
+        db_user=${default_db_user}
     fi
     
     if [ -z "$db_password" ]; then
-        db_user=ece5password
+        db_password=${default_db_password}
     fi
     
     if [ -z "$db_schema" ]; then
-        db_schema=ece5db
+        db_schema=${default_db_schema}
     fi
 }
 
 function set_db_settings_from_fai_conf()
 {
-    # the port isn't fully supported. The user must himself update the
-    # mysql configuration to run it on a non standard port.
-    if [ -n "${fai_db_port}" ]; then
-        db_port=${fai_db_port}
-    fi
+    # Note: the port isn't fully supported. The user must himself
+    # update the mysql configuration to run it on a non standard port.
     
-    if [ -n "${fai_db_host}" ]; then
-        db_host=${fai_db_host}
-    fi
-    
-    if [ -n "${fai_db_user}" ]; then
-        db_user=${fai_db_user}
-    fi
-    
-    if [ -n "${fai_db_password}" ]; then
-        db_password=${fai_db_password}
-    fi
-    
-    if [ -n "${fai_db_schema}" ]; then
-        db_schema=${fai_db_schema}
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+        db_port=${fai_db_port-${default_db_port}}
+        db_host=${fai_db_host-${default_db_host}}
+        db_user=${fai_db_user-${default_db_user}}
+        db_password=${fai_db_password-${default_db_password}}
+        db_schema=${fai_db_schema-${default_db_schema}}
+    else
+        db_port=${fai_analysis_db_port-${default_db_port}}
+        db_host=${fai_analysis_db_host-${default_db_host}}
+        db_user=${fai_analysis_db_user-${default_db_user}}
+        db_password=${fai_analysis_db_password-${default_db_password}}
+        db_schema=${fai_analysis_db_schema-${default_db_schema}}
     fi
     
     if [ -n "${fai_db_drop_old_db_first}" ]; then
@@ -949,9 +949,10 @@ function set_up_app_server()
     
     if [ $fai_enabled -eq 0 ]; then
         print "Another question: Where does the database run?"
-        print "Press ENTER to accept the default ($HOSTNAME:3306:ece5db)"
-        print "Or enter: <host>:<port>:<schema>, e.g.: 'db1:3306:mydb'"
-        echo -n "Your choice [$HOSTNAME:3306:schema]> "
+        print "Press ENTER to accept the default " \
+            "($HOSTNAME:${default_db_port}:${default_db_schema})"
+        print "Or enter: <host>:<port>:<schema>, e.g.: 'db1:${default_db_port}:mydb'"
+        echo -n "Your choice [$HOSTNAME:${default_db_port}:schema]> "
         read user_database
         
         db_host=$(echo $user_database | cut -d':' -f1)
@@ -2402,8 +2403,12 @@ function install_analysis_server()
     set_conf_file_value pageview.aggr.hour.older.than.hours 2 $file
     set_conf_file_value pageview.maintenance.older.than.days 0 $file
 
+    # important to turn this off here, it's only for the EAE .cfg
+    # files, see above.
     dont_quote_conf_values=0
-    
+
+    # touching web.xml to trigger a re-deploy of the EAE Reports
+    # application.
     run touch ${tomcat_base}/webapps/analysis-reports/WEB-INF/web.xml
     run_hook install_analysis_server.postinst
 }
