@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# /usr/bin/vosa --- command to manage vizrt on-line system-administration
+# managed instances of virtual machines.
+
+# vosa list --- list all available virtual machines
+# vosa -i /etc/vizrt/vosa/available.d/vm03 enable --- enable a specific vm
+# vosa -i /etc/vizrt/vosa/available.d/vm03 disable --- disable a specific vm
+# vosa -i /etc/vizrt/vosa/enabled.d/vm03 disable --- disable a vm
+# vosa -i ... restart
+# vosa -i ... reinstall
+
