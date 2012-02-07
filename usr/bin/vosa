@@ -10,3 +10,103 @@
 # vosa -i ... restart
 # vosa -i ... reinstall
 
+instance_dir=
+usage=0
+
+### To add an option, add it to the optstring, as defined in getopts, in alphabetical order.
+### Also add a function "option-x" where x is the option. $1 will be the option value, if any.
+### set any variables needed to default values as globals first.
+OPTSTRING=":i:h"
+
+function option-h() {
+  usage=1
+}
+
+function option-i() {
+  instance_dir="${1}"
+}
+
+
+function unknown-option() {
+  echo "Unknown option $@"
+  usage=1
+}
+
+### To add a command, simply define a function with a do_ prefix.
+function do_list() {
+  if [ ! -z $instance_dir ] ; then
+    echo "Instance cannot be specified"
+    usage=1
+    return
+  fi
+  availabledir=$(dirname $0)/../../etc/vizrt/vosa/available.d
+  availabledir=$(readlink -f ${availabledir})
+  ls -d ${availabledir}/* | grep "/[0-9a-z][-0-9a-z]*$"
+}
+
+### To add a command, simply define a function with a do_ prefix.
+function do_install() {
+  if [ -z $instance_dir ] ; then
+    echo "Instance is required"
+    usage=1
+    return
+  fi
+  echo "Starting $instance_dir"
+}
+
+function unknown-argument() {
+  echo "Unknown argument $@"
+  usage=1
+}
+
+LASTOPTIND=0
+
+function parseopts() {
+local OPTARG
+local OPTIND
+local opt
+local currentconfigdirectory="${@:1:1}"
+shift;
+while getopts "${OPTSTRING}" opt; do
+  case $opt in
+    \?)
+      unknown-option "-$OPTARG"
+      ;;
+    *)
+      option-$opt "${OPTARG}"
+      ;;
+  esac
+done
+
+LASTOPTIND=$OPTIND
+
+}
+
+parseopts "$PWD" "${@}"
+
+# get rid of all parsed parameters from command line, leaving real arguments
+shift $((LASTOPTIND-1))
+
+if [ $usage -eq 0 -a "${#@}" -gt 1 ] ; then
+  echo "Only one argument is allowed"
+  usage=1
+fi
+
+if [ $usage -eq 0 -a "${#@}" -lt 1 ] ; then
+  echo "A command must be specified."
+  usage=1
+fi
+
+
+# Check if the command
+fn="do_$1"
+declare > /dev/null -f "$fn" || unknown-argument "$1"
+declare > /dev/null -f "$fn" && "$fn"
+
+if [ $usage -eq 1 ] ; then
+  echo "Usage: $0 -i instance-dir <command>"
+  exit 1;
+fi
+
+
+
