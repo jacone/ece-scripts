@@ -88,7 +88,11 @@ function do_install() {
     usage=1
     return
   fi
-  echo "Starting $instance_dir"
+  echo "Installing $instance_dir from scratch...  This takes a few minutes"
+  echo "Archiving old image ..."
+  echo "Extracting a new fresh image"
+  # TODO should this just be in
+  # $(dirname $0)/../../usr/share/vizrt/vosa/commands/install.sh "$instance_dir"
 }
 
 function unknown-argument() {
