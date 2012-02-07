@@ -926,6 +926,8 @@ function get_info_for_type()
     fi
     if [ -n "${appserver}" ]; then
         print "Application server: $appserver"
+        print "Appplication server status:" $(get_status)
+        
         case "$appserver" in
             tomcat)
                 if [ -n "${tomcat_home}" ]; then
@@ -1217,7 +1219,7 @@ function make_thread_dump()
             kill -QUIT $type_pid >> $log_file
         fi
     else
-        get_status
+        print "$(get_status)"
     fi
 }
 
@@ -1385,19 +1387,19 @@ function set_id()
 function get_status()
 {
     if [ -z "$type_pid" ]; then
-        print "DOWN"
+        echo "DOWN"
         exit 0
     elif [ -r $pid_file ]; then
         
         if [ "$type_pid" != `cat $pid_file` ]; then
-            print "Is running, but was not started with `basename $0`"
-            print "system PID $ece_id differs from the PID in $pid_file"
+            echo "Is running, but was not started with `basename $0`"
+            echo "system PID $ece_id differs from the PID in $pid_file"
             exit 1
         fi
     else
-        print $pid_file "did not exist, "
-        print "the ${instance} instance of ${type} is running with PID $type_pid"
-        print "but hasn't been started properly with `basename $0`"
+        echo $pid_file "did not exist, "
+        echo "the ${instance} instance of ${type} is running with PID $type_pid"
+        echo "but hasn't been started properly with `basename $0`"
         exit 1
     fi
 
@@ -1411,7 +1413,7 @@ function get_status()
     minutes=$(( seconds_left / 60 ))
     seconds_left=$(( seconds_left - $minutes * 60 ))
 
-    print "UP" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    echo "UP" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 }
 
 function list_versions()
@@ -1647,7 +1649,7 @@ for el in $command; do
             start_type
             ;;
         status)
-            get_status
+            print "$(get_status)"
             ;;
         stop)
             stop_type
