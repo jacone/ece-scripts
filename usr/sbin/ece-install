@@ -1196,6 +1196,37 @@ EOF
             xmlValidation="false"
             xmlNamespaceAware="false">
       </Host>
+EOF
+    if [[ ($install_profile_number == $PROFILE_EDITORIAL_SERVER || \
+        $install_profile_number == $PROFILE_PRESENTATION_SERVER || \
+        $install_profile_number == $PROFILE_ALL_IN_ONE) && \
+        -n "$fai_publication_domain_mapping_list" ]]; then
+
+        declare -A publication_domain_map
+        
+        for el in ${fai_publication_domain_mapping_list}; do
+            local old_ifs=$IFS
+            # the entries in the fai_publication_domain_mapping_list
+            # are on the form: <publication>#<domain>
+            IFS='#'
+            read publication domain <<< "$el"
+            publication_domain_map[${publication}]="${domain}"
+            IFS=$old_ifs
+        done
+        
+        for el in ${!publication_domain_map[@]}; do
+            cat >> $tomcat_base/conf/server.xml <<EOF
+      <Host name="${publication_domain_map[$el]}" appBase="webapps" autoDeploy="false">
+        <Context displayName="${publication_domain_map[$el]}"
+                 docBase="${el}"
+                 path="/"
+        />
+      </Host>
+EOF
+        done
+    fi
+    
+    cat >> $tomcat_base/conf/server.xml <<EOF
     </Engine>
   </Service>
 </Server>
@@ -2826,7 +2857,6 @@ allow ${escaped_munin_gather_ip}
 EOF
     fi
     
-
     # install the escenic_jstat munin plugin
     file=/usr/share/munin/plugins/escenic_jstat_
     run wget $wget_opts \
