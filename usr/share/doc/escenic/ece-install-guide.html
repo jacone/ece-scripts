@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
                "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml"
-lang="en" xml:lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
 <title>Welcome to the /usr/sbin/ece-install Guide</title>
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
+<meta name="title" content="Welcome to the /usr/sbin/ece-install Guide"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2012-01-18 13:15:34 CST"/>
+<meta name="generated" content="2012-02-07 19:40:37 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -65,6 +65,10 @@ body {
   font-size: small;
   #width : 600;
   margin: 70px 70px 0px 50px;
+}
+
+pre {
+  background-color: grey;
 }
 
 h1, h2 {
@@ -224,84 +228,92 @@ div.note {
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#sec-1">1 Supported Operating Systems </a>
+<li><a href="#sec-1">1 Supported Operating Systems</a>
 <ul>
 <li>
 <ul>
-<li><a href="#sec-1-1">1.1 Debian based operating systems </a></li>
-<li><a href="#sec-1-2">1.2 Other GNU/Linux and Unix systems </a></li>
+<li><a href="#sec-1-1">1.1 Debian based operating systems</a></li>
+<li><a href="#sec-1-2">1.2 Other GNU/Linux and Unix systems</a></li>
 </ul></li>
 </ul>
 </li>
-<li><a href="#sec-2">2 A Note on Running ece-install On Non-GNU/Linux Systems </a></li>
-<li><a href="#sec-3">3 Downloading the ece-install Script </a></li>
-<li><a href="#sec-4">4 Running the ece-install Script </a></li>
-<li><a href="#sec-5">5 Available Server Profiles </a>
+<li><a href="#sec-2">2 A Note on Running ece-install On Non-GNU/Linux Systems</a></li>
+<li><a href="#sec-3">3 Downloading the ece-install Script</a></li>
+<li><a href="#sec-4">4 Running the ece-install Script</a></li>
+<li><a href="#sec-5">5 Available Server Profiles</a>
 <ul>
-<li><a href="#sec-5-1">5.1 Common for All Server Profiles </a></li>
-<li><a href="#sec-5-2">5.2 Common for Editorial, Presentation and Search Instances </a>
+<li><a href="#sec-5-1">5.1 Common for All Server Profiles</a></li>
+<li><a href="#sec-5-2">5.2 Common for Editorial, Presentation and Search Instances</a>
 <ul>
-<li><a href="#sec-5-2-1">5.2.1 Sun Java 6 </a></li>
-<li><a href="#sec-5-2-2">5.2.2 Apache Tomcat application server </a></li>
-<li><a href="#sec-5-2-3">5.2.3 Basic Escenic Nursery configuration </a></li>
-<li><a href="#sec-5-2-4">5.2.4 APR, native library for optimal Tomcat I/O performance </a></li>
-<li><a href="#sec-5-2-5">5.2.5 Escenic Assembly environment </a></li>
-<li><a href="#sec-5-2-6">5.2.6 Database driver </a></li>
-<li><a href="#sec-5-2-7">5.2.7 Compression of content </a></li>
+<li><a href="#sec-5-2-1">5.2.1 Sun Java 6</a></li>
+<li><a href="#sec-5-2-2">5.2.2 Apache Tomcat application server</a></li>
+<li><a href="#sec-5-2-3">5.2.3 Basic Escenic Nursery configuration</a></li>
+<li><a href="#sec-5-2-4">5.2.4 APR, native library for optimal Tomcat I/O performance</a></li>
+<li><a href="#sec-5-2-5">5.2.5 Escenic Assembly environment</a></li>
+<li><a href="#sec-5-2-6">5.2.6 Database driver</a></li>
+<li><a href="#sec-5-2-7">5.2.7 Compression of content</a></li>
 </ul>
 </li>
-<li><a href="#sec-5-3">5.3 Profile - Full Stack on One Host </a></li>
-<li><a href="#sec-5-4">5.4 Profile - Editorial Server (Publication Server) </a></li>
-<li><a href="#sec-5-5">5.5 Profile - Presentation Server </a></li>
-<li><a href="#sec-5-6">5.6 Profile - Database Server </a></li>
-<li><a href="#sec-5-7">5.7 Profile - Cache Server </a></li>
-<li><a href="#sec-5-8">5.8 Profile - Install Widget Framework </a></li>
-<li><a href="#sec-5-9">5.9 Profile - Create Publication </a></li>
-<li><a href="#sec-5-10">5.10 Profile - Monitoring Server </a></li>
-<li><a href="#sec-5-11">5.11 Profile - Restoring from backup </a></li>
-<li><a href="#sec-5-12">5.12 Running interactively </a>
+<li><a href="#sec-5-3">5.3 Profile - Full Stack on One Host</a></li>
+<li><a href="#sec-5-4">5.4 Profile - Editorial Server (Publication Server)</a></li>
+<li><a href="#sec-5-5">5.5 Profile - Presentation Server</a></li>
+<li><a href="#sec-5-6">5.6 Profile - Database Server</a></li>
+<li><a href="#sec-5-7">5.7 Profile - Cache Server</a></li>
+<li><a href="#sec-5-8">5.8 Profile - Install Widget Framework</a></li>
+<li><a href="#sec-5-9">5.9 Profile - Create Publication</a></li>
+<li><a href="#sec-5-10">5.10 Profile - Monitoring Server</a></li>
+<li><a href="#sec-5-11">5.11 Profile - Restoring from backup</a></li>
+<li><a href="#sec-5-12">5.12 Running interactively</a>
 <ul>
-<li><a href="#sec-5-12-1">5.12.1 Start ece-install and choose the Option, "Restore from backup" </a></li>
-<li><a href="#sec-5-12-2">5.12.2 Select Which Backup to Restore </a></li>
-<li><a href="#sec-5-12-3">5.12.3 Choose What to Restore </a></li>
-<li><a href="#sec-5-12-4">5.12.4 Sit Back and Watch ece-install Restore the Data for You </a></li>
+<li><a href="#sec-5-12-1">5.12.1 Start ece-install and choose the Option, "Restore from backup"</a></li>
+<li><a href="#sec-5-12-2">5.12.2 Select Which Backup to Restore</a></li>
+<li><a href="#sec-5-12-3">5.12.3 Choose What to Restore</a></li>
+<li><a href="#sec-5-12-4">5.12.4 Sit Back and Watch ece-install Restore the Data for You</a></li>
 </ul>
 </li>
-<li><a href="#sec-5-13">5.13 Running in FAI mode </a></li>
-<li><a href="#sec-5-14">5.14 Data security </a></li>
+<li><a href="#sec-5-13">5.13 Running in FAI mode</a></li>
+<li><a href="#sec-5-14">5.14 Data security</a></li>
 </ul>
 </li>
-<li><a href="#sec-6">6 Full Automatic Install (FAI) </a>
+<li><a href="#sec-6">6 Full Automatic Install (FAI)</a>
 <ul>
-<li><a href="#sec-6-1">6.1 Installing from EARs instead of Binaries </a></li>
-<li><a href="#sec-6-2">6.2 Overview of All FAI Parameters </a></li>
-<li><a href="#sec-6-3">6.3 Examples </a>
+<li><a href="#sec-6-1">6.1 Installing from EARs instead of Binaries</a></li>
+<li><a href="#sec-6-2">6.2 Setting up virtual hosts</a></li>
+<li><a href="#sec-6-3">6.3 Overview of All FAI Parameters</a></li>
+<li><a href="#sec-6-4">6.4 Examples</a>
 <ul>
-<li><a href="#sec-6-3-1">6.3.1 Installing an Editorial Server &amp; Create a Publication </a></li>
-<li><a href="#sec-6-3-2">6.3.2 Installing Two Presentation Servers On a Single Host </a></li>
+<li><a href="#sec-6-4-1">6.4.1 Installing an Editorial Server &amp; Create a Publication</a></li>
+<li><a href="#sec-6-4-2">6.4.2 Installing Two Presentation Servers On a Single Host</a></li>
 </ul>
 </li>
-<li><a href="#sec-6-4">6.4 Verifying That the Script Is Running In FAI Mode </a></li>
+<li><a href="#sec-6-5">6.5 Verifying That the Script Is Running In FAI Mode</a></li>
 </ul>
 </li>
-<li><a href="#sec-7">7 Running More Than One Installation Process </a></li>
-<li><a href="#sec-8">8 Re-running ece-install (and How To Speed It Up) </a></li>
-<li><a href="#sec-9">9 Using a Custom Configuration File for ece-install </a></li>
-<li><a href="#sec-10">10 Overview of File Paths Used by the ece-install script </a></li>
-<li><a href="#sec-11">11 Overriding the Escenic directories </a></li>
-<li><a href="#sec-12">12 Assumptions </a>
+<li><a href="#sec-7">7 Running More Than One Installation Process</a></li>
+<li><a href="#sec-8">8 Re-running ece-install (and How To Speed It Up)</a></li>
+<li><a href="#sec-9">9 Using a Custom Configuration File for ece-install</a></li>
+<li><a href="#sec-10">10 Overview of File Paths Used by the ece-install script</a></li>
+<li><a href="#sec-11">11 Overriding the Escenic directories</a></li>
+<li><a href="#sec-12">12 Extending ece-install by Writing Hooks</a>
 <ul>
-<li><a href="#sec-12-1">12.1 /etc/esecenic is shared </a></li>
+<li><a href="#sec-12-1">12.1 Accessing ece-install variables</a></li>
+<li><a href="#sec-12-2">12.2 Example hook</a></li>
+<li><a href="#sec-12-3">12.3 Available hooks</a></li>
 </ul>
 </li>
-<li><a href="#sec-13">13 Uninstalling Everything That the ece-install Set Up </a></li>
-<li><a href="#sec-14">14 Example Output FAI </a></li>
+<li><a href="#sec-13">13 Assumptions</a>
+<ul>
+<li><a href="#sec-13-1">13.1 /etc/esecenic is shared</a></li>
+</ul>
+</li>
+<li><a href="#sec-14">14 Uninstalling Everything That the ece-install Set Up</a></li>
+<li><a href="#sec-15">15 Example Output FAI</a></li>
 </ul>
 </div>
 </div>
 
 <div id="outline-container-1" class="outline-2">
-<h2 id="sec-1"><span class="section-number-2">1</span> Supported Operating Systems </h2>
+<h2 id="sec-1"><span class="section-number-2">1</span> Supported Operating Systems</h2>
 <div class="outline-text-2" id="text-1">
 
 <p>For the best experience, run this script on Debian Squeeze (or newer),
@@ -313,7 +325,7 @@ has a recent version of BASH.
 </div>
 
 <div id="outline-container-1-1" class="outline-4">
-<h4 id="sec-1-1"><span class="section-number-4">1.1</span> Debian based operating systems </h4>
+<h4 id="sec-1-1"><span class="section-number-4">1.1</span> Debian based operating systems</h4>
 <div class="outline-text-4" id="text-1-1">
 
 <p>If running on a Debian based operating system, ece-install will take
@@ -325,7 +337,7 @@ care of installing all required third party software, such as database
 </div>
 
 <div id="outline-container-1-2" class="outline-4">
-<h4 id="sec-1-2"><span class="section-number-4">1.2</span> Other GNU/Linux and Unix systems </h4>
+<h4 id="sec-1-2"><span class="section-number-4">1.2</span> Other GNU/Linux and Unix systems</h4>
 <div class="outline-text-4" id="text-1-2">
 
 <p>If you're installing on another Linux or Unix system, you must first
@@ -344,7 +356,7 @@ ece-install assumes are present.
 </div>
 
 <div id="outline-container-2" class="outline-2">
-<h2 id="sec-2"><span class="section-number-2">2</span> A Note on Running ece-install On Non-GNU/Linux Systems </h2>
+<h2 id="sec-2"><span class="section-number-2">2</span> A Note on Running ece-install On Non-GNU/Linux Systems</h2>
 <div class="outline-text-2" id="text-2">
 
 <p>Please note, it's assumed that the OS uses GNU's tools, i.e. find, cp
@@ -358,7 +370,7 @@ ece-install.
 </div>
 
 <div id="outline-container-3" class="outline-2">
-<h2 id="sec-3"><span class="section-number-2">3</span> Downloading the ece-install Script </h2>
+<h2 id="sec-3"><span class="section-number-2">3</span> Downloading the ece-install Script</h2>
 <div class="outline-text-2" id="text-3">
 
 <p>The ece-install script can be downloaded from:
@@ -376,7 +388,7 @@ or be downloaded together with the other ece-scripts using git:
 </div>
 
 <div id="outline-container-4" class="outline-2">
-<h2 id="sec-4"><span class="section-number-2">4</span> Running the ece-install Script </h2>
+<h2 id="sec-4"><span class="section-number-2">4</span> Running the ece-install Script</h2>
 <div class="outline-text-2" id="text-4">
 
 <p>You must run the script as the root user.  If you start the script as
@@ -488,7 +500,7 @@ on /var/log/ece-install.log should be sufficient, though.
 </div>
 
 <div id="outline-container-5" class="outline-2">
-<h2 id="sec-5"><span class="section-number-2">5</span> Available Server Profiles </h2>
+<h2 id="sec-5"><span class="section-number-2">5</span> Available Server Profiles</h2>
 <div class="outline-text-2" id="text-5">
 
 <p>When starting the script, it will ask you which server profile you
@@ -518,7 +530,7 @@ want to install:
 </div>
 
 <div id="outline-container-5-1" class="outline-3">
-<h3 id="sec-5-1"><span class="section-number-3">5.1</span> Common for All Server Profiles </h3>
+<h3 id="sec-5-1"><span class="section-number-3">5.1</span> Common for All Server Profiles</h3>
 <div class="outline-text-3" id="text-5-1">
 
 <p>The script will install a Munin node on the host. It will also
@@ -530,14 +542,14 @@ any Escenic server components.
 </div>
 
 <div id="outline-container-5-2" class="outline-3">
-<h3 id="sec-5-2"><span class="section-number-3">5.2</span> Common for Editorial, Presentation and Search Instances </h3>
+<h3 id="sec-5-2"><span class="section-number-3">5.2</span> Common for Editorial, Presentation and Search Instances</h3>
 <div class="outline-text-3" id="text-5-2">
 
 
 </div>
 
 <div id="outline-container-5-2-1" class="outline-4">
-<h4 id="sec-5-2-1"><span class="section-number-4">5.2.1</span> Sun Java 6 </h4>
+<h4 id="sec-5-2-1"><span class="section-number-4">5.2.1</span> Sun Java 6</h4>
 <div class="outline-text-4" id="text-5-2-1">
 
 </div>
@@ -545,7 +557,7 @@ any Escenic server components.
 </div>
 
 <div id="outline-container-5-2-2" class="outline-4">
-<h4 id="sec-5-2-2"><span class="section-number-4">5.2.2</span> Apache Tomcat application server </h4>
+<h4 id="sec-5-2-2"><span class="section-number-4">5.2.2</span> Apache Tomcat application server</h4>
 <div class="outline-text-4" id="text-5-2-2">
 
 <ul>
@@ -567,7 +579,7 @@ any Escenic server components.
 </div>
 
 <div id="outline-container-5-2-3" class="outline-4">
-<h4 id="sec-5-2-3"><span class="section-number-4">5.2.3</span> Basic Escenic Nursery configuration </h4>
+<h4 id="sec-5-2-3"><span class="section-number-4">5.2.3</span> Basic Escenic Nursery configuration</h4>
 <div class="outline-text-4" id="text-5-2-3">
 
 <p>The basic Nursery configuration is taken care of for you, including RMI,
@@ -577,7 +589,7 @@ any Escenic server components.
 </div>
 
 <div id="outline-container-5-2-4" class="outline-4">
-<h4 id="sec-5-2-4"><span class="section-number-4">5.2.4</span> APR, native library for optimal Tomcat I/O performance </h4>
+<h4 id="sec-5-2-4"><span class="section-number-4">5.2.4</span> APR, native library for optimal Tomcat I/O performance</h4>
 <div class="outline-text-4" id="text-5-2-4">
 
 </div>
@@ -585,7 +597,7 @@ any Escenic server components.
 </div>
 
 <div id="outline-container-5-2-5" class="outline-4">
-<h4 id="sec-5-2-5"><span class="section-number-4">5.2.5</span> Escenic Assembly environment </h4>
+<h4 id="sec-5-2-5"><span class="section-number-4">5.2.5</span> Escenic Assembly environment</h4>
 <div class="outline-text-4" id="text-5-2-5">
 
 <p>The reason why ece-install sets this up on each host, is to make the
@@ -597,7 +609,7 @@ may be removed after the installation if you want to.
 </div>
 
 <div id="outline-container-5-2-6" class="outline-4">
-<h4 id="sec-5-2-6"><span class="section-number-4">5.2.6</span> Database driver </h4>
+<h4 id="sec-5-2-6"><span class="section-number-4">5.2.6</span> Database driver</h4>
 <div class="outline-text-4" id="text-5-2-6">
 
 
@@ -606,7 +618,7 @@ may be removed after the installation if you want to.
 </div>
 
 <div id="outline-container-5-2-7" class="outline-4">
-<h4 id="sec-5-2-7"><span class="section-number-4">5.2.7</span> Compression of content </h4>
+<h4 id="sec-5-2-7"><span class="section-number-4">5.2.7</span> Compression of content</h4>
 <div class="outline-text-4" id="text-5-2-7">
 
 <p>This was was previously accomplished by having a web server in fron t
@@ -623,7 +635,7 @@ now.
 </div>
 
 <div id="outline-container-5-3" class="outline-3">
-<h3 id="sec-5-3"><span class="section-number-3">5.3</span> Profile - Full Stack on One Host </h3>
+<h3 id="sec-5-3"><span class="section-number-3">5.3</span> Profile - Full Stack on One Host</h3>
 <div class="outline-text-3" id="text-5-3">
 
 <p>This profile is suitable for developers and admins wanting to set up a
@@ -641,7 +653,7 @@ the different profile descriptions bellow.
 </div>
 
 <div id="outline-container-5-4" class="outline-3">
-<h3 id="sec-5-4"><span class="section-number-3">5.4</span> Profile - Editorial Server (Publication Server) </h3>
+<h3 id="sec-5-4"><span class="section-number-3">5.4</span> Profile - Editorial Server (Publication Server)</h3>
 <div class="outline-text-3" id="text-5-4">
 
 <p>Will set up a typical editorial server (often referred to as the
@@ -652,7 +664,7 @@ publication server in Escenic literature).
 </div>
 
 <div id="outline-container-5-5" class="outline-3">
-<h3 id="sec-5-5"><span class="section-number-3">5.5</span> Profile - Presentation Server </h3>
+<h3 id="sec-5-5"><span class="section-number-3">5.5</span> Profile - Presentation Server</h3>
 <div class="outline-text-3" id="text-5-5">
 
 <p>This will set up a typical presentation server:
@@ -670,7 +682,7 @@ publication server in Escenic literature).
 </div>
 
 <div id="outline-container-5-6" class="outline-3">
-<h3 id="sec-5-6"><span class="section-number-3">5.6</span> Profile - Database Server </h3>
+<h3 id="sec-5-6"><span class="section-number-3">5.6</span> Profile - Database Server</h3>
 <div class="outline-text-3" id="text-5-6">
 
 <p>If ece-install is run on a support version of Debian or Ubuntu, this
@@ -704,7 +716,7 @@ The script will fail by itself if the DB already exists:
 </div>
 
 <div id="outline-container-5-7" class="outline-3">
-<h3 id="sec-5-7"><span class="section-number-3">5.7</span> Profile - Cache Server </h3>
+<h3 id="sec-5-7"><span class="section-number-3">5.7</span> Profile - Cache Server</h3>
 <div class="outline-text-3" id="text-5-7">
 
 <p>If ece-install is run on a support version of Debian or Ubuntu, it
@@ -765,7 +777,7 @@ TBD:
 </div>
 
 <div id="outline-container-5-8" class="outline-3">
-<h3 id="sec-5-8"><span class="section-number-3">5.8</span> Profile - Install Widget Framework </h3>
+<h3 id="sec-5-8"><span class="section-number-3">5.8</span> Profile - Install Widget Framework</h3>
 <div class="outline-text-3" id="text-5-8">
 
 <p>You'll need a user name and password for accessing the
@@ -788,7 +800,7 @@ complain:
 </div>
 
 <div id="outline-container-5-9" class="outline-3">
-<h3 id="sec-5-9"><span class="section-number-3">5.9</span> Profile - Create Publication </h3>
+<h3 id="sec-5-9"><span class="section-number-3">5.9</span> Profile - Create Publication</h3>
 <div class="outline-text-3" id="text-5-9">
 
 <p>This profile will create a publication for you, only asking you the
@@ -804,7 +816,7 @@ is used as a basis.
 </div>
 
 <div id="outline-container-5-10" class="outline-3">
-<h3 id="sec-5-10"><span class="section-number-3">5.10</span> Profile - Monitoring Server </h3>
+<h3 id="sec-5-10"><span class="section-number-3">5.10</span> Profile - Monitoring Server</h3>
 <div class="outline-text-3" id="text-5-10">
 
 <p>This will install a Munin gatherer and web server. The latter for
@@ -819,7 +831,7 @@ monitoring the different nodes.
 </div>
 
 <div id="outline-container-5-11" class="outline-3">
-<h3 id="sec-5-11"><span class="section-number-3">5.11</span> Profile - Restoring from backup </h3>
+<h3 id="sec-5-11"><span class="section-number-3">5.11</span> Profile - Restoring from backup</h3>
 <div class="outline-text-3" id="text-5-11">
 
 <p>ece-install can restore from a backup made by the ece script:
@@ -851,14 +863,14 @@ what's available on the host where it's run):
 </div>
 
 <div id="outline-container-5-12" class="outline-3">
-<h3 id="sec-5-12"><span class="section-number-3">5.12</span> Running interactively </h3>
+<h3 id="sec-5-12"><span class="section-number-3">5.12</span> Running interactively</h3>
 <div class="outline-text-3" id="text-5-12">
 
 
 </div>
 
 <div id="outline-container-5-12-1" class="outline-4">
-<h4 id="sec-5-12-1"><span class="section-number-4">5.12.1</span> Start ece-install and choose the Option, "Restore from backup" </h4>
+<h4 id="sec-5-12-1"><span class="section-number-4">5.12.1</span> Start ece-install and choose the Option, "Restore from backup"</h4>
 <div class="outline-text-4" id="text-5-12-1">
 
 
@@ -873,7 +885,7 @@ what's available on the host where it's run):
 </div>
 
 <div id="outline-container-5-12-2" class="outline-4">
-<h4 id="sec-5-12-2"><span class="section-number-4">5.12.2</span> Select Which Backup to Restore </h4>
+<h4 id="sec-5-12-2"><span class="section-number-4">5.12.2</span> Select Which Backup to Restore</h4>
 <div class="outline-text-4" id="text-5-12-2">
 
 
@@ -904,7 +916,7 @@ and the ece-install script will hence expect to find them here.
 </div>
 
 <div id="outline-container-5-12-3" class="outline-4">
-<h4 id="sec-5-12-3"><span class="section-number-4">5.12.3</span> Choose What to Restore </h4>
+<h4 id="sec-5-12-3"><span class="section-number-4">5.12.3</span> Choose What to Restore</h4>
 <div class="outline-text-4" id="text-5-12-3">
 
 
@@ -924,7 +936,7 @@ Your choice [1]&gt; 2
 </div>
 
 <div id="outline-container-5-12-4" class="outline-4">
-<h4 id="sec-5-12-4"><span class="section-number-4">5.12.4</span> Sit Back and Watch ece-install Restore the Data for You </h4>
+<h4 id="sec-5-12-4"><span class="section-number-4">5.12.4</span> Sit Back and Watch ece-install Restore the Data for You</h4>
 <div class="outline-text-4" id="text-5-12-4">
 
 
@@ -944,7 +956,7 @@ Your choice [1]&gt; 2
 </div>
 
 <div id="outline-container-5-13" class="outline-3">
-<h3 id="sec-5-13"><span class="section-number-3">5.13</span> Running in FAI mode </h3>
+<h3 id="sec-5-13"><span class="section-number-3">5.13</span> Running in FAI mode</h3>
 <div class="outline-text-3" id="text-5-13">
 
 <p>If you're running in FAI mode, you can choose between these settings
@@ -988,7 +1000,7 @@ need this in your ece-install.conf:
 </div>
 
 <div id="outline-container-5-14" class="outline-3">
-<h3 id="sec-5-14"><span class="section-number-3">5.14</span> Data security </h3>
+<h3 id="sec-5-14"><span class="section-number-3">5.14</span> Data security</h3>
 <div class="outline-text-3" id="text-5-14">
 
 <p>You should take heed when running restore, so that you're not
@@ -1019,7 +1031,7 @@ ERROR 1050 (42S01) at line 25: Table '`ece5db`.`AccessControlList`' already exis
 </div>
 
 <div id="outline-container-6" class="outline-2">
-<h2 id="sec-6"><span class="section-number-2">6</span> Full Automatic Install (FAI) </h2>
+<h2 id="sec-6"><span class="section-number-2">6</span> Full Automatic Install (FAI)</h2>
 <div class="outline-text-2" id="text-6">
 
 <p>The ece-install script has support for doing a full automatic install
@@ -1059,7 +1071,7 @@ running in the background.
 </div>
 
 <div id="outline-container-6-1" class="outline-3">
-<h3 id="sec-6-1"><span class="section-number-3">6.1</span> Installing from EARs instead of Binaries </h3>
+<h3 id="sec-6-1"><span class="section-number-3">6.1</span> Installing from EARs instead of Binaries</h3>
 <div class="outline-text-3" id="text-6-1">
 
 <p>It is possible to get ece-install to use a supplied EAR and
@@ -1096,23 +1108,33 @@ The configuration bundle must contain:
 
 
 <p>
+and optionally also:
+</p>
+
+
+<pre class="src src-sh">engine/solr/conf
+</pre>
+
+
+<p>
 A simple way to create this bundle, is to use a server which has the
 assembly environment set up and then do:
 </p>
 
 
 
-<pre class="src src-conf"><span style="color: #f0dfaf;">$</span> cd /opt/escenic/engine
-<span style="color: #f0dfaf;">$</span> tar czf /tmp/nursery-skeleton-and-security.tar.gz \
+<pre class="src src-conf"><span style="color: #f0dfaf;">$</span> cd /opt/escenic
+<span style="color: #f0dfaf;">$</span> tar czf /tmp/nursery-skeleton-solr-and-security.tar.gz \
   <span style="color: #f0dfaf;">engine/security</span> \
   <span style="color: #f0dfaf;">engine/siteconfig/config-skeleton/</span> \
+  <span style="color: #f0dfaf;">engine/solr/conf</span> \
   <span style="color: #f0dfaf;">engine/siteconfig/bootstrap-skeleton/</span> \
-  <span style="color: #f0dfaf;">`find</span> -L  assemblytool/plugins/ -name siteconfig`
+  <span style="color: #f0dfaf;">`find</span> -L assemblytool/plugins/ -name siteconfig`
 </pre>
 
 
 <p>
-/tmp/nursery-skeleton-and-security.tar.gz should now have everything
+/tmp/nursery-skeleton-solr-and-security.tar.gz should now have everything
 you need. You can now configure your FAI installation to use these by,
 e.g.:
 </p>
@@ -1120,7 +1142,7 @@ e.g.:
 
 
 <pre class="src src-conf"><span style="color: #f0dfaf;">fai_presentation_ear</span>=/tmp/engine.ear
-<span style="color: #f0dfaf;">fai_presentation_conf_archive</span>=/tmp/nursery-skeleton-and-security.tar.gz
+<span style="color: #f0dfaf;">fai_presentation_conf_archive</span>=/tmp/nursery-skeleton-solr-and-security.tar.gz
 </pre>
 
 
@@ -1128,13 +1150,72 @@ e.g.:
 Corresponding configuration options are available for the other server
 profiles, see the table below.
 </p>
+<p>
+The inclusion of the engine/solr directory makes it easy for users to
+provide their own, optimised Solr configuration. In this context, also
+note that a post install hook, set<sub>up</sub><sub>solr</sub>.postinst, is available.
+</p>
 </div>
 
 </div>
 
 <div id="outline-container-6-2" class="outline-3">
-<h3 id="sec-6-2"><span class="section-number-3">6.2</span> Overview of All FAI Parameters </h3>
+<h3 id="sec-6-2"><span class="section-number-3">6.2</span> Setting up virtual hosts</h3>
 <div class="outline-text-3" id="text-6-2">
+
+<p>Setting up virtual host definitions in the application server makes a
+some things easier, such as ECE plugins which set cookies based on
+information they get from the app server.
+</p>
+<p>
+ece-install can set up the virtual hosts configuration for Tomcat
+application servers if the profile is editorial, all presentation.
+</p>
+<p>
+To use this feature, you must define one domain for each publication
+in the following FAI parameter:
+</p>
+
+
+<pre class="src src-sh"><span style="color: #f0dfaf;">fai_publication_domain_mapping_list</span>=<span style="color: #ffa07a;">"</span>
+<span style="color: #ffa07a;">firepub#fire.escenic.com</span>
+<span style="color: #ffa07a;">ildpub#ild.escenic.com</span>
+<span style="color: #ffa07a;">"</span>
+</pre>
+
+
+<p>
+This will produce the following stanzas in server.xml:
+</p>
+
+
+
+<pre class="src src-nxml">&lt;<span style="color: #8cd0d3;">Host</span> <span style="color: #f0dfaf;">name</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">fire.escenic.com</span><span style="color: #ffa07a;">"</span> <span style="color: #f0dfaf;">appBase</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">webapps</span><span style="color: #ffa07a;">"</span> <span style="color: #f0dfaf;">autoDeploy</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">false</span><span style="color: #ffa07a;">"</span>&gt;
+  &lt;<span style="color: #8cd0d3;">Context</span> <span style="color: #f0dfaf;">displayName</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">fire.escenic.com</span><span style="color: #ffa07a;">"</span>
+           <span style="color: #f0dfaf;">docBase</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">firepub</span><span style="color: #ffa07a;">"</span>
+           <span style="color: #f0dfaf;">path</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">/</span><span style="color: #ffa07a;">"</span>
+  /&gt;
+&lt;/<span style="color: #8cd0d3;">Host</span>&gt;
+&lt;<span style="color: #8cd0d3;">Host</span> <span style="color: #f0dfaf;">name</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">ild.escenic.com</span><span style="color: #ffa07a;">"</span> <span style="color: #f0dfaf;">appBase</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">webapps</span><span style="color: #ffa07a;">"</span> <span style="color: #f0dfaf;">autoDeploy</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">false</span><span style="color: #ffa07a;">"</span>&gt;
+  &lt;<span style="color: #8cd0d3;">Context</span> <span style="color: #f0dfaf;">displayName</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">ild.escenic.com</span><span style="color: #ffa07a;">"</span>
+           <span style="color: #f0dfaf;">docBase</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">ildpub</span><span style="color: #ffa07a;">"</span>
+           <span style="color: #f0dfaf;">path</span>=<span style="color: #ffa07a;">"</span><span style="color: #ffa07a;">/</span><span style="color: #ffa07a;">"</span>
+  /&gt;
+&lt;/<span style="color: #8cd0d3;">Host</span>&gt;
+</pre>
+
+
+<p>
+You must of course make sure that these host names are resolvable to
+the intended IPs on your system using /etc/hosts or a local DNS.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-6-3" class="outline-3">
+<h3 id="sec-6-3"><span class="section-number-3">6.3</span> Overview of All FAI Parameters</h3>
+<div class="outline-text-3" id="text-6-3">
 
 <p>The ece-install script understands for the following settings in the
 $HOME/ece-install.conf file of the root user:
@@ -1151,7 +1232,7 @@ $HOME/ece-install.conf file of the root user:
 <tr><td class="left">fai_cache_backends</td><td class="left">${HOSTNAME}:8080</td><td class="left">Space separated, e.g. "app1:8080 app2:8080"</td></tr>
 <tr><td class="left">fai_cache_install</td><td class="left">0</td><td class="left">Install cache server profile</td></tr>
 <tr><td class="left">fai_db_host</td><td class="left">$HOSTNAME</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
-<tr><td class="left">fai_db_drop<sub>old</sub><sub>db</sub><sub>first</sub></td><td class="left">0</td><td class="left">Warning: this will drop the old database before installing a new one</td></tr>
+<tr><td class="left">fai_db_drop_old_db_first</td><td class="left">0</td><td class="left">Warning: this will drop the old database before installing a new one</td></tr>
 <tr><td class="left">fai_db_install</td><td class="left">0</td><td class="left">Install db profile</td></tr>
 <tr><td class="left">fai_db_password</td><td class="left">read-the-source-luke</td><td class="left">Useful for DB installation profile</td></tr>
 <tr><td class="left">fai_db_port</td><td class="left">3306</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
@@ -1176,10 +1257,15 @@ $HOME/ece-install.conf file of the root user:
 <tr><td class="left">fai_publication_create</td><td class="left">0</td><td class="left">Create a new publication</td></tr>
 <tr><td class="left">fai_publication_name</td><td class="left">mypub</td><td class="left">Name of the publication</td></tr>
 <tr><td class="left">fai_publication_use_instance</td><td class="left">dev1</td><td class="left">Name of local instance to use for creation</td></tr>
-<tr><td class="left">fai_publication_war</td><td class="left">"WF or ECE demo WAR"</td><td class="left">WAR to to base the new publication on</td></tr>
+<tr><td class="left">fai_publication_war</td><td class="left">"WF or ECE demo WAR"</td><td class="left">WAR to base the new publication on</td></tr>
+<tr><td class="left">fai_publication_war_uri_list</td><td class="left">""</td><td class="left">Publication WARs used for setting up Assembly tool. Supported: http[s]://tmp.com/mypub.war, <a href="file:////tmp/mypub.war">///tmp/mypub.war</a> and /tmp/mypub.war.</td></tr>
+<tr><td class="left">fai_publication_domain_mapping_list</td><td class="left">""</td><td class="left">Mapping between publication names and their corresponding domains on the form: one#one.com other#other.com</td></tr>
 <tr><td class="left">fai_rmi_install</td><td class="left">0</td><td class="left">Install RMI hub profile</td></tr>
 <tr><td class="left">fai_search_conf_archive</td><td class="left">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
 <tr><td class="left">fai_search_ear</td><td class="left">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
+<tr><td class="left">fai_search_for_editor</td><td class="left">0</td><td class="left">If 1 (true), will configure Solr for use with an editorial server, if not conf for presentation servers will be chosen.</td></tr>
+<tr><td class="left">fai_search_indexer_ws_uri</td><td class="left"><a href="http://${HOSTNAME}:8080/indexer-webservice/index/">http://${HOSTNAME}:8080/indexer-webservice/index/</a></td><td class="left">URI of the indexer-webservice that the search instance shall use for knowing what to index.</td></tr>
+<tr><td class="left">fai_search_install</td><td class="left">0</td><td class="left">Install the search server profile (Solr + indexer)</td></tr>
 <tr><td class="left">fai_search_name</td><td class="left">search1</td><td class="left">Name of the search instance</td></tr>
 <tr><td class="left">fai_search_port</td><td class="left">8080</td><td class="left">HTTP port of the search instance</td></tr>
 <tr><td class="left">fai_search_shutdown</td><td class="left">8005</td><td class="left">Shutdown port of the search instance</td></tr>
@@ -1195,16 +1281,16 @@ As you've probably have guessed, 0 means "false" and 1 means "true" :-)
 
 </div>
 
-<div id="outline-container-6-3" class="outline-3">
-<h3 id="sec-6-3"><span class="section-number-3">6.3</span> Examples </h3>
-<div class="outline-text-3" id="text-6-3">
+<div id="outline-container-6-4" class="outline-3">
+<h3 id="sec-6-4"><span class="section-number-3">6.4</span> Examples</h3>
+<div class="outline-text-3" id="text-6-4">
 
 
 </div>
 
-<div id="outline-container-6-3-1" class="outline-4">
-<h4 id="sec-6-3-1"><span class="section-number-4">6.3.1</span> Installing an Editorial Server &amp; Create a Publication </h4>
-<div class="outline-text-4" id="text-6-3-1">
+<div id="outline-container-6-4-1" class="outline-4">
+<h4 id="sec-6-4-1"><span class="section-number-4">6.4.1</span> Installing an Editorial Server &amp; Create a Publication</h4>
+<div class="outline-text-4" id="text-6-4-1">
 
 <p>To automatically install an editorial server and create a publication
 called "jollygood", the minimal configuration in ece-install.conf
@@ -1224,9 +1310,9 @@ would be:
 
 </div>
 
-<div id="outline-container-6-3-2" class="outline-4">
-<h4 id="sec-6-3-2"><span class="section-number-4">6.3.2</span> Installing Two Presentation Servers On a Single Host </h4>
-<div class="outline-text-4" id="text-6-3-2">
+<div id="outline-container-6-4-2" class="outline-4">
+<h4 id="sec-6-4-2"><span class="section-number-4">6.4.2</span> Installing Two Presentation Servers On a Single Host</h4>
+<div class="outline-text-4" id="text-6-4-2">
 
 <p>If you wish to only install two presentation servers called "web1" and
 "web2" on your host, you will first run ece-install with:
@@ -1262,9 +1348,9 @@ whereas the second one needs to override these.
 
 </div>
 
-<div id="outline-container-6-4" class="outline-3">
-<h3 id="sec-6-4"><span class="section-number-3">6.4</span> Verifying That the Script Is Running In FAI Mode </h3>
-<div class="outline-text-3" id="text-6-4">
+<div id="outline-container-6-5" class="outline-3">
+<h3 id="sec-6-5"><span class="section-number-3">6.5</span> Verifying That the Script Is Running In FAI Mode</h3>
+<div class="outline-text-3" id="text-6-5">
 
 <p>When FAI is enabled, ece-install will report:
 </p>
@@ -1281,7 +1367,7 @@ whereas the second one needs to override these.
 </div>
 
 <div id="outline-container-7" class="outline-2">
-<h2 id="sec-7"><span class="section-number-2">7</span> Running More Than One Installation Process </h2>
+<h2 id="sec-7"><span class="section-number-2">7</span> Running More Than One Installation Process</h2>
 <div class="outline-text-2" id="text-7">
 
 <p>If the script believes there's already an ece-intall process running,
@@ -1301,7 +1387,7 @@ it will abort:
 </div>
 
 <div id="outline-container-8" class="outline-2">
-<h2 id="sec-8"><span class="section-number-2">8</span> Re-running ece-install (and How To Speed It Up) </h2>
+<h2 id="sec-8"><span class="section-number-2">8</span> Re-running ece-install (and How To Speed It Up)</h2>
 <div class="outline-text-2" id="text-8">
 
 <p>Although the initial thought behind ece-install, is to run it on a
@@ -1324,7 +1410,7 @@ folder, and only download the missing ones (if any).
 </p>
 <p>
 To get a list of the artifacts it'll pull from
-<a href="http://technet.escenic.com">http://technet.escenic.com</a> and http://tomcat.apache.org search for the
+<a href="http://technet.escenic.com">http://technet.escenic.com</a> and <a href="http://tomcat.apache.org">http://tomcat.apache.org</a> search for the
 following variables:
 </p><ul>
 <li>technet_download_list
@@ -1346,7 +1432,7 @@ bundle, see the FAI section.
 </div>
 
 <div id="outline-container-9" class="outline-2">
-<h2 id="sec-9"><span class="section-number-2">9</span> Using a Custom Configuration File for ece-install </h2>
+<h2 id="sec-9"><span class="section-number-2">9</span> Using a Custom Configuration File for ece-install</h2>
 <div class="outline-text-2" id="text-9">
 
 <p>You can specify a different configuration by using the -f parameter: 
@@ -1362,7 +1448,7 @@ bundle, see the FAI section.
 </div>
 
 <div id="outline-container-10" class="outline-2">
-<h2 id="sec-10"><span class="section-number-2">10</span> Overview of File Paths Used by the ece-install script </h2>
+<h2 id="sec-10"><span class="section-number-2">10</span> Overview of File Paths Used by the ece-install script</h2>
 <div class="outline-text-2" id="text-10">
 
 <p>There are of course other paths involved when setting up your system,
@@ -1414,7 +1500,7 @@ but these should be the most interesting ones.
 </div>
 
 <div id="outline-container-11" class="outline-2">
-<h2 id="sec-11"><span class="section-number-2">11</span> Overriding the Escenic directories </h2>
+<h2 id="sec-11"><span class="section-number-2">11</span> Overriding the Escenic directories</h2>
 <div class="outline-text-2" id="text-11">
 
 <p>All of the Escenic specific directories may be overwritten in
@@ -1449,15 +1535,103 @@ and plugins.
 </div>
 
 <div id="outline-container-12" class="outline-2">
-<h2 id="sec-12"><span class="section-number-2">12</span> Assumptions </h2>
+<h2 id="sec-12"><span class="section-number-2">12</span> Extending ece-install by Writing Hooks</h2>
 <div class="outline-text-2" id="text-12">
 
+<p>ece-install  has a number of hooks on which you can hook on your own
+scripts. The scripts are to reside in $HOME/ece-conf.d/ and have names
+inspired by Debian's package scripts:
+</p>
+
+
+
+<pre class="src src-conf"><span style="color: #f0dfaf;">&lt;hook</span> name&gt;.&lt;phase&gt;
+</pre>
+
+
+<p>
+e.g.:
+</p>
+
+
+
+<pre class="src src-conf"><span style="color: #f0dfaf;">install_analysis_server.preinst</span>
+</pre>
+
+
+<p>
+Will be run before the body of the hook, just the corresponding
+.postinst hook will be run after.
+</p>
 
 </div>
 
 <div id="outline-container-12-1" class="outline-3">
-<h3 id="sec-12-1"><span class="section-number-3">12.1</span> /etc/esecenic is shared </h3>
+<h3 id="sec-12-1"><span class="section-number-3">12.1</span> Accessing ece-install variables</h3>
 <div class="outline-text-3" id="text-12-1">
+
+<p>Before running the hook, ece-install will make all its local variables
+available in /var/run/escenic/ece-install.env, which can then be used
+by the hook scripts.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-12-2" class="outline-3">
+<h3 id="sec-12-2"><span class="section-number-3">12.2</span> Example hook</h3>
+<div class="outline-text-3" id="text-12-2">
+
+<p>Here is an example hook which will be run after the EAE is installed.
+</p>
+
+
+
+<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">Put this in is $HOME/ece-install.d/install_analysis_server.postinst</span>
+
+<span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">read ece-install's current variables</span>
+<span style="color: #b0c4de;">source</span> /var/run/escenic/ece-install.env
+
+<span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">do something useful</span>
+<span style="color: #b0c4de;">echo</span> <span style="color: #ffa07a;">"Hello from $0, EAE is installed in ${tomcat_base}"</span> &gt; /tmp/hello.txt
+</pre>
+
+
+</div>
+
+</div>
+
+<div id="outline-container-12-3" class="outline-3">
+<h3 id="sec-12-3"><span class="section-number-3">12.3</span> Available hooks</h3>
+<div class="outline-text-3" id="text-12-3">
+
+<p>Currently, the following hooks are available:
+</p>
+
+
+
+<pre class="src src-sh">install_analysis_server.preinst
+install_analysis_server.postinst
+set_up_solr.preinst
+set_up_solr.postinst
+</pre>
+
+
+</div>
+</div>
+
+</div>
+
+<div id="outline-container-13" class="outline-2">
+<h2 id="sec-13"><span class="section-number-2">13</span> Assumptions</h2>
+<div class="outline-text-2" id="text-13">
+
+
+</div>
+
+<div id="outline-container-13-1" class="outline-3">
+<h3 id="sec-13-1"><span class="section-number-3">13.1</span> /etc/esecenic is shared</h3>
+<div class="outline-text-3" id="text-13-1">
 
 <p>It's assumed that the /etc/escenic directory is either on a shared
 file system or rsync-ed among the hosts that are running the ECE
@@ -1468,9 +1642,9 @@ instances (the exception being database and cache servers).
 
 </div>
 
-<div id="outline-container-13" class="outline-2">
-<h2 id="sec-13"><span class="section-number-2">13</span> Uninstalling Everything That the ece-install Set Up </h2>
-<div class="outline-text-2" id="text-13">
+<div id="outline-container-14" class="outline-2">
+<h2 id="sec-14"><span class="section-number-2">14</span> Uninstalling Everything That the ece-install Set Up</h2>
+<div class="outline-text-2" id="text-14">
 
 <p>WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
@@ -1488,9 +1662,9 @@ things set up by the script.
 
 </div>
 
-<div id="outline-container-14" class="outline-2">
-<h2 id="sec-14"><span class="section-number-2">14</span> Example Output FAI </h2>
-<div class="outline-text-2" id="text-14">
+<div id="outline-container-15" class="outline-2">
+<h2 id="sec-15"><span class="section-number-2">15</span> Example Output FAI</h2>
+<div class="outline-text-2" id="text-15">
 
 <p>The ece-install will often be run in FAI mode where all the settings
 are read from ~/ece-install.conf. Given the following entries in this
@@ -1560,7 +1734,7 @@ The following output is produced from ece-install:
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2012-01-18 13:15:34 CST
+  Date: 2012-02-07 19:40:37 CST
 </p>
 </div>
 </body>
