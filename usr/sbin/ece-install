@@ -726,7 +726,12 @@ EOF
     make_ln $common_nursery_dir/trace.properties
     run ln -sf trace.properties log4j.properies
 
-    cat > $tomcat_base/conf/logging.properties <<EOF
+
+    # since the solr webapp otherwise will pollute our logs, we ask
+    # Tomcat specifically to make it log to dedicated logger.
+    if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
+        $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+        cat > $tomcat_base/conf/logging.properties <<EOF
 handlers = 1catalina.org.apache.juli.FileHandler, 2localhost.org.apache.juli.FileHandler, java.util.logging.ConsoleHandler, 6localhost.org.apache.juli.FileHandler
 
 .handlers = 1catalina.org.apache.juli.FileHandler, java.util.logging.ConsoleHandler
@@ -751,8 +756,11 @@ org.apache.solr.handlers=6localhost.org.apache.juli.FileHandler
 
 org.apache.catalina.core.ContainerBase.[Catalina].[localhost].level = INFO
 org.apache.catalina.core.ContainerBase.[Catalina].[localhost].handlers = 2localhost.org.apache.juli.FileHandler
-
 EOF
+    else
+        run cp $tomcat_home/conf/logging.properties $tomcat_base/conf
+    fi
+    
 }
 
 # don't quote values when setting conf file values with
@@ -1014,7 +1022,8 @@ function set_up_app_server()
         run rm tomcat
     fi
     run ln -sf ${tomcat_dir} tomcat
-
+    
+    tomcat_home=${appserver_root_dir}/tomcat   
     tomcat_base=${appserver_root_dir}/tomcat-${instance_name}
     make_dir $tomcat_base
 
@@ -1024,7 +1033,7 @@ function set_up_app_server()
     done
 
     set_ece_instance_conf tomcat_base $tomcat_base   
-    set_ece_instance_conf tomcat_home ${appserver_root_dir}/tomcat   
+    set_ece_instance_conf tomcat_home $tomcat_home
     set_ece_instance_conf appserver_port $appserver_port
    
     run cd $tomcat_base/lib
@@ -1266,6 +1275,10 @@ EOF
       name="jdbc/eae-qs/qs"
       type="javax.sql.DataSource"
   />
+</Context>
+EOF
+    else 
+        cat >> $tomcat_base/conf/context.xml <<EOF
 </Context>
 EOF
     fi
@@ -2569,13 +2582,6 @@ function install_search_server()
     type=search
     install_ece_instance "search1" 0
     
-    file=$escenic_conf_dir/ece-${instance_name}.conf
-    print_and_log "Creating instance specific conf: $file ..."
-    set_conf_file_value \
-        deploy_webapp_white_list \
-        $(get_deploy_white_list) \
-        $file
-
     # TODO update instead of append
     dir=$common_nursery_dir/com/escenic/framework/search/solr
     make_dir $dir
