@@ -33,6 +33,7 @@ function unknown-option() {
 }
 
 ### To add a command, simply define a function with a do_ prefix.
+
 function do_list() {
   if [ ! -z $instance_dir ] ; then
     echo "Instance cannot be specified"
@@ -44,7 +45,17 @@ function do_list() {
   ls -d ${availabledir}/* | grep "/[0-9a-z][-0-9a-z]*$"
 }
 
-### To add a command, simply define a function with a do_ prefix.
+function do_enabled() {
+  if [ ! -z $instance_dir ] ; then
+    echo "Instance cannot be specified"
+    usage=1
+    return
+  fi
+  availabledir=$(dirname $0)/../../etc/vizrt/vosa/enabled.d
+  availabledir=$(readlink -f ${availabledir})
+  ls -d ${availabledir}/* | grep "/[0-9a-z][-0-9a-z]*$"
+}
+
 function do_install() {
   if [ -z $instance_dir ] ; then
     echo "Instance is required"
