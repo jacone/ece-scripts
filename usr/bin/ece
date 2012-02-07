@@ -925,19 +925,24 @@ function get_info_for_type()
         print "Java location: $java_home"
     fi
     if [ -n "${appserver}" ]; then
-        print "Application server: $appserver"
-        print "Appplication server status:" $(get_status)
+        print "Application server:"
+        set_type_port
+        set_type_pid
+        print "|-> Status:" $(get_status)
+        print "|-> Port:" $port
+        print "|-> PID:" $type_pid
+        print "|-> Type: " $appserver
         
         case "$appserver" in
             tomcat)
                 if [ -n "${tomcat_home}" ]; then
-                    print "Tomcat home:" $tomcat_home
-                    print "Tomcat base:" $tomcat_base
+                    print "|-> Tomcat home:" $tomcat_home
+                    print "|-> Tomcat base:" $tomcat_base
                 fi
             ;;
             resin)
                 if [ -n "${resin_home}" ]; then
-                    print "Resin home:" $resin_home
+                    print "  |-> Resin home:" $resin_home
                 fi
                 ;;
         esac
