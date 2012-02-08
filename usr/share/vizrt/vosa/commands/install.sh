@@ -120,7 +120,7 @@ function create_overlay() {
   # local copy of overlay
   mkdir -p ${tempdir}/overlay/updates; exitonerror $? "Unable to make overlay directory" 
 
-  for o in "${install_config_overlay[@]}" ; do  ****
+  for o in "${install_config_overlay[@]}" ; do
     if [ "${o}" == "" ] ; then continue; fi
     cp -rp --dereference $o/* ${tempdir}/overlay/updates/; exitonerror $? "Unable to copy overlay $o" 
   done
