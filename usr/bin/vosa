@@ -175,6 +175,15 @@ function do_uninstall() {
       echo "$instance_dir is not enabled"
       exit 1
     fi
+    local status=( $(really_do_status $instance_dir) )
+    if [ "${status[6]}" == "alive" ] ; then
+      echo "$instance_dir is alive. Stop it first. exiting"
+      exit 1
+    fi
+    if [ "${status[4]}" == "running" ] ; then
+      echo "$instance_dir is supposed to be running. Stop it first. Exiting!"
+      exit 1
+    fi
     local imgdir=$(readlink -f ${instance_dir}/../../../../../var/lib/vizrt/vosa/images/$(basename $instance_dir)/)
     local backupdir="/var/backup/vizrt/vosa/$(basename $instance_dir)"
     local backupparent="/var/backup/vizrt/vosa"
