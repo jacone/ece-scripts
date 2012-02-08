@@ -177,8 +177,16 @@ function delete_overlay() {
 }
 
 function postinstall() {
-  echo "running all the postinstall scripts..."
-  sleep 4;
+  for o in "${install_config_postinstall[@]}" ; do
+    echo "Executing postinstall $o"
+    local cmd="$(dirname $0)/../post-install-hooks/$o"
+    if [ ! -x "$cmd" ] ; then
+      echo "Unable to execute non-executable post-install hook: $cmd"
+      exit 1
+    fi
+    cmd=$(readlink -f "$cmd")
+    $cmd "$config" "$image"
+  done
 }
 
 copy_original_image
