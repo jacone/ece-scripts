@@ -30,7 +30,6 @@ function exitonerror() {
 
 source $(dirname $0)/functions
 source $(dirname $0)/install_config_parser
-source $(dirname $0)/boot_config_parser
 
 config=$1
 image=$2
@@ -67,7 +66,6 @@ hostname=$(basename "$image")
 
 # Parse all install config items
 parse_config_file $config/install.conf install_config_
-parse_config_file $config/boot.conf boot_config_
 
 function make_temp_dir() {
   tempdir=/tmp/some-rundir
@@ -116,8 +114,19 @@ function generate_ssh_key() {
   ssh-keygen -t dsa -N "" -f ${image}/id_dsa -b 1024 -C "kvm-one-time-key:$name" > /dev/null; exitonerror $? "Unable to generate ssh key"
 }
 
-function create_user_data_file() {
-  cat >> ${tempdir}/user_data.txt <<EOF
+function create_overlay() {
+  make_temp_dir
+
+  # local copy of overlay
+  mkdir -p ${tempdir}/overlay/updates; exitonerror $? "Unable to make overlay directory" 
+
+  for o in "${install_config_overlay[@]}" ; do  ****
+    if [ "${o}" == "" ] ; then continue; fi
+    cp -rp --dereference $o/* ${tempdir}/overlay/updates/; exitonerror $? "Unable to copy overlay $o" 
+  done
+
+  mkdir -p ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/
+  cat >> ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/user-data <<EOF
 #cloud-config
 manage_etc_hosts: true
 timezone: ${timezone}
@@ -125,6 +134,47 @@ apt_update: false
 apt_upgrade: false
 apt_mirror: ${mirror}
 EOF
+
+  cat >> ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/meta-data <<EOF
+EOF
+
+  mkdir -p ${tempdir}/overlay/updates/home/ubuntu/.ssh
+  chmod 700 ${tempdir}/overlay/updates/home/ubuntu/.ssh
+  for o in "${install_config_ssh_keys[@]}" ; do
+    cat $o >> ${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys; exitonerror $? "Unable to add authorized key $o" 
+  done
+
+  chmod 600 ${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys; exitonerror $? "Unable to chmod 600 authorized_keys" 
+  # todo: inject another key to go from one server to another???
+
+  cat > ${tempdir}/overlay/updates.script <<EOF
+# Reset permissions on files created above (might not belong to root etc):
+chown --recursive ubuntu: /home/ubuntu/
+
+# Remove DHCP defaults
+perl -pi -e 's/iface eth0.*//' /etc/network/interfaces
+
+# Add static IP configuration
+cat >> /etc/network/interfaces <<END
+iface eth0 inet static
+    address ${guestip}
+    netmask ${guestmask}
+    gateway ${guestgw}
+END
+EOF
+
+  chmod 755 ${tempdir}/overlay/updates.script
+  # Make an ISO image of the overlay, to pass to kvm during its first boot.
+  genisoimage -quiet -rock -uid 0 -gid 0 --output ${tempdir}/updates.iso ${tempdir}/overlay; exitonerror $? "Unable to create overlay file" 
+
+
+
+  cleanup_temp_dir
+}
+
+function delete_overlay() {
+  # ...
+  decho 1 'Deleting initial overlay file'
 }
 
 function postinstall() {
@@ -138,11 +188,11 @@ generate_ssh_key
 
 ### functions below require tempdir
 
-make_temp_dir
-create_user_data_file
-cleanup_temp_dir
+create_overlay
 
 # chain to boot.sh to actually start the image.
 $(dirname $0)/boot.sh $1 $2
 
 postinstall
+delete_overlay
+
