@@ -108,7 +108,7 @@ function really_do_status () {
         output=( ${output[@]} disabled );
       else
         output=( ${output[@]} enabled );
-        local vmdir=$(readlink -f ${avdir}/../../../../../var/lib/vizrt/vosa/images/vm02/)
+        local vmdir=$(readlink -f ${avdir}/../../../../../var/lib/vizrt/vosa/images/$(basename $1))
         if [ ! -d "$vmdir" ] ; then
           output=( ${output[@]} uninstalled );
         else
@@ -155,6 +155,31 @@ function do_enable() {
       exit 1
     fi
     ln -v -s "../available.d/$(basename $instance_dir)" "$enabled_dir" || exit 1
+  }
+}
+
+function do_uninstall() {
+  requires_instance_dir && {
+    # check if the instance is available
+    # check if the instance isn't enabled already
+    # check if the instance isn't forcibly disabled
+    # make a symbolic link
+    if [ ! -d ${available_dir}/$(basename $instance_dir) ] ; then
+      echo "$instance_dir is not an available instance"
+      exit 1
+    fi
+    if [ ! -L ${enabled_dir}/$(basename $instance_dir) ] ; then
+      echo "$instance_dir is not enabled"
+      exit 1
+    fi
+    local imgdir=$(readlink -f ${instance_dir}/../../../../../var/lib/vizrt/vosa/images/$(basename $instance_dir)/)
+    local backupdir="/var/backup/vizrt/vosa/$(basename $instance_dir)"
+    local backupparent="/var/backup/vizrt/vosa"
+    if [ ! -z "$imgdir" -a -d "$imgdir" -a -w "$backupparent" ] ; then
+      # todo: rotate a few times?
+      rm -rf "$backupdir"
+      mv "$imgdir" "$backupparent"
+    fi
   }
 }
 
