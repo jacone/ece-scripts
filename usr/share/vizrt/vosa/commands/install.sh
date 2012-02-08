@@ -129,10 +129,10 @@ function create_overlay() {
   cat >> ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/user-data <<EOF
 #cloud-config
 manage_etc_hosts: true
-timezone: ${timezone}
+timezone: ${install_config_timezone}
 apt_update: false
 apt_upgrade: false
-apt_mirror: ${mirror}
+apt_mirror: ${install_config_mirror}
 EOF
 
   cat >> ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/meta-data <<EOF
@@ -146,7 +146,6 @@ EOF
   done
 
   chmod 600 ${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys; exitonerror $? "Unable to chmod 600 authorized_keys" 
-  # todo: inject another key to go from one server to another???
 
   cat > ${tempdir}/overlay/updates.script <<EOF
 # Reset permissions on files created above (might not belong to root etc):
@@ -158,17 +157,16 @@ perl -pi -e 's/iface eth0.*//' /etc/network/interfaces
 # Add static IP configuration
 cat >> /etc/network/interfaces <<END
 iface eth0 inet static
-    address ${guestip}
-    netmask ${guestmask}
-    gateway ${guestgw}
+    address ${install_config_ip_address}
+    netmask ${install_config_netmask}
+    gateway ${install_config_gateway}
 END
 EOF
 
   chmod 755 ${tempdir}/overlay/updates.script
+
   # Make an ISO image of the overlay, to pass to kvm during its first boot.
-  genisoimage -quiet -rock -uid 0 -gid 0 --output ${tempdir}/updates.iso ${tempdir}/overlay; exitonerror $? "Unable to create overlay file" 
-
-
+  genisoimage -quiet -rock -uid 0 -gid 0 --output ${image}/updates.iso ${tempdir}/overlay; exitonerror $? "Unable to create overlay file" 
 
   cleanup_temp_dir
 }
