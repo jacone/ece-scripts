@@ -50,13 +50,13 @@ declare -a install_config_overlay
 declare -a install_config_postinstall
 
 function install_config_ssh_keys() {
-  install_config_ssh_keys=( "${ssh_keys[@]}" "$1" )
+  install_config_ssh_keys=( "${install_config_ssh_keys[@]}" "$1" )
 }
 
 function install_config_overlay() {
-  install_config_overlay=( "${overlay[@]}" "$1" )
+  install_config_overlay=( "${install_config_overlay[@]}" "$1" )
 }
 
 function install_config_postinstall() {
-  install_config_postinstall=( "${postinstall[@]}" "$1" )
+  install_config_postinstall=( "${install_config_postinstall[@]}" "$1" )
 }
