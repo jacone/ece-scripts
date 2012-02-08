@@ -88,6 +88,7 @@ EOF
 
 function do_status() {
   if [ -z "$instance_dir" ] ; then
+    local a
     for a in $(
       ls -d ${available_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
     ) ; do 
