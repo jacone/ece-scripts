@@ -38,47 +38,124 @@ available_dir=$(readlink -f ${available_dir})
 enabled_dir=$(dirname $0)/../../etc/vizrt/vosa/enabled.d
 enabled_dir=$(readlink -f ${enabled_dir})
 
-function do_available() {
-  if [ ! -z $instance_dir ] ; then
+
+function requires_instance_dir() {
+  if [ -z "$instance_dir" ] ; then
+    echo "Instance is required"
+    usage=1
+    return 1
+  fi
+}
+function prohibits_instance_dir() {
+  if [ ! -z "$instance_dir" ] ; then
     echo "Instance cannot be specified"
     usage=1
-    return
+    return 1
   fi
-  ls -d ${available_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
+}
+
+function do_available() {
+  prohibits_instance_dir && {
+    ls -d ${available_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
+  }
 }
 
 function do_enabled() {
-  if [ ! -z $instance_dir ] ; then
-    echo "Instance cannot be specified"
-    usage=1
-    return
+  prohibits_instance_dir && {
+    ls -d ${enabled_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
+  }
+}
+
+function do_help() {
+  if [ -z "$instance_dir" ] ; then
+    cat <<EOF
+$0 is a command to manage virtual machines running under
+the regime of Vizrt Online System Administration.
+
+"$0 status" gives you a quick overview of the VMs running
+on this host.
+EOF
+    exit 0;
+  else
+    echo "\"$0 -i $instance_dir status\" to see the status of this instance"
+    echo "\"$0 -i $instance_dir install\" to (re)install this image from scratch"
+    exit 0;
   fi
-  ls -d ${enabled_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
+}
+
+function do_status() {
+  if [ -z "$instance_dir" ] ; then
+    for a in $(
+      ls -d ${available_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
+    ) ; do 
+      really_do_status $a
+    done
+  else
+    really_do_status $instance_dir
+  fi
+}
+
+function really_do_status () {
+    local output
+    local avdir="${available_dir}/$(basename $1)"
+    local endir="${enabled_dir}/$(basename $1)"
+    output=( $avdir )
+    if [ ! -d "$avdir" ] ; then
+      output=( ${output[@]} unavailable );
+    else
+      output=( ${output[@]} available );
+      if [ ! -L "$endir" ] ; then
+        output=( ${output[@]} disabled );
+      else
+        output=( ${output[@]} enabled );
+        local vmdir=$(readlink -f ${avdir}/../../../../../var/lib/vizrt/vosa/images/vm02/)
+        if [ ! -d "$vmdir" ] ; then
+          output=( ${output[@]} uninstalled );
+        else
+          output=( ${output[@]} installed );
+          local statefile=$(readlink -f ${avdir}/../../../../../var/run/vizrt/vosa/$(basename $1).state)
+          if [ ! -r "$statefile" ] ; then
+            output=( ${output[@]} probably_stopped );
+          else
+            output=( ${output[@]} $(<$statefile) );
+            if [ ! -z "$(<$statefile)" -a $(<$statefile) == "running" ] ; then
+              local pidfile="$(dirname $statefile)/$(basename $1).pid"
+              if [ -r "$pidfile" ] ; then
+                output=( ${output[@]} $(<$pidfile) );
+                if ! ps > /dev/null $(<$pidfile) ; then
+                  output=( ${output[@]} dead );
+                else
+                  output=( ${output[@]} alive "$( ps -p "$(<$pidfile)" -o "etime=" )" );
+                fi
+              fi
+            fi
+          fi
+        fi
+      fi
+    fi
+    echo ${output[@]}
 }
 
 function do_enable() {
-  if [ -z $instance_dir ] ; then
-    echo "Instance must be specified"
-    usage=1
-    return
-  fi
-  # check if the instance isn't enabled already
-  # check if the instance isn't forcibly disabled
-  # check if the instance is available
-  # make a symbolic link
-  if [ -L ${enabled_dir}/$(basename $instance_dir) ] ; then
-    echo "$instance_dir is already enabled"
-    exit 1
-  fi
-  if [ -r ${enabled_dir}/$(basename $instance_dir) ] ; then
-    echo "$instance_dir has been forcibly disabled by the presence of the file ${enabled_dir}/$(basename $instance_dir)"
-    exit 1
-  fi
-  if [ ! -d ${available_dir}/$(basename $instance_dir) ] ; then
-    echo "$instance_dir is not an available instance"
-    exit 1
-  fi
-  ln -v -s "../available.d/$(basename $instance_dir)" "$enabled_dir" || exit 1
+  requires_instance_dir && {
+    # check if the instance is available
+    # check if the instance isn't enabled already
+    # check if the instance isn't forcibly disabled
+    # make a symbolic link
+    if [ ! -d ${available_dir}/$(basename $instance_dir) ] ; then
+      echo "$instance_dir is not an available instance"
+      exit 1
+    fi
+    if [ -L ${enabled_dir}/$(basename $instance_dir) ] ; then
+      echo "$instance_dir is already enabled"
+      exit 1
+    fi
+    if [ -r ${enabled_dir}/$(basename $instance_dir) ] ; then
+      echo "$instance_dir has been forcibly disabled by the presence of the file ${enabled_dir}/$(basename $instance_dir)"
+      exit 1
+    fi
+    ln -v -s "../available.d/$(basename $instance_dir)" "$enabled_dir" || exit 1
+  }
 }
 
 
@@ -86,29 +163,23 @@ commands="$(dirname $0)/../share/vizrt/vosa/commands"
 
 
 function do_install() {
-  if [ -z $instance_dir ] ; then
-    echo "Instance is required"
-    usage=1
-    return
-  fi
-  # todo:
-  # Error checking: if the instance is not enabled, abort
-  # If the instance exists and is running, abort. its 'statefile' must be set to 'stopped' for a reinstall to happen.
-  # If the instance exists, take a tar.gz backup of the entire image directory
-  ${commands}/install.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
+  requires_instance_dir && {
+    # todo:
+    # Error checking: if the instance is not enabled, abort
+    # If the instance exists and is running, abort. its 'statefile' must be set to 'stopped' for a reinstall to happen.
+    # If the instance exists, take a tar.gz backup of the entire image directory
+    ${commands}/install.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
+  }
 }
 
 function do_start() {
-  if [ -z $instance_dir ] ; then
-    echo "Instance is required"
-    usage=1
-    return
-  fi
-  # todo:
-  # Error checking: if the instance is not enabled, abort
-  # If the instance exists and is running, abort. its 'statefile' must be set to 'stopped' for a reinstall to happen.
-  # If the instance exists, take a tar.gz backup of the entire image directory
-  ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
+  requires_instance_dir && {
+    # todo:
+    # Error checking: if the instance is not enabled, abort
+    # If the instance exists and is running, abort. its 'statefile' must be set to 'stopped' for a reinstall to happen.
+    # If the instance exists, take a tar.gz backup of the entire image directory
+    ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
+  }
 }
 
 
@@ -163,7 +234,8 @@ declare > /dev/null -f "$fn" || unknown-argument "$1"
 declare > /dev/null -f "$fn" && "$fn"
 
 if [ $usage -eq 1 ] ; then
-  echo "Usage: $0 -i instance-dir <command>"
+  echo "Usage: $0 [-i <instance-dir>] <command>"
+  echo "$0 available to get a list of instances"
   exit 1;
 fi
 
