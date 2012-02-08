@@ -6,7 +6,7 @@
 # contains a "vosa" configuration, and a second directory,
 # which is where the installation disks are held.
 
-# Usually this command is executed from "/usr/bin/vosa -i somevm install"
+# Usually this command is executed from "/usr/bin/vosa -i somevm start"
 # or similar.
 
 debug=3
@@ -104,6 +104,11 @@ function touch_pid_file() {
   touch "${pidfile}"
 }
 
+function touch_state_file() {
+  statefile=$rundir/$hostname.state
+  echo 'running' > $statefile
+}
+
 function configure_vnc_option() {
   if [ -z "$boot_config_vnc_port" -o "$boot_config_vnc_port" == "none" ] ; then 
     vncoption="-vnc none"
@@ -116,6 +121,7 @@ function configure_vnc_option() {
 function boot_kvm() {
   kernel=${image}/vmlinuz
   img=${image}/disk.img
+  cloud_param="nocloud;h=${hostname}"
 
   # should _maybe_ be put in some other script?  Needed by e.g. vosa start too.
   decho 1 "Starting the machine"
@@ -134,15 +140,19 @@ function boot_kvm() {
   -net "nic,model=virtio,macaddr=${install_config_macaddr}"
   -net "tap,script=$(dirname $0)/qemu-ifup")
   
+  updates=${image}/updates.iso
+  if [ -r "${updates}" ] ; then
+    startupcmd=("${startupcmd[@]}" -drive "file=${updates},if=virtio")
+    xupdate="xupdate=vdb:mnt"
+  fi
 
-  #-drive "file=updates.iso,if=virtio" \
-
-  firstboot=("${startupcmd[@]}" -append "root=/dev/vda ro init=/usr/lib/cloud-init/uncloud-init ds=${cloud_param} ubuntu-pass=random xupdate=vdb:mnt" )
+  startupcmd=("${startupcmd[@]}" -append "root=/dev/vda ro init=/usr/lib/cloud-init/uncloud-init ds=${cloud_param} ubuntu-pass=random $xupdate" )
 
   # actually execute kvm
-  echo "${firstboot[@]}"
-  "${firstboot[@]}"; exitonerror $? "Unable to start kvm :-/" 
+  echo "${startupcmd[@]}"
+  "${startupcmd[@]}"; exitonerror $? "Unable to start kvm :-/" 
 }
+
 
 check_sudo
 make_run_dir
@@ -150,4 +160,4 @@ configure_vnc_option
 
 touch_pid_file  # should maybe be part of boot process?  dunno.
 boot_kvm
-
+touch_state_file
