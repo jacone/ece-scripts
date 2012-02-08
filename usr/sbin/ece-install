@@ -3301,4 +3301,5 @@ else
     common_post_install
 fi
 
+exit 0
 
