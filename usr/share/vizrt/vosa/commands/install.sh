@@ -71,7 +71,9 @@ parse_config_file $config/boot.conf boot_config_
 
 function make_temp_dir() {
   tempdir=/tmp/some-rundir
-  mkdir "${tempdir}"
+  if [ ! -z "${tempdir}" -a ! -d "${tempdir}" ] ; then
+    mkdir "${tempdir}"
+  fi
 }
 
 function cleanup_temp_dir() {
@@ -125,89 +127,22 @@ apt_mirror: ${mirror}
 EOF
 }
 
-function check_sudo() {
-  sudo=''
-  runas=''
-  if [ "$(id -u)" != "0" ] ; then
-    decho 1 "Checking if we have sudo access to kvm"
-    sudo -n kvm --help > /dev/null 2>/dev/null
-    if [ $? -ne 0 ] ; then
-      cat <<EOF
-$0: It seems I am not able to run kvm as root.  I will not be able to run kvm
-with bridged networking.
-To fix this, add the file /etc/sudoers.d/kvm with the line
-
-  $(id -un) ALL=(ALL) NOPASSWD: /usr/bin/kvm
-
-Exiting.
-EOF
-      exit 2
-    fi
-
-    sudo=sudo
-    # drop priviledges after kvm starts if necessary.
-    runas="-runas $(id -un)"
-  fi
+function postinstall() {
+  echo "running all the postinstall scripts..."
+  sleep 4;
 }
 
-function touch_pid_file() {
-  pidfile=$rundir/$hostname.pid
-  touch "${pidfile}"
-}
-
-function configure_vnc_option() {
-  if [ -z "$boot_config_vnc_port" -o "$boot_config_vnc_port" == "none" ] ; then 
-    vncoption="-vnc none"
-  else
-    vncoption="-vnc :${vncdisplay}"
-  fi
-}
-
-
-function boot_kvm() {
-  # should _maybe_ be put in some other script?  Needed by e.g. vosa start too.
-  decho 1 "Starting the machine"
-  startupcmd=($sudo kvm \
-  -daemonize \
-  ${vncoption} \
-  -name "${hostname}"
-  -cpu "host" \
-  -pidfile "${pidfile}" \
-  -m "${boot_config_memory}" \
-  $runas \
-  -enable-kvm \
-  -balloon "virtio" \
-  -drive "file=${img},if=virtio,cache=none" \
-  -drive "file=updates.iso,if=virtio"
-  -kernel ${kernel} \
-  -net "nic,model=virtio,macaddr=${install_config_macaddr}" \
-  -net "tap,script=../bin/qemu-ifup")
-  
-
-  firstboot=("${startupcmd[@]}" -append "root=/dev/vda ro init=/usr/lib/cloud-init/uncloud-init ds=${cloud_param} ubuntu-pass=random xupdate=vdb:mnt" )
-
-  # actually execute kvm
-  "${firstboot[@]}"; exitonerror $? "Unable to start kvm :-/" 
-}
-
-check_sudo
 copy_original_image
 resize_original_image
 generate_ssh_key
-make_run_dir
-configure_vnc_option
 
 ### functions below require tempdir
 
 make_temp_dir
 create_user_data_file
-
-
-
-
-
-touch_pid_file  # should maybe be part of boot process?  dunno.
-boot_kvm
-
 cleanup_temp_dir
 
+# chain to boot.sh to actually start the image.
+$(dirname $0)/boot.sh $1 $2
+
+postinstall
