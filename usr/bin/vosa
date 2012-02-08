@@ -295,33 +295,33 @@ LASTOPTIND=$OPTIND
 
 }
 
+function verify_usage() {
+  if [ $usage -eq 1 ] ; then
+    echo "Usage: $0 [-i <instance-dir>] <command>"
+    echo "$0 available to get a list of instances"
+    exit 1;
+  fi
+}
+
 parseopts "$PWD" "${@}"
 
 # get rid of all parsed parameters from command line, leaving real arguments
 shift $((LASTOPTIND-1))
-
-if [ $usage -eq 0 -a "${#@}" -gt 1 ] ; then
-  echo "Only one argument is allowed"
-  # TODO parse each command one at a time...
-  usage=1
-fi
 
 if [ $usage -eq 0 -a "${#@}" -lt 1 ] ; then
   echo "A command must be specified."
   usage=1
 fi
 
+verify_usage
 
-# Check if the command
-fn="do_$1"
-declare > /dev/null -f "$fn" || unknown-argument "$1"
-declare > /dev/null -f "$fn" && "$fn"
-
-if [ $usage -eq 1 ] ; then
-  echo "Usage: $0 [-i <instance-dir>] <command>"
-  echo "$0 available to get a list of instances"
-  exit 1;
-fi
+for cmd in "${@}" ; do
+  # Check if the command
+  fn="do_${cmd}"
+  declare > /dev/null -f "$fn" || unknown-argument "$1"
+  declare > /dev/null -f "$fn" && "$fn"
+  verify_usage
+done
 
 
 
