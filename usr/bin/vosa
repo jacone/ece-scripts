@@ -161,6 +161,21 @@ function do_enable() {
   }
 }
 
+function help_uninstall() {
+  cat <<EOF
+uninstall: removes the entire image directory from disk.
+
+This deletes the contents of the directory
+/var/lib/vizrt/vosa/images/<vm-id>/ if it exists.
+
+If the VM is in the running state (i.e. it _should_ be
+running, this command does nothing.
+
+If the VM is alive, i.e. actually is running, this
+command does nothing.
+EOF
+}
+
 function do_uninstall() {
   requires_instance_dir && {
     # check if the instance is available
@@ -205,21 +220,48 @@ commands="$(dirname $0)/../share/vizrt/vosa/commands"
 
 function do_install() {
   requires_instance_dir && {
-    # todo:
-    # Error checking: if the instance is not enabled, abort
-    # If the instance exists and is running, abort. its 'statefile' must be set to 'stopped' for a reinstall to happen.
-    # If the instance exists, take a tar.gz backup of the entire image directory
+    local status=( $(really_do_status $instance_dir) )
+    if [ "${status[3]}" == "installed" ] ; then
+      echo "$instance_dir is already installed. Uninstall before installing."
+      exit 1
+    fi
+    if [ "${status[2]}" != "enabled" ] ; then
+      echo "$instance_dir is not enabled, enable it on this host first"
+      exit 1
+    fi
     ${commands}/install.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
   }
 }
 
 function do_start() {
   requires_instance_dir && {
-    # todo:
-    # Error checking: if the instance is not enabled, abort
-    # If the instance exists and is running, abort. its 'statefile' must be set to 'stopped' for a reinstall to happen.
-    # If the instance exists, take a tar.gz backup of the entire image directory
+    local status=( $(really_do_status $instance_dir) )
+    if [ "${status[6]}" == "alive" ] ; then
+      echo "$instance_dir is alive. No need to start it."
+      exit 1
+    fi
+    if [ "${status[3]}" != "installed" ] ; then
+      echo "$instance_dir is not installed. I can't start it."
+      exit 1
+    fi
     ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
+  }
+}
+
+function do_stop() {
+  requires_instance_dir && {
+    local status=( $(really_do_status $instance_dir) )
+    if [ "${status[3]}" != "installed" ] ; then
+      echo "$instance_dir is not installed. I can't stop it."
+      exit 1
+    fi
+    if [ "${status[6]}" == "alive" ] ; then
+      echo "Killing kvm process ${status[5]}"
+      kill "${status[5]}"
+      # should now be "dead" if we asked it.
+    fi
+    # set state to "stopped"
+    echo "stopped" > "$(dirname $0)/../../var/run/vizrt/vosa/$(basename $instance_dir).state"
   }
 }
 
@@ -260,6 +302,7 @@ shift $((LASTOPTIND-1))
 
 if [ $usage -eq 0 -a "${#@}" -gt 1 ] ; then
   echo "Only one argument is allowed"
+  # TODO parse each command one at a time...
   usage=1
 fi
 
