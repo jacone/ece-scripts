@@ -7,8 +7,10 @@
 # vosa -i /etc/vizrt/vosa/available.d/vm03 enable --- enable a specific vm
 # vosa -i /etc/vizrt/vosa/available.d/vm03 disable --- disable a specific vm
 # vosa -i /etc/vizrt/vosa/enabled.d/vm03 disable --- disable a vm
-# vosa -i ... restart
-# vosa -i ... reinstall
+# vosa -i /etc/vizrt/vosa/enabled.d/vm03 install --- creates a new disk image etc.
+# vosa -i /etc/vizrt/vosa/enabled.d/vm03 uninstall --- removes the disk image etc.
+# vosa -i ... start
+# vosa -i ... status --- tells you about the VM, if it's enabled, running, alive, its uptime.
 
 instance_dir=
 usage=0
@@ -24,6 +26,7 @@ function option-h() {
 
 function option-i() {
   instance_dir="${1}"
+  # TODO remove trailing "/" since it's supposed to be a directory.  This script depends on it!
 }
 
 
@@ -175,10 +178,14 @@ function do_uninstall() {
     local imgdir=$(readlink -f ${instance_dir}/../../../../../var/lib/vizrt/vosa/images/$(basename $instance_dir)/)
     local backupdir="/var/backup/vizrt/vosa/$(basename $instance_dir)"
     local backupparent="/var/backup/vizrt/vosa"
-    if [ ! -z "$imgdir" -a -d "$imgdir" -a -w "$backupparent" ] ; then
-      # todo: rotate a few times?
-      rm -rf "$backupdir"
-      mv "$imgdir" "$backupparent"
+    if [ ! -z "$imgdir" -a -d "$imgdir" ] ; then
+      if [ -w "$backupparent" ] ; then
+        # todo: rotate a few times?
+        rm -rf "$backupdir"
+        mv "$imgdir" "$backupparent"
+      else
+        rm -rf "$imgdir"
+      fi
     fi
   }
 }

@@ -140,6 +140,7 @@ EOF
 
   mkdir -p ${tempdir}/overlay/updates/home/ubuntu/.ssh
   chmod 700 ${tempdir}/overlay/updates/home/ubuntu/.ssh
+  cp "${image}/id_dsa.pub" "${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys"; exitonerror $? "Unable to install id_dsa.pub" 
   for o in "${install_config_ssh_keys[@]}" ; do
     cat $o >> ${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys; exitonerror $? "Unable to add authorized key $o" 
   done
