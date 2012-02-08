@@ -82,6 +82,9 @@ function do_enable() {
 }
 
 
+commands="$(dirname $0)/../share/vizrt/vosa/commands"
+
+
 function do_install() {
   if [ -z $instance_dir ] ; then
     echo "Instance is required"
@@ -90,10 +93,25 @@ function do_install() {
   fi
   # todo:
   # Error checking: if the instance is not enabled, abort
-  # If the instance exists and is running, stop it (gracefully?)
+  # If the instance exists and is running, abort. its 'statefile' must be set to 'stopped' for a reinstall to happen.
   # If the instance exists, take a tar.gz backup of the entire image directory
-  $(dirname $0)/../share/vizrt/vosa/commands/install.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
+  ${commands}/install.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
 }
+
+function do_start() {
+  if [ -z $instance_dir ] ; then
+    echo "Instance is required"
+    usage=1
+    return
+  fi
+  # todo:
+  # Error checking: if the instance is not enabled, abort
+  # If the instance exists and is running, abort. its 'statefile' must be set to 'stopped' for a reinstall to happen.
+  # If the instance exists, take a tar.gz backup of the entire image directory
+  ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
+}
+
+
 
 function unknown-argument() {
   echo "Unknown argument $@"
