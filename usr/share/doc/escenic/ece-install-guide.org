@@ -473,8 +473,16 @@ This will produce the following stanzas in server.xml:
 </Host>
 #+END_SRC
 
-You must of course make sure that these host names are resolvable to
-the intended IPs on your system using /etc/hosts or a local DNS.
+Furthermore, if these host names are  not resolvable to your local
+host (neither localhost or the IP of your $HOSTNAME), ece-install will
+add entries for these domains in the machine's /etc/hosts:
+#+BEGIN_SRC sh
+# added by ece-install @ Wed Feb  8 19:21:49 CST 2012
+127.0.1.1 fire.escenic.com
+
+# added by ece-install @ Wed Feb  8 19:21:51 CST 2012
+127.0.1.1 ild.escenic.com
+#+END_SRC
 
 ** Overview of All FAI Parameters
 The ece-install script understands for the following settings in the
