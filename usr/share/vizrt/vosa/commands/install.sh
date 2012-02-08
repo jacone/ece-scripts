@@ -114,6 +114,17 @@ function generate_ssh_key() {
   ssh-keygen -t dsa -N "" -f ${image}/id_dsa -b 1024 -C "kvm-one-time-key:$name" > /dev/null; exitonerror $? "Unable to generate ssh key"
 }
 
+function make_ssh_conf() {
+  cat > ${image}/ssh.conf <<EOF
+IdentityFile ${image}/id_dsa
+HostName ${install_config_ip_address}
+User ubuntu
+BatchMode yes
+UserKnownHostsFile ${image}/ssh_known_hosts
+StrictHostKeyChecking no
+EOF
+}
+
 function create_overlay() {
   make_temp_dir
 
@@ -138,13 +149,17 @@ EOF
   cat >> ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/meta-data <<EOF
 EOF
 
+  mkdir -p ${tempdir}/overlay/updates/root/.ssh
+  chmod 700 ${tempdir}/overlay/updates/root/.ssh
   mkdir -p ${tempdir}/overlay/updates/home/ubuntu/.ssh
   chmod 700 ${tempdir}/overlay/updates/home/ubuntu/.ssh
   cp "${image}/id_dsa.pub" "${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys"; exitonerror $? "Unable to install id_dsa.pub" 
+  cp "${image}/id_dsa.pub" "${tempdir}/overlay/updates/root/.ssh/authorized_keys"; exitonerror $? "Unable to install id_dsa.pub for root" 
   for o in "${install_config_ssh_keys[@]}" ; do
     cat $o >> ${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys; exitonerror $? "Unable to add authorized key $o" 
   done
 
+  chmod 600 ${tempdir}/overlay/updates/root/.ssh/authorized_keys; exitonerror $? "Unable to chmod 600 authorized_keys" 
   chmod 600 ${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys; exitonerror $? "Unable to chmod 600 authorized_keys" 
 
   cat > ${tempdir}/overlay/updates.script <<EOF
@@ -192,6 +207,7 @@ function postinstall() {
 copy_original_image
 resize_original_image
 generate_ssh_key
+make_ssh_conf
 
 ### functions below require tempdir
 
