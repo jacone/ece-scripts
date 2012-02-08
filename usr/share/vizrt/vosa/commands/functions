@@ -1,0 +1,17 @@
+# bash functions common to the vosa commands
+# e.g. parsing a config file
+
+
+# $1 == config file name
+# $2 == prefix of functions to call
+function parse_config_file() {
+  local line
+  local prefix=$2
+  while read line; do
+    if [ "${line:0:1}" == "#" ] ; then continue; fi
+    if [ -z "${line}" ] ; then continue; fi
+    local line2=(${line})
+    local name="${line2[0]}"
+    declare > /dev/null -f ${prefix}${name} && ${prefix}${name} "${line2[@]:1}"
+  done < "${1}"
+}

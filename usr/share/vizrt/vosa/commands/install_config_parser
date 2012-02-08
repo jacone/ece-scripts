@@ -1,0 +1,62 @@
+# bash functions common to the vosa commands
+# e.g. parsing a config file
+
+ip_address=
+original_image=
+kernel=
+initial_disk_size=
+macaddr=
+netmask=
+gateway=
+timezone=
+
+
+function install_config_ip_address() {
+  ip_address=$1
+}
+
+function install_config_original_image() {
+  original_image=$1
+}
+
+function install_config_kernel() {
+  kernel=$1
+}
+
+function install_config_initial_disk_size() {
+  initial_disk_size=$1
+}
+
+function install_config_macaddr() {
+  macaddr=$1
+}
+
+function install_config_netmask() {
+  netmask=$1
+}
+
+function install_config_gateway() {
+  gateway=$1
+}
+
+function install_config_timezone() {
+  timezone=$1
+}
+
+# Handle arrays
+
+declare -a ssh_keys
+declare -a overlay
+declare -a postinstall
+
+function install_config_ssh_keys() {
+  ssh_keys=( "${ssh_keys[@]}" "$1" )
+}
+
+function install_config_overlay() {
+  overlay=( "${overlay[@]}" "$1" )
+}
+
+function install_config_postinstall() {
+  postinstall=( "${postinstall[@]}" "$1" )
+}

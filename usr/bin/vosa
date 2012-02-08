@@ -88,11 +88,11 @@ function do_install() {
     usage=1
     return
   fi
-  echo "Installing $instance_dir from scratch...  This takes a few minutes"
-  echo "Archiving old image ..."
-  echo "Extracting a new fresh image"
-  # TODO should this just be in
-  # $(dirname $0)/../../usr/share/vizrt/vosa/commands/install.sh "$instance_dir"
+  # todo:
+  # Error checking: if the instance is not enabled, abort
+  # If the instance exists and is running, stop it (gracefully?)
+  # If the instance exists, take a tar.gz backup of the entire image directory
+  $(dirname $0)/../share/vizrt/vosa/commands/install.sh "$instance_dir"
 }
 
 function unknown-argument() {
