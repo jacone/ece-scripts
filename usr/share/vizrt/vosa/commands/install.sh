@@ -54,6 +54,8 @@ if [ -d "$image" -o -r "$image" ] ; then
   exit 1
 fi
 
+# todo: verify that basename and image don't end with slashes...
+
 if [ "$(basename "$image")" != "$(basename "$config")" ] ; then
   echo "$image and $config appear to try to name different VMs. Try using $(basename $config) instead."
   exit 2
@@ -61,6 +63,7 @@ fi
 
 # make the holding area.
 mkdir $image
+hostname=$(basename "$image")
 
 # Parse all install config items
 parse_config_file $config/install.conf install_config_
@@ -99,6 +102,7 @@ function copy_original_image() {
 }
 
 function resize_original_image() {
+  if [ -z "${install_config_initial_disk_size}" ] ; then return; fi
   decho 1 "Resizing 'disk.img' to ${install_config_initial_disk_size}Gb"
   fsck.ext4 > /dev/null -p -f ${img}; exitonerror $? "fsck.ext4 failed before resize"
   resize2fs > /dev/null ${img} ${install_config_initial_disk_size}G; exitonerror $? "resize2fs failed"
@@ -147,7 +151,7 @@ EOF
 }
 
 function touch_pid_file() {
-  pidfile=$rundir/$(basename $config).pid
+  pidfile=$rundir/$hostname.pid
   touch "${pidfile}"
 }
 
@@ -192,7 +196,6 @@ resize_original_image
 generate_ssh_key
 make_run_dir
 configure_vnc_option
-touch_pid_file  # should maybe be part of boot process?  dunno.
 
 ### functions below require tempdir
 
@@ -203,6 +206,7 @@ create_user_data_file
 
 
 
+touch_pid_file  # should maybe be part of boot process?  dunno.
 boot_kvm
 
 cleanup_temp_dir
