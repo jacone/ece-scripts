@@ -116,12 +116,13 @@ function generate_ssh_key() {
 
 function make_ssh_conf() {
   cat > ${image}/ssh.conf <<EOF
-IdentityFile ${image}/id_dsa
-HostName ${install_config_ip_address}
-User ubuntu
-BatchMode yes
-UserKnownHostsFile ${image}/ssh_known_hosts
-StrictHostKeyChecking no
+Host guest
+  IdentityFile ${image}/id_dsa
+  HostName ${install_config_ip_address}
+  User ubuntu
+  BatchMode yes
+  UserKnownHostsFile ${image}/ssh_known_hosts
+  StrictHostKeyChecking no
 EOF
 }
 

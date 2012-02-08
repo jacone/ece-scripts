@@ -1,3 +1,4 @@
 #!/bin/bash
 
-echo 'This is a VOSA system!' | ssh -F $2/ssh.conf root@remote tee /etc/motd
+ssh -F $2/ssh.conf root@guest rm /etc/motd
+echo 'This is a VOSA system!' | ssh -F $2/ssh.conf root@guest tee /etc/motd
