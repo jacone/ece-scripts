@@ -485,7 +485,7 @@ add entries for these domains in the machine's /etc/hosts:
 #+END_SRC
 
 If you do not want ece-install to touch your /etc/hosts, you can set
-fai_keep_off_etc_hosts=1 in your ece-install.conf
+fai\_keep\_off\_etc\_hosts=1 in your ece-install.conf
 
 ** Overview of All FAI Parameters
 The ece-install script understands for the following settings in the
