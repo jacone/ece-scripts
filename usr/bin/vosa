@@ -47,9 +47,9 @@ function unknown-option() {
 }
 
 ### To add a command, simply define a function with a do_ prefix.
-available_dir=$(dirname $(readlink -f $0))/../../etc/vizrt/vosa/available.d
+available_dir=$(dirname $0)/../../etc/vizrt/vosa/available.d
 available_dir=$(readlink -f ${available_dir})
-enabled_dir=$(dirname $(readlink -f $0))/../../etc/vizrt/vosa/enabled.d
+enabled_dir=$(dirname $0)/../../etc/vizrt/vosa/enabled.d
 enabled_dir=$(readlink -f ${enabled_dir})
 
 
@@ -61,7 +61,7 @@ function requires_instance_dir() {
   fi
 }
 function prohibits_instance_dir() {
-  if [ ! -z "$instance_dir" -o -z "${instance_name}" ] ; then
+  if [ ! -z "$instance_dir" -o ! -z "${instance_name}" ] ; then
     echo "Instance cannot be specified"
     usage=1
     return 1
@@ -76,7 +76,7 @@ function prohibits_instance_dir() {
 ## An available instance
 function do_available() {
   prohibits_instance_dir && {
-    ls -d ${available_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
+    ls -d ${available_dir}/* | grep "/[0-9a-z][-0-9a-z]*$" | sed s,.*/,,
   }
 }
 
@@ -88,7 +88,7 @@ function do_available() {
 ## An enabled instance may be installed
 function do_enabled() {
   prohibits_instance_dir && {
-    ls -d ${enabled_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
+    ls -d ${enabled_dir}/* | grep "/[0-9a-z][-0-9a-z]*$" | sed s,.*/,,
   }
 }
 
@@ -285,7 +285,7 @@ function do_uninstall() {
 }
 
 
-commands="$(readlink -f "$(dirname $(readlink -f $0))")/../share/vizrt/vosa/commands"
+commands="$(readlink -f "$(dirname $0)")/../share/vizrt/vosa/commands"
 
 
 ## Installs an image of an instance
@@ -311,7 +311,7 @@ function do_install() {
       echo "$instance_name is not enabled, enable it on this host first"
       exit 1
     fi
-    ${commands}/install.sh "$instance_dir" "$(dirname $(readlink -f $0))/../../var/lib/vizrt/vosa/images/$instance_name"
+    ${commands}/install.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
   }
 }
 
@@ -336,7 +336,7 @@ function do_start() {
       echo "$instance_name is not installed. I can't start it."
       exit 1
     fi
-    ${commands}/boot.sh "$instance_dir" "$(dirname $(readlink -f $0))/../../var/lib/vizrt/vosa/images/$instance_name"
+    ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
   }
 }
 
