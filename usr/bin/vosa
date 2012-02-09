@@ -78,6 +78,12 @@ the regime of Vizrt Online System Administration.
 "$0 status" gives you a quick overview of the VMs running
 on this host.
 EOF
+    echo "$0 supports these commands:"
+    declare | grep ^"do_" | cut -d' ' -f1 | cut -d'_' -f2 | sort | \
+        while read f; do
+      echo "  *" $f
+    done
+    
     exit 0;
   else
     echo "\"$0 -i $instance_dir status\" to see the status of this instance"
