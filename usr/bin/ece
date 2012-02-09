@@ -338,6 +338,8 @@ function set_instance_settings()
     # * java.awt.headless is to avoid potential problems with graphics
     #   handling/generation, causing 0x0 bitmaps etc.
     # * java.security for configuring the Java security framework with ECE.
+    # * garbage collection log: this is paramount to keep an eye on
+    #   when running in production.
     ece_args="-Descenic.server=$ece_server\
               -Dsolr.solr.home=$solr_home\
               -Djava.awt.headless=true\
