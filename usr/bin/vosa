@@ -83,28 +83,29 @@ function do_enabled() {
 
 ## Provides help... :-)
 function do_help() {
-  if [ -z "$instance_dir" ] ; then
-    cat <<EOF
+  cat <<EOF
 $0 is a command to manage virtual machines running under
 the regime of Vizrt Online System Administration.
 
 "$0 status" gives you a quick overview of the VMs running
 on this host.
 EOF
-    echo "$0 supports these commands:"
-    declare -F | grep ^"declare -f do_" | cut -d ' ' -f3 | cut -d'_' -f2 | sort | \
-        while read f; do
-      echo -n ' * '$f:  # first line on the same as the command.
-      awk -f $commands/help.awk fn=do_$f < $0
-      echo
-    done
-    
-    exit 0;
-  else
-    echo "\"$0 -i $instance_dir status\" to see the status of this instance"
-    echo "\"$0 -i $instance_dir install\" to (re)install this image from scratch"
-    exit 0;
-  fi
+  echo "$0 supports these commands:"
+  declare -F | grep ^"declare -f do_" | cut -d ' ' -f3 | cut -d'_' -f2 | sort | \
+      while read f; do
+    echo -n ' * '$f:  # first line on the same as the command.
+    awk -f $commands/help.awk fn=do_$f < $0
+    echo
+  done
+}
+
+## List detailed information on how to use all the commands.
+function do_commands() {
+  declare -F | grep ^"declare -f do_" | cut -d ' ' -f3 | cut -d'_' -f2 | sort | \
+      while read f; do
+    echo -n ' * '$f:  # first line on the same as the command.
+    awk -f $commands/help.awk fn=do_$f < $0 | head -n 1
+  done
 }
 
 ## Provides status information about defines VMs
@@ -275,7 +276,7 @@ function do_uninstall() {
 }
 
 
-commands="$(dirname $0)/../share/vizrt/vosa/commands"
+commands="$(readlink -f "$(dirname $(readlink -f $0))")/../share/vizrt/vosa/commands"
 
 
 ## Installs an image of an instance
