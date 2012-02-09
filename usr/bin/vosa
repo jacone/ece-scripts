@@ -57,18 +57,31 @@ function prohibits_instance_dir() {
   fi
 }
 
+## Lists the names of all the instance definitions known to vosa.
+##
+## An instance known to vosa is an instance which has a directory
+## /etc/vizrt/vosa/available.d/<instance>/
+##
+## An available instance
 function do_available() {
   prohibits_instance_dir && {
     ls -d ${available_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
   }
 }
 
+## Lists the names of all enabled instances
+##
+## An enabled instance is an instance with a symlink from
+## /etc/vizrt/vosa/enabled.d/<instance> -> ../available.d/<instance>
+##
+## An enabled instance may be installed
 function do_enabled() {
   prohibits_instance_dir && {
     ls -d ${enabled_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
   }
 }
 
+## Provides help... :-)
 function do_help() {
   if [ -z "$instance_dir" ] ; then
     cat <<EOF
@@ -79,9 +92,11 @@ the regime of Vizrt Online System Administration.
 on this host.
 EOF
     echo "$0 supports these commands:"
-    declare | grep ^"do_" | cut -d' ' -f1 | cut -d'_' -f2 | sort | \
+    declare -F | grep ^"declare -f do_" | cut -d ' ' -f3 | cut -d'_' -f2 | sort | \
         while read f; do
-      echo "  *" $f
+      echo -n ' * '$f:  # first line on the same as the command.
+      awk -f $commands/help.awk fn=do_$f < $0
+      echo
     done
     
     exit 0;
@@ -92,6 +107,32 @@ EOF
   fi
 }
 
+## Provides status information about defines VMs
+##
+## vosa status
+##      Provides status information on all known VMs.
+##
+## vosa -i <instance> status
+##      Provides status information on a single VM
+##
+## Status information consists of up to 8 columns
+##  - instance name
+##      The first column is the instance name itself.
+##      An instance may be unavailable or available.
+##  - unavailable or available
+##      An unavailable VM isn't known to the system.
+##      An available VM is known to the system, in that it contains
+##      a directory in /etc/vizrt/vosa/available.d/<instance>/
+##      An available VM can be enabled or disabled.
+##  - enabled or disabled
+##      A disabled VM is not "supposed" to run on this physical machine
+##      An enabled VM *is* supposed to run on this machine.
+##      An enabled VM may be installed or uninstalled.
+##  - installed or uninstalled
+##      An uninstalled VM does not have an image directory
+##      An installed VM *does* have an image directory
+##      An installed VM may be running or stopped
+## rest of help excluded because of pending changes to vosa command)
 function do_status() {
   if [ -z "$instance_dir" ] ; then
     local a
@@ -146,6 +187,16 @@ function really_do_status () {
     echo ${output[@]}
 }
 
+## Tells vosa that it is allowed to install and run an instance.
+##
+## vosa -i <instance> enable
+##     Enables <instance> on this host.
+##
+## vosa will create a symlink in /etc/vizrt/vosa/enabled.d/
+## pointing to "../available.d/<instance>".  This is all that is
+## required to enable an instance.
+##
+## An enabled instance can be installed.
 function do_enable() {
   requires_instance_dir && {
     # check if the instance is available
@@ -168,21 +219,23 @@ function do_enable() {
   }
 }
 
-function help_uninstall() {
-  cat <<EOF
-uninstall: removes the entire image directory from disk.
 
-This deletes the contents of the directory
-/var/lib/vizrt/vosa/images/<vm-id>/ if it exists.
 
-If the VM is in the running state (i.e. it _should_ be
-running, this command does nothing.
-
-If the VM is alive, i.e. actually is running, this
-command does nothing.
-EOF
-}
-
+## Removes the installed image of an instance
+##
+## This deletes the contents of the directory
+## /var/lib/vizrt/vosa/images/<instance>/ if it exists.
+##
+## Removing the installed image of an instance makes it impossible to
+## start the instance unless it is (re)installed later.  Uninstalling
+## an instance is destructive, but if the directory
+##   /var/backup/vizrt/vosa/
+## exists then ONE generation of backups will be kept in that directory,
+## and it will be possible to restore an old backup by manually moving
+## the backup directory back into /var/lib/vizrt/vosa/images/
+##
+## It is not possible to uninstall an instance that is running, or
+## that _should_ be running (i.e. if a .pid file exists).
 function do_uninstall() {
   requires_instance_dir && {
     # check if the instance is available
@@ -225,6 +278,18 @@ function do_uninstall() {
 commands="$(dirname $0)/../share/vizrt/vosa/commands"
 
 
+## Installs an image of an instance
+##
+## This creates a disk image and supporting files in the directory
+## /var/lib/vizrt/vosa/images/<instance>/, starts a virtual machine
+## and configures it as described in the instance configuration
+## directory /etc/vizrt/vosa/available.d/<instance>/.
+##
+## Installing an instance usually ends up in a functional virtual
+## machine.
+##
+## It is not possible to install an instance that has already been
+## installed.
 function do_install() {
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
@@ -240,7 +305,17 @@ function do_install() {
   }
 }
 
+## Starts a stopped instance.
+##
+## Starts an installed instance that has been stopped or has died
+## (or has been shut down from within the guest). A pidfile will be
+## created, with the pid of the kvm process, which also serves as a
+## flag that the "desired state" of the VM is to be started.
+##
+## It is not possible to start an instance that has not been installed,
+## or that is running.
 function do_start() {
+  # TODO: let's make this command wait for SSH access before returning?
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[6]}" == "alive" ] ; then
@@ -255,7 +330,17 @@ function do_start() {
   }
 }
 
+
+## Stops a running instance.
+##
+## Stops an instance that has previously been been started. If the instance
+## has died, the pidfile will be removed to indicate that the desired state
+## is to be stopped.
+##
+## It is not possible to start an instance that has not been installed,
+## or that is running.
 function do_stop() {
+  # TODO: let's make this command try to do a graceful shutdown (by ssh'ing to the guest and performing a shutdown, and eventually killing, and wait for the kvm process to die, eventually killing it.
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[3]}" != "installed" ] ; then
