@@ -13,6 +13,7 @@
 # vosa -i ... status --- tells you about the VM, if it's enabled, running, alive, its uptime.
 
 instance_dir=
+instance_name=
 usage=0
 
 ### To add an option, add it to the optstring, as defined in getopts, in alphabetical order.
@@ -25,8 +26,18 @@ function option-h() {
 }
 
 function option-i() {
-  instance_dir="${1}"
-  # TODO remove trailing "/" since it's supposed to be a directory.  This script depends on it!
+  if [[ "${1}" =~ ^[-a-z0-9]*$ ]] ; then
+    instance_dir=${available_dir}/$1
+  else
+    instance_dir="${1}"
+  fi
+  if [ ! -r $instance_dir ] ; then
+    echo "Instance $1 does not exist.  Exiting"
+    exit 1
+  else
+    instance_dir=$(readlink -f "$instance_dir")
+    instance_name=$(basename $instance_dir)
+  fi
 }
 
 
@@ -36,21 +47,21 @@ function unknown-option() {
 }
 
 ### To add a command, simply define a function with a do_ prefix.
-available_dir=$(dirname $0)/../../etc/vizrt/vosa/available.d
+available_dir=$(dirname $(readlink -f $0))/../../etc/vizrt/vosa/available.d
 available_dir=$(readlink -f ${available_dir})
-enabled_dir=$(dirname $0)/../../etc/vizrt/vosa/enabled.d
+enabled_dir=$(dirname $(readlink -f $0))/../../etc/vizrt/vosa/enabled.d
 enabled_dir=$(readlink -f ${enabled_dir})
 
 
 function requires_instance_dir() {
-  if [ -z "$instance_dir" ] ; then
+  if [ -z "$instance_dir" -o -z "${instance_name}" ] ; then
     echo "Instance is required"
     usage=1
     return 1
   fi
 }
 function prohibits_instance_dir() {
-  if [ ! -z "$instance_dir" ] ; then
+  if [ ! -z "$instance_dir" -o -z "${instance_name}" ] ; then
     echo "Instance cannot be specified"
     usage=1
     return 1
@@ -151,7 +162,7 @@ function really_do_status () {
     local output
     local avdir="${available_dir}/$(basename $1)"
     local endir="${enabled_dir}/$(basename $1)"
-    output=( $avdir )
+    output=( $(basename $1) )
     if [ ! -d "$avdir" ] ; then
       output=( ${output[@]} unavailable );
     else
@@ -204,19 +215,19 @@ function do_enable() {
     # check if the instance isn't enabled already
     # check if the instance isn't forcibly disabled
     # make a symbolic link
-    if [ ! -d ${available_dir}/$(basename $instance_dir) ] ; then
-      echo "$instance_dir is not an available instance"
+    if [ ! -d ${available_dir}/$instance_name ] ; then
+      echo "$instance_name is not an available instance"
       exit 1
     fi
-    if [ -L ${enabled_dir}/$(basename $instance_dir) ] ; then
-      echo "$instance_dir is already enabled"
+    if [ -L ${enabled_dir}/$instance_name ] ; then
+      echo "$instance_name is already enabled"
       exit 1
     fi
-    if [ -r ${enabled_dir}/$(basename $instance_dir) ] ; then
-      echo "$instance_dir has been forcibly disabled by the presence of the file ${enabled_dir}/$(basename $instance_dir)"
+    if [ -r ${enabled_dir}/$instance_name ] ; then
+      echo "$instance_name has been forcibly disabled by the presence of the file ${enabled_dir}/$instance_name"
       exit 1
     fi
-    ln -v -s "../available.d/$(basename $instance_dir)" "$enabled_dir" || exit 1
+    ln -v -s "../available.d/$instance_name" "$enabled_dir" || exit 1
   }
 }
 
@@ -243,25 +254,25 @@ function do_uninstall() {
     # check if the instance isn't enabled already
     # check if the instance isn't forcibly disabled
     # make a symbolic link
-    if [ ! -d ${available_dir}/$(basename $instance_dir) ] ; then
-      echo "$instance_dir is not an available instance"
+    if [ ! -d ${available_dir}/$instance_name ] ; then
+      echo "$instance_name is not an available instance"
       exit 1
     fi
-    if [ ! -L ${enabled_dir}/$(basename $instance_dir) ] ; then
-      echo "$instance_dir is not enabled"
+    if [ ! -L ${enabled_dir}/$instance_name ] ; then
+      echo "$instance_name is not enabled"
       exit 1
     fi
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[6]}" == "alive" ] ; then
-      echo "$instance_dir is alive. Stop it first. exiting"
+      echo "$instance_name is alive. Stop it first. exiting"
       exit 1
     fi
     if [ "${status[4]}" == "running" ] ; then
-      echo "$instance_dir is supposed to be running. Stop it first. Exiting!"
+      echo "$instance_name is supposed to be running. Stop it first. Exiting!"
       exit 1
     fi
-    local imgdir=$(readlink -f ${instance_dir}/../../../../../var/lib/vizrt/vosa/images/$(basename $instance_dir)/)
-    local backupdir="/var/backup/vizrt/vosa/$(basename $instance_dir)"
+    local imgdir=$(readlink -f ${instance_dir}/../../../../../var/lib/vizrt/vosa/images/$instance_name/)
+    local backupdir="/var/backup/vizrt/vosa/$instance_name"
     local backupparent="/var/backup/vizrt/vosa"
     if [ ! -z "$imgdir" -a -d "$imgdir" ] ; then
       if [ -w "$backupparent" ] ; then
@@ -295,14 +306,14 @@ function do_install() {
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[3]}" == "installed" ] ; then
-      echo "$instance_dir is already installed. Uninstall before installing."
+      echo "$instance_name is already installed. Uninstall before installing."
       exit 1
     fi
     if [ "${status[2]}" != "enabled" ] ; then
-      echo "$instance_dir is not enabled, enable it on this host first"
+      echo "$instance_name is not enabled, enable it on this host first"
       exit 1
     fi
-    ${commands}/install.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
+    ${commands}/install.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
   }
 }
 
@@ -320,14 +331,14 @@ function do_start() {
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[6]}" == "alive" ] ; then
-      echo "$instance_dir is alive. No need to start it."
+      echo "$instance_name is alive. No need to start it."
       exit 1
     fi
     if [ "${status[3]}" != "installed" ] ; then
-      echo "$instance_dir is not installed. I can't start it."
+      echo "$instance_name is not installed. I can't start it."
       exit 1
     fi
-    ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$(basename $instance_dir)"
+    ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
   }
 }
 
@@ -345,16 +356,17 @@ function do_stop() {
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[3]}" != "installed" ] ; then
-      echo "$instance_dir is not installed. I can't stop it."
+      echo "$instance_name is not installed. I can't stop it."
       exit 1
     fi
     if [ "${status[6]}" == "alive" ] ; then
       echo "Killing kvm process ${status[5]}"
       kill "${status[5]}"
       # should now be "dead" if we asked it.
+      # TODO: remove PIDfile instead of keeping the state file
     fi
     # set state to "stopped"
-    echo "stopped" > "$(dirname $0)/../../var/run/vizrt/vosa/$(basename $instance_dir).state"
+    echo "stopped" > "$(dirname $0)/../../var/run/vizrt/vosa/$instance_name.state"
   }
 }
 
