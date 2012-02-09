@@ -173,30 +173,28 @@ function really_do_status () {
         output=( ${output[@]} enabled );
         local vmdir=$(readlink -f ${avdir}/../../../../../var/lib/vizrt/vosa/images/$(basename $1))
         if [ ! -d "$vmdir" ] ; then
-          output=( ${output[@]} uninstalled );
+          output=( ${output[@]} uninstalled );
         else
           output=( ${output[@]} installed );
-          local statefile=$(readlink -f ${avdir}/../../../../../var/run/vizrt/vosa/$(basename $1).state)
-          if [ ! -r "$statefile" ] ; then
-            output=( ${output[@]} probably_stopped );
-          else
-            output=( ${output[@]} $(<$statefile) );
-            if [ ! -z "$(<$statefile)" -a $(<$statefile) == "running" ] ; then
-              local pidfile="$(dirname $statefile)/$(basename $1).pid"
-              if [ -r "$pidfile" ] ; then
-                output=( ${output[@]} $(<$pidfile) );
-                if ! ps > /dev/null $(<$pidfile) ; then
-                  output=( ${output[@]} dead );
-                else
-                  output=( ${output[@]} alive "$( ps -p "$(<$pidfile)" -o "etime=" )" );
-                fi
-              fi
+          local pidfile=$(echo_pidfile_of $(basename $1))
+          if [ -r "$pidfile" ] ; then
+            if ! ps > /dev/null $(<$pidfile) ; then
+              output=( ${output[@]} dead );
+            else
+              output=( ${output[@]} alive )
+              output=( ${output[@]} $(<$pidfile) );
+              output=( ${output[@]} "$( ps -p "$(<$pidfile)" -o "etime=" )" );
             fi
           fi
         fi
       fi
     fi
     echo ${output[@]}
+}
+
+function echo_pidfile_of() {
+  local avdir="${available_dir}/$(basename $1)"
+  echo "$(readlink -f ${avdir}/../../../../../var/run/vizrt/vosa/$1.pid)"
 }
 
 ## Tells vosa that it is allowed to install and run an instance.
@@ -263,12 +261,12 @@ function do_uninstall() {
       exit 1
     fi
     local status=( $(really_do_status $instance_dir) )
-    if [ "${status[6]}" == "alive" ] ; then
+    if [ "${status[4]}" == "alive" ] ; then
       echo "$instance_name is alive. Stop it first. exiting"
       exit 1
     fi
-    if [ "${status[4]}" == "running" ] ; then
-      echo "$instance_name is supposed to be running. Stop it first. Exiting!"
+    if [ "${status[4]}" == "dead" ] ; then
+      echo "$instance_name is dead, but supposed to be running. Stop it first. Exiting!"
       exit 1
     fi
     local imgdir=$(readlink -f ${instance_dir}/../../../../../var/lib/vizrt/vosa/images/$instance_name/)
@@ -313,7 +311,7 @@ function do_install() {
       echo "$instance_name is not enabled, enable it on this host first"
       exit 1
     fi
-    ${commands}/install.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
+    ${commands}/install.sh "$instance_dir" "$(dirname $(readlink -f $0))/../../var/lib/vizrt/vosa/images/$instance_name"
   }
 }
 
@@ -330,7 +328,7 @@ function do_start() {
   # TODO: let's make this command wait for SSH access before returning?
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
-    if [ "${status[6]}" == "alive" ] ; then
+    if [ "${status[4]}" == "alive" ] ; then
       echo "$instance_name is alive. No need to start it."
       exit 1
     fi
@@ -338,7 +336,7 @@ function do_start() {
       echo "$instance_name is not installed. I can't start it."
       exit 1
     fi
-    ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
+    ${commands}/boot.sh "$instance_dir" "$(dirname $(readlink -f $0))/../../var/lib/vizrt/vosa/images/$instance_name"
   }
 }
 
@@ -359,14 +357,16 @@ function do_stop() {
       echo "$instance_name is not installed. I can't stop it."
       exit 1
     fi
-    if [ "${status[6]}" == "alive" ] ; then
+    if [ "${status[4]}" == "alive" ] ; then
       echo "Killing kvm process ${status[5]}"
       kill "${status[5]}"
       # should now be "dead" if we asked it.
-      # TODO: remove PIDfile instead of keeping the state file
     fi
-    # set state to "stopped"
-    echo "stopped" > "$(dirname $0)/../../var/run/vizrt/vosa/$instance_name.state"
+    # regardless of this, we _want_ it to die. remove pidfile.
+    # TODO: continue trying to kill it more forcibly, and
+    # remove the pidfile when it's done.
+    local pidfile=$(echo_pidfile_of ${status[0]})
+    rm $pidfile
   }
 }
 
