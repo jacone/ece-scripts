@@ -134,6 +134,7 @@ function boot_kvm() {
   -m "${boot_config_memory}"
   $runas
   -enable-kvm
+  -monitor unix:${image}/monitor.sock,server,nowait
   -balloon "virtio"
   -drive "file=${img},if=virtio,cache=none"
   -kernel ${kernel}
