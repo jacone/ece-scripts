@@ -379,7 +379,7 @@ EOF
         assemble.properties \
         1>>$log 2>>$log
     exit_on_error "sed on assemble.properties"
-
+    
     sed -i "s~\#\# plugins\ =\ /path/to/plugins~plugins=${escenic_root_dir}/assemblytool/plugins~g" \
         assemble.properties \
         1>>$log 2>>$log
@@ -472,8 +472,10 @@ function set_up_ece_scripts()
 
     run cd $download_dir
     if [ -d ece-scripts ]; then
-        (cd ece-scripts
-            git pull 1>>$log 2>>$log)
+        (
+            run cd ece-scripts
+            run git pull
+        )
     else
         run git clone $ece_scripts_git_source
     fi
@@ -831,17 +833,54 @@ function set_ece_instance_conf()
     set_conf_file_value $1 $2 $instance_conf_file
 }
 
+function create_java_deb_packages_and_repo()
+{
+    install_packages_if_missing $git_package
+
+    print $(lsb_release -i | cut -d':' -f2) \
+        $(lsb_release -r | cut -d':' -f2) \
+        "doesn't have official Sun/Oracle Java packages,"
+    print "I'm creating packages & local repo for you ..."
+    
+    local tmp_dir=$(mktemp -d)
+    (
+        run cd $tmp_dir
+        run git clone https://github.com/flexiondotorg/oab-java6.git
+        run cd oab-java6
+        run bash oab-java6.sh
+        run rm -rf $tmp_dir
+    )
+
+    add_next_step "Local APT repository with Sun/Oracle Java packages"
+    add_next_step "has been installed at /var/local/oab/deb and added"
+    add_next_step "to your APT system with /etc/apt/sources.list.d/oab.list"
+}
+
+function has_sun_java_installed()
+{
+    if [[ -x /usr/lib/jvm/java-6-sun/bin/java || \
+        $(java -version 2>&1 > /dev/null | grep HotSpot | wc -l) -gt 0 ]]; then
+        echo 1
+    else
+        echo 0
+    fi
+}
+
 # Installs third party packages needed by the ECE (i.e. Java related).
 # Also see install_common_os_packages for packages common to all
 # servers in the architecture.
 function install_ece_third_party_packages
 {
-    print_and_log "Installing 3rd party packages needed by ECE ..."
+    run_hook install_ece_third_party_packages.preinst
     
     if [ $on_debian_or_derivative -eq 1 ]; then
-
         if [ $on_ubuntu -eq 1 ]; then
-            add_apt_source "deb http://archive.canonical.com/ $(lsb_release -s -c) partner"
+            # Sun Java was removed in Ubuntu in 11.10 
+            local version_needs_local_java_deb=1110
+            local version=$(lsb_release -s -r | sed "s#\.##g")
+            
+            add_apt_source \
+                "deb http://archive.canonical.com/ $(lsb_release -s -c) partner"
         elif [ $on_debian -eq 1 ]; then
             code_name=$(lsb_release -s -c)
             has_non_free=$(grep $(lsb_release -s  -c) \
@@ -851,12 +890,27 @@ function install_ece_third_party_packages
                 grep non-free | \
                 wc -l)
             if [ $has_non_free -eq 0 ]; then
-                add_apt_source "deb http://ftp.${mirror_country_suffix}.debian.org/debian/ $(lsb_release -s -c) contrib non-free"
+                add_apt_source "deb http://ftp.${mirror_country_suffix}.debian.org/debian/" \
+                    $(lsb_release -s -c) \
+                    "contrib non-free"
             fi
+
+            # Sun Java was removed in Debian 6.0.4 (TODO verify this version)
+            local version_needs_local_java_deb=604
+            local version=$(lsb_release -s -r |  sed "s#\.##g")
+        fi
+        
+        if [ $version -ge $version_needs_local_java_deb -a \
+            $(has_sun_java_installed) -eq 0 ]; then
+            create_java_deb_packages_and_repo
         fi
         
         echo "sun-java6-jdk shared/accepted-sun-dlj-v1-1 boolean true" | \
             debconf-set-selections
+
+        # install sun-java6-jdk first so that ant doesn't pull down OpenJDK
+        local packages="sun-java6-jdk"
+        install_packages_if_missing $packages
 
         packages="
           ant
@@ -867,9 +921,9 @@ function install_ece_third_party_packages
           libmysql-java
           memcached
           maven2
-          sun-java6-jdk
           wget"
 
+        print_and_log "Installing 3rd party packages needed by ECE ..."
         install_packages_if_missing $packages
     fi
     
@@ -1091,9 +1145,7 @@ function set_up_app_server()
     escenic_loader=",$\{catalina.base\}/escenic/lib/*.jar"
     old=$(get_escaped_bash_string ${common_loader})
     new=${escaped_common_loader}$(get_escaped_bash_string ${escenic_loader})
-    sed -i "s#${old}#${new}#g" $file \
-        1>>$log 2>>$log
-    exit_on_error "sed on $file"
+    run sed -i "s#${old}#${new}#g" $file 
     
     cat > $tomcat_base/conf/server.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
@@ -1400,8 +1452,7 @@ function set_correct_permissions()
             fi
         fi
 
-        run chown -R ${ece_user}:${ece_group} $el \
-            1>>$log 2>>$log                
+        run chown -R ${ece_user}:${ece_group} $el
     done
     
     if [ -d "$tomcat_base" ]; then
@@ -1675,7 +1726,7 @@ function un_install_ece()
 function set_up_varnish()
 {
     print_and_log "Setting up Varnish to match your environment ..."
-    /etc/init.d/varnish stop 1>>$log 2>>$log
+    run /etc/init.d/varnish stop
 
     # we need to swap standard err and standard out here as varnishd
     # -V for some reason writes to standard error.
@@ -1813,7 +1864,7 @@ EOF
   set resp.http.X-Cache-Backend = req.backend;
 }
 EOF
-    /etc/init.d/varnish start 1>>$log 2>>$log
+    run /etc/init.d/varnish start
 }
 
 function read_user_input()
@@ -2056,9 +2107,8 @@ function install_database_server()
             print_and_log "Installing the Percona database ..."
 
             if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
-                gpg --keyserver hkp://keys.gnupg.net \
-                    --recv-keys 1C4CBDCDCD2EFD2A \
-                     1>>$log 2>>$log
+                run gpg --keyserver hkp://keys.gnupg.net \
+                    --recv-keys 1C4CBDCDCD2EFD2A
                 
                 # There has been twice now, during six months, that
                 # the key cannot be retrieved from
@@ -2371,6 +2421,20 @@ function ensure_that_instance_is_running()
     fi
 }
 
+# If the system is installed using the recommended paths, the method
+# will return a list of the instances configured in
+# ${escenic_conf_dir}/engine/instance
+function get_instance_list()
+{
+    local instance_list=""
+
+    if [ -r ${escenic_conf_dir}/engine/instance ]; then
+        instance_list=$(ls ${escenic_conf_dir}/engine/instance)
+    fi
+
+    echo $instance_list
+}
+
 function create_publication()
 {
     if [ ! -e $escenic_root_dir/engine -o \
@@ -2385,11 +2449,13 @@ function create_publication()
 
     # TODO make educated guesses about the available instances on
     # $HOSTNAME by looking in $escenic_conf_dir/ece-*.conf
-    
-    default_instance=dev1
+
+    local instance_list=$(get_instance_list)
+    local default_instance=$(echo ${instance_list} | cut -d' ' -f1)
 
     if [ $fai_enabled -eq 0 ]; then
         print "Which ECE instance do you wish to use to create it?"
+        print "These instances are available: $instance_list"
         echo -n "Your choice [$default_instance]> "
         read instance_name
     else
@@ -2461,8 +2527,7 @@ function install_analysis_server()
     set_correct_permissions
     
     local ece_command="ece -i ${instance_name} -t ${type} start"
-    su - $ece_user -c "$ece_command" \
-        1>>$log 2>>$log
+    su - $ece_user -c "$ece_command" 1>>$log 2>>$log
     exit_on_error "su - $ece_user -c \"$ece_command\""
 
     local seconds=3
@@ -2617,15 +2682,12 @@ EOF
     print_and_log "Downloading Widget Framework from technet.escenic.com ..."
     for el in $wf_download_list; do
         cd $download_dir
-        wget $wget_opts \
+        run wget $wget_opts \
             --http-user $technet_user \
             --http-password $technet_password \
-            $el \
-            1>>$log 2>>$log
-        
-        cd $escenic_root_dir/
-        unzip -q -u $download_dir/$(basename $el) \
-            1>>$log 2>>$log
+            $el
+        run cd $escenic_root_dir/
+        run unzip -q -u $download_dir/$(basename $el)
     done
 
     assert_pre_prequesite mvn
@@ -2636,8 +2698,7 @@ EOF
     print_and_log "Installing Widget Framework into your Maven repository ..."
     log "JAVA_HOME=$JAVA_HOME"
     
-    mvn $maven_opts install \
-        1>>$log 2>>$log
+    run mvn $maven_opts install
 
     # installing the widget-framework-common as a ECE plugin
     wf_dist_dir=$(echo $wf_maven_dir/widget-framework-common/target/widget-framework-common-*-dist/widget-framework-common-*)
@@ -2773,7 +2834,7 @@ server {
 EOF
     fi
     
-    /etc/init.d/nginx restart 1>>$log 2>>$log
+    run /etc/init.d/nginx restart
 
     if [ $1 -eq 0 ]; then
         add_next_step "http://${HOSTNAME}:${port}/binary gives the Adactus endpoint"
@@ -2954,8 +3015,7 @@ EOF
     fi
     
     if [ $on_debian_or_derivative -eq 1 ]; then
-        service munin-node restart \
-            1>>$log 2>>$log
+        run service munin-node restart
     fi
 
     add_next_step "A Munin node has been installed on $HOSTNAME"
