@@ -140,6 +140,10 @@ function boot_kvm() {
   -net "nic,model=virtio,macaddr=${install_config_macaddr}"
   -net "tap,script=$(dirname $0)/qemu-ifup")
   
+# http://dwdwwebcache.googleusercontent.com/search?q=cache:mEAjcA2zHosJ:kerneltrap.org/mailarchive/linux-kvm/2010/1/26/6257297/thread+qemu-kvm+acpi+shutdown&cd=1&hl=no&ct=clnk&gl=no
+# http://kerneltrap.org/mailarchive/linux-kvm/2010/1/26/6257297/thread
+# provide a monitor socket to talk to kvm.   /var/run?
+
   updates=${image}/updates.iso
   if [ -r "${updates}" ] ; then
     startupcmd=("${startupcmd[@]}" -drive "file=${updates},if=virtio")

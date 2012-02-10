@@ -190,6 +190,7 @@ EOF
 function delete_overlay() {
   # ...
   decho 1 'Deleting initial overlay file'
+  rm -f ${image}/updates.iso 
 }
 
 function postinstall() {
@@ -198,10 +199,11 @@ function postinstall() {
     local cmd="$(dirname $0)/../post-install-hooks/$o"
     if [ ! -x "$cmd" ] ; then
       echo "Unable to execute non-executable post-install hook: $cmd"
+      delete_overlay
       exit 1
     fi
     cmd=$(readlink -f "$cmd")
-    $cmd "$config" "$image"
+    $cmd "$config" "$image" || exitonerror $? "Postinstall script $cmd exited nonzero return code."
   done
 }
 
