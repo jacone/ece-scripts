@@ -2447,9 +2447,6 @@ function create_publication()
     print_and_log "Getting ready to create a new publication ..."
     create_publication_definition_and_war
 
-    # TODO make educated guesses about the available instances on
-    # $HOSTNAME by looking in $escenic_conf_dir/ece-*.conf
-
     local instance_list=$(get_instance_list)
     local default_instance=$(echo ${instance_list} | cut -d' ' -f1)
 
@@ -2468,8 +2465,6 @@ function create_publication()
 
     type=engine
     ensure_that_instance_is_running $instance_name
-    # TODO set the appserver_port based on the instance_name chosen
-    # above.
     create_publication_in_db $publication_war
     assemble_deploy_and_restart_type
 
