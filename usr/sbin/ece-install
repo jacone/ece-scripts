@@ -895,8 +895,10 @@ function install_ece_third_party_packages
                     "contrib non-free"
             fi
 
-            # Sun Java was removed in Debian 6.0.4 (TODO verify this version)
-            local version_needs_local_java_deb=604
+            # Sun Java will be removed in the next Debian stable,
+            # wheezy (either 6.1 or 7.0 not announced yet, current in
+            # squeeze/6.0, hence setting 6.1 here).
+            local version_needs_local_java_deb=610
             local version=$(lsb_release -s -r |  sed "s#\.##g")
         fi
         
