@@ -2921,7 +2921,7 @@ function monitoring_install_icinga_server()
     # set password for the icingaadmin
     print "Setting user/pass for icinga admin ..."
     local file=/etc/icinga/htpasswd.users
-    run htpasswd -b -c $file icingaadmin admin
+    run htpasswd -b -c $file icingaadmin ${fai_monitoring_admin_password-admin}
     
     # enable remote commands
     local file=/etc/icinga/icinga.cfg
