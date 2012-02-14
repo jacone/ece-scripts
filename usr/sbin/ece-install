@@ -2856,7 +2856,6 @@ function install_munin_gatherer()
         return
     fi
 
-    # TODO ask user/read fai_munin_node_list
     if [ $fai_enabled -eq 0 ]; then
         print "Which nodes shall this Munin monitor gather from?"
         print "Separate your hosts with a space, e.g.: 'editor01 db01 web01'"
@@ -2867,7 +2866,7 @@ function install_munin_gatherer()
             node_list=$user_munin_nodes
         fi
     else
-        node_list=$(get_conf_value fai_munin_node_list)
+        node_list=${fai_munin_node_list}
     fi
     
     if [ -z "$node_list" ]; then
@@ -2876,13 +2875,17 @@ function install_munin_gatherer()
 
     for el in $node_list; do
         print_and_log "Adding ${el} to the Muning gatherer on ${HOSTNAME} ..."
-        file=/etc/munin/munin-conf.d/escenic.conf
+        local file=/etc/munin/munin-conf.d/escenic.conf
         cat >> $file <<EOF
 [${el}]
     address $(get_ip $el)
     use_node_name yes
 EOF
     done
+
+    # TODO add the priveleged network to the Allowed stanza (i.e. the
+    # network wich will do the monitoring of the servers.
+    local file=/etc/apache2/conf.d/munin
 
     add_next_step "Munin gatherer installed on $HOSTNAME."
     add_next_step "Make sure all nodes allows my IP to connect to them."
@@ -2903,6 +2906,91 @@ function get_ip()
     fi
 
     echo $ip
+}
+
+## Installs the Icinga monitoring server.
+function monitoring_install_icinga_server()
+{
+    print "Installing an icinga server on $HOSTNAME ..."
+    
+    # TODO consider apache2 in seperate method
+    if [ $on_debian_or_derivative -eq 1 ]; then
+        install_packages_if_missing apache2 icinga nagios-nrpe-plugin icinga-doc
+    fi
+
+    # set password for the icingaadmin
+    print "Setting user/pass for icinga admin ..."
+    local file=/etc/icinga/htpasswd.users
+    run htpasswd -b -c $file icingaadmin admin
+    
+    # enable remote commands
+    local file=/etc/icinga/icinga.cfg
+    dont_quote_conf_values=1
+    set_conf_file_value check_external_commands 1 $file
+    dont_quote_conf_values=0
+
+    for el in $fai_monitoring_host_list; do
+        set_up_icinga_host $el
+    done
+
+    set_up_icinga_host_groups \
+        "ece-hosts" \
+        'Hosts running one or more ECE' \
+        ${fai_monitoring_ece_host_list}
+
+    run /etc/init.d/icinga restart
+    run /etc/init.d/apache2 reload
+}
+
+## $1 <host name>:<ip>, e.g.: fire:192.168.1.100
+function set_up_icinga_host()
+{
+    local old_ifs=$IFS
+    IFS=':'
+    read host_name ip <<< "$1"
+    local file=/etc/icinga/objects/${host_name}_icinga.cfg
+    IFS=$old_ifs
+
+
+    if [ $(grep "host_name $host_name" $file | wc -l) -gt 0 ]; then
+        print "Icinga host" $host_name "already defined, skipping it."
+        return
+    fi
+    
+    cat >> $file <<EOF
+define host {
+  use generic-host
+  host_name $host_name
+  alias $host_name
+  address $ip
+}
+
+define service {
+  use generic-service
+  host_name $host_name
+  service_description CPU load
+  check_command check_nrpe_1arg!check_load
+}
+EOF
+
+}
+
+function install_icinga_client()
+{
+    print "Installing an icinga client on $HOSTNAME ..."
+    if [ $on_debian_or_derivative -eq 1 ]; then
+        install_packages_if_missing nagios-nrpe-server nagios-plugins
+    fi
+    
+    local file=/etc/nagios/nrpe.cfg
+    dont_quote_conf_values=1
+    set_conf_file_value \
+        allowed_hosts \
+        127.0.0.1,${fai_monitoring_server_ip} \
+        $file
+    dont_quote_conf_values=0
+
+    run /etc/init.d/nagios-nrpe-server restart
 }
 
 # munin nodes need the IP of the munin gatherer to be escaped. Hence this function.
@@ -3222,6 +3310,35 @@ function restore_from_backup()
     fi
 }
 
+function set_up_icinga_host_groups()
+{
+    local file=/etc/icinga/objects/hostgroups_icinga.cfg
+    local host_group_name=$1
+    local host_group_alias=$2
+    local host_group_member_list=${@:3:$(( $# - 2 ))}
+
+    if [ $(grep "hostgroup_name $host_group_name" $file | wc -l) -gt 0 ]; then
+        print "Icinga group member" \
+            $host_group_name \
+            "already defined, skipping it."
+        return
+    fi
+    
+    cat >> $file <<EOF
+define hostgroup {
+  hostgroup_name $host_group_name
+  alias $host_group_alias
+EOF
+    echo -n "  members" >> $file
+    for el in $host_group_member_list; do
+        echo -n " ${el}," >> $file
+    done
+    cat >> $file <<EOF
+
+}
+EOF
+}
+
 function common_post_install()
 {
     if [ $install_profile_number -eq $PROFILE_ALL_IN_ONE -o \
@@ -3235,6 +3352,10 @@ function common_post_install()
         $install_profile_number -ne $PROFILE_CREATE_PUBLICATION -a \
         $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]; then
         install_munin_node
+
+        if [ $install_profile_number -ne $PROFILE_MONITORING_SERVER ]; then
+            install_icinga_client
+        fi
     fi
 
     set_correct_permissions
@@ -3325,8 +3446,9 @@ if [ $fai_enabled -eq 1 ]; then
     
     if [ $(get_boolean_conf_value fai_monitoring_install) -eq 1 ]; then
         install_profile_number=$PROFILE_MONITORING_SERVER
+        monitoring_install_icinga_server
         install_munin_gatherer
-        install_web_server 1
+        # install_web_server 1
         no_fai_profile=0
     fi
     
@@ -3361,40 +3483,40 @@ else
     
     case $install_profile_number in
         $PROFILE_ALL_IN_ONE)
-        install_all_in_one_environment
-        ;;
+            install_all_in_one_environment
+            ;;
         $PROFILE_CACHE_SERVER)
-        install_cache_server
-        install_web_server 0
-        ;;
+            install_cache_server
+            install_web_server 0
+            ;;
         $PROFILE_DB_SERVER)
-        install_database_server
-        ;;
+            install_database_server
+            ;;
         $PROFILE_EDITORIAL_SERVER)
-        install_editorial_server
-        ;;
+            install_editorial_server
+            ;;
         $PROFILE_PRESENTATION_SERVER)
-        install_presentation_server
-        ;;
+            install_presentation_server
+            ;;
         $PROFILE_SEARCH_SERVER)
-        install_search_server
-        ;;
+            install_search_server
+            ;;
         $PROFILE_RMI_HUB)
-        install_rmi_hub
-        ;;
+            install_rmi_hub
+            ;;
         $PROFILE_WIDGET_FRAMEWORK)
-        install_widget_framework
-        ;;
+            install_widget_framework
+            ;;
         $PROFILE_CREATE_PUBLICATION)
-        create_publication
-        ;;
+            create_publication
+            ;;
         $PROFILE_MONITORING_SERVER)
-        install_munin_gatherer
-        install_web_server 1
-        ;;
+            install_munin_gatherer
+            install_web_server 1
+            ;;
         $PROFILE_RESTORE_FROM_BACKUP)
-        restore_from_backup
-        ;;
+            restore_from_backup
+            ;;
         *)
             print "Invalid profile number $install_profile_number, must be 1-11"
             remove_pid_and_exit_in_error
