@@ -81,6 +81,11 @@ Useful starting points:
 EOF
 }
 
+## Initializes the etc directory with a skeleton of a virtual machine
+function do_init() {
+  echo "not implemented."
+}
+
 ## Provides even more help.
 function do_longhelp() {
   cat <<EOF
@@ -200,7 +205,7 @@ function really_do_status () {
         local vmdir=$(readlink -f ${avdir}/../../../../../var/lib/vizrt/vosa/images/$(basename $1))
         if [ -d "$vmdir" ] ; then
           output=( ${output[@]} installed );
-          local pidfile=$(echo_rundir_of $(basename $1))/$(basename $1).pid
+          local pidfile=$(echo_pidfile_of $(basename $1))
           if [ -r "$pidfile" ] ; then
             if ! ps > /dev/null $(<$pidfile) ; then
               output=( ${output[@]} dead );
@@ -216,9 +221,9 @@ function really_do_status () {
     echo ${output[@]}
 }
 
-function echo_rundir_of() {
+function echo_pidfile_of() {
   local avdir="${available_dir}/$(basename $1)"
-  echo "$(readlink -f ${avdir}/../../../../../var/run/vizrt/vosa/)"
+  echo "$(readlink -f ${avdir}/../../../../../var/run/vizrt/vosa/$1.pid)"
 }
 
 ## Tells vosa that it is allowed to install and run an instance.
@@ -385,42 +390,18 @@ function do_stop() {
       exit 1
     fi
     if [ "${status[3]}" == "alive" ] ; then
-      shutdown "${status[0]}"
+      echo "Killing kvm process ${status[4]}"
+      kill "${status[4]}"
       # should now be "dead" if we asked it.
     fi
     # regardless of this, we _want_ it to die. remove pidfile.
     # TODO: continue trying to kill it more forcibly, and
     # remove the pidfile when it's done.
-    local pidfile=$(echo_rundir_of ${status[0]})/${status[0]}.pid
+    local pidfile=$(echo_pidfile_of ${status[0]})
     rm -f $pidfile
   }
 }
 
-
-
-# Performs a graceful shutdown of the guest
-function shutdown() {
-  local pid=$(<$(echo_rundir_of $1)/$1.pid)
-  echo "Sending ACPI shutdown signal to guest ($pid) ($(echo_rundir_of $1)/$1.monitor)"
-  echo 'system_powerdown' | nc -U $(echo_rundir_of $1)/$1.monitor
-  local a;
-  for a in $(seq 1 10) ; do
-    sleep 1
-    ps > /dev/null $pid || return 0
-  done
-  ps > /dev/null $pid && {
-    echo "guest did not shut down.  Killing its power."
-    kill "${status[4]}"
-  }
-  for a in $(seq 1 10) ; do
-    sleep 1
-    ps > /dev/null $pid || return 0
-  done
-  ps > /dev/null $pid && {
-    echo "guest did not respond to kill.  Killing with -9."
-    kill -9 "${status[4]}"
-  }
-}
 
 
 function unknown-argument() {
@@ -470,6 +451,16 @@ if [ $usage -eq 0 -a "${#@}" -lt 1 ] ; then
 fi
 
 verify_usage
+
+if [ -z "$available_dir" -o ! -r "$available_dir" ] ; then
+  echo "Not initialized! RTFM! Exiting. ($available_dir)"
+  exit 2
+fi
+
+if [ -z "$enabled_dir" -o ! -r "$enabled_dir" ] ; then
+  echo "Not initialized! RTFM! Exiting. ($enabled_dir)"
+  exit 2
+fi
 
 for cmd in "${@}" ; do
   # Check if the command
