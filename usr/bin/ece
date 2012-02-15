@@ -152,7 +152,7 @@ function ensure_that_required_fields_are_set()
             continue
         fi
         
-        print "You need to specifiy '$el' in one of ${ece_conf_files_read}"
+        print "You need to specifiy '$el' in one of ${ece_conf_files_read[@]}"
         requirements_failed=1
     done
 
