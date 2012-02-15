@@ -883,23 +883,21 @@ function install_ece_third_party_packages
                 "deb http://archive.canonical.com/ $(lsb_release -s -c) partner"
         elif [ $on_debian -eq 1 ]; then
             code_name=$(lsb_release -s -c)
-            has_non_free=$(grep $(lsb_release -s  -c) \
+            has_non_free=$(grep $(lsb_release -s -c) \
                 /etc/apt/sources.list | \
                 egrep -v "^#|deb-src" | \
                 grep -v security | \
                 grep non-free | \
                 wc -l)
             if [ $has_non_free -eq 0 ]; then
-                add_apt_source "deb http://ftp.${mirror_country_suffix}.debian.org/debian/" \
-                    $(lsb_release -s -c) \
-                    "contrib non-free"
+                add_apt_source "deb http://ftp.${mirror_country_suffix}.debian.org/debian/ $(lsb_release -s -c) contrib non-free"
             fi
 
             # Sun Java will be removed in the next Debian stable,
             # wheezy (either 6.1 or 7.0 not announced yet, current in
             # squeeze/6.0, hence setting 6.1 here).
             local version_needs_local_java_deb=610
-            local version=$(lsb_release -s -r |  sed "s#\.##g")
+            local version=$(lsb_release -s -r | sed "s#\.##g")
         fi
         
         if [ $version -ge $version_needs_local_java_deb -a \
@@ -932,6 +930,9 @@ function install_ece_third_party_packages
     for el in ant mvn java; do
         assert_pre_prequesite $el
     done
+    
+    exit 0
+    
 }
 
 function get_base_dir_from_bundle()
@@ -3049,25 +3050,22 @@ EOF
     fi
     
     # install the escenic_jstat munin plugin
-    file=/usr/share/munin/plugins/escenic_jstat_
+    local file=/usr/share/munin/plugins/escenic_jstat_
     run wget $wget_opts \
         https://github.com/mogsie/escenic-munin/raw/master/escenic_jstat_ \
         -O $file
     run chmod 755 $file
 
-    if [ ! -e $escenic_conf_dir -o \
-        $(ls $escenic_conf_dir/ | grep ece- | wc -l) -lt 1 ]; then
+    local instance_list=$(get_instance_list)
+    if [ -z ${instance_list} ]; then
         print_and_log "No ECE instances found on $HOSTNAME, so I'm not adding"
         print_and_log "additional Munin configuration"  
         add_next_step "A Munin node has been installed on $HOSTNAME"
         return
     fi
     
-    escenic_jstat_modules="_gc _gcoverhead _heap _uptime"
-    for el in $escenic_conf_dir/ece-*.conf; do
-        current_instance=$(basename ${el} | \
-            sed -e 's/ece-//g' -e 's/engine-//g' | \
-            cut -d'.' -f1)
+    local escenic_jstat_modules="_gc _gcoverhead _heap _uptime"
+    for current_instance in $instance_list; do
         for module in $escenic_jstat_modules; do
 	          cd /usr/share/munin/plugins/
 	          make_ln escenic_jstat_ escenic_jstat_${current_instance}${module}
