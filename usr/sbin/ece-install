@@ -930,9 +930,6 @@ function install_ece_third_party_packages
     for el in ant mvn java; do
         assert_pre_prequesite $el
     done
-    
-    exit 0
-    
 }
 
 function get_base_dir_from_bundle()
@@ -1641,6 +1638,7 @@ function set_up_user_enviornment()
 
     if [ $(grep ECE_CONF_LOCATIONS ${bashrc} | wc -l) -eq 0 ]; then
         echo "export ECE_CONF_LOCATIONS=\"$escenic_conf_dir\"" >> ${bashrc}
+        run chown ${ece_user}:${ece_group} ${bashrc}
     fi
 }
 
@@ -2867,7 +2865,7 @@ function install_munin_gatherer()
             node_list=$user_munin_nodes
         fi
     else
-        node_list=${fai_munin_node_list}
+        node_list=${fai_monitoring_munin_node_list}
     fi
     
     if [ -z "$node_list" ]; then
@@ -2875,7 +2873,7 @@ function install_munin_gatherer()
     fi
 
     for el in $node_list; do
-        print_and_log "Adding ${el} to the Muning gatherer on ${HOSTNAME} ..."
+        print_and_log "Adding ${el} to the Munin gatherer on ${HOSTNAME} ..."
         local file=/etc/munin/munin-conf.d/escenic.conf
         cat >> $file <<EOF
 [${el}]
@@ -2887,9 +2885,20 @@ EOF
     # TODO add the priveleged network to the Allowed stanza (i.e. the
     # network wich will do the monitoring of the servers.
     local file=/etc/apache2/conf.d/munin
+    if [ -n "${fai_monitoring_privileged_hosts}" ]; then
+        local privileged_hosts=$(
+            echo ${fai_monitoring_privileged_hosts} | \
+                sed "s#\ #\\\ #g"
+        )
+        sed -i "s#Allow\ from\ localhost#Allow\ from\ ${privileged_hosts}\ localhost#g" \
+            $file
+        exit_on_error "Failed adding ${fai_monitoring_privileged_hosts} to" \
+            "Munin's allowed addresses."
+        run /etc/init.d/apache2 reload
+    fi
 
-    add_next_step "Munin gatherer installed on $HOSTNAME."
-    add_next_step "Make sure all nodes allows my IP to connect to them."
+    add_next_step "Munin gatherer admin interface: http://${HOSTNAME}/munin"
+    add_next_step "Make sure all nodes allows its IP to connect to them."
 }
 
 # will return the IP of the host name. If not found, the host name
@@ -2909,52 +2918,92 @@ function get_ip()
     echo $ip
 }
 
-## Installs the Icinga monitoring server.
-function monitoring_install_icinga_server()
+## Installs the Nagios monitoring server.
+## $1 the nagios vendor/falvour, "nagios" and "icinga" are supported.
+function install_nagios_monitoring_server()
 {
-    print "Installing an icinga server on $HOSTNAME ..."
+    print "Installing an $1 server on $HOSTNAME ..."
+    local monitoring_vendor=$1
     
-    # TODO consider apache2 in seperate method
     if [ $on_debian_or_derivative -eq 1 ]; then
-        install_packages_if_missing apache2 icinga nagios-nrpe-plugin icinga-doc
+        if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
+            install_packages_if_missing apache2 nagios3 nagios-nrpe-plugin
+        else
+            install_packages_if_missing \
+                apache2 icinga nagios-nrpe-plugin icinga-doc
+        fi
     fi
 
-    # set password for the icingaadmin
-    print "Setting user/pass for icinga admin ..."
-    local file=/etc/icinga/htpasswd.users
-    run htpasswd -b -c $file icingaadmin ${fai_monitoring_admin_password-admin}
+    if [[ $monitoring_vendor == $MONITORING_VENDOR_ICINGA ]]; then
+        print "Setting user/pass for icinga admin ..."
+        local file=/etc/icinga/htpasswd.users
+        run htpasswd -b -c $file icingaadmin \
+            ${fai_monitoring_admin_password-admin}
+    fi
     
     # enable remote commands
-    local file=/etc/icinga/icinga.cfg
+    if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
+        local file=/etc/nagios3/nagios.cfg
+    else
+        local file=/etc/icinga/icinga.cfg
+    fi
+    
     dont_quote_conf_values=1
     set_conf_file_value check_external_commands 1 $file
     dont_quote_conf_values=0
 
     for el in $fai_monitoring_host_list; do
-        set_up_icinga_host $el
+        set_up_monitoring_host_def $monitoring_vendor $el
     done
 
-    set_up_icinga_host_groups \
+    if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
+        file=/etc/nagios3/conf.d/hostgroups_nagios2.cfg
+    else
+        file=/etc/icinga/objects/hostgroups_icinga.cfg
+    fi
+    
+    set_up_monitoring_host_group \
+        $file \
         "ece-hosts" \
         'Hosts running one or more ECE' \
         ${fai_monitoring_ece_host_list}
 
-    run /etc/init.d/icinga restart
+    set_up_monitoring_host_group \
+        $file \
+        "search-hosts" \
+        'Hosts running search instance(s) (Solr + indexer)' \
+        ${fai_monitoring_search_host_list}
+
+    if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
+        run /etc/init.d/nagios3 restart
+        add_next_step "Icinga monitoring interface: http://${HOSTNAME}/nagios3"
+    else
+        run /etc/init.d/icinga restart
+        add_next_step "Icinga monitoring interface: http://${HOSTNAME}/icinga"
+    fi
+    
     run /etc/init.d/apache2 reload
+
 }
 
-## $1 <host name>:<ip>, e.g.: fire:192.168.1.100
-function set_up_icinga_host()
+## Sets up the definition file for a given monitoring host.
+##
+## $1 nagios flavour/vendor
+## $2 <host name>:<ip>, e.g.: fire:192.168.1.100
+function set_up_monitoring_host_def()
 {
-    local old_ifs=$IFS
-    IFS=':'
-    read host_name ip <<< "$1"
     local file=/etc/icinga/objects/${host_name}_icinga.cfg
+    if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
+        file=/etc/nagios3/conf.d/${host_name}_nagios2.cfg
+    fi
+    
+    local old_ifs=$IFS
+    IFS='#'
+    read host_name ip <<< "$2"
     IFS=$old_ifs
-
-
-    if [ $(grep "host_name $host_name" $file | wc -l) -gt 0 ]; then
-        print "Icinga host" $host_name "already defined, skipping it."
+    
+    if [ $(grep "host_name $host_name" $file 2>/dev/null | wc -l) -gt 0 ]; then
+        print "$1 host" $host_name "already defined, skipping it."
         return
     fi
     
@@ -2976,7 +3025,7 @@ EOF
 
 }
 
-function install_icinga_client()
+function install_nagios_node()
 {
     print "Installing an icinga client on $HOSTNAME ..."
     if [ $on_debian_or_derivative -eq 1 ]; then
@@ -2992,6 +3041,7 @@ function install_icinga_client()
     dont_quote_conf_values=0
 
     run /etc/init.d/nagios-nrpe-server restart
+    add_next_step "A Nagios NRPE node has been installed on ${HOSTNAME}"
 }
 
 # munin nodes need the IP of the munin gatherer to be escaped. Hence this function.
@@ -3057,7 +3107,7 @@ EOF
     run chmod 755 $file
 
     local instance_list=$(get_instance_list)
-    if [ -z ${instance_list} ]; then
+    if [ -z "${instance_list}" ]; then
         print_and_log "No ECE instances found on $HOSTNAME, so I'm not adding"
         print_and_log "additional Munin configuration"  
         add_next_step "A Munin node has been installed on $HOSTNAME"
@@ -3308,12 +3358,18 @@ function restore_from_backup()
     fi
 }
 
-function set_up_icinga_host_groups()
+## $1 configuration file name
+## $2 host group name
+## $3 host group alias
+## $4..n host group members
+function set_up_monitoring_host_group()
 {
-    local file=/etc/icinga/objects/hostgroups_icinga.cfg
-    local host_group_name=$1
-    local host_group_alias=$2
-    local host_group_member_list=${@:3:$(( $# - 2 ))}
+    local file=$1
+    local host_group_name=$2
+    local host_group_alias=$3
+    # the remainding arguments passed to the methods is the member
+    # list members
+    local host_group_member_list=${@:4:$(( $# - 3 ))}
 
     if [ $(grep "hostgroup_name $host_group_name" $file | wc -l) -gt 0 ]; then
         print "Icinga group member" \
@@ -3337,6 +3393,41 @@ EOF
 EOF
 }
 
+## $1 nagios vendor
+function create_monitoring_server_overview()
+{
+    local file=/var/www/index.html
+    cat > $file <<EOF
+<html>
+  <body>
+    <h1>Welcome to the might monitoring server @ ${HOSTNAME}</h1>
+    <ul>
+EOF
+    if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
+        echo '<li><a href="/nagios3">Nagios</a></li>' \
+    else
+        echo '<li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' \
+            >> $file
+    fi
+    cat > $file <<EOF
+      <li><a href="/munin">Munin</a></li>
+    </ul>
+  </body>
+</html>
+EOF
+    add_next_step "Start page for all monitoring interfaces: http://${HOSTNAME}/"
+}
+
+MONITORING_VENDOR_NAGIOS=nagios
+MONITORING_VENDOR_ICINGA=icinga
+function install_monitoring_server()
+{
+    local nagios_flavour=${fai_monitoring_nagios_flavour-$MONITORING_VENDOR_ICINGA}
+    install_nagios_monitoring_server $nagios_flavour
+    install_munin_gatherer
+    create_monitoring_server_overview $nagios_flavour
+}
+
 function common_post_install()
 {
     if [ $install_profile_number -eq $PROFILE_ALL_IN_ONE -o \
@@ -3352,7 +3443,7 @@ function common_post_install()
         install_munin_node
 
         if [ $install_profile_number -ne $PROFILE_MONITORING_SERVER ]; then
-            install_icinga_client
+            install_nagios_node
         fi
     fi
 
@@ -3444,9 +3535,7 @@ if [ $fai_enabled -eq 1 ]; then
     
     if [ $(get_boolean_conf_value fai_monitoring_install) -eq 1 ]; then
         install_profile_number=$PROFILE_MONITORING_SERVER
-        monitoring_install_icinga_server
-        install_munin_gatherer
-        # install_web_server 1
+        install_monitoring_server
         no_fai_profile=0
     fi
     
