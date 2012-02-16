@@ -271,7 +271,7 @@ function download_escenic_components()
 #
 # parameters:
 # $1 : space separated string of package names 
-install_packages_if_missing()
+function install_packages_if_missing()
 {
     if [ $on_debian_or_derivative -eq 1 ]; then
         some_are_missing=0
@@ -1724,6 +1724,27 @@ function un_install_ece()
     apt-get clean
 }
 
+## Returns the privileged hosts. This will include both the IP(s) the
+## logged in user conduction the ece-install is coming from, as well
+## as any IPs defined in fai_privileged_hosts.
+function get_privileged_hosts()
+{
+    local privileged_hosts=${fai_privileged_hosts}
+    
+    for ip in $(
+        w -h  | \
+            grep pts | \
+            sed "s#.*pts/[0-9]*[ ]*\(.*\)#\1#" | \
+            cut -d' ' -f1 | \
+            sort | \
+            uniq
+    ); do
+        privileged_hosts=${privileged_hosts}" "${ip}
+    done
+
+    echo ${privileged_hosts}
+}
+
 function set_up_varnish()
 {
     print_and_log "Setting up Varnish to match your environment ..."
@@ -1744,13 +1765,11 @@ function set_up_varnish()
 acl staff {
   "localhost";
 EOF
-    w | cut -d' ' -f7 | sort | uniq | while read l; do
-        if [ $(echo $l | wc -c) -gt 8 ]; then
-    cat >> /etc/varnish/default.vcl <<EOF
-  # The host which conducted the ece-install
+    for l in $(get_privileged_hosts); do
+        cat >> /etc/varnish/default.vcl <<EOF
+  # Privileged host (either doing the ece-install or listed as such)
   "${l}";
 EOF
-        fi
     done
     
     cat >> /etc/varnish/default.vcl <<EOF
@@ -2885,14 +2904,13 @@ EOF
     # TODO add the priveleged network to the Allowed stanza (i.e. the
     # network wich will do the monitoring of the servers.
     local file=/etc/apache2/conf.d/munin
-    if [ -n "${fai_monitoring_privileged_hosts}" ]; then
+    if [ -n "$(get_privileged_hosts)" ]; then
         local privileged_hosts=$(
-            echo ${fai_monitoring_privileged_hosts} | \
-                sed "s#\ #\\\ #g"
+            echo $(get_privileged_hosts) | sed "s#\ #\\\ #g"
         )
         sed -i "s#Allow\ from\ localhost#Allow\ from\ ${privileged_hosts}\ localhost#g" \
             $file
-        exit_on_error "Failed adding ${fai_monitoring_privileged_hosts} to" \
+        exit_on_error "Failed adding ${fai_privileged_hosts} to" \
             "Munin's allowed addresses."
         run /etc/init.d/apache2 reload
     fi
