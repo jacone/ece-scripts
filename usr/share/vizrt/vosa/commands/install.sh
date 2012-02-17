@@ -138,7 +138,10 @@ function create_overlay() {
   done
 
   mkdir -p ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/
-  cat >> ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/user-data <<EOF
+  if [ ! -z "${install_config_user_data}" ] ; then
+    cp "${install_config_user_data}" ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/user-data
+  else 
+    cat >> ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/user-data <<EOF
 #cloud-config
 manage_etc_hosts: true
 timezone: ${install_config_timezone}
@@ -146,6 +149,7 @@ apt_update: false
 apt_upgrade: false
 apt_mirror: ${install_config_mirror}
 EOF
+  fi
 
   cat >> ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/meta-data <<EOF
 EOF
