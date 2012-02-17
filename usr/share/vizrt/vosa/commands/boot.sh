@@ -165,7 +165,7 @@ function boot_kvm() {
   fi
   kernel=${image}/vmlinuz
   img=${image}/disk.img
-  cloud_param="nocloud;h=${hostname}"
+  cloud_param="nocloud;h=${hostname};s=file:///var/lib/cloud/data/cache/nocloud/"
 
   # should _maybe_ be put in some other script?  Needed by e.g. vosa start too.
   decho 1 "Starting the machine"
