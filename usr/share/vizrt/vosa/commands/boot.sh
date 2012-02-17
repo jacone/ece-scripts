@@ -65,13 +65,59 @@ hostname=$(basename "$image")
 parse_config_file $config/install.conf install_config_
 parse_config_file $config/boot.conf boot_config_
 
-make_run_dir() {
+function make_run_dir() {
   rundir=/var/run/vizrt/vosa/ 
   if [ "$(id -u)" != "0" ] ; then
     rundir=$HOME/.vizrt/vosa/
   fi
   decho 1 "Making var-run directory $rundir"
   mkdir -p $rundir || exitonerror $? "Unable to make the place where pidfiles are stored ($rundir)"
+}
+
+## Select a tap interface
+## For now it selects a single tap interface at random, of the ones not
+## listed in use by any other machines.
+function select_tap_interface() {
+  if [ -r $rundir/$hostname.network ] ; then
+    rm -f $rundir/$hostname.network
+  fi
+  for try in 1 2 3 4 ; do 
+    # Read the list of available networks we have
+    declare -A availablenetworks
+    local network
+    for network in $rundir/*.availablenetwork ; do
+      [[ -f $network ]] || continue
+      # $network == tap4.availablenetwork.  Contains the name(s) of vm04's networks
+      local tap
+      tap=$(basename $network .availablenetwork)
+      availablenetworks["$tap"]=1
+    done
+
+    echo "Available tap interfaces: ${!availablenetworks[@]}"
+
+    # Read the list of used networks we have
+    declare -A usednetworks
+    for network in $rundir/*.network ; do
+      [[ -f $network ]] || continue
+      # $network == /.../vm04.network.  File contains a list of taps used by vm04
+      local vm  # "vm04"
+      vm=$(basename $network .network)
+      local i
+      for i in $(<$network) ; do
+        usednetworks["$i"]=$vm  # e.g. usednetworks[tap3]=vm04
+      done
+    done
+
+    echo "tap interfaces already in use : ${!usednetworks[@]}"
+
+    for tap in ${!availablenetworks[@]} ; do
+      if [ -z "${usednetworks["$tap"]}" ] ; then
+        tapinterface=$tap
+        # TODO: only exit when the desired number of network interfaces has been reached...
+        echo $tap >> "${rundir}/${hostname}.network" && return
+      fi
+    done
+  done
 }
 
 function check_sudo() {
@@ -104,11 +150,6 @@ function touch_pid_file() {
   touch "${pidfile}"
 }
 
-function touch_state_file() {
-  statefile=$rundir/$hostname.state
-  echo 'running' > $statefile
-}
-
 function configure_vnc_option() {
   if [ -z "$boot_config_vnc_port" -o "$boot_config_vnc_port" == "none" ] ; then 
     vncoption="-vnc none"
@@ -119,6 +160,9 @@ function configure_vnc_option() {
 
 
 function boot_kvm() {
+  if [ -z "$tapinterface" ] ; then
+    echo "No tap interface available..."
+  fi
   kernel=${image}/vmlinuz
   img=${image}/disk.img
   cloud_param="nocloud;h=${hostname}"
@@ -139,7 +183,7 @@ function boot_kvm() {
   -drive "file=${img},if=virtio,cache=none"
   -kernel ${kernel}
   -net "nic,model=virtio,macaddr=${install_config_macaddr}"
-  -net "tap,script=$(dirname $0)/qemu-ifup")
+  -net "tap,ifname=$tapinterface,script=no,downscript=no")
   
 # http://dwdwwebcache.googleusercontent.com/search?q=cache:mEAjcA2zHosJ:kerneltrap.org/mailarchive/linux-kvm/2010/1/26/6257297/thread+qemu-kvm+acpi+shutdown&cd=1&hl=no&ct=clnk&gl=no
 # http://kerneltrap.org/mailarchive/linux-kvm/2010/1/26/6257297/thread
@@ -162,7 +206,7 @@ function boot_kvm() {
 check_sudo
 make_run_dir
 configure_vnc_option
+select_tap_interface
 
-touch_pid_file  # should maybe be part of boot process?  dunno.
+touch_pid_file
 boot_kvm
-touch_state_file
