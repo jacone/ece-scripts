@@ -110,6 +110,11 @@ function print()
     echo $(get_id) $@
 }
 
+function printne()
+{
+    echo -ne $(get_id) $@
+}
+
 function log()
 {
     echo $(get_id) $@ >> $log
@@ -244,14 +249,46 @@ function set_up_engine_directories()
     done
 }
 
+pulse_bits="-\|/"
+
+function pulse()
+{
+    echo -ne "\b${pulse_bits:i++%${#pulse_bits}:1}"
+}
+
+function show_pulse()
+{
+    printne "$1 ...."
+    local pulse_pid=$2
+    while true; do
+        kill -0 $pulse_pid 2>/dev/null
+        if [ $? -eq 0 ]; then
+            pulse
+            sleep 0.25
+        else
+            wait $pulse_pid
+            local exit_code=$?
+            if [ $exit_code -eq 0 ]; then
+                echo -e '\b\E[37;32m'" \033[1mok\033[0m"
+                tput sgr0
+            else
+                echo -e '\b\E[37;31m'" \033[1mfailed\033[0m"
+                tput sgr0
+            fi
+            
+            break
+        fi
+    done
+}
+
 function download_escenic_components()
 {
     if [ $ece_software_setup_completed -eq 1 ]; then
         return
     fi
-    
+
     print_and_log "Downloading Escenic software from technet.escenic.com ..."
-    
+
     cd $download_dir
     for el in $technet_download_list; do
         if [ -e $(basename $el) ]; then
@@ -263,7 +300,6 @@ function download_escenic_components()
             --http-password $technet_password \
             $el 
     done
-
 }
 
 # will install the passed packages if these are not installed from
@@ -298,23 +334,24 @@ function install_packages_if_missing()
 
 function install_common_os_packages()
 {
-    print_and_log "Installing 3rd party packages needed by $(basename $0) ..."
-
-    if [ $on_debian_or_derivative -eq 1 ]; then
+    $(
+        if [ $on_debian_or_derivative -eq 1 ]; then
         # Ubuntu doesn't have git (!) but only git-core.
-        if [ $on_ubuntu -eq 1 ]; then
-            git_package=git-core
-        else
-            git_package=git
+            if [ $on_ubuntu -eq 1 ]; then
+                git_package=git-core
+            else
+                git_package=git
+            fi
+
+            packages="curl $git_package wget unzip"
+            install_packages_if_missing $packages
         fi
 
-        packages="curl $git_package wget unzip"
-        install_packages_if_missing $packages
-    fi
-
-    for el in lsb_release curl wget git unzip; do
-        assert_pre_prequesite $el
-    done
+        for el in lsb_release curl wget git unzip; do
+            assert_pre_prequesite $el
+        done
+    ) &
+    show_pulse  "Installing 3rd party packages needed by $(basename $0)" $!
 }
 
 function set_up_assembly_tool()
@@ -436,12 +473,12 @@ function set_up_engine_and_plugins()
         fi
     done
     
-    if [ ! -d ${engine_dir} ]; then
+    if [ ! -d "${engine_dir}" ]; then
         run unzip -q -u $download_dir/${engine_file}
         if [ -h engine ]; then
             run rm engine
         fi
-    
+        
         run ln -s ${engine_dir} engine
     else
         debug "${engine_dir} is already there, skipping to next step."
@@ -465,41 +502,43 @@ function set_up_engine_and_plugins()
 
 function set_up_ece_scripts()
 {
-    print_and_log "Setting up the ece UNIX scripts ..." 
+    $(
+        run cd $download_dir
+        if [ -d ece-scripts ]; then
+            (
+                run cd ece-scripts
+                run git pull
+            )
+        else
+            run git clone $ece_scripts_git_source
+        fi
+        
+        run cp -r ece-scripts/usr/* /usr/
+        run cp -r ece-scripts/etc/escenic/* ${escenic_conf_dir}/
+        run cp -r ece-scripts/etc/bash_completion.d/ece /etc/bash_completion.d/
+        run cp -r ece-scripts/etc/init.d/* /etc/init.d/
+        run cp -r ece-scripts/etc/default/* /etc/default/
+        
+        local file=${escenic_conf_dir}/ece.conf
+        set_conf_file_value assemblytool_home ${escenic_root_dir}/assemblytool $file
+        set_conf_file_value backup_dir ${escenic_backups_dir} $file
+        set_conf_file_value cache_dir ${escenic_cache_dir} ${file}
+        set_conf_file_value ece_home ${escenic_root_dir}/engine ${file}
+        set_conf_file_value escenic_conf_dir ${escenic_conf_dir} ${file}
+        set_conf_file_value heap_dump_dir ${escenic_crash_dir} ${file}
+        set_conf_file_value log_dir ${escenic_log_dir} ${file}
+        set_conf_file_value pid_dir ${escenic_run_dir} ${file}
+        set_conf_file_value rmi_hub_conf ${escenic_conf_dir}/rmi-hub ${file}
+        set_conf_file_value solr_home ${escenic_data_dir}/solr ${file}
+        set_conf_file_value ece_security_configuration_dir \
+            ${escenic_conf_dir}/engine/common/security \
+            ${file}
 
-    run cd $download_dir
-    if [ -d ece-scripts ]; then
-        (
-            run cd ece-scripts
-            run git pull
-        )
-    else
-        run git clone $ece_scripts_git_source
-    fi
+        run sed -i "s#/etc/escenic#${escenic_conf_dir}#g" /etc/bash_completion.d/ece
+        run sed -i "s#/opt/escenic#${escenic_root_dir}#g" /etc/bash_completion.d/ece
+    ) &
     
-    run cp -r ece-scripts/usr/* /usr/
-    run cp -r ece-scripts/etc/escenic/* ${escenic_conf_dir}/
-    run cp -r ece-scripts/etc/bash_completion.d/ece /etc/bash_completion.d/
-    run cp -r ece-scripts/etc/init.d/* /etc/init.d/
-    run cp -r ece-scripts/etc/default/* /etc/default/
-    
-    local file=${escenic_conf_dir}/ece.conf
-    set_conf_file_value assemblytool_home ${escenic_root_dir}/assemblytool $file
-    set_conf_file_value backup_dir ${escenic_backups_dir} $file
-    set_conf_file_value cache_dir ${escenic_cache_dir} ${file}
-    set_conf_file_value ece_home ${escenic_root_dir}/engine ${file}
-    set_conf_file_value escenic_conf_dir ${escenic_conf_dir} ${file}
-    set_conf_file_value heap_dump_dir ${escenic_crash_dir} ${file}
-    set_conf_file_value log_dir ${escenic_log_dir} ${file}
-    set_conf_file_value pid_dir ${escenic_run_dir} ${file}
-    set_conf_file_value rmi_hub_conf ${escenic_conf_dir}/rmi-hub ${file}
-    set_conf_file_value solr_home ${escenic_data_dir}/solr ${file}
-    set_conf_file_value ece_security_configuration_dir \
-        ${escenic_conf_dir}/engine/common/security \
-        ${file}
-
-    run sed -i "s#/etc/escenic#${escenic_conf_dir}#g" /etc/bash_completion.d/ece
-    run sed -i "s#/opt/escenic#${escenic_root_dir}#g" /etc/bash_completion.d/ece
+    show_pulse "Setting up the ece UNIX scripts ..." $!
 }
 
 default_db_port=3306
@@ -672,21 +711,21 @@ readConnector=/connector/ReadConnector
 updateConnector=/connector/UpdateConnector
 EOF
 
-    file=$common_nursery_dir/com/escenic/community/CommunityEngine.properties
-    if [ -w ${file} ]; then
-        sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
-        exit_on_error "sed on $file"
-    elif [ ! -e ${file} ]; then
-        print_and_log "I Could not find an ECOME configuration file,"
-        print_and_log "I assume you have not installed Community Engine."
-    else
-        print_and_log "Could not write to ${file},"
-        print_and_log "Community Engine might not work because of this. "
-        remove_pid_and_exit_in_error
-    fi
+file=$common_nursery_dir/com/escenic/community/CommunityEngine.properties
+if [ -w ${file} ]; then
+    sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
+    exit_on_error "sed on $file"
+elif [ ! -e ${file} ]; then
+    print_and_log "I Could not find an ECOME configuration file,"
+    print_and_log "I assume you have not installed Community Engine."
+else
+    print_and_log "Could not write to ${file},"
+    print_and_log "Community Engine might not work because of this. "
+    remove_pid_and_exit_in_error
+fi
 
-    file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
-    cat >> $file <<EOF
+file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
+cat >> $file <<EOF
 
 # We set this to get around a missing feature in Varnish, see:
 # https://www.varnish-cache.org/trac/wiki/Future_Feature#Chunkedencodingclientrequests
@@ -698,11 +737,11 @@ EOF
 function set_up_instance_specific_nursery_configuration()
 {
     for el in $escenic_conf_dir/engine/instance/*; do
-       i=$(( i + 1 ))
-       if [ $(basename $el) = $instance_name ]; then
-           rmi_port="8${i}23"
-           run echo "port=$rmi_port" > $el/RMI.properties
-       fi
+        i=$(( i + 1 ))
+        if [ $(basename $el) = $instance_name ]; then
+            rmi_port="8${i}23"
+            run echo "port=$rmi_port" > $el/RMI.properties
+        fi
     done
 
     nursery_context=neo/io/managers/HubConnectionManager.properties
@@ -925,8 +964,8 @@ function install_ece_third_party_packages
           memcached
           wget"
 
-        print_and_log "Installing 3rd party packages needed by ECE ..."
-        install_packages_if_missing $packages
+        $(install_packages_if_missing $packages) & \
+            show_pulse "Installing 3rd party packages needed by ECE" $!
     fi
     
     for el in ant java; do
@@ -943,12 +982,12 @@ function get_base_dir_from_bundle()
         # we'll look inside the archive to determine the base_dir
         file_name=$(
             unzip -t ${download_dir}/$file_name | \
-            awk '{print $2}' | \
-            cut -d'/' -f1 | \
-            sort | \
-            uniq | \
-            grep -v errors | \
-            grep [a-z]
+                awk '{print $2}' | \
+                cut -d'/' -f1 | \
+                sort | \
+                uniq | \
+                grep -v errors | \
+                grep [a-z]
         )
     else
         for el in .tar.gz .tar.bz2 .zip; do
@@ -1134,7 +1173,7 @@ function set_up_app_server()
     set_ece_instance_conf tomcat_base $tomcat_base   
     set_ece_instance_conf tomcat_home $tomcat_home
     set_ece_instance_conf appserver_port $appserver_port
-   
+    
     run cd $tomcat_base/lib
     make_ln $jdbc_driver
 
@@ -1338,9 +1377,9 @@ EOF
   <WatchedResource>WEB-INF/web.xml</WatchedResource>
 EOF
 
-    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
-        $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
-        cat >> $tomcat_base/conf/context.xml <<EOF
+if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
+    $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
+    cat >> $tomcat_base/conf/context.xml <<EOF
   <ResourceLink
       global="jdbc/ECE_READ_DS"
       name="jdbc/ECE_READ_DS"
@@ -1352,10 +1391,10 @@ EOF
       type="javax.sql.DataSource"
   />
 EOF
-    fi
+fi
 
-    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
-        cat >> $tomcat_base/conf/context.xml <<EOF
+if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+    cat >> $tomcat_base/conf/context.xml <<EOF
   <Environment
       name="escenic/solr-base-uri"
       value="http://${search_host}:${search_port}/solr/"
@@ -1363,10 +1402,10 @@ EOF
       override="false"
   />
 EOF
-    fi
+fi
 
-    if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
-        cat >> $tomcat_base/conf/context.xml <<EOF
+if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+    cat >> $tomcat_base/conf/context.xml <<EOF
   <Environment
       name="escenic/indexer-webservice"
       value="http://${indexer_ws_uri}"
@@ -1393,8 +1432,8 @@ EOF
   />
 </Context>
 EOF
-    elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
-        cat >> $tomcat_base/conf/context.xml <<EOF
+elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
+    cat >> $tomcat_base/conf/context.xml <<EOF
   <ResourceLink
       global="jdbc/eae-logger/logger"
       name="jdbc/eae-logger/logger"
@@ -1407,30 +1446,30 @@ EOF
   />
 </Context>
 EOF
-    else 
-        cat >> $tomcat_base/conf/context.xml <<EOF
+else 
+    cat >> $tomcat_base/conf/context.xml <<EOF
 </Context>
 EOF
-    fi
+fi
 }
 
 function create_user_and_group_if_not_present()
 {
-   if [ $(grep $ece_user /etc/passwd | wc -l) -lt 1 ]; then
-       print_and_log "Creating UNIX user $ece_user ..."
+    if [ $(grep $ece_user /etc/passwd | wc -l) -lt 1 ]; then
+        print_and_log "Creating UNIX user $ece_user ..."
         # TODO add support for useradd
-       run adduser $ece_user \
-           --disabled-password \
-           --gecos "Escenic-user,Room,Work,Home,Other"
-       add_next_step "I created a new UNIX user called $ece_user"
-       add_next_step "and you must set a password using: passwd $ece_user"
-   fi
-   
-   if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
-       print_and_log "Creating UNIX group $ece_group ..."
-       run addgroup $ece_group
-   fi
- }
+        run adduser $ece_user \
+            --disabled-password \
+            --gecos "Escenic-user,Room,Work,Home,Other"
+        add_next_step "I created a new UNIX user called $ece_user"
+        add_next_step "and you must set a password using: passwd $ece_user"
+    fi
+    
+    if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
+        print_and_log "Creating UNIX group $ece_group ..."
+        run addgroup $ece_group
+    fi
+}
 
 # last, give the control back to the ECE user & group 
 function set_correct_permissions()
@@ -1558,19 +1597,19 @@ source-war: ${publication_name}.war
 context-root: ${publication_name}
 EOF
 
-    publication_war=$escenic_root_dir/assemblytool/publications/${publication_name}.war
-    if [[ $fai_enabled -eq 1 && -n "${fai_publication_war}" ]]; then
-        print_and_log "Basing ${publication_name}.war on the one specified in $conf_file"
-        run cp ${fai_publication_war} ${publication_war}
-    elif [ -d $escenic_root_dir/widget-framework-core-* ]; then
-        print_and_log "Basing ${publication_name}.war on Widget Framework Demo ..."
-        run cd $escenic_root_dir/widget-framework-core-*/publications/demo-core
-        run mvn $maven_opts package
-        run cp target/demo-core-*.war ${publication_war}
-    else
-        print_and_log "Basing your ${publication_name}.war on ECE/demo-clean ..."
-        run cp $escenic_root_dir/engine/contrib/wars/demo-clean.war ${publication_war}
-    fi
+publication_war=$escenic_root_dir/assemblytool/publications/${publication_name}.war
+if [[ $fai_enabled -eq 1 && -n "${fai_publication_war}" ]]; then
+    print_and_log "Basing ${publication_name}.war on the one specified in $conf_file"
+    run cp ${fai_publication_war} ${publication_war}
+elif [ -d $escenic_root_dir/widget-framework-core-* ]; then
+    print_and_log "Basing ${publication_name}.war on Widget Framework Demo ..."
+    run cd $escenic_root_dir/widget-framework-core-*/publications/demo-core
+    run mvn $maven_opts package
+    run cp target/demo-core-*.war ${publication_war}
+else
+    print_and_log "Basing your ${publication_name}.war on ECE/demo-clean ..."
+    run cp $escenic_root_dir/engine/contrib/wars/demo-clean.war ${publication_war}
+fi
 
     # TODO add support for the community widgets
     #
@@ -1621,7 +1660,7 @@ function install_memcached()
 service.0.0-memcached-socket-pool=/com/danga/SockIOPool
 EOF
 
-    echo "TBD"
+echo "TBD"
 }
 
 ## Method which will try its best to find the home diretory of
@@ -1653,19 +1692,20 @@ function get_user_home_directory()
 
 function set_up_user_enviornment()
 {
-    print_and_log "Setting up the ${ece_user} user's UNIX environment ..."
+    $(
+        local bashrc=$(get_user_home_directory $ece_user)/.bashrc
+        
+        if [ $(grep bash_completion.d/ece ${bashrc} 2>/dev/null | \
+            wc -l) -lt 1 ]; then
+            echo ". /etc/bash_completion.d/ece" >> ${bashrc}
+        fi
 
-    local bashrc=$(get_user_home_directory $ece_user)/.bashrc
-    
-    if [ $(grep bash_completion.d/ece ${bashrc} 2>/dev/null | \
-        wc -l) -lt 1 ]; then
-        echo ". /etc/bash_completion.d/ece" >> ${bashrc}
-    fi
-
-    if [ $(grep ECE_CONF_LOCATIONS ${bashrc} | wc -l) -eq 0 ]; then
-        echo "export ECE_CONF_LOCATIONS=\"$escenic_conf_dir\"" >> ${bashrc}
-        run chown ${ece_user}:${ece_group} ${bashrc}
-    fi
+        if [ $(grep ECE_CONF_LOCATIONS ${bashrc} | wc -l) -eq 0 ]; then
+            echo "export ECE_CONF_LOCATIONS=\"$escenic_conf_dir\"" >> ${bashrc}
+            run chown ${ece_user}:${ece_group} ${bashrc}
+        fi
+    ) &
+    show_pulse "Setting up the ${ece_user} user's UNIX environment" $!
 }
 
 function set_up_solr()
@@ -1845,7 +1885,7 @@ EOF
 }
 EOF
 
-    cat >> /etc/varnish/default.vcl <<EOF
+cat >> /etc/varnish/default.vcl <<EOF
 sub vcl_recv {
   if (!client.ip ~ staff &&
       (req.url ~ "^/escenic" ||
@@ -1916,20 +1956,20 @@ EOF
 function read_user_input()
 {
     installation_profiles=(
-      "$PROFILE_ALL_IN_ONE - All in one, full stack on one host,"\
+        "$PROFILE_ALL_IN_ONE - All in one, full stack on one host,"\
 " suitable for dev & test environments"
-      "$PROFILE_EDITORIAL_SERVER - Editorial (publication) server"
-      "$PROFILE_PRESENTATION_SERVER - Presentation server (ECE + memcached)."
-      "$PROFILE_DB_SERVER - Database server"
-      "$PROFILE_CACHE_SERVER - Cache server (cache and web server)"
-      "$PROFILE_RMI_HUB - RMI hub"
-      "$PROFILE_SEARCH_SERVER - Search server (Solr + indexer-webapp)"
-      "$PROFILE_WIDGET_FRAMEWORK - Install Widget Framework."
-      "$PROFILE_CREATE_PUBLICATION - Create a new publication"\
+"$PROFILE_EDITORIAL_SERVER - Editorial (publication) server"
+"$PROFILE_PRESENTATION_SERVER - Presentation server (ECE + memcached)."
+"$PROFILE_DB_SERVER - Database server"
+"$PROFILE_CACHE_SERVER - Cache server (cache and web server)"
+"$PROFILE_RMI_HUB - RMI hub"
+"$PROFILE_SEARCH_SERVER - Search server (Solr + indexer-webapp)"
+"$PROFILE_WIDGET_FRAMEWORK - Install Widget Framework."
+"$PROFILE_CREATE_PUBLICATION - Create a new publication"\
 " based on WF if available, ECE/clean-demo if not"
-      "$PROFILE_MONITORING_SERVER - A monitoring server (web server +"\
+"$PROFILE_MONITORING_SERVER - A monitoring server (web server +"\
 " Munin gatherer)"
-      "$PROFILE_RESTORE_FROM_BACKUP - Restore from backup"\
+"$PROFILE_RESTORE_FROM_BACKUP - Restore from backup"\
 " (DB, data files, binaries, conf & publications)"
     )
     
@@ -2069,7 +2109,7 @@ function install_cache_server()
     fi
 
     code_name=$(lsb_release -s -c)
-        
+    
     supported_code_name=0
     # list taken from http://repo.varnish-cache.org/debian/dists/
     supported_list="lenny squeeze hardy lucid"
@@ -2120,7 +2160,7 @@ function add_next_step()
     if [ -n "$next_steps" ]; then
         next_steps=${next_steps}${NEW_LINE}"[$(basename $0)] "${1}
     else
-         next_steps="[$(basename $0)] "${1}
+        next_steps="[$(basename $0)] "${1}
     fi
 }
 
@@ -2332,7 +2372,7 @@ function verify_that_files_exist_and_are_readable()
         fi
     done
 }   
-        
+
 # $1=<default instance name>
 # $2=<editorial server=0 | presentation server=1>
 function install_ece_instance()
@@ -2388,9 +2428,9 @@ function install_ece_instance()
     add_next_step "Admin interface: $admin_uri"
     add_next_step "View installed versions with:"\
 " ece -i $instance_name versions"
-    add_next_step "Type 'ece help' to see all the options of this script"
-    add_next_step "Read its guide: /usr/share/doc/escenic/ece-guide.txt"
-    add_next_step "/etc/default/ece lists all instances started at boot time"
+add_next_step "Type 'ece help' to see all the options of this script"
+add_next_step "Read its guide: /usr/share/doc/escenic/ece-guide.txt"
+add_next_step "/etc/default/ece lists all instances started at boot time"
 }
 
 function get_publication_short_name_list()
@@ -2409,7 +2449,7 @@ function get_publication_short_name_list()
     done
 
     echo ${short_name_list}
- }
+}
 
 function get_deploy_white_list()
 {
@@ -2432,7 +2472,7 @@ function get_deploy_white_list()
 
 function install_presentation_server()
 {
-    print_and_log "Installing a presentation server on $HOSTNAME ..."
+    print_and_log "Installing a presentation server on $HOSTNAME."
     type=engine
     install_ece_instance "web1" $PROFILE_PRESENTATION_SERVER
 }
@@ -2629,11 +2669,11 @@ clientConfiguration=/neo/io/services/HubConnection
 pingTime=10000
 EOF
 
-    add_next_step "Restart all your instances to make the hub see them."
+add_next_step "Restart all your instances to make the hub see them."
 
-    print_and_log "Starting the RMI-hub on $HOSTNAME ..."
-    ece_command="ece -t rmi-hub restart"
-    su - $ece_user -c "$ece_command" 1>>$log 2>>$log
+print_and_log "Starting the RMI-hub on $HOSTNAME ..."
+ece_command="ece -t rmi-hub restart"
+su - $ece_user -c "$ece_command" 1>>$log 2>>$log
 }
 
 # reads the value of the desired setting from $conf_file
@@ -2720,39 +2760,39 @@ function install_widget_framework()
 </settings>
 EOF
 
-    print_and_log "Downloading Widget Framework from technet.escenic.com ..."
-    for el in $wf_download_list; do
-        cd $download_dir
-        run wget $wget_opts \
-            --http-user $technet_user \
-            --http-password $technet_password \
-            $el
-        run cd $escenic_root_dir/
-        run unzip -q -u $download_dir/$(basename $el)
-    done
+print_and_log "Downloading Widget Framework from technet.escenic.com ..."
+for el in $wf_download_list; do
+    cd $download_dir
+    run wget $wget_opts \
+        --http-user $technet_user \
+        --http-password $technet_password \
+        $el
+    run cd $escenic_root_dir/
+    run unzip -q -u $download_dir/$(basename $el)
+done
 
-    install_packages_if_missing "maven2"
-    assert_pre_prequesite mvn
-    
-    export JAVA_HOME=$java_home
-    wf_maven_dir=$(echo $escenic_root_dir/widget-framework-core-*/maven)
-    run cd $wf_maven_dir
-    
-    print_and_log "Installing Widget Framework into your Maven repository ..."
-    log "JAVA_HOME=$JAVA_HOME"
-    
-    run mvn $maven_opts install
+install_packages_if_missing "maven2"
+assert_pre_prequesite mvn
+
+export JAVA_HOME=$java_home
+wf_maven_dir=$(echo $escenic_root_dir/widget-framework-core-*/maven)
+run cd $wf_maven_dir
+
+print_and_log "Installing Widget Framework into your Maven repository ..."
+log "JAVA_HOME=$JAVA_HOME"
+
+run mvn $maven_opts install
 
     # installing the widget-framework-common as a ECE plugin
-    wf_dist_dir=$(echo $wf_maven_dir/widget-framework-common/target/widget-framework-common-*-dist/widget-framework-common-*)
-    cd $escenic_root_dir/assemblytool/plugins
-    if [ ! -h $(basename $wf_dist_dir) ]; then
-        ln -s $wf_dist_dir
-    fi
-    
-    cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
+wf_dist_dir=$(echo $wf_maven_dir/widget-framework-common/target/widget-framework-common-*-dist/widget-framework-common-*)
+cd $escenic_root_dir/assemblytool/plugins
+if [ ! -h $(basename $wf_dist_dir) ]; then
+    ln -s $wf_dist_dir
+fi
 
-    add_next_step "Widget Framework has been installed into your "\
+cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
+
+add_next_step "Widget Framework has been installed into your "\
 " Maven repo"
 }
 
@@ -2763,7 +2803,7 @@ function install_search_server()
     install_ece_instance "search1" 0
     
     # TODO update instead of append
-    dir=$common_nursery_dir/com/escenic/framework/search/solr
+    local dir=$common_nursery_dir/com/escenic/framework/search/solr
     make_dir $dir
     echo "solrServerURI=http://${search_host}:${search_port}/solr" \
         >>  $dir/SolrSearchEngine.properties
@@ -3052,7 +3092,8 @@ function set_up_monitoring_host_def()
         print "$1 host" $host_name "already defined, skipping it."
         return
     fi
-    
+
+    # TODO add more services based on what kind of host it is.
     cat >> $file <<EOF
 define host {
   use generic-host
@@ -3205,8 +3246,8 @@ function add_server_to_runlevels()
     # no need to add init.d scripts to the runlevel(s) for these
     # profiles
     if [ $install_profile_number -eq $PROFILE_WIDGET_FRAMEWORK -o \
-         $install_profile_number -eq $PROFILE_DB_SERVER -o \
-         $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
+        $install_profile_number -eq $PROFILE_DB_SERVER -o \
+        $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
         return
     fi
 
@@ -3451,7 +3492,7 @@ function create_monitoring_server_overview()
 EOF
     if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
         echo '<li><a href="/nagios3">Nagios</a></li>' \
-    else
+            else
         echo '<li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' \
             >> $file
     fi
