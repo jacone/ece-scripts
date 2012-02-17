@@ -35,7 +35,7 @@ escenic_backups_dir=/var/backups/${dir_suffix}
 escenic_spool_dir=/var/spool/${dir_suffix}
 escenic_cache_dir=/var/cache/${dir_suffix}
 escenic_crash_dir=/var/crash/${dir_suffix}
-appserver_root_dir=/opt
+appserver_parent_dir=/opt
 
 # country code for selecting the correct (APT) mirror.
 mirror_country_suffix=jp
@@ -1114,7 +1114,7 @@ function set_up_app_server()
     run wget $wget_opts $tomcat_download
     tomcat_dir=$(get_base_dir_from_bundle $tomcat_download)
     
-    run cd $appserver_root_dir
+    run cd $appserver_parent_dir
     run tar xzf $download_dir/${tomcat_dir}.tar.gz
 
     if [ -e tomcat ]; then
@@ -1122,11 +1122,11 @@ function set_up_app_server()
     fi
     run ln -sf ${tomcat_dir} tomcat
     
-    tomcat_home=${appserver_root_dir}/tomcat   
-    tomcat_base=${appserver_root_dir}/tomcat-${instance_name}
+    tomcat_home=${appserver_parent_dir}/tomcat   
+    tomcat_base=${appserver_parent_dir}/tomcat-${instance_name}
     make_dir $tomcat_base
 
-    run cp -r ${appserver_root_dir}/${tomcat_dir}/conf $tomcat_base
+    run cp -r ${appserver_parent_dir}/${tomcat_dir}/conf $tomcat_base
     for el in bin escenic/lib lib work logs temp webapps; do
         make_dir $tomcat_base/$el
     done
@@ -1715,7 +1715,7 @@ function un_install_ece()
     print_and_log "Uninstalling ECE ..."
      # TODO safety, warnings++
     rm -rf $escenic_conf_dir/ \
-        ${appserver_root_dir}/*tomcat* \
+        ${appserver_parent_dir}/*tomcat* \
         $escenic_root_dir \
         $escenic_data_dir \
         $escenic_run_dir/ \
@@ -3369,7 +3369,7 @@ function restore_from_backup()
         run tar -C / -xf $backup_file opt
         add_next_step "Successfully restored Escenic & Tomcat binaries"
         add_next_step "Backup file used: $(basename $backup_file)"
-        add_next_step "Check ${appserver_root_dir} to verify that they're all there".
+        add_next_step "Check ${appserver_parent_dir} to verify that they're all there".
         install_ece_third_party_packages
         set_up_engine_directories
 
