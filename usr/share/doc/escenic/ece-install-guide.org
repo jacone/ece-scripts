@@ -674,17 +674,17 @@ ece-install.conf. Here's an example of changing all the paths possible
 with the same suffix.
 
 #+BEGIN_SRC conf
-suffix=escenic-parallel
-
-escenic_root_dir=/opt/$suffix
-escenic_conf_dir=/etc/$suffix
-escenic_log_dir=/var/log/$suffix
-escenic_data_dir=/var/lib/$suffix
-escenic_run_dir=/var/run/$suffix
-escenic_backups_dir=/var/backups/$suffix
-escenic_spool_dir=/var/spool/$suffix
-escenic_cache_dir=/var/cache/$suffix
-escenic_crash_dir=/var/crash/$suffix
+dir_suffix=escenic-parallel
+escenic_root_dir=/opt/${dir_suffix}
+escenic_conf_dir=/etc/${dir_suffix}
+escenic_log_dir=/var/log/${dir_suffix}
+escenic_data_dir=/var/lib/${dir_suffix}
+escenic_run_dir=/var/run/${dir_suffix}
+escenic_backups_dir=/var/backups/${dir_suffix}
+escenic_spool_dir=/var/spool/${dir_suffix}
+escenic_cache_dir=/var/cache/${dir_suffix}
+escenic_crash_dir=/var/crash/${dir_suffix}
+appserver_parent_dir=/opt
 #+END_SRC
 
 Note, this is only needed if you are running two completely separate
