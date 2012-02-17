@@ -419,8 +419,7 @@ $ tar czf /tmp/nursery-skeleton-solr-and-security.tar.gz \
   engine/security \
   engine/siteconfig/config-skeleton/ \
   engine/solr/conf \
-  engine/siteconfig/bootstrap-skeleton/ \
-  `find -L assemblytool/plugins/ -name siteconfig`
+  engine/siteconfig/bootstrap-skeleton/`
 #+END_SRC
 
 /tmp/nursery-skeleton-solr-and-security.tar.gz should now have everything
@@ -438,6 +437,10 @@ profiles, see the table below.
 The inclusion of the engine/solr directory makes it easy for users to
 provide their own, optimised Solr configuration. In this context, also
 note that a post install hook, set_up_solr.postinst, is available.
+
+If you wish to provide Nursery configuration for the plugins, you
+simply put them in engine/siteconfig/config-skeleton inside your
+tarball, together with the other Nursery configuration files.
 
 ** Setting up virtual hosts
 Setting up virtual host definitions in the application server makes a
