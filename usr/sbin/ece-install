@@ -296,7 +296,6 @@ function install_packages_if_missing()
     fi
 }
 
-
 function install_common_os_packages()
 {
     print_and_log "Installing 3rd party packages needed by $(basename $0) ..."
@@ -413,10 +412,8 @@ name: ${short_name}
 source-war: ${short_name}.war
 context-root: ${short_name}
 EOF
-            
         done
     fi
-    
 }
 
 function set_up_engine_and_plugins()
@@ -609,31 +606,37 @@ function set_up_basic_nursery_configuration()
 {
     print_and_log "Setting up the basic Nursery configuration ..."
 
-    local escenic_root_dir=$escenic_root_dir
-    
-    if [ $(is_using_conf_archive) -eq 1 ]; then
-        print_and_log "Using the supplied Nursery & JAAS configuration from" 
-        print_and_log "bundle: $ece_instance_conf_archive"
-        local a_tmp_dir=$(mktemp -d)
-        escenic_root_dir=$a_tmp_dir
-        run cd $a_tmp_dir
-        run tar xzf $ece_instance_conf_archive
-    fi
-    
-    run cp -r $escenic_root_dir/engine/siteconfig/config-skeleton/* \
-        $common_nursery_dir/
-    run cp -r $escenic_root_dir/engine/security/ \
-        $common_nursery_dir/
-
-    make_dir $escenic_conf_dir/engine/instance
-
+    # we always copy the default plugin configuration (even if there
+    # is an archive)
     for el in $escenic_root_dir/assemblytool/plugins/*; do
         if [ ! -d $el/misc/siteconfig/ ]; then
             continue
         fi
-
         run cp -r $el/misc/siteconfig/* $common_nursery_dir/
     done
+
+    # Then we see if we're using configuration archives, if yes, use
+    # the JAAS and Nursery configuraiton from here.
+    if [ $(is_using_conf_archive) -eq 1 ]; then
+        print_and_log "Using the supplied Nursery & JAAS configuration from" 
+        print_and_log "bundle: $ece_instance_conf_archive"
+        local a_tmp_dir=$(mktemp -d)
+        
+        if [ ! -d ${a_tmp_dir}/engine/security ]; then
+            print "Archive $ece_instance_conf_archive doesn't have JAAS config,"
+            print "I'll use standard JAAS (engine/security) instead."
+            run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/
+        fi
+        
+        run cd $a_tmp_dir
+        run tar xzf $ece_instance_conf_archive
+        run cp -r engine/siteconfig/config-skeleton/* $common_nursery_dir/
+    else
+        run cp -r $escenic_root_dir/engine/siteconfig/config-skeleton/* \
+            $common_nursery_dir/
+        run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/
+    fi
+
 
     if [ -n "${a_tmp_dir}" ]; then
         run rm -rf ${a_tmp_dir}
@@ -920,14 +923,13 @@ function install_ece_third_party_packages
           libtcnative-1
           libmysql-java
           memcached
-          maven2
           wget"
 
         print_and_log "Installing 3rd party packages needed by ECE ..."
         install_packages_if_missing $packages
     fi
     
-    for el in ant mvn java; do
+    for el in ant java; do
         assert_pre_prequesite $el
     done
 }
@@ -1622,16 +1624,40 @@ EOF
     echo "TBD"
 }
 
+## Method which will try its best to find the home diretory of
+## existing users and probable home directories of new users.
+##
+## (1) On Darwin/Mac OS X, it will return /Users/<user>
+## (2) On systems using /etc/passwd, it will search there to find the
+##     home dir of existing users.
+## (3) For new users, it will check the configuration of adduser (if
+##     present).
+## (4) If all of thes above fails, it will return /home/<user>
+##
+## Arguments:
+## $1 : the user name, can either be an existing user or a non-yet
+## created user.
+function get_user_home_directory()
+{
+    if [ $(uname -s) = "Darwin" ]; then
+        echo /Users/$1
+    elif [ $(grep $1 /etc/passwd | wc -l) -gt 0 ]; then
+        grep $1 /etc/passwd | cut -d':' -f6
+    elif [ -r /etc/adduser.conf ]; then
+        local dir=$(grep DHOME /etc/adduser.conf | grep -v ^# | cut -d'=' -f2)
+        echo $dir/$1
+    else
+        echo "/home/$1"
+    fi
+}
+
 function set_up_user_enviornment()
 {
     print_and_log "Setting up the ${ece_user} user's UNIX environment ..."
 
-    local bashrc=/home/${ece_user}/.bashrc
-    if [ $(uname -s) = "Darwin" ]; then
-        bashrc=/Users/${ece_user}/.bashrc
-    fi
+    local bashrc=$(get_user_home_directory $ece_user)/.bashrc
     
-    if [ $(grep bash_completion.d/ece ${bashrc}  2>/dev/null | \
+    if [ $(grep bash_completion.d/ece ${bashrc} 2>/dev/null | \
         wc -l) -lt 1 ]; then
         echo ". /etc/bash_completion.d/ece" >> ${bashrc}
     fi
@@ -2705,7 +2731,9 @@ EOF
         run unzip -q -u $download_dir/$(basename $el)
     done
 
+    install_packages_if_missing "maven2"
     assert_pre_prequesite mvn
+    
     export JAVA_HOME=$java_home
     wf_maven_dir=$(echo $escenic_root_dir/widget-framework-core-*/maven)
     run cd $wf_maven_dir
