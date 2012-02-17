@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="title" content="Welcome to the /usr/sbin/ece-install Guide"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2012-02-07 19:40:37 CST"/>
+<meta name="generated" content="2012-02-17 12:59:41 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -1128,8 +1128,7 @@ assembly environment set up and then do:
   <span style="color: #f0dfaf;">engine/security</span> \
   <span style="color: #f0dfaf;">engine/siteconfig/config-skeleton/</span> \
   <span style="color: #f0dfaf;">engine/solr/conf</span> \
-  <span style="color: #f0dfaf;">engine/siteconfig/bootstrap-skeleton/</span> \
-  <span style="color: #f0dfaf;">`find</span> -L assemblytool/plugins/ -name siteconfig`
+  <span style="color: #f0dfaf;">engine/siteconfig/bootstrap-skeleton/`</span>
 </pre>
 
 
@@ -1154,6 +1153,11 @@ profiles, see the table below.
 The inclusion of the engine/solr directory makes it easy for users to
 provide their own, optimised Solr configuration. In this context, also
 note that a post install hook, set<sub>up</sub><sub>solr</sub>.postinst, is available.
+</p>
+<p>
+If you wish to provide Nursery configuration for the plugins, you
+simply put them in engine/siteconfig/config-skeleton inside your
+tarball, together with the other Nursery configuration files.
 </p>
 </div>
 
@@ -1206,8 +1210,23 @@ This will produce the following stanzas in server.xml:
 
 
 <p>
-You must of course make sure that these host names are resolvable to
-the intended IPs on your system using /etc/hosts or a local DNS.
+Furthermore, if these host names are  not resolvable to your local
+host (neither localhost or the IP of your $HOSTNAME), ece-install will
+add entries for these domains in the machine's /etc/hosts:
+</p>
+
+
+<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">added by ece-install @ Wed Feb  8 19:21:49 CST 2012</span>
+127.0.1.1 fire.escenic.com
+
+<span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">added by ece-install @ Wed Feb  8 19:21:51 CST 2012</span>
+127.0.1.1 ild.escenic.com
+</pre>
+
+
+<p>
+If you do not want ece-install to touch your /etc/hosts, you can set
+fai_keep_off_etc_hosts=1 in your ece-install.conf
 </p>
 </div>
 
@@ -1259,7 +1278,7 @@ $HOME/ece-install.conf file of the root user:
 <tr><td class="left">fai_publication_use_instance</td><td class="left">dev1</td><td class="left">Name of local instance to use for creation</td></tr>
 <tr><td class="left">fai_publication_war</td><td class="left">"WF or ECE demo WAR"</td><td class="left">WAR to base the new publication on</td></tr>
 <tr><td class="left">fai_publication_war_uri_list</td><td class="left">""</td><td class="left">Publication WARs used for setting up Assembly tool. Supported: http[s]://tmp.com/mypub.war, <a href="file:////tmp/mypub.war">///tmp/mypub.war</a> and /tmp/mypub.war.</td></tr>
-<tr><td class="left">fai_publication_domain_mapping_list</td><td class="left">""</td><td class="left">Mapping between publication names and their corresponding domains on the form: one#one.com other#other.com</td></tr>
+<tr><td class="left">fai_publication_domain_mapping_list</td><td class="left">""</td><td class="left">Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com"</td></tr>
 <tr><td class="left">fai_rmi_install</td><td class="left">0</td><td class="left">Install RMI hub profile</td></tr>
 <tr><td class="left">fai_search_conf_archive</td><td class="left">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
 <tr><td class="left">fai_search_ear</td><td class="left">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
@@ -1269,6 +1288,7 @@ $HOME/ece-install.conf file of the root user:
 <tr><td class="left">fai_search_name</td><td class="left">search1</td><td class="left">Name of the search instance</td></tr>
 <tr><td class="left">fai_search_port</td><td class="left">8080</td><td class="left">HTTP port of the search instance</td></tr>
 <tr><td class="left">fai_search_shutdown</td><td class="left">8005</td><td class="left">Shutdown port of the search instance</td></tr>
+<tr><td class="left">fai_keep_off_etc_hosts</td><td class="left">0</td><td class="left">Set this to 1 if you don't want ece-install adding entries to /etc/hosts</td></tr>
 <tr><td class="left">fai_wf_install</td><td class="left">0</td><td class="left">Install Widget Framework profile</td></tr>
 </tbody>
 </table>
@@ -1510,17 +1530,17 @@ with the same suffix.
 
 
 
-<pre class="src src-conf"><span style="color: #f0dfaf;">suffix</span>=escenic-parallel
-
-<span style="color: #f0dfaf;">escenic_root_dir</span>=/opt/$suffix
-<span style="color: #f0dfaf;">escenic_conf_dir</span>=/etc/$suffix
-<span style="color: #f0dfaf;">escenic_log_dir</span>=/var/log/$suffix
-<span style="color: #f0dfaf;">escenic_data_dir</span>=/var/lib/$suffix
-<span style="color: #f0dfaf;">escenic_run_dir</span>=/var/run/$suffix
-<span style="color: #f0dfaf;">escenic_backups_dir</span>=/var/backups/$suffix
-<span style="color: #f0dfaf;">escenic_spool_dir</span>=/var/spool/$suffix
-<span style="color: #f0dfaf;">escenic_cache_dir</span>=/var/cache/$suffix
-<span style="color: #f0dfaf;">escenic_crash_dir</span>=/var/crash/$suffix
+<pre class="src src-conf"><span style="color: #f0dfaf;">dir_suffix</span>=escenic-parallel
+<span style="color: #f0dfaf;">escenic_root_dir</span>=/opt/${dir_suffix}
+<span style="color: #f0dfaf;">escenic_conf_dir</span>=/etc/${dir_suffix}
+<span style="color: #f0dfaf;">escenic_log_dir</span>=/var/log/${dir_suffix}
+<span style="color: #f0dfaf;">escenic_data_dir</span>=/var/lib/${dir_suffix}
+<span style="color: #f0dfaf;">escenic_run_dir</span>=/var/run/${dir_suffix}
+<span style="color: #f0dfaf;">escenic_backups_dir</span>=/var/backups/${dir_suffix}
+<span style="color: #f0dfaf;">escenic_spool_dir</span>=/var/spool/${dir_suffix}
+<span style="color: #f0dfaf;">escenic_cache_dir</span>=/var/cache/${dir_suffix}
+<span style="color: #f0dfaf;">escenic_crash_dir</span>=/var/crash/${dir_suffix}
+<span style="color: #f0dfaf;">appserver_parent_dir</span>=/opt
 </pre>
 
 
@@ -1734,7 +1754,7 @@ The following output is produced from ece-install:
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2012-02-07 19:40:37 CST
+  Date: 2012-02-17 12:59:41 CST
 </p>
 </div>
 </body>
