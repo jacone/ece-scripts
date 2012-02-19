@@ -9,6 +9,17 @@
 # Usually this command is executed from "/usr/bin/vosa -i somevm start"
 # or similar.
 
+if [ -z "$KVM_BINARY" ] ; then
+  KVM_BINARY=$(which 2>/dev/null kvm) ||
+  KVM_BINARY=$(which 2>/dev/null qemu-kvm) ||
+  KVM_BINARY=/usr/libexec/qemu-kvm
+fi
+
+if [ -z "$KVM_BINARY" -o ! -x $KVM_BINARY ] ; then
+  echo Unable to figure out where kvm is installed... export KVM_BINARY to make it work.
+fi
+
+
 debug=3
 
 function decho() {
@@ -132,7 +143,7 @@ $0: It seems I am not able to run kvm as root.  I will not be able to run kvm
 with bridged networking.
 To fix this, add the file /etc/sudoers.d/kvm with the line
 
-  $(id -un) ALL=(ALL) NOPASSWD: /usr/bin/kvm
+  $(id -un) ALL=(ALL) NOPASSWD: $KVM_BINARY
 
 Exiting.
 EOF
@@ -165,11 +176,11 @@ function boot_kvm() {
   fi
   kernel=${image}/vmlinuz
   img=${image}/disk.img
-  cloud_param="nocloud;h=${hostname};s=file:///var/lib/cloud/data/cache/nocloud/"
+  cloud_param="nocloud;h=${hostname}"
 
   # should _maybe_ be put in some other script?  Needed by e.g. vosa start too.
   decho 1 "Starting the machine"
-  startupcmd=($sudo kvm
+  startupcmd=($sudo $KVM_BINARY
   -daemonize
   ${vncoption}
   -name "${hostname}"
