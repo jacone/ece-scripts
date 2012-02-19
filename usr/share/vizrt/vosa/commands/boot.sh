@@ -210,7 +210,13 @@ function boot_kvm() {
 
   # actually execute kvm
   echo "${startupcmd[@]}"
-  "${startupcmd[@]}"; exitonerror $? "Unable to start kvm :-/" 
+  "${startupcmd[@]}"; 
+  local rc
+  rc=$?
+  if [ $rc != 0 ] ;
+    rm $pidfile
+    exitonerror $rc "Unable to start kvm :-/"
+  fi
 }
 
 
