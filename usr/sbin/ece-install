@@ -253,13 +253,13 @@ pulse_bits="-\|/"
 
 function pulse()
 {
-    echo -ne "\b${pulse_bits:i++%${#pulse_bits}:1}"
+    echo -ne "\b${pulse_bits: i++ % ${#pulse_bits}: 1}"
 }
 
 function show_pulse()
 {
-    printne "$1 ...."
-    local pulse_pid=$2
+    printne "${@: 2: $(( $# - 1 ))} ...."
+    local pulse_pid=$1
     while true; do
         kill -0 $pulse_pid 2>/dev/null
         if [ $? -eq 0 ]; then
@@ -287,18 +287,16 @@ function download_escenic_components()
         return
     fi
 
-    print_and_log "Downloading Escenic software from technet.escenic.com ..."
-
     cd $download_dir
     for el in $technet_download_list; do
-        if [ -e $(basename $el) ]; then
-            continue
-        fi
-        
-        run wget $wget_opts \
-            --http-user $technet_user \
-            --http-password $technet_password \
-            $el 
+      if [ -e $(basename $el) ]; then
+        continue
+      fi
+      
+      run wget $wget_opts \
+        --http-user $technet_user \
+        --http-password $technet_password \
+        $el 
     done
 }
 
@@ -309,6 +307,8 @@ function download_escenic_components()
 # $1 : space separated string of package names 
 function install_packages_if_missing()
 {
+  log "Installing packages [$1] if they're missing ..."
+  
     if [ $on_debian_or_derivative -eq 1 ]; then
         some_are_missing=0
         for el in $@; do
@@ -334,25 +334,48 @@ function install_packages_if_missing()
 
 function install_common_os_packages()
 {
-    $(
-        if [ $on_debian_or_derivative -eq 1 ]; then
+  log "Installing common OS packages ..."
+  
+  if [ $on_debian_or_derivative -eq 1 ]; then
         # Ubuntu doesn't have git (!) but only git-core.
-            if [ $on_ubuntu -eq 1 ]; then
-                git_package=git-core
-            else
-                git_package=git
-            fi
-
-            packages="curl $git_package wget unzip"
-            install_packages_if_missing $packages
-        fi
-
-        for el in lsb_release curl wget git unzip; do
-            assert_pre_prequesite $el
-        done
-    ) &
-    show_pulse  "Installing 3rd party packages needed by $(basename $0)" $!
+    if [ $on_ubuntu -eq 1 ]; then
+      git_package=git-core
+    else
+      git_package=git
+    fi
+    
+    packages="curl $git_package wget unzip"
+    install_packages_if_missing $packages
+  fi
+  
+  for el in lsb_release curl wget git unzip; do
+    assert_pre_prequesite $el
+  done
 }
+
+######################################################################
+# <pulse-methods>
+function set_up_user_environment_p() {
+  $(set_up_user_environment) &
+  show_pulse $! "Setting up the ${ece_user}'s UNIX environment"
+}
+
+function set_up_ece_scripts_p() {
+  $(set_up_ece_scripts) &
+  show_pulse $! 'Setting up the ece UNIX scripts'
+}
+
+function install_common_os_packages_p() {
+  $(install_common_os_packages) &
+  show_pulse $! "Installing 3rd party packages needed by $(basename $0)"
+}
+
+function install_ece_third_party_packages_p() {
+  $(install_ece_third_party_packages) &
+  show_pulse $! "Installing 3rd party packages needed by ECE"
+}
+######################################################################
+# </pulse-methods>
 
 function set_up_assembly_tool()
 {
@@ -502,43 +525,39 @@ function set_up_engine_and_plugins()
 
 function set_up_ece_scripts()
 {
-    $(
-        run cd $download_dir
-        if [ -d ece-scripts ]; then
-            (
-                run cd ece-scripts
-                run git pull
-            )
-        else
-            run git clone $ece_scripts_git_source
-        fi
-        
-        run cp -r ece-scripts/usr/* /usr/
-        run cp -r ece-scripts/etc/escenic/* ${escenic_conf_dir}/
-        run cp -r ece-scripts/etc/bash_completion.d/ece /etc/bash_completion.d/
-        run cp -r ece-scripts/etc/init.d/* /etc/init.d/
-        run cp -r ece-scripts/etc/default/* /etc/default/
-        
-        local file=${escenic_conf_dir}/ece.conf
-        set_conf_file_value assemblytool_home ${escenic_root_dir}/assemblytool $file
-        set_conf_file_value backup_dir ${escenic_backups_dir} $file
-        set_conf_file_value cache_dir ${escenic_cache_dir} ${file}
-        set_conf_file_value ece_home ${escenic_root_dir}/engine ${file}
-        set_conf_file_value escenic_conf_dir ${escenic_conf_dir} ${file}
-        set_conf_file_value heap_dump_dir ${escenic_crash_dir} ${file}
-        set_conf_file_value log_dir ${escenic_log_dir} ${file}
-        set_conf_file_value pid_dir ${escenic_run_dir} ${file}
-        set_conf_file_value rmi_hub_conf ${escenic_conf_dir}/rmi-hub ${file}
-        set_conf_file_value solr_home ${escenic_data_dir}/solr ${file}
-        set_conf_file_value ece_security_configuration_dir \
-            ${escenic_conf_dir}/engine/common/security \
-            ${file}
+  run cd $download_dir
+  if [ -d ece-scripts ]; then
+    (
+      run cd ece-scripts
+      run git pull
+    )
+  else
+    run git clone $ece_scripts_git_source
+  fi
+  
+  run cp -r ece-scripts/usr/* /usr/
+  run cp -r ece-scripts/etc/escenic/* ${escenic_conf_dir}/
+  run cp -r ece-scripts/etc/bash_completion.d/ece /etc/bash_completion.d/
+  run cp -r ece-scripts/etc/init.d/* /etc/init.d/
+  run cp -r ece-scripts/etc/default/* /etc/default/
+  
+  local file=${escenic_conf_dir}/ece.conf
+  set_conf_file_value assemblytool_home ${escenic_root_dir}/assemblytool $file
+  set_conf_file_value backup_dir ${escenic_backups_dir} $file
+  set_conf_file_value cache_dir ${escenic_cache_dir} ${file}
+  set_conf_file_value ece_home ${escenic_root_dir}/engine ${file}
+  set_conf_file_value escenic_conf_dir ${escenic_conf_dir} ${file}
+  set_conf_file_value heap_dump_dir ${escenic_crash_dir} ${file}
+  set_conf_file_value log_dir ${escenic_log_dir} ${file}
+  set_conf_file_value pid_dir ${escenic_run_dir} ${file}
+  set_conf_file_value rmi_hub_conf ${escenic_conf_dir}/rmi-hub ${file}
+  set_conf_file_value solr_home ${escenic_data_dir}/solr ${file}
+  set_conf_file_value ece_security_configuration_dir \
+    ${escenic_conf_dir}/engine/common/security \
+    ${file}
 
-        run sed -i "s#/etc/escenic#${escenic_conf_dir}#g" /etc/bash_completion.d/ece
-        run sed -i "s#/opt/escenic#${escenic_root_dir}#g" /etc/bash_completion.d/ece
-    ) &
-    
-    show_pulse "Setting up the ece UNIX scripts ..." $!
+  run sed -i "s#/etc/escenic#${escenic_conf_dir}#g" /etc/bash_completion.d/ece
+  run sed -i "s#/opt/escenic#${escenic_root_dir}#g" /etc/bash_completion.d/ece
 }
 
 default_db_port=3306
@@ -917,8 +936,10 @@ function install_ece_third_party_packages
     
     if [ $on_debian_or_derivative -eq 1 ]; then
         if [ $on_ubuntu -eq 1 ]; then
-            # Sun Java was removed in Ubuntu in 11.10 
-            local version_needs_local_java_deb=1110
+            # Sun Java was removed in Ubuntu in 11.10 and later also
+            # from LTS 10.04, hence Hardy is the last one with these
+            # packges now (2012-02-20 11:22)
+            local version_needs_local_java_deb=1004
             local version=$(lsb_release -s -r | sed "s#\.##g")
             
             add_apt_source \
@@ -964,8 +985,7 @@ function install_ece_third_party_packages
           memcached
           wget"
 
-        $(install_packages_if_missing $packages) & \
-            show_pulse "Installing 3rd party packages needed by ECE" $!
+        install_packages_if_missing $packages
     fi
     
     for el in ant java; do
@@ -1690,22 +1710,19 @@ function get_user_home_directory()
     fi
 }
 
-function set_up_user_enviornment()
+function set_up_user_environment()
 {
-    $(
-        local bashrc=$(get_user_home_directory $ece_user)/.bashrc
-        
-        if [ $(grep bash_completion.d/ece ${bashrc} 2>/dev/null | \
-            wc -l) -lt 1 ]; then
-            echo ". /etc/bash_completion.d/ece" >> ${bashrc}
-        fi
-
-        if [ $(grep ECE_CONF_LOCATIONS ${bashrc} | wc -l) -eq 0 ]; then
-            echo "export ECE_CONF_LOCATIONS=\"$escenic_conf_dir\"" >> ${bashrc}
-            run chown ${ece_user}:${ece_group} ${bashrc}
-        fi
-    ) &
-    show_pulse "Setting up the ${ece_user} user's UNIX environment" $!
+  local bashrc=$(get_user_home_directory $ece_user)/.bashrc
+  
+  if [ $(grep bash_completion.d/ece ${bashrc} 2>/dev/null | \
+    wc -l) -lt 1 ]; then
+    echo ". /etc/bash_completion.d/ece" >> ${bashrc}
+  fi
+  
+  if [ $(grep ECE_CONF_LOCATIONS ${bashrc} | wc -l) -eq 0 ]; then
+    echo "export ECE_CONF_LOCATIONS=\"$escenic_conf_dir\"" >> ${bashrc}
+    run chown ${ece_user}:${ece_group} ${bashrc}
+  fi
 }
 
 function set_up_solr()
@@ -2070,9 +2087,9 @@ function common_pre_install()
     fi
 
     make_dir $download_dir
-    install_common_os_packages
+    install_common_os_packages_p
     create_user_and_group_if_not_present
-    set_up_user_enviornment
+    set_up_user_environment_p
 }
 
 function assert_pre_prequesite()
@@ -2381,7 +2398,7 @@ function install_ece_instance()
     
     ask_for_instance_name $1
     set_up_engine_directories
-    set_up_ece_scripts
+    set_up_ece_scripts_p
 
     set_archive_files_depending_on_profile
     
@@ -2760,40 +2777,40 @@ function install_widget_framework()
 </settings>
 EOF
 
-print_and_log "Downloading Widget Framework from technet.escenic.com ..."
-for el in $wf_download_list; do
-    cd $download_dir
-    run wget $wget_opts \
+    print_and_log "Downloading Widget Framework from technet.escenic.com ..."
+    for el in $wf_download_list; do
+      cd $download_dir
+      run wget $wget_opts \
         --http-user $technet_user \
         --http-password $technet_password \
         $el
-    run cd $escenic_root_dir/
-    run unzip -q -u $download_dir/$(basename $el)
-done
+      run cd $escenic_root_dir/
+      run unzip -q -u $download_dir/$(basename $el)
+    done
 
-install_packages_if_missing "maven2"
-assert_pre_prequesite mvn
+    install_packages_if_missing "maven2"
+    assert_pre_prequesite mvn
 
-export JAVA_HOME=$java_home
-wf_maven_dir=$(echo $escenic_root_dir/widget-framework-core-*/maven)
-run cd $wf_maven_dir
+    export JAVA_HOME=$java_home
+    wf_maven_dir=$(echo $escenic_root_dir/widget-framework-core-*/maven)
+    run cd $wf_maven_dir
 
-print_and_log "Installing Widget Framework into your Maven repository ..."
-log "JAVA_HOME=$JAVA_HOME"
+    print_and_log "Installing Widget Framework into your Maven repository ..."
+    log "JAVA_HOME=$JAVA_HOME"
 
-run mvn $maven_opts install
+    run mvn $maven_opts install
 
     # installing the widget-framework-common as a ECE plugin
-wf_dist_dir=$(echo $wf_maven_dir/widget-framework-common/target/widget-framework-common-*-dist/widget-framework-common-*)
-cd $escenic_root_dir/assemblytool/plugins
-if [ ! -h $(basename $wf_dist_dir) ]; then
-    ln -s $wf_dist_dir
-fi
+    wf_dist_dir=$(echo $wf_maven_dir/widget-framework-common/target/widget-framework-common-*-dist/widget-framework-common-*)
+    cd $escenic_root_dir/assemblytool/plugins
+    if [ ! -h $(basename $wf_dist_dir) ]; then
+      ln -s $wf_dist_dir
+    fi
 
-cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
+    cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
 
-add_next_step "Widget Framework has been installed into your "\
-" Maven repo"
+    add_next_step "Widget Framework has been installed into your " \
+      " Maven repo"
 }
 
 function install_search_server()
