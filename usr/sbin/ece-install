@@ -73,117 +73,9 @@ force_packages=0
 # ECE software components.
 ece_software_setup_completed=0
 
-NEW_LINE="
-"
 # the next steps printed when the user has installed his/her
 # components.
 next_steps=()
-
-function get_seconds_since_start()
-{
-    local seconds="n/a"
-    
-    if [ -r $pid_file ]; then
-        now=`date +%s`
-        started=`stat -c %Y $pid_file`
-        seconds=$(( now - started ))
-    fi
-    
-    echo "$seconds"
-}
-
-function get_id()
-{
-    timestamp=$(get_seconds_since_start)
-    echo "[$(basename $0)-${timestamp}]"
-}
-
-function debug()
-{
-    if [ $debug -eq 1 ]; then
-        echo "[$(basename $0)-debug]" "$@"
-    fi
-}
-
-function print()
-{
-    echo $(get_id) $@
-}
-
-function printne()
-{
-    echo -ne $(get_id) $@
-}
-
-function log()
-{
-    echo $(get_id) $@ >> $log
-}
-
-function print_and_log()
-{
-    print "$@"
-    log "$@"
-}
-
-function log_call_stack()
-{
-    log "Call stack (top most is the last one, main is the first):"
-
-    # skipping i=0 as this is log_call_stack itself
-    for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
-        echo -n  ${BASH_SOURCE[$i]}:${BASH_LINENO[$i-1]}:${FUNCNAME[$i]}"()" >> $log
-        if [ -e ${BASH_SOURCE[$i]} ]; then
-            echo -n " => " >> $log
-            sed -n "${BASH_LINENO[$i-1]}p" ${BASH_SOURCE[$i]} | \
-                sed "s#^[ \t]*##g" >> $log
-        else
-            echo "" >> $log
-        fi
-    done
-}
-
-function remove_pid_and_exit_in_error()
-{
-    if [ -e $pid_file ]; then
-        rm $pid_file
-    fi
-
-    log_call_stack
-    
-    exit 1
-}
-
-function exit_on_error()
-{
-    if [ $? -gt 0 ]; then
-        print "The command ["$@"] FAILED, exiting :-("
-        print "See $log for further details."
-        remove_pid_and_exit_in_error
-    fi
-}
-
-function run()
-{
-    $@ 1>>$log 2>>$log
-    exit_on_error $@
-}
-
-# Returns 1 if the passed value is a number, 0 if not
-#
-# $1 : what you want to test
-function is_number()
-{
-    if [ -z $1 ]; then
-        echo 0
-    elif [ $(echo $1 | grep [a-z] | wc -l) -gt 0 ]; then
-        echo 0
-    elif [ $(echo $1 | grep [A-Z] | wc -l) -gt 0 ]; then
-        echo 0
-    else
-        echo 1
-    fi
-}
 
 technet_download_list="
 http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
@@ -216,68 +108,19 @@ PROFILE_MONITORING_SERVER=10
 PROFILE_RESTORE_FROM_BACKUP=11
 PROFILE_ANALYSIS_SERVER=12
 
-function make_dir()
-{
-    if [ ! -d $1 ]; then
-        run mkdir -p $1
-    fi
-}
-
-function make_ln()
-{
-    if [ $2 ]; then
-        if [ -e $1 -a ! -h $2 ]; then
-            run ln -s $1 $2
-        elif [ ! -e $1 ]; then
-            print_and_log "Tried to make a symlink to $1, but it doesn't exist"
-            remove_pid_and_exit_in_error
-        fi
-    else
-        if [ -e $1 -a ! -h $(basename $1) ]; then
-            run ln -s $1
-        elif [ ! -e $1 ]; then
-            print_and_log "Tried to make a symlink to $1, but it doesn't exist"
-            remove_pid_and_exit_in_error
-        fi
-    fi
-}
+######################################################################
+# Load common BASH libraries
+#####################################################################
+common_libraries="common-bashing.sh common-pulse.sh common-io.sh common-os.sh"
+for el in $common_libraries; do
+  source $(dirname $0)/../share/escenic/ece-scripts/${el} || \
+    (echo "Could not find $el"; exit 1)
+done
 
 function set_up_engine_directories()
 {
     for el in $engine_dir_list; do
         make_dir $el
-    done
-}
-
-pulse_bits="-\|/"
-
-function pulse()
-{
-    echo -ne "\b${pulse_bits: i++ % ${#pulse_bits}: 1}"
-}
-
-function show_pulse()
-{
-    printne "${@: 2: $(( $# - 1 ))} ...."
-    local pulse_pid=$1
-    while true; do
-        kill -0 $pulse_pid 2>/dev/null
-        if [ $? -eq 0 ]; then
-            pulse
-            sleep 0.25
-        else
-            wait $pulse_pid
-            local exit_code=$?
-            if [ $exit_code -eq 0 ]; then
-                echo -e '\b\E[37;32m'" \033[1mok\033[0m"
-                tput sgr0
-            else
-                echo -e '\b\E[37;31m'" \033[1mfailed\033[0m"
-                tput sgr0
-            fi
-            
-            break
-        fi
     done
 }
 
@@ -349,12 +192,13 @@ function install_common_os_packages()
   fi
   
   for el in lsb_release curl wget git unzip; do
-    assert_pre_prequesite $el
+    assert_pre_requisite $el
   done
 }
 
 ######################################################################
 # <pulse-methods>
+######################################################################
 function set_up_user_environment_p() {
   $(set_up_user_environment) &
   show_pulse $! "Setting up the ${ece_user}'s UNIX environment"
@@ -376,6 +220,7 @@ function install_ece_third_party_packages_p() {
 }
 ######################################################################
 # </pulse-methods>
+######################################################################
 
 function set_up_assembly_tool()
 {
@@ -593,30 +438,30 @@ function set_db_defaults_if_not_set()
 
 function set_db_settings_from_fai_conf()
 {
-    # Note: the port isn't fully supported. The user must himself
-    # update the mysql configuration to run it on a non standard port.
-    
-    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
-        db_port=${fai_db_port-${default_db_port}}
-        db_host=${fai_db_host-${default_db_host}}
-        db_user=${fai_db_user-${default_db_user}}
-        db_password=${fai_db_password-${default_db_password}}
-        db_schema=${fai_db_schema-${default_db_schema}}
-    else
-        db_port=${fai_analysis_db_port-${default_db_port}}
-        db_host=${fai_analysis_db_host-${default_db_host}}
-        db_user=${fai_analysis_db_user-${default_db_user}}
-        db_password=${fai_analysis_db_password-${default_db_password}}
-        db_schema=${fai_analysis_db_schema-${default_db_schema}}
+  # Note: the port isn't fully supported. The user must himself
+  # update the mysql configuration to run it on a non standard port.
+  
+  if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+    db_port=${fai_db_port-${default_db_port}}
+    db_host=${fai_db_host-${default_db_host}}
+    db_user=${fai_db_user-${default_db_user}}
+    db_password=${fai_db_password-${default_db_password}}
+    db_schema=${fai_db_schema-${default_db_schema}}
+  else
+    db_port=${fai_analysis_db_port-${default_db_port}}
+    db_host=${fai_analysis_db_host-${default_db_host}}
+    db_user=${fai_analysis_db_user-${default_db_user}}
+    db_password=${fai_analysis_db_password-${default_db_password}}
+    db_schema=${fai_analysis_db_schema-${default_db_schema}}
+  fi
+  
+  if [ -n "${fai_db_drop_old_db_first}" ]; then
+    drop_db_first=${fai_db_drop_old_db_first}
+    if [ $fai_db_drop_old_db_first -eq 1 ]; then
+      print_and_log "$(yellow WARNING): I hope you know what you're doing!"
+      print_and_log "$(yellow WARNING): fai_db_drop_old_db_first is 1 (true)"
     fi
-    
-    if [ -n "${fai_db_drop_old_db_first}" ]; then
-        drop_db_first=${fai_db_drop_old_db_first}
-        if [ $fai_db_drop_old_db_first -eq 1 ]; then
-            print_and_log "WARNING: I hope you know what you're doing!"
-            print_and_log "WARNING: fai_db_drop_old_db_first is 1 (true)"
-        fi
-    fi
+  fi
 }
 
 function set_up_ecedb()
@@ -823,64 +668,12 @@ EOF
     else
         run cp $tomcat_home/conf/logging.properties $tomcat_base/conf
     fi
-    
 }
 
 # don't quote values when setting conf file values with
 # set_conf_file_value. This is a hack-ish variable due to EAE's
 # handling of .cfg files.
 dont_quote_conf_values=0
-
-# Parameters:
-# $1 is the property
-# $2 ... to the (last - 1) is the value
-# The last argument is the file
-#
-# e.g.:
-# set_conf_file_value \
-#   mykey \
-#   myvalue1 myvalue2 myvalue3 \
-#   /etc/myfile.conf
-function set_conf_file_value()
-{
-    if [ $# -lt 3 ]; then
-        return
-    fi
-    
-    local file=${@:${#@}}
-    local key=${@:1:1}
-    local value_end_index=$(( $# - 2 ))
-    local value=${@:2:${value_end_index}}
-
-    local parent_dir=$(dirname $file)
-    if [ ! -d ${parent_dir} ]; then
-        print ${parent_dir} "doesn't exist, something is wrong :-("
-        remove_pid_and_exit_in_error
-    fi
-    
-    if [ -r $file ]; then
-        if [ $(grep ^$1 $file | wc -l) -gt 0 ]; then
-            if [ $dont_quote_conf_values -eq 0 ]; then
-                sed -i "s~$key=.*~$key=\"$value\"~g" $file
-            else
-                sed -i "s~$key=.*~$key=$value~g" $file
-            fi    
-        else
-            if [ $dont_quote_conf_values -eq 0 ]; then
-                echo "$key=\"$value\"" >> $file
-            else
-                echo "$key=$value" >> $file
-            fi
-            
-        fi
-    else
-        if [ $dont_quote_conf_values -eq 0 ]; then
-            echo "$key=\"$value\"" >> $file
-        else
-            echo "$key=$value" >> $file
-        fi
-    fi
-}
 
 # The function accepts the following parameters:
 # $1 is the property
@@ -915,16 +708,6 @@ function create_java_deb_packages_and_repo()
     add_next_step "Local APT repository with Sun/Oracle Java packages"
     add_next_step "has been installed at /var/local/oab/deb and added"
     add_next_step "to your APT system with /etc/apt/sources.list.d/oab.list"
-}
-
-function has_sun_java_installed()
-{
-    if [[ -x /usr/lib/jvm/java-6-sun/bin/java || \
-        $(java -version 2>&1 > /dev/null | grep HotSpot | wc -l) -gt 0 ]]; then
-        echo 1
-    else
-        echo 0
-    fi
 }
 
 # Installs third party packages needed by the ECE (i.e. Java related).
@@ -989,7 +772,7 @@ function install_ece_third_party_packages
     fi
     
     for el in ant java; do
-        assert_pre_prequesite $el
+        assert_pre_requisite $el
     done
 }
 
@@ -1016,19 +799,6 @@ function get_base_dir_from_bundle()
     fi
     
     echo $file_name
-}
-
-# Returns an escaped string useful for sed and other BASH commands.
-#
-# $1 :  the string
-function get_escaped_bash_string()
-{
-    local result=$(echo $1 | \
-        sed -e 's/\$/\\$/g' \
-        -e 's/\*/\\*/g' \
-        -e 's#/#\\/#g' \
-        -e 's/\./\\./g')
-    echo $result
 }
 
 # $1 the domain
@@ -1464,24 +1234,6 @@ EOF
 fi
 }
 
-function create_user_and_group_if_not_present()
-{
-    if [ $(grep $ece_user /etc/passwd | wc -l) -lt 1 ]; then
-        print_and_log "Creating UNIX user $ece_user ..."
-        # TODO add support for useradd
-        run adduser $ece_user \
-            --disabled-password \
-            --gecos "Escenic-user,Room,Work,Home,Other"
-        add_next_step "I created a new UNIX user called $ece_user"
-        add_next_step "and you must set a password using: passwd $ece_user"
-    fi
-    
-    if [ $(grep $ece_group /etc/group | wc -l) -lt 1 ]; then
-        print_and_log "Creating UNIX group $ece_group ..."
-        run addgroup $ece_group
-    fi
-}
-
 # last, give the control back to the ECE user & group 
 function set_correct_permissions()
 {
@@ -1547,7 +1299,7 @@ function print_status_and_next_steps()
     done
 
     print $'\n'"Enjoy your time with Escenic Content Engine!"$'\n'
-    print "-Vizrt Online"
+    print "-$(red Vizrt) Online"
 }
 
 # Based on Erik Mogensen's work:
@@ -1671,34 +1423,7 @@ function install_memcached()
 service.0.0-memcached-socket-pool=/com/danga/SockIOPool
 EOF
 
-echo "TBD"
-}
-
-## Method which will try its best to find the home diretory of
-## existing users and probable home directories of new users.
-##
-## (1) On Darwin/Mac OS X, it will return /Users/<user>
-## (2) On systems using /etc/passwd, it will search there to find the
-##     home dir of existing users.
-## (3) For new users, it will check the configuration of adduser (if
-##     present).
-## (4) If all of thes above fails, it will return /home/<user>
-##
-## Arguments:
-## $1 : the user name, can either be an existing user or a non-yet
-## created user.
-function get_user_home_directory()
-{
-    if [ $(uname -s) = "Darwin" ]; then
-        echo /Users/$1
-    elif [ $(grep $1 /etc/passwd | wc -l) -gt 0 ]; then
-        grep $1 /etc/passwd | cut -d':' -f6
-    elif [ -r /etc/adduser.conf ]; then
-        local dir=$(grep DHOME /etc/adduser.conf | grep -v ^# | cut -d'=' -f2)
-        echo $dir/$1
-    else
-        echo "/home/$1"
-    fi
+    echo "TBD"
 }
 
 function set_up_user_environment()
@@ -2079,16 +1804,8 @@ function common_pre_install()
 
     make_dir $download_dir
     install_common_os_packages_p
-    create_user_and_group_if_not_present
+    create_user_and_group_if_not_present $ece_user $ece_group
     set_up_user_environment_p
-}
-
-function assert_pre_prequesite()
-{
-    if [ $(which $1 | wc -l) -lt 1 ]; then
-        print_and_log "Please install $1 and then run $(basename $0) again."
-        remove_pid_and_exit_in_error
-    fi
 }
 
 function add_apt_source()
@@ -2137,7 +1854,7 @@ function install_cache_server()
         apt-get -y install varnish 1>>$log 2>>$log
     fi
 
-    assert_pre_prequesite varnishd
+    assert_pre_requisite varnishd
 
     if [ $fai_enabled -eq 0 ]; then
         print "You must now list your backend servers."
@@ -2166,7 +1883,7 @@ function add_next_step()
     return
     
     if [ -n "$next_steps" ]; then
-        next_steps=${next_steps}${NEW_LINE}"[$(basename $0)] "${1}
+        next_steps=${next_steps}$'\n'"[$(basename $0)] "${1}
     else
         next_steps="[$(basename $0)] "${1}
     fi
@@ -2240,7 +1957,7 @@ function install_database_server()
         fi
     fi
 
-    assert_pre_prequesite mysql
+    assert_pre_requisite mysql
 
     if [ -z "$1" ]; then
         download_escenic_components
@@ -2780,7 +2497,7 @@ EOF
     done
 
     install_packages_if_missing "maven2"
-    assert_pre_prequesite mvn
+    assert_pre_requisite mvn
 
     export JAVA_HOME=$java_home
     wf_maven_dir=$(echo $escenic_root_dir/widget-framework-core-*/maven)
@@ -2995,23 +2712,6 @@ EOF
     add_next_step "Make sure all nodes allows its IP to connect to them."
 }
 
-# will return the IP of the host name. If not found, the host name
-# passed to the function will be returned.
-# parameters: $1 the host name
-function get_ip()
-{
-    ip=$(ping -c 1 $1 2>/dev/null | \
-        grep "bytes from" | \
-        cut -d'(' -f2 | \
-        cut -d ')' -f1)
-    
-    if [ -z "$ip" ]; then
-        echo $1
-    fi
-
-    echo $ip
-}
-
 ## Installs the Nagios monitoring server.
 ## $1 the nagios vendor/falvour, "nagios" and "icinga" are supported.
 function install_nagios_monitoring_server()
@@ -3137,17 +2837,6 @@ function install_nagios_node()
 
     run /etc/init.d/nagios-nrpe-server restart
     add_next_step "A Nagios NRPE node has been installed on ${HOSTNAME}"
-}
-
-# munin nodes need the IP of the munin gatherer to be escaped. Hence this function.
-# $parameters:
-# $1 : the IP
-function get_perl_escaped()
-{
-    local escaped_input=$(
-        echo $1 | sed 's/\./\\./g'
-    )
-    echo "^${escaped_input}$"
 }
 
 function install_munin_node()
@@ -3434,7 +3123,7 @@ function restore_from_backup()
                 cut -d'=' -f2 | \
                 sed -e "s/'//g" -e 's/"//g'
             )
-            create_user_and_group_if_not_present
+            create_user_and_group_if_not_present $ece_user $ece_group
             
             if [ -d $escenic_conf_dir -a \
                 $(ls $escenic_conf_dir/ | grep ^ece- | wc -l) -gt 0 -a \
