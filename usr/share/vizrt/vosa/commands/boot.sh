@@ -190,7 +190,7 @@ function boot_kvm() {
   startupcmd=($sudo $taskset $KVM_BINARY
   -daemonize
   ${vncoption}
-  -name "${hostname}"
+  -name "${hostname}",process=kvm/${hostname}
   -cpu "host"
   $smpoption
   -pidfile "${pidfile}"
