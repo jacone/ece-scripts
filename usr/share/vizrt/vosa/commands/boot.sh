@@ -174,17 +174,24 @@ function boot_kvm() {
   if [ -z "$tapinterface" ] ; then
     echo "No tap interface available..."
   fi
+
+  if [ ! -z "$boot_config_processor_affinity" ] ; then
+    echo "Applying processor restriction to $boot_config_processor_affinity"
+    taskset="taskset -c $boot_config_processor_affinity"
+    smpoption="-smp cores=2"
+  fi
   kernel=${image}/vmlinuz
   img=${image}/disk.img
   cloud_param="nocloud;h=${hostname};s=file:///var/lib/cloud/data/cache/nocloud/"
 
   # should _maybe_ be put in some other script?  Needed by e.g. vosa start too.
   decho 1 "Starting the machine"
-  startupcmd=($sudo $KVM_BINARY
+  startupcmd=($sudo $taskset $KVM_BINARY
   -daemonize
   ${vncoption}
   -name "${hostname}"
   -cpu "host"
+  $smpoption
   -pidfile "${pidfile}"
   -m "${boot_config_memory}"
   $runas
@@ -213,7 +220,7 @@ function boot_kvm() {
   "${startupcmd[@]}"; 
   local rc
   rc=$?
-  if [ $rc != 0 ] ;
+  if [ $rc != 0 ] ; then
     rm $pidfile
     exitonerror $rc "Unable to start kvm :-/"
   fi
