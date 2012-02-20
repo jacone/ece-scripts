@@ -1035,43 +1035,39 @@ function get_escaped_bash_string()
 #
 # The method will ensure that the passed domain is resolvable by the
 # host on which ece-install is run.
-function ensure_domain_is_known_to_local_host()
-{
-    if [ -z "$1" ]; then
-        return 1
-    fi
-    
-    local localhost_ip=$(ping -c 1 localhost 2>/dev/null | \
-        head -1 | \
-        cut -d'(' -f2 | \
-        cut -d')' -f1)
-    local hostname_ip=$(ping -c 1 $HOSTNAME 2>/dev/null | \
-        head -1 | \
-        cut -d'(' -f2 | \
-        cut -d')' -f1)
-    local domain_ip=$(ping -c 1 $1 2>/dev/null | \
-        head -1 | \
-        cut -d'(' -f2 | \
-        cut -d')' -f1)
+function ensure_domain_is_known_to_local_host() {
+  if [ -z "$1" ]; then
+    return 1
+  fi
+  
+  local hostname_ip=$(ping -c 1 $HOSTNAME 2>/dev/null | \
+    head -1 | \
+    cut -d'(' -f2 | \
+    cut -d')' -f1)
+  local domain_ip=$(ping -c 1 $1 2>/dev/null | \
+    head -1 | \
+    cut -d'(' -f2 | \
+    cut -d')' -f1)
 
-    local keep_off_etc_hosts=${fai_keep_off_etc_hosts-0}
-    if [[ $domain_ip != $localhost_ip && \
-        $domain_ip != hostname_ip && \
-        $keep_off_etc_hosts -ne 1 ]]; then
-        print_and_log "The domain name ${1} is not resolvable to this host"
-        print_and_log "I will remedy this by adding it to /etc/hosts"
-        cat >> /etc/hosts <<EOF
+  local keep_off_etc_hosts=${fai_keep_off_etc_hosts-0}
+  if [[ $domain_ip != "127.0.0.1" && \
+    $domain_ip != "127.0.1.1" && \
+    $domain_ip != $hostname_ip && \
+    $keep_off_etc_hosts -ne 1 ]]; then
+    print_and_log "The domain name ${1} is not resolvable to this host"
+    print_and_log "I will remedy this by adding it to /etc/hosts"
+    cat >> /etc/hosts <<EOF
 
 # added by $(basename $0) @ $(date)
 127.0.1.1 ${1}
 EOF
-    fi
-    if [[ $domain_ip != $localhost_ip && \
-        $domain_ip != hostname_ip && \
-        $keep_off_etc_hosts -eq 1 ]]; then
-        print_and_log "The domain name ${1} is not resolvable to this host"
-        print_and_log "but I will keep off /etc/hosts as you've requested."
-    fi
+  fi
+  if [[ $domain_ip != $localhost_ip && \
+    $domain_ip != hostname_ip && \
+    $keep_off_etc_hosts -eq 1 ]]; then
+    print_and_log "The domain name ${1} is not resolvable to this host"
+    print_and_log "but I will keep off /etc/hosts as you've requested."
+  fi
 }
 
 function set_up_app_server()
