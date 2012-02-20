@@ -178,7 +178,8 @@ function boot_kvm() {
   if [ ! -z "$boot_config_processor_affinity" ] ; then
     echo "Applying processor restriction to $boot_config_processor_affinity"
     taskset="taskset -c $boot_config_processor_affinity"
-    smpoption="-smp cores=2"
+    cpulist=( "${boot_config_processor_affinity//,/ }" )
+    smpoption="-smp cores=${#cpulist[@]}"
   fi
   kernel=${image}/vmlinuz
   img=${image}/disk.img
