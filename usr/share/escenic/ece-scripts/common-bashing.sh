@@ -80,8 +80,8 @@ function remove_pid_and_exit_in_error() {
 
 function exit_on_error() {
   if [ $? -gt 0 ]; then
-    print "The command ["$@"] FAILED, exiting :-("
-    print "See $log for further details."
+    log "The command ["$@"] FAILED, exiting :-("
+    log "See $log for further details."
     remove_pid_and_exit_in_error
   fi
 }
@@ -173,7 +173,9 @@ function get_base_dir_from_bundle()
             file_name=${file_name%$el}
         done
     fi
-    
+
+    log "get_base_dir_from_bundle file_name="$file_name $1
+
     echo $file_name
 }
 

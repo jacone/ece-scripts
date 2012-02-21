@@ -120,11 +120,11 @@ function download_tomcat() {
   (
     log "Downloading Tomcat from $url ..."
     run cd $1
-    run wget $wget_opts $(get_tomcat_url)
+    run wget $wget_opts $(get_tomcat_download_url)
   )
 }
 
 function download_tomcat_p() {
   $(download_tomcat) &
-  show_pulse $! "Downloading Tomcat from local mirror"
+  show_pulse $! "Downloading Tomcat from nearest mirror"
 }

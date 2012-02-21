@@ -237,6 +237,9 @@ function set_up_user_environment_p() {
 function set_up_ece_scripts_p() {
   $(set_up_ece_scripts) &
   show_pulse $! 'Setting up the ece UNIX scripts'
+  if [ -n "${messages}" ]; then
+    echo $message
+  fi
 }
 
 function install_common_os_packages_p() {
@@ -372,7 +375,7 @@ function set_up_engine_and_plugins()
         if [ $(basename $el | \
             grep -E "^engine-[0-9]|^engine-trunk-SNAPSHOT|^engine-dist" | \
             wc -l) -gt 0 ]; then
-            engine_dir=$(get_base_dir_from_bundle $download_dir/$el)
+            engine_dir=$(get_base_dir_from_bundle $download_dir/$(basename $el))
             engine_file=$(basename $el)
         fi
     done
@@ -412,6 +415,7 @@ function set_up_ece_scripts()
       run cd ece-scripts
       run git pull
     )
+    if [ $! -eq 1 ]; then echo $!; return 1; fi
   else
     run git clone $ece_scripts_git_source
   fi
