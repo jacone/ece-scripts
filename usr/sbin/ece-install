@@ -231,7 +231,7 @@ function check_for_required_downloads_p() {
 
 function set_up_user_environment_p() {
   $(set_up_user_environment) &
-  show_pulse $! "Setting up the ${ece_user}'s UNIX environment"
+  show_pulse $! "Setting up the ${ece_user} user's UNIX environment"
 }
 
 function set_up_ece_scripts_p() {
@@ -734,16 +734,16 @@ function create_java_deb_packages_and_repo()
     print $(lsb_release -i | cut -d':' -f2) \
         $(lsb_release -r | cut -d':' -f2) \
         "doesn't have official Sun/Oracle Java packages,"
-    print "I'm creating packages & local repo for you ..."
     
     local tmp_dir=$(mktemp -d)
-    (
+    $(
         run cd $tmp_dir
         run git clone https://github.com/flexiondotorg/oab-java6.git
         run cd oab-java6
         run bash oab-java6.sh
         run rm -rf $tmp_dir
-    )
+    ) &
+    show_pulse $! "I'm creating packages & local repo for you"
 
     add_next_step "Local APT repository with Sun/Oracle Java packages"
     add_next_step "has been installed at /var/local/oab/deb and added"
@@ -950,7 +950,7 @@ function set_up_app_server()
         search_port=$(echo $user_search | cut -d':' -f2)
     fi
 
-    download_tomcat_p
+    download_tomcat_p $download_dir
     tomcat_dir=$(get_base_dir_from_bundle $(get_tomcat_download_url))
     
     run cd $appserver_parent_dir
