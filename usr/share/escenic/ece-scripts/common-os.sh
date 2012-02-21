@@ -6,6 +6,9 @@
 
 # depends on common-bashing
 common_bashing_is_loaded > /dev/null 2>&1 || source common-bashing.sh
+common_pulse_is_loaded > /dev/null 2>&1 || source common-bashing.sh
+
+wget_opts="--continue --inet4-only --quiet"
 
 # Can be used like this:
 # common_io_os_loaded 2>/dev/null || source common-os.sh
@@ -99,3 +102,29 @@ function assert_pre_requisite() {
   fi
 }
 
+function get_tomcat_download_url() {
+  local url=$(
+    curl -s http://tomcat.apache.org/download-60.cgi | \
+      grep tar.gz | \
+      head -1 | \
+      cut -d'"' -f2
+  )
+  
+  echo $url
+}
+
+## Downloads Tomcat from the regional mirror
+##
+## $1: target directory
+function download_tomcat() {
+  (
+    log "Downloading Tomcat from $url ..."
+    run cd $1
+    run wget $wget_opts $(get_tomcat_url)
+  )
+}
+
+function download_tomcat_p() {
+  $(download_tomcat) &
+  show_pulse $! "Downloading Tomcat from local mirror"
+}

@@ -21,7 +21,6 @@ ece_user=escenic
 ece_group=escenic
 jdbc_driver=/usr/share/java/mysql.jar
 debug=0
-tomcat_download=http://ftp.mirror.tw/pub/apache/tomcat/tomcat-6/v6.0.35/bin/apache-tomcat-6.0.35.tar.gz
 
 # These variables govern where software is installed and data and run
 # time files are written.
@@ -135,7 +134,8 @@ function download_escenic_components()
       if [ -e $(basename $el) ]; then
         continue
       fi
-      
+
+      log "Downloading $el ..."
       run wget $wget_opts \
         --http-user $technet_user \
         --http-password $technet_password \
@@ -143,7 +143,12 @@ function download_escenic_components()
     done
 }
 
-# will install the passed packages if these are not installed from
+function download_escenic_components_p() {
+  $(download_escenic_components) &
+  show_pulse $! "Downloading Escenic components from Technet"
+}
+
+# WILL install the passed packages if these are not installed from
 # before.
 #
 # parameters:
@@ -199,6 +204,31 @@ function install_common_os_packages()
 ######################################################################
 # <pulse-methods>
 ######################################################################
+function set_up_instance_specific_nursery_configuration_p() {
+  $(set_up_instance_specific_nursery_configuration) &
+  show_pulse $! "Setting up instance specific Nursery configuration"
+}
+
+function set_up_basic_nursery_configuration_p() {
+  $(set_up_basic_nursery_configuration) &
+  show_pulse $! "Setting up basic Nursery configuration"
+}
+
+function assemble_deploy_and_restart_type_p() {
+  echo $(assemble_deploy_and_restart_type) &
+  show_pulse $! "Assembling, deploying & starting $instance_name"
+}
+
+function set_up_engine_and_plugins_p() {
+  $(set_up_engine_and_plugins) &
+  show_pulse $! "Setting up the Escenic Content Engine & its plugins"
+}
+  
+function check_for_required_downloads_p() {
+  $(check_for_required_downloads) &
+  show_pulse $! "Asserting that required downloads succeeded"
+}
+
 function set_up_user_environment_p() {
   $(set_up_user_environment) &
   show_pulse $! "Setting up the ${ece_user}'s UNIX environment"
@@ -218,13 +248,19 @@ function install_ece_third_party_packages_p() {
   $(install_ece_third_party_packages) &
   show_pulse $! "Installing 3rd party packages needed by ECE"
 }
+
+function set_up_assembly_tool() {
+  $(set_up_assembly_tool) &
+  show_pulse $! "Setting up the Assembly Tool"
+}
+  
 ######################################################################
 # </pulse-methods>
 ######################################################################
 
 function set_up_assembly_tool()
 {
-    print_and_log "Setting up the Assembly Tool ..."
+    log "Setting up the Assembly Tool ..."
     
     make_dir $escenic_root_dir/assemblytool/
     cd $escenic_root_dir/assemblytool/
@@ -327,7 +363,7 @@ function set_up_engine_and_plugins()
         return
     fi
     
-    print_and_log "Setting up the Escenic Content Engine & its plugins ..."
+    log "Setting up the Escenic Content Engine & its plugins ..."
 
     make_dir $escenic_root_dir
     cd $escenic_root_dir/
@@ -336,7 +372,7 @@ function set_up_engine_and_plugins()
         if [ $(basename $el | \
             grep -E "^engine-[0-9]|^engine-trunk-SNAPSHOT|^engine-dist" | \
             wc -l) -gt 0 ]; then
-            engine_dir=$(get_base_dir_from_bundle $el)
+            engine_dir=$(get_base_dir_from_bundle $download_dir/$el)
             engine_file=$(basename $el)
         fi
     done
@@ -507,7 +543,7 @@ function set_up_ecedb()
 
 function set_up_basic_nursery_configuration()
 {
-    print_and_log "Setting up the basic Nursery configuration ..."
+    log "Setting up basic Nursery configuration ..."
 
     # we always copy the default plugin configuration (even if there
     # is an archive)
@@ -776,31 +812,6 @@ function install_ece_third_party_packages
     done
 }
 
-function get_base_dir_from_bundle()
-{
-    local file_name=$(basename $1)
-    suffix=${file_name##*.}
-
-    if [ ${suffix} = "zip" ]; then
-        # we'll look inside the archive to determine the base_dir
-        file_name=$(
-            unzip -t ${download_dir}/$file_name | \
-                awk '{print $2}' | \
-                cut -d'/' -f1 | \
-                sort | \
-                uniq | \
-                grep -v errors | \
-                grep [a-z]
-        )
-    else
-        for el in .tar.gz .tar.bz2 .zip; do
-            file_name=${file_name%$el}
-        done
-    fi
-    
-    echo $file_name
-}
-
 # $1 the domain
 #
 # The method will ensure that the passed domain is resolvable by the
@@ -934,10 +945,9 @@ function set_up_app_server()
         search_host=$(echo $user_search | cut -d':' -f1)
         search_port=$(echo $user_search | cut -d':' -f2)
     fi
-    
-    run cd $download_dir
-    run wget $wget_opts $tomcat_download
-    tomcat_dir=$(get_base_dir_from_bundle $tomcat_download)
+
+    download_tomcat_p
+    tomcat_dir=$(get_base_dir_from_bundle $(get_tomcat_download_url))
     
     run cd $appserver_parent_dir
     run tar xzf $download_dir/${tomcat_dir}.tar.gz
@@ -1237,7 +1247,7 @@ fi
 # last, give the control back to the ECE user & group 
 function set_correct_permissions()
 {
-    print_and_log "Setting correct permissions on ECE related directories ..."
+    log "Setting correct permissions on ECE related directories ..."
 
     for el in $engine_dir_list; do
         if [ ! -d $el ]; then
@@ -1250,8 +1260,8 @@ function set_correct_permissions()
                 -user ${ece_user} | \
                 wc -l)
             if [ $correct_permission -gt 0 ]; then
-                print_and_log "Data directory root, $el,"
-                print_and_log "has correct permissions, skiping sub directories."
+                log "Data directory root, $el,"
+                log "has correct permissions, skiping sub directories."
                 continue
             fi
         fi
@@ -1386,25 +1396,28 @@ fi
 
 function check_for_required_downloads()
 {
-    if [ $ece_software_setup_completed -eq 1 ]; then
-        return
-    fi
+  if [ $ece_software_setup_completed -eq 1 ]; then
+    return
+  fi
+  
+  log "Asserting that required downloads succeeded ..."
+  local required_escenic_packages="engine assemblytool"
     
-    print_and_log "Asserting that required downloads succeeded ..."
-    required_escenic_packages="engine assemblytool"
+  for el in $required_escenic_packages; do
+    if [ $(ls $download_dir/$el*.zip 2>/dev/null | wc -l) -lt 1 ]; then
+      log "$el is missing"
+    else
+      # want the newest one if there are several
+      local file=$(ls $download_dir/$el*.zip | tail -1)
+      unzip -t $file > /dev/null 2>&1
 
-    for el in $required_escenic_packages; do
-        if [ $(ls $download_dir | \
-            grep ${el} | \
-            grep -v community | \
-            grep -v analysis | \
-            grep .zip$ | \
-            wc -l) \
-            -lt 1 ]; then
-            print_and_log "Couldn't find $el* in $download_dir"
-            remove_pid_and_exit_in_error
-        fi
-    done
+      if [ $? -ne 0 ]; then
+        log "$file has been downloaded, but is faulty,"
+        log "remove it and re-run $0"
+        return 9
+      fi
+    fi
+  done
 }
 
 function install_memcached()
@@ -1960,7 +1973,7 @@ function install_database_server()
     assert_pre_requisite mysql
 
     if [ -z "$1" ]; then
-        download_escenic_components
+        download_escenic_components_p
         set_up_engine_and_plugins
         set_up_ecedb
     fi
@@ -2113,9 +2126,9 @@ function install_ece_instance()
     # most likely, the user is _not_ installing from archives (EAR +
     # configuration bundle), hence the false test goes first.
     if [ $(is_installing_from_ear) -eq 0 ]; then
-        download_escenic_components
-        check_for_required_downloads
-        set_up_engine_and_plugins
+        download_escenic_components_p
+        check_for_required_downloads_p
+        set_up_engine_and_plugins_p
         set_up_assembly_tool
     else
         verify_that_files_exist_and_are_readable \
@@ -2123,8 +2136,8 @@ function install_ece_instance()
             $ece_instance_conf_archive
     fi
     
-    set_up_basic_nursery_configuration
-    set_up_instance_specific_nursery_configuration
+    set_up_basic_nursery_configuration_p
+    set_up_instance_specific_nursery_configuration_p
     
     set_up_app_server
     set_up_proper_logging_configuration
@@ -2141,7 +2154,7 @@ function install_ece_instance()
 
     if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
         $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
-        assemble_deploy_and_restart_type
+        assemble_deploy_and_restart_type_p
     fi
     
     update_type_instances_to_start_up
@@ -2204,7 +2217,7 @@ function install_presentation_server()
 
 function assemble_deploy_and_restart_type()
 {
-    print_and_log "Assembling, deploying & starting $instance_name ..."
+    log "Assembling, deploying & starting $instance_name ..."
     
     set_correct_permissions
 
@@ -2214,7 +2227,7 @@ function assemble_deploy_and_restart_type()
     if [ $(is_installing_from_ear) -eq 1 ]; then
         run cp $ece_instance_ear_file $escenic_cache_dir/engine.ear
         ece_command="ece -i $instance_name -t $type deploy restart"
-        print_and_log "Using the supplied EAR instead of running an assembly."
+        log "Using the supplied EAR instead of running an assembly."
     fi
     
     su - $ece_user -c "$ece_command" 1>>$log 2>>$log

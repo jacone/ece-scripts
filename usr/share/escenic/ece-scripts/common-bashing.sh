@@ -150,3 +150,30 @@ function yellow() {
   echo -e "\E[37;33m\033[1m${@}\033[0m"
 }
 
+
+## $1: full path to the file.
+function get_base_dir_from_bundle()
+{
+    local file_name=$(basename $1)
+    suffix=${file_name##*.}
+    
+    if [ ${suffix} = "zip" ]; then
+        # we'll look inside the archive to determine the base_dir
+        file_name=$(
+            unzip -t $1 2>>$log | \
+                awk '{print $2}' | \
+                cut -d'/' -f1 | \
+                sort | \
+                uniq | \
+                grep -v errors | \
+                grep [a-z]
+        )
+    else
+        for el in .tar.gz .tar.bz2 .zip; do
+            file_name=${file_name%$el}
+        done
+    fi
+    
+    echo $file_name
+}
+
