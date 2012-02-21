@@ -1424,25 +1424,6 @@ function check_for_required_downloads()
   done
 }
 
-function install_memcached()
-{
-    if [ $on_debian_or_derivative ]; then
-        install_packages_if_missing "memcached"
-    fi
-    
-     # 1) download java library
-     # 2) configure PresenationArticle cache for the publication
-     # 3) build and re-deploy
-    
-    cat >> $escenic_conf_dir/engine/common/Initial.properties <<EOF
-
-# using memcached
-service.0.0-memcached-socket-pool=/com/danga/SockIOPool
-EOF
-
-    echo "TBD"
-}
-
 function set_up_user_environment()
 {
   local bashrc=$(get_user_home_directory $ece_user)/.bashrc
