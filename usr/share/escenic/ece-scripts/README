@@ -1,0 +1,14 @@
+#############################################################################
+# common-*.sh :: Common libraries
+#############################################################################
+
+The common-*.sh files are considered re-usable BASH libraries, which
+can be used by any script, in and outside of the ece-scripts.
+
+#############################################################################
+# ece-install.d :: ece-install modules.
+#############################################################################
+
+The scripts found in ece-install.d are meant for use by ece-install
+itself and may not work when used separately as they rely on
+ece-install internals.
