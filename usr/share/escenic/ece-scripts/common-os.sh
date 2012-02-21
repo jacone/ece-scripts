@@ -125,6 +125,6 @@ function download_tomcat() {
 }
 
 function download_tomcat_p() {
-  $(download_tomcat) &
+  $(download_tomcat $1) &
   show_pulse $! "Downloading Tomcat from nearest mirror"
 }
