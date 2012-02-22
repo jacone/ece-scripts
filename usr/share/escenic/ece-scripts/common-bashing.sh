@@ -174,7 +174,7 @@ function get_base_dir_from_bundle()
         done
     fi
 
-    log "get_base_dir_from_bundle file_name="$file_name $1
+    debug "get_base_dir_from_bundle file_name="$file_name $1
 
     echo $file_name
 }
