@@ -50,7 +50,7 @@ pid_file=/var/run/$(basename $0).pid
 download_dir=/tmp/ece-downloads
 log=/var/log/$(basename $0).log
 conf_file=$HOME/ece-install.conf
-ece_scripts_git_source=git://github.com/skybert/ece-scripts.git
+ece_scripts_git_source=https://github.com/skybert/ece-scripts.git
 maven_opts="--batch-mode"
 wget_opts="--continue --inet4-only --quiet"
 apt_opts="--no-install-recommends"
@@ -109,7 +109,7 @@ PROFILE_ANALYSIS_SERVER=12
 
 ######################################################################
 # Load common BASH libraries
-#####################################################################
+######################################################################
 common_libraries="common-bashing.sh common-pulse.sh common-io.sh common-os.sh"
 for el in $common_libraries; do
   source $(dirname $0)/../share/escenic/ece-scripts/${el} || \
@@ -148,14 +148,14 @@ function download_escenic_components_p() {
   show_pulse $! "Downloading Escenic components from Technet"
 }
 
-# WILL install the passed packages if these are not installed from
+# Will install the passed packages if these are not installed from
 # before.
 #
 # parameters:
 # $1 : space separated string of package names 
 function install_packages_if_missing()
 {
-  log "Installing packages [$1] if they're missing ..."
+  log "Installing package(s) [$@] if missing ..."
   
     if [ $on_debian_or_derivative -eq 1 ]; then
         some_are_missing=0
@@ -192,7 +192,7 @@ function install_common_os_packages()
       git_package=git
     fi
     
-    packages="curl $git_package wget unzip"
+    local packages="curl $git_package wget unzip"
     install_packages_if_missing $packages
   fi
   
@@ -580,7 +580,6 @@ function set_up_basic_nursery_configuration()
         run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/
     fi
 
-
     if [ -n "${a_tmp_dir}" ]; then
         run rm -rf ${a_tmp_dir}
     fi
@@ -615,21 +614,21 @@ readConnector=/connector/ReadConnector
 updateConnector=/connector/UpdateConnector
 EOF
 
-file=$common_nursery_dir/com/escenic/community/CommunityEngine.properties
-if [ -w ${file} ]; then
-    sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
-    exit_on_error "sed on $file"
-elif [ ! -e ${file} ]; then
-    print_and_log "I Could not find an ECOME configuration file,"
-    print_and_log "I assume you have not installed Community Engine."
-else
-    print_and_log "Could not write to ${file},"
-    print_and_log "Community Engine might not work because of this. "
-    remove_pid_and_exit_in_error
-fi
+    file=$common_nursery_dir/com/escenic/community/CommunityEngine.properties
+    if [ -w ${file} ]; then
+        sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
+        exit_on_error "sed on $file"
+    elif [ ! -e ${file} ]; then
+        print_and_log "I Could not find an ECOME configuration file,"
+        print_and_log "I assume you have not installed Community Engine."
+    else
+        print_and_log "Could not write to ${file},"
+        print_and_log "Community Engine might not work because of this. "
+        remove_pid_and_exit_in_error
+    fi
 
-file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
-cat >> $file <<EOF
+    file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
+    cat >> $file <<EOF
 
 # We set this to get around a missing feature in Varnish, see:
 # https://www.varnish-cache.org/trac/wiki/Future_Feature#Chunkedencodingclientrequests
@@ -656,7 +655,6 @@ function set_up_instance_specific_nursery_configuration()
     if [ ! -e $file ]; then
         run echo "hostname=$HOSTNAME" >> $file
     fi
-    
 }
 
 function set_up_proper_logging_configuration()
@@ -673,7 +671,6 @@ EOF
     cd $tomcat_base/lib/
     make_ln $common_nursery_dir/trace.properties
     run ln -sf trace.properties log4j.properies
-
 
     # since the solr webapp otherwise will pollute our logs, we ask
     # Tomcat specifically to make it log to dedicated logger.
@@ -729,8 +726,6 @@ function set_ece_instance_conf()
 
 function create_java_deb_packages_and_repo()
 {
-    install_packages_if_missing $git_package
-
     print $(lsb_release -i | cut -d':' -f2) \
         $(lsb_release -r | cut -d':' -f2) \
         "doesn't have official Sun/Oracle Java packages,"
@@ -1168,13 +1163,12 @@ EOF
     cat > $tomcat_base/conf/context.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
 <Context>
-
   <WatchedResource>WEB-INF/web.xml</WatchedResource>
 EOF
 
-if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
-    $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
-    cat >> $tomcat_base/conf/context.xml <<EOF
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
+      $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
+      cat >> $tomcat_base/conf/context.xml <<EOF
   <ResourceLink
       global="jdbc/ECE_READ_DS"
       name="jdbc/ECE_READ_DS"
@@ -1186,10 +1180,10 @@ if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
       type="javax.sql.DataSource"
   />
 EOF
-fi
+    fi
 
-if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
-    cat >> $tomcat_base/conf/context.xml <<EOF
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+      cat >> $tomcat_base/conf/context.xml <<EOF
   <Environment
       name="escenic/solr-base-uri"
       value="http://${search_host}:${search_port}/solr/"
@@ -1197,10 +1191,10 @@ if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
       override="false"
   />
 EOF
-fi
+    fi
 
-if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
-    cat >> $tomcat_base/conf/context.xml <<EOF
+    if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+      cat >> $tomcat_base/conf/context.xml <<EOF
   <Environment
       name="escenic/indexer-webservice"
       value="http://${indexer_ws_uri}"
@@ -1227,8 +1221,8 @@ if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
   />
 </Context>
 EOF
-elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
-    cat >> $tomcat_base/conf/context.xml <<EOF
+    elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
+      cat >> $tomcat_base/conf/context.xml <<EOF
   <ResourceLink
       global="jdbc/eae-logger/logger"
       name="jdbc/eae-logger/logger"
@@ -1241,11 +1235,11 @@ elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
   />
 </Context>
 EOF
-else 
-    cat >> $tomcat_base/conf/context.xml <<EOF
+    else 
+      cat >> $tomcat_base/conf/context.xml <<EOF
 </Context>
 EOF
-fi
+    fi
 }
 
 # last, give the control back to the ECE user & group 
@@ -1275,10 +1269,6 @@ function set_correct_permissions()
     
     if [ -d "$tomcat_base" ]; then
         run chown -R ${ece_user}:${ece_group} $tomcat_base
-    fi
-
-    if [ $(ls /tmp | grep ^ece | wc -l) -gt 0 ]; then
-        run chown -R ${ece_user}:${ece_group} /tmp/ece-*
     fi
 }
 
@@ -1374,19 +1364,19 @@ source-war: ${publication_name}.war
 context-root: ${publication_name}
 EOF
 
-publication_war=$escenic_root_dir/assemblytool/publications/${publication_name}.war
-if [[ $fai_enabled -eq 1 && -n "${fai_publication_war}" ]]; then
-    print_and_log "Basing ${publication_name}.war on the one specified in $conf_file"
-    run cp ${fai_publication_war} ${publication_war}
-elif [ -d $escenic_root_dir/widget-framework-core-* ]; then
-    print_and_log "Basing ${publication_name}.war on Widget Framework Demo ..."
-    run cd $escenic_root_dir/widget-framework-core-*/publications/demo-core
-    run mvn $maven_opts package
-    run cp target/demo-core-*.war ${publication_war}
-else
-    print_and_log "Basing your ${publication_name}.war on ECE/demo-clean ..."
-    run cp $escenic_root_dir/engine/contrib/wars/demo-clean.war ${publication_war}
-fi
+    publication_war=$escenic_root_dir/assemblytool/publications/${publication_name}.war
+    if [[ $fai_enabled -eq 1 && -n "${fai_publication_war}" ]]; then
+      print_and_log "Basing ${publication_name}.war on the one specified in $conf_file"
+      run cp ${fai_publication_war} ${publication_war}
+    elif [ -d $escenic_root_dir/widget-framework-core-* ]; then
+      print_and_log "Basing ${publication_name}.war on Widget Framework Demo ..."
+      run cd $escenic_root_dir/widget-framework-core-*/publications/demo-core
+      run mvn $maven_opts package
+      run cp target/demo-core-*.war ${publication_war}
+    else
+      print_and_log "Basing your ${publication_name}.war on ECE/demo-clean ..."
+      run cp $escenic_root_dir/engine/contrib/wars/demo-clean.war ${publication_war}
+    fi
 
     # TODO add support for the community widgets
     #
@@ -1551,7 +1541,7 @@ function set_up_varnish()
     # -V for some reason writes to standard error.
     using_varnish_3=$(varnishd -V 3>&1 1>&2 2>&3 | grep varnish-3 | wc -l)
     
-    file=/etc/default/varnish
+    local file=/etc/default/varnish
     sed -i -e 's/6081/80/g' -e 's/^START=no$/START=yes/' $file
     exit_on_error "sed on $file"
 
@@ -1614,9 +1604,7 @@ EOF
 
     cat >> /etc/varnish/default.vcl <<EOF
 }
-EOF
 
-cat >> /etc/varnish/default.vcl <<EOF
 sub vcl_recv {
   if (!client.ip ~ staff &&
       (req.url ~ "^/escenic" ||
@@ -1887,8 +1875,8 @@ function add_next_step()
     fi
 }
 
-# $1 : optional parameter, binaries_only. If passed, $1=binaries_only,
-#      the ECE DB schema is not set up. 
+## $1: optional parameter, binaries_only. If passed, $1=binaries_only,
+##     the ECE DB schema is not set up. 
 function install_database_server()
 {
     print_and_log "Installing the database server on $HOSTNAME ..."
@@ -2096,8 +2084,7 @@ function verify_that_files_exist_and_are_readable()
     done
 }   
 
-# $1=<default instance name>
-# $2=<editorial server=0 | presentation server=1>
+## $1=<default instance name>
 function install_ece_instance()
 {
     install_ece_third_party_packages
@@ -2149,11 +2136,11 @@ function install_ece_instance()
     admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin/
     add_next_step "New ECE instance $instance_name installed."
     add_next_step "Admin interface: $admin_uri"
-    add_next_step "View installed versions with:"\
-" ece -i $instance_name versions"
-add_next_step "Type 'ece help' to see all the options of this script"
-add_next_step "Read its guide: /usr/share/doc/escenic/ece-guide.txt"
-add_next_step "/etc/default/ece lists all instances started at boot time"
+    add_next_step "View installed versions with:" \
+      " ece -i $instance_name versions"
+    add_next_step "Type 'ece help' to see all the options of this script"
+    add_next_step "Read its guide: /usr/share/doc/escenic/ece-guide.txt"
+    add_next_step "/etc/default/ece lists all instances started at boot time"
 }
 
 function get_publication_short_name_list()
@@ -2392,11 +2379,11 @@ clientConfiguration=/neo/io/services/HubConnection
 pingTime=10000
 EOF
 
-add_next_step "Restart all your instances to make the hub see them."
+    add_next_step "Restart all your instances to make the hub see them."
 
-print_and_log "Starting the RMI-hub on $HOSTNAME ..."
-ece_command="ece -t rmi-hub restart"
-su - $ece_user -c "$ece_command" 1>>$log 2>>$log
+    print_and_log "Starting the RMI-hub on $HOSTNAME ..."
+    ece_command="ece -t rmi-hub restart"
+    su - $ece_user -c "$ece_command" 1>>$log 2>>$log
 }
 
 # reads the value of the desired setting from $conf_file
