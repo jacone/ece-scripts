@@ -54,6 +54,7 @@ enabled_dir=$(readlink -f ${enabled_dir})
 
 
 function requires_instance_dir() {
+  
   if [ -z "$instance_dir" -o -z "${instance_name}" ] ; then
     echo "Instance is required"
     usage=1
@@ -81,9 +82,218 @@ Useful starting points:
 EOF
 }
 
-## Initializes the etc directory with a skeleton of a virtual machine
+## Initializes the etc directory with the required directory structure
+##
+## Creates /etc/vizrt/vosa/available.d, enabled.d and a skeleton directory
+## with a documented set of files.  The files and directories are not
+## overwritten if they already exist.
 function do_init() {
-  echo "not implemented."
+  mkdir -p /etc/vizrt/vosa/available.d || exit 2
+  mkdir -p /etc/vizrt/vosa/enabled.d || exit 2
+  mkdir -p /etc/vizrt/vosa/skeleton || exit 2
+  if [ ! -r /etc/vizrt/vosa/skeleton/install.conf ] ; then
+    cat > /etc/vizrt/vosa/skeleton/install.conf <<EOF
+# Installation time configuration
+
+# The lines in this files are parsed in-order.  The bottom most
+# values override top ones of the same name, unless the stanza has
+# been defined as having multiple values, in which case the values
+# will be appended in the order they appear in the file.
+
+# Which image to use to install the sucker
+
+original_image /var/lib/vizrt/vosa/original-images/current/disk.img
+kernel /var/lib/vizrt/vosa/original-images/current/vmlinuz
+
+# Initial disk size for its own storage, in Gigabytes: Disk will be
+# reized to this size on installation.
+# If this isn't used, the original image file is used without resizing, in which
+# case it ought to be resized manually first.
+initial_disk_size 10
+
+# Any SSH keys to use here?  If specified many times, all of the files will
+# be appended to the user's known_host.
+ssh_keys /etc/vizrt/vosa/global-ssh-keys
+#ssh_keys ssh-keys
+
+# MAC address to use (e.g. DE:AD:BE:EF:88:EC)
+# This allows a host to keep a stable mac address across restarts
+# and across reinstalls.
+macaddr 00:0c:29:38:b4:02
+
+# ip-address given to the eth0 in the guest.
+ip_address 172.24.201.202
+netmask 255.255.0.0
+gateway 172.24.1.1
+
+# address of mirror to use (defaults to mirror://mirrors.ubuntu.com/mirrors.txt)
+# mirror http://no.archive.ubuntu.com/
+user_data /etc/vizrt/vosa/user-data/puppet-client.txt
+
+# Host name give to the machine. defaults to the name of the vm instance
+# hostname some-vm03
+
+# Add files to the image early in initial boot
+# This option can be provided several times.
+# Any symliks in the overlay will be dereferenced on the host
+# before being overlaid on the guest.
+overlay /etc/vizrt/vosa/overlay/common
+
+# Time zone that the server should have if
+# different than the host (e.g. Europe/Oslo)
+timezone Europe/Oslo
+
+# scripts to run as root on the host after installing a
+# guest, passing the name of the vm on the command line.
+# If the command fails, the VM is killed, and the operation
+# is deemed a failure.
+
+
+# First, wait for SSH access....
+postinstall wait-for-ssh.sh
+
+#Provide sane and correct information in motd
+postinstall make-a-motd.sh
+
+# Mount prerequisite shared file systems by adding them to
+# /etc/fstab, mounting them and verifying that they're there
+#postinstall mount-shared-disks.sh
+
+# run ece-install in the guest, with the EAR file in question
+# The scripts are assumed to be in /usr/lib/vosa/
+# OR simply install tomcat, and the ece scripts and deploy it...
+# postinstall install-engine.sh
+
+# Install and configure the heartbeat
+#postinstall install-heartbeat.sh
+
+# Install and configure fail2ban.sh
+#postinstall install-fail2ban.sh
+
+
+# Configure the standard firewall rules
+#postinstall install-firewall-rules.sh
+
+# Configure syslog to use the host's syslog and not the guest.
+#postinstall reconfigure-syslog.sh
+
+# finally let's have a clean boot for goot measure.
+# this command waits until it's back up again.
+#postinstall final-reboot.sh 
+
+
+#postinstall enable-time-synchronization.sh
+
+EOF
+  fi
+
+  if [ ! -r /etc/vizrt/vosa/skeleton/boot.conf ] ; then
+    cat > /etc/vizrt/vosa/skeleton/boot.conf <<EOF
+#-----------------------------------------------------------------------#
+# Run-time configuration options
+#-----------------------------------------------------------------------#
+#
+# Changes to this file take effect the next time the image is
+# stopped and started (i.e. "power off")
+#
+# These options are also used during installation, affect install-time
+# by coming into play when the image is booted the first time.
+
+#-----------------------------------------------------------------------#
+# Amount of memory, in megabytes, allocated to this guest
+# 3584 is 3.5Gb.
+memory 3584
+
+#-----------------------------------------------------------------------#
+# Which processors should this guest have access to?
+# The number of processors specified here are also used to calculate
+# how many CPUs that should be emulated inside the guest.
+# For example: 0,1,2,3 will make the guest have a four-way CPU.
+processor_affinity 0,1,2,3
+
+#-----------------------------------------------------------------------#
+# Dispay number for vnc or "none" to turn off
+# Example: "vnc_port 4" will listen on port 5904.
+# Note that guests will fail to start if the vnc port is busy!
+# This should only be used to debug boot problems; in production it
+# should not be necessary to vnc to the guests...
+vnc_port none
+EOF
+  fi
+  # TODO:
+  # Include common configuration items.
+  #include /etc/vizrt/vosa/common.conf
+
+
+  mkdir -p /etc/vizrt/vosa/user-data || exit 2
+  if [ ! -r /etc/vizrt/vosa/user-data/puppetmaster.pp ] ; then
+    cat > /etc/vizrt/vosa/user-data/puppetmaster.pp <<EOF
+#cloud-config
+
+#------------------------------------------------------------------------#
+# This file is a User Data file to set up a puppet master.
+#
+# It installs a base set of packages and configures the puppet master to
+# create a self signed certificate.
+
+manage_etc_hosts: false
+timezone: Europe/Oslo
+
+apt_update: true
+apt_upgrade: true
+apt_mirror: http://no.archive.ubuntu.com/
+
+# ACPID installed before puppet, because it ensures clean shutdowns, even if something goes wrong.
+packages:
+ - acpid
+ - mercurial
+ - ruby-activerecord
+
+puppet:
+  conf:
+    master:
+      certname: "puppetmaster"
+      node_name: "facter"
+      storeconfigs: "true"
+
+# Patch the oneiric auth.conf to allow the cert called "generic-puppetmaster-client"
+# to access the guest.
+# Other versions of guests might need a different patch file...
+# Note that dollar-signs need to be escaped.
+runcmd:
+ - |
+   apt-get -y install puppetmaster
+   cat > /tmp/auth.patch <<EOF
+   --- /etc/puppet/auth.conf    2011-06-27 16:50:51.000000000 +0200
+   +++ /etc/puppet/auth.conf.orig       2012-02-21 07:26:54.361610001 +0100
+   @@ -51,7 +51,9 @@
+    # allow nodes to retrieve their own catalog (ie their configuration)
+    path ~ ^/catalog/([^/]+)\\$
+    method find
+   -allow \\\$1
+   +#allow \\\$1
+   +# allow the generic cert to retrieve any node's catalog
+   +allow generic-puppetmaster-client
+
+    # allow nodes to retrieve their own node definition
+    path ~ ^/node/([^/]+)\\$
+   EOF
+   patch /etc/puppet/auth.conf < /tmp/auth.patch
+   puppet cert --generate generic-puppetmaster-client
+EOF
+  fi
+
+  mkdir -p /etc/vizrt/vosa/overlay/common/etc || exit 2
+  mkdir -p /etc/vizrt/vosa/overlay/common/etc || exit 2
+  if [ ! -r /etc/vizrt/vosa/overlay/common/etc/resolv.conf ] ; then
+    ln -s /etc/resolv.conf /etc/vizrt/vosa/overlay/common/etc/resolv.conf || exit 2
+  fi
+  if [ ! -r /etc/vizrt/vosa/overlay/common/etc/hosts ] ; then
+    ln -s /etc/resolv.conf /etc/vizrt/vosa/overlay/common/etc/hosts || exit 2
+  fi
+  if [ ! -r /etc/vizrt/vosa/global-ssh-keys ] ; then
+    touch /etc/vizrt/vosa/global-ssh-keys || exit 2
+  fi
 }
 
 ## Provides even more help.
@@ -129,6 +339,18 @@ function do_commands() {
     echo -n ' * '$f:  # first line on the same as the command.
     awk -f $commands/help.awk fn=do_$f < $0 | head -n 1
   done
+}
+
+function verify_installation() {
+  if [ -z "$available_dir" -o ! -r "$available_dir" ] ; then
+    echo "Not initialized! RTFM! Exiting. ($available_dir)"
+    exit 2
+  fi
+
+  if [ -z "$enabled_dir" -o ! -r "$enabled_dir" ] ; then
+    echo "Not initialized! RTFM! Exiting. ($enabled_dir)"
+    exit 2
+  fi
 }
 
 ## Provides status information about defines VMs
@@ -180,10 +402,11 @@ function do_commands() {
 ##      For informational purposes, the pid and the uptime of the pid
 ##      are shown in dd-hh:mm:ss format.
 function do_status() {
+  verify_installation
   if [ -z "$instance_dir" ] ; then
     local a
     for a in $(
-      ls -d ${available_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
+      ls 2>/dev/null -d ${available_dir}/* | grep "/[0-9a-z][-0-9a-z]*$"
     ) ; do 
       really_do_status $a
     done
@@ -459,7 +682,7 @@ LASTOPTIND=$OPTIND
 function verify_usage() {
   if [ $usage -eq 1 ] ; then
     echo "Usage: $0 [-i <instance-dir>] <command>"
-    echo "$0 available to get a list of instances"
+    echo "$0 help for more help"
     exit 1;
   fi
 }
@@ -475,16 +698,6 @@ if [ $usage -eq 0 -a "${#@}" -lt 1 ] ; then
 fi
 
 verify_usage
-
-if [ -z "$available_dir" -o ! -r "$available_dir" ] ; then
-  echo "Not initialized! RTFM! Exiting. ($available_dir)"
-  exit 2
-fi
-
-if [ -z "$enabled_dir" -o ! -r "$enabled_dir" ] ; then
-  echo "Not initialized! RTFM! Exiting. ($enabled_dir)"
-  exit 2
-fi
 
 for cmd in "${@}" ; do
   # Check if the command
