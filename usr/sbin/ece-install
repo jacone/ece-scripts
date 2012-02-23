@@ -1509,22 +1509,22 @@ function un_install_ece()
 ## Returns the privileged hosts. This will include both the IP(s) the
 ## logged in user conduction the ece-install is coming from, as well
 ## as any IPs defined in fai_privileged_hosts.
-function get_privileged_hosts()
-{
-    local privileged_hosts=${fai_privileged_hosts}
-    
-    for ip in $(
-        w -h  | \
-            grep pts | \
-            sed "s#.*pts/[0-9]*[ ]*\(.*\)#\1#" | \
-            cut -d' ' -f1 | \
-            sort | \
-            uniq
-    ); do
-        privileged_hosts=${privileged_hosts}" "${ip}
-    done
+function get_privileged_hosts() {
+  local privileged_hosts=${fai_privileged_hosts}
+  
+  for ip in $(
+    w -h  | \
+      grep pts | \
+      grep -v ":0.0" | \
+    sed "s#.*pts/[0-9]*[ ]*\(.*\)#\1#" | \
+      cut -d' ' -f1 | \
+      sort | \
+      uniq
+  ); do
+    privileged_hosts=${privileged_hosts}" "${ip}
+  done
 
-    echo ${privileged_hosts}
+  echo ${privileged_hosts}
 }
 
 function set_up_varnish()
@@ -1567,6 +1567,7 @@ backend static {
   .host = "localhost";
   .port = "81";
 }
+
 EOF
     for el in $backend_servers; do
         appserver_id=$(echo $el | cut -d':' -f1 | sed 's/-/_/g')
