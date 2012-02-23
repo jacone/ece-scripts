@@ -19,7 +19,7 @@
 #####################################################################
 ece_user=escenic
 ece_group=escenic
-jdbc_driver=/usr/share/java/mysql.jar
+jdbc_driver=/usr/share/java/mysql-connector-java.jar
 debug=0
 
 # These variables govern where software is installed and data and run
@@ -63,6 +63,7 @@ ece_install_scripts_dir=$HOME/ece-install.d
 appserver_host=localhost
 appserver_port=8080
 on_debian_or_derivative=0
+on_redhat_or_derivative=0
 on_debian=0
 on_ubuntu=0
 force_packages=0
@@ -143,58 +144,53 @@ function download_escenic_components()
     done
 }
 
-function download_escenic_components_p() {
-  $(download_escenic_components) &
-  show_pulse $! "Downloading Escenic components from Technet"
-}
 
 # Will install the passed packages if these are not installed from
 # before.
 #
 # parameters:
 # $1 : space separated string of package names 
-function install_packages_if_missing()
-{
+function install_packages_if_missing() {
   log "Installing package(s) [$@] if missing ..."
   
-    if [ $on_debian_or_derivative -eq 1 ]; then
-        some_are_missing=0
-        for el in $@; do
+  if [ $on_debian_or_derivative -eq 1 ]; then
+    some_are_missing=0
+    for el in $@; do
             # we don't need to grep away "No packages found matching
             # ..." since this message from dpkg is written to standard
             # error.
-            if [ $(dpkg -l $el 2>/dev/null | grep ^ii | wc -l) -lt 1 ]; then
-                some_are_missing=1
-            fi
-        done
-        
-        if [ $some_are_missing -eq 0 ]; then
-            return
-        fi
-
-        if [ $force_packages -eq 1 ]; then
-            run apt-get install $apt_opts --assume-yes --force-yes $@
-        else
-            run apt-get install $apt_opts --assume-yes $@
-        fi
+      if [ $(dpkg -l $el 2>/dev/null | grep ^ii | wc -l) -lt 1 ]; then
+        some_are_missing=1
+      fi
+    done
+    
+    if [ $some_are_missing -eq 0 ]; then
+      return
     fi
+
+    if [ $force_packages -eq 1 ]; then
+      run apt-get install $apt_opts --assume-yes --force-yes $@
+    else
+      run apt-get install $apt_opts --assume-yes $@
+    fi
+  elif [ $on_redhat_or_derivative -eq 1 ]; then
+    run yum install --assumeyes $@
+  fi
 }
 
 function install_common_os_packages()
 {
-  log "Installing common OS packages ..."
-  
+  print_and_log "Installing common OS packages ..."
+  git_package=git
   if [ $on_debian_or_derivative -eq 1 ]; then
         # Ubuntu doesn't have git (!) but only git-core.
     if [ $on_ubuntu -eq 1 ]; then
       git_package=git-core
-    else
-      git_package=git
     fi
-    
-    local packages="curl $git_package wget unzip"
-    install_packages_if_missing $packages
   fi
+  
+  local packages="curl $git_package wget unzip"
+  install_packages_if_missing $packages
   
   for el in lsb_release curl wget git unzip; do
     assert_pre_requisite $el
@@ -204,6 +200,11 @@ function install_common_os_packages()
 ######################################################################
 # <pulse-methods>
 ######################################################################
+function download_escenic_components_p() {
+  $(download_escenic_components) &
+  show_pulse $! "Downloading Escenic components from Technet"
+}
+
 function set_up_instance_specific_nursery_configuration_p() {
   $(set_up_instance_specific_nursery_configuration) &
   show_pulse $! "Setting up instance specific Nursery configuration"
@@ -797,9 +798,20 @@ function install_ece_third_party_packages
           libmysql-java
           memcached
           wget"
-
-        install_packages_if_missing $packages
+    elif [ $on_redhat_or_derivative -eq 1 ]; then
+      packages="
+        ant
+        ant-contrib
+        ant-nodeps
+        apr
+        memcached
+        mysql-connector-java
+        wget
+      "
+      # TODO no tomcat APR wrappers in official repositories
     fi
+    
+    install_packages_if_missing $packages
     
     for el in ant java; do
         assert_pre_requisite $el
@@ -940,7 +952,7 @@ function set_up_app_server()
         search_port=$(echo $user_search | cut -d':' -f2)
     fi
 
-    download_tomcat_p $download_dir
+    download_tomcat $download_dir
     tomcat_dir=$(get_base_dir_from_bundle $(get_tomcat_download_url))
     
     run cd $appserver_parent_dir
@@ -1769,14 +1781,21 @@ function common_pre_install()
     if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
         on_debian_or_derivative=1
         export DEBIAN_FRONTEND=noninteractive
+        
+      # chicken and the egg problem, we need lsb_release to install the
+      # packages later on, hence as soon as we know we've got a Debian
+      # based platform, we install lsb-release. Also note, the
+      # executable, lsb_release, is in the list of required binaries in
+      # install_common_os_packages.
+      install_packages_if_missing "lsb-release"
     fi
 
-    # chicken and the egg problem, we need lsb_release to install the
-    # packages later on, hence as soon as we know we've got a Debian
-    # based platform, we install lsb-release. Also note, the
-    # executable, lsb_release, is in the list of required binaries in
-    # install_common_os_packages.
-    install_packages_if_missing "lsb-release"
+    if [ -e /etc/redhat-release ]; then
+      on_redhat_or_derivative=1
+      install_packages_if_missing "redhat-lsb"
+    fi
+
+    assert_pre_requisite lsb_release
     
     if [ $(lsb_release -i | grep Ubuntu | wc -l) -gt 0 ]; then
         on_ubuntu=1
@@ -1785,9 +1804,9 @@ function common_pre_install()
     fi
 
     make_dir $download_dir
-    install_common_os_packages_p
+    install_common_os_packages
     create_user_and_group_if_not_present $ece_user $ece_group
-    set_up_user_environment_p
+    set_up_user_environment
 }
 
 function add_apt_source()
@@ -1832,10 +1851,7 @@ function install_cache_server()
         add_apt_source "deb http://repo.varnish-cache.org/ubuntu/ $(lsb_release -s -c) varnish-3.0"
     fi
 
-    if [ $on_debian_or_derivative -eq 1 ]; then
-        apt-get -y install varnish 1>>$log 2>>$log
-    fi
-
+    install_packages_if_missing varnish
     assert_pre_requisite varnishd
 
     if [ $fai_enabled -eq 0 ]; then
@@ -1877,7 +1893,7 @@ function install_database_server()
 {
     print_and_log "Installing the database server on $HOSTNAME ..."
 
-    source /usr/sbin/drop-and-create-ecedb
+    source $(dirname $0)/drop-and-create-ecedb
 
     if [ $on_debian_or_derivative -eq 1 ]; then
 
@@ -1935,8 +1951,16 @@ function install_database_server()
             print_and_log "I will use vanilla MySQL instead."
 
             packages="mysql-server mysql-client"
-            install_packages_if_missing $packages
         fi
+    elif [ $on_redhat_or_derivative -eq 1 ]; then
+      packages="mysql mysql-server"
+    fi
+    
+    install_packages_if_missing $packages
+
+    if [ $on_redhat_or_derivative -eq 1 ]; then
+      run chkconfig --level 35 mysqld on
+      run /etc/init.d/mysqld start
     fi
 
     assert_pre_requisite mysql
@@ -2122,7 +2146,7 @@ function install_ece_instance()
 
     if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
         $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
-        assemble_deploy_and_restart_type_p
+        assemble_deploy_and_restart_type
     fi
     
     update_type_instances_to_start_up
@@ -2185,7 +2209,7 @@ function install_presentation_server()
 
 function assemble_deploy_and_restart_type()
 {
-    log "Assembling, deploying & starting $instance_name ..."
+    print_and_log "Assembling, deploying & starting $instance_name ..."
     
     set_correct_permissions
 
@@ -2937,7 +2961,7 @@ function add_server_to_runlevels()
 "run levels." 
         # TODO add init.d to the default runlevels, for other
         # distributions too:
-        # - RedHat/chekcconfig
+        # - RedHat/chekcconfig  chkconfig --level 35 ece on
         # - Gentoo: rc-update add ece default
     fi
 }
