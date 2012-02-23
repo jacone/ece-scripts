@@ -464,6 +464,16 @@ function sanity_check()
             exit 1
         fi
     fi
+
+    # verifies that java_home exists and has the java executable
+    if [ ! -d $java_home ]; then
+        print "java_home $java_home doesn't exist"
+        print "check your setting in ${ece_conf_files_read[@]}"
+        exit 1
+    elif [ ! -x $java_home/bin/java ]; then
+        print "$java_home/bin/java isn't executable for $ece_user"
+        exit 1
+    fi
 }
 
 function deploy()
