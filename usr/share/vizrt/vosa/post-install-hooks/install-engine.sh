@@ -19,16 +19,15 @@ if [ ! -r $2/ece-install ] ; then
   if [ -r $1/ece-install ] ; then
     cp $1/ece-install $2
   else
-    wget "https://raw.github.com/skybert/ece-scripts/master/usr/sbin/ece-install" -O $2/ece-install
+    wget "https://github.com/skybert/ece-scripts/tarball/master" -O $2/ece-install.tar.gz
   fi
 fi
-chmod +x $2/ece-install
 if [ ! -r $1/ece-install.conf ] ; then
   echo "No ece-install.conf file present in $1"
   exit 1;
 fi
 
-scp -F $2/ssh.conf $2/ece-install $1/ece-install.conf root@guest:
+scp -F $2/ssh.conf $2/ece-install.tar.gz $1/ece-install.conf root@guest:
 
-ssh -F $2/ssh.conf root@guest ./ece-install
-
+ssh -F $2/ssh.conf root@guest tar xfz ece-install.tar.gz
+ssh -F $2/ssh.conf root@guest bash *-ece-scripts-*/usr/sbin/ece-install
