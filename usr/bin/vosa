@@ -19,7 +19,7 @@ usage=0
 ### To add an option, add it to the optstring, as defined in getopts, in alphabetical order.
 ### Also add a function "option-x" where x is the option. $1 will be the option value, if any.
 ### set any variables needed to default values as globals first.
-OPTSTRING=":i:h"
+OPTSTRING=":i:v:h"
 
 function option-h() {
   usage=1
@@ -38,6 +38,10 @@ function option-i() {
     instance_dir=$(readlink -f "$instance_dir")
     instance_name=$(basename $instance_dir)
   fi
+}
+
+function option-v() {
+  uec_version="${1}"
 }
 
 
@@ -294,6 +298,40 @@ EOF
   if [ ! -r /etc/vizrt/vosa/global-ssh-keys ] ; then
     touch /etc/vizrt/vosa/global-ssh-keys || exit 2
   fi
+}
+
+## Download an Ubuntu Enterprise Cloud server image
+##
+## Downloads a tar.gz from Ubuntu Enterprise Cloud and makes it
+## available under /var/lib/vizrt/vosa/images/<today's date>/
+## unless it already exists.
+##
+## Required option -v naming the distribution, e.g. oneiric or lucid.
+##
+## Also changes the symlink of "current" to point to this image.
+function do_download() {
+  if [ -z "$uec_version" ] ; then
+    echo "-v option is required when downloading."
+    exit 2
+  fi
+  date=$(date --iso)
+  local dir
+  dir=/var/lib/vizrt/vosa/images/$uec_version-$date/
+  if [ -d $dir ] ; then
+    echo "$uec_version-$date already exists, skipping download."
+    echo "Remove $dir if you want to re-download this image."
+  else
+    mkdir /var/lib/vizrt/vosa/images/$uec_version-$date/ || exit 2
+    wget http://uec-images.ubuntu.com/server/$uec_version/current/$uec_version-server-cloudimg-amd64.tar.gz -O $dir/$uec_version-server-cloudimg-amd64.tar.gz || exit 2
+    tar -x -C $dir -v -f $dir/$uec_version-server-cloudimg-amd64.tar.gz | tee $dir/contents > /dev/null || exit 2
+    local kernel
+    kernel=$(cd $dir && echo ${base}-vmlinuz-*)
+  fi
+  if [ -L /var/lib/vizrt/vosa/images/current ] ; then
+    rm /var/lib/vizrt/vosa/images/current
+  fi
+  echo "Marking $uec_version-$date as"' "current"'
+  ln -s $uec_version-$date /var/lib/vizrt/vosa/images/current
 }
 
 ## Provides even more help.
