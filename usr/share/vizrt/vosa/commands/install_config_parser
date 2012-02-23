@@ -10,6 +10,7 @@ install_config_netmask=
 install_config_gateway=
 install_config_timezone=
 install_config_user_data=
+install_config_mirror=
 
 
 function install_config_ip_address() {
@@ -46,6 +47,10 @@ function install_config_timezone() {
 
 function install_config_user_data() {
   install_config_user_data=$1
+}
+
+function install_config_mirror() {
+  install_config_mirror=$1
 }
 
 # Handle arrays
