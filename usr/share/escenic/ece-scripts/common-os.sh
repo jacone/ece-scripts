@@ -96,7 +96,7 @@ function get_ip() {
 ##
 ## $1: the binary/executable/program
 function assert_pre_requisite() {
-  if [ $(which $1 | wc -l) -lt 1 ]; then
+  if [ $(which $1 2>/dev/null | wc -l) -lt 1 ]; then
     print_and_log "Please install $1 and then run $(basename $0) again."
     remove_pid_and_exit_in_error
   fi
@@ -109,6 +109,11 @@ function get_tomcat_download_url() {
       head -1 | \
       cut -d'"' -f2
   )
+
+  if [ -z $url ]; then
+    print_and_log "Failed to get Tomcat download URL"
+    kill $$
+  fi
   
   echo $url
 }
@@ -118,13 +123,10 @@ function get_tomcat_download_url() {
 ## $1: target directory
 function download_tomcat() {
   (
+    local url=$(get_tomcat_download_url)
     log "Downloading Tomcat from $url ..."
     run cd $1
-    run wget $wget_opts $(get_tomcat_download_url)
+    run wget $wget_opts $url
   )
 }
 
-function download_tomcat_p() {
-  $(download_tomcat $1) &
-  show_pulse $! "Downloading Tomcat from nearest mirror"
-}
