@@ -216,7 +216,20 @@ function boot_kvm() {
 
   startupcmd=("${startupcmd[@]}" -append "root=/dev/vda ro init=/usr/lib/cloud-init/uncloud-init ds=${cloud_param} ubuntu-pass=random $xupdate" )
 
+  ps > /dev/null -fC "kvm/${hostname}" && {
+    echo "This instance of KVM is already running.  Just see here:"
+    ps -fC "kvm/${hostname}"
+    exit 2
+  }
+
+  lsof > /dev/null ${img} && {
+    echo "This instance of KVM seems to be in use by another process. Just see here:"
+    lsof "${img}"
+    exit 2
+  }
+
   # actually execute kvm
+  echo "Command to star this KVM:"
   echo "${startupcmd[@]}"
   "${startupcmd[@]}"; 
   local rc

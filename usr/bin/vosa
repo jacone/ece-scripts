@@ -106,8 +106,8 @@ function do_init() {
 
 # Which image to use to install the sucker
 
-original_image /var/lib/vizrt/vosa/original-images/current/disk.img
-kernel /var/lib/vizrt/vosa/original-images/current/vmlinuz
+original_image /var/lib/vizrt/vosa/uec-images/current/disk.img
+kernel /var/lib/vizrt/vosa/uec-images/current/vmlinuz
 
 # Initial disk size for its own storage, in Gigabytes: Disk will be
 # reized to this size on installation.
@@ -316,22 +316,25 @@ function do_download() {
   fi
   date=$(date --iso)
   local dir
-  dir=/var/lib/vizrt/vosa/images/$uec_version-$date/
+  dir=/var/lib/vizrt/vosa/uec-images/$uec_version-$date/
   if [ -d $dir ] ; then
     echo "$uec_version-$date already exists, skipping download."
     echo "Remove $dir if you want to re-download this image."
   else
-    mkdir /var/lib/vizrt/vosa/images/$uec_version-$date/ || exit 2
+    mkdir -p $dir || exit 2
     wget http://uec-images.ubuntu.com/server/$uec_version/current/$uec_version-server-cloudimg-amd64.tar.gz -O $dir/$uec_version-server-cloudimg-amd64.tar.gz || exit 2
-    tar -x -C $dir -v -f $dir/$uec_version-server-cloudimg-amd64.tar.gz | tee $dir/contents > /dev/null || exit 2
+    tar -x --no-same-owner --no-same-permissions -C $dir -v -f $dir/$uec_version-server-cloudimg-amd64.tar.gz | tee $dir/contents > /dev/null || exit 2
     local kernel
-    kernel=$(cd $dir && echo ${base}-vmlinuz-*)
+    kernel=$(cd $dir && echo *-vmlinuz-*)
+    image=$(cd $dir && echo *.img)
+    mv $dir/$kernel $dir/vmlinuz
+    mv $dir/$image $dir/disk.img
   fi
-  if [ -L /var/lib/vizrt/vosa/images/current ] ; then
-    rm /var/lib/vizrt/vosa/images/current
+  if [ -L /var/lib/vizrt/vosa/uec-images/current ] ; then
+    rm /var/lib/vizrt/vosa/uec-images/current
   fi
   echo "Marking $uec_version-$date as"' "current"'
-  ln -s $uec_version-$date /var/lib/vizrt/vosa/images/current
+  ln -s $uec_version-$date /var/lib/vizrt/vosa/uec-images/current
 }
 
 ## Provides even more help.
