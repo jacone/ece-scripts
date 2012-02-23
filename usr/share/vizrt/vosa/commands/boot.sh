@@ -201,7 +201,7 @@ function boot_kvm() {
   -balloon "virtio"
   -drive "file=${img},if=virtio,cache=none"
   -kernel ${kernel}
-  -net "nic,model=virtio,macaddr=${install_config_macaddr}"
+  -net "nic,model=rtl8139,macaddr=${install_config_macaddr}"
   -net "tap,ifname=$tapinterface,script=no,downscript=no")
   
 # http://dwdwwebcache.googleusercontent.com/search?q=cache:mEAjcA2zHosJ:kerneltrap.org/mailarchive/linux-kvm/2010/1/26/6257297/thread+qemu-kvm+acpi+shutdown&cd=1&hl=no&ct=clnk&gl=no
