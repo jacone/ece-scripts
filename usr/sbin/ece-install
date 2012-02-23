@@ -209,11 +209,6 @@ function set_up_instance_specific_nursery_configuration_p() {
   show_pulse $! "Setting up instance specific Nursery configuration"
 }
 
-function set_up_basic_nursery_configuration_p() {
-  $(set_up_basic_nursery_configuration) &
-  show_pulse $! "Setting up basic Nursery configuration"
-}
-
 function assemble_deploy_and_restart_type_p() {
   echo $(assemble_deploy_and_restart_type) &
   show_pulse $! "Assembling, deploying & starting $instance_name"
@@ -926,8 +921,8 @@ function set_up_app_server()
     if [ $fai_enabled -eq 0 ]; then
         print "Last question, I promise!: Where does the search instance run?"
         print "Press ENTER to accept the default ($HOSTNAME:8080)"
+        print "or enter: <host>:<port>, e.g.: 'search1:8080'"
         print "If you're in doubt, just press ENTER :-)"
-        print "Or enter: <host>:<port>, e.g.: 'search1:8080'"
         echo -n "Your choice [$HOSTNAME:8080]> "
         read user_search
     else
@@ -2108,7 +2103,7 @@ function install_ece_instance()
             $ece_instance_conf_archive
     fi
     
-    set_up_basic_nursery_configuration_p
+    set_up_basic_nursery_configuration
     set_up_instance_specific_nursery_configuration_p
     
     set_up_app_server
