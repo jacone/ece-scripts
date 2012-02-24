@@ -1,7 +1,3 @@
-#! /usr/bin/env bash
-
-# by tkj@vizrt.com
-
 memcached_java_lib_url=http://img.whalin.com/memcached/jdk5/log4j/java_memcached-release_2.0.1.tar.gz
 
 ## $1: root directory of the publication
