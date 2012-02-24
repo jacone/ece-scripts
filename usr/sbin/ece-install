@@ -2827,9 +2827,13 @@ EOF
 
 function install_nagios_node()
 {
-    print "Installing an icinga client on $HOSTNAME ..."
+    print "Installing a Nagios client on $HOSTNAME ..."
     if [ $on_debian_or_derivative -eq 1 ]; then
         install_packages_if_missing nagios-nrpe-server nagios-plugins
+    else
+      print_and_log "Nagios node installation not supported on your system"
+      print_and_log "You will have to install it manually."
+      return
     fi
     
     local file=/etc/nagios/nrpe.cfg
@@ -3217,29 +3221,32 @@ function install_monitoring_server()
     create_monitoring_server_overview $nagios_flavour
 }
 
-function common_post_install()
-{
-    if [ $install_profile_number -eq $PROFILE_ALL_IN_ONE -o \
-        $install_profile_number -eq $PROFILE_PRESENTATION_SERVER -o \
-        $install_profile_number -eq $PROFILE_RMI_HUB -o \
-        $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
-        add_server_to_runlevels
+function common_post_install() {
+  if [ $install_profile_number -eq $PROFILE_ALL_IN_ONE -o \
+    $install_profile_number -eq $PROFILE_PRESENTATION_SERVER -o \
+    $install_profile_number -eq $PROFILE_RMI_HUB -o \
+    $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+    add_server_to_runlevels
+  fi
+
+  if [ $install_profile_number -ne $PROFILE_WIDGET_FRAMEWORK -a \
+    $install_profile_number -ne $PROFILE_CREATE_PUBLICATION -a \
+    $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]; then
+
+    if [[ "${fai_monitoring_node_munin_skip}" != "1" ]]; then
+      install_munin_node
     fi
 
-    if [ $install_profile_number -ne $PROFILE_WIDGET_FRAMEWORK -a \
-        $install_profile_number -ne $PROFILE_CREATE_PUBLICATION -a \
-        $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]; then
-        install_munin_node
-
-        if [ $install_profile_number -ne $PROFILE_MONITORING_SERVER ]; then
-            install_nagios_node
-        fi
+    if [[ $install_profile_number != $PROFILE_MONITORING_SERVER &&
+          "${fai_monitoring_node_nagios_skip}" != "1" ]]; then
+      install_nagios_node
     fi
+  fi
 
-    set_correct_permissions
-    
-    print_status_and_next_steps
-    rm $pid_file
+  set_correct_permissions
+  
+  print_status_and_next_steps
+  run rm $pid_file
 }
 
 for el in $@; do
