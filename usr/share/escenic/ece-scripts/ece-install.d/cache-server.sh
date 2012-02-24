@@ -34,6 +34,8 @@ function install_cache_server()
 
     if [ $fai_enabled -eq 0 ]; then
         print "You must now list your backend servers."
+        print "These must be host names (not IPs) and must all be resolvable"
+        print "by your cache host ($HOSTNAME), preferably from /etc/hosts"
         print "Seperate the entries with a space. e.g.: app1:8080 app2:8080."
         print "Press ENTER to accept the default: ${HOSTNAME}:${appserver_port}"
         echo -n "Your choice [${HOSTNAME}:${appserver_port}]> "
