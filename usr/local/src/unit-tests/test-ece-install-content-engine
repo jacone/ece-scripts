@@ -1,0 +1,32 @@
+#! /usr/bin/env bash
+
+# by tkj@vizrt.com
+
+common_test_is_loaded > /dev/null 2>&1 || source common-test.sh
+
+# source ../../../share/escenic/ece-scripts/ece-install.d/constants.sh
+source ../../../share/escenic/ece-scripts/ece-install.d/content-engine.sh
+
+function test_get_publication_short_name_list() {
+  escenic_root_dir=$(mktemp -d)
+  local pub_dir=$escenic_root_dir/assemblytool/publications
+  mkdir -p $pub_dir
+  touch $pub_dir/{pub1,pub2}.properties
+
+  # a sub dir
+  mkdir -p $pub_dir/sub
+  touch $pub_dir/sub/{SomeNurseryComponent,SomeOtherNurseryComponent}.properties
+  
+  local short_name_list=$(get_publication_short_name_list | sed 's/\ //g')
+  assert_equals "should not include other .properties" "pub2pub1" $short_name_list
+
+  rm -rf $escenic_root_dir
+}
+
+test_suite="
+test_get_publication_short_name_list
+"
+
+run_test_suite $test_suite
+
+
