@@ -28,7 +28,7 @@ function install_memcached()
   memcached_set_up_common_nursery
   
   log "Configuring all publications for using memcached ..."
-  for el in $assemblytool_home/publications/*.properties 2>/dev/null; do
+  for el in $assemblytool_home/publications/*.properties; do
     local publication=$(basename $el .properties)
     
     if [[ $appserver == "tomcat" ]]; then
