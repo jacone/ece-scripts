@@ -193,7 +193,7 @@ function install_packages_if_missing() {
       run apt-get install $apt_opts --assume-yes $@
     fi
   elif [ $on_redhat_or_derivative -eq 1 ]; then
-    run yum install --assumeyes $@
+    run yum install -y $@
   fi
 }
 
