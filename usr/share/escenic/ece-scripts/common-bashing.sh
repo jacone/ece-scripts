@@ -80,8 +80,8 @@ function remove_pid_and_exit_in_error() {
 
 function exit_on_error() {
   if [ $? -gt 0 ]; then
-    log "The command ["$@"] FAILED, exiting :-("
-    log "See $log for further details."
+    print_and_log "The command ["$@"] $(red FAILED), exiting :-("
+    print "See $log for further details."
     remove_pid_and_exit_in_error
   fi
 }
