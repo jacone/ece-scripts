@@ -5,6 +5,9 @@
 if [ ! -e bash_unit ]; then
   wget --quiet https://raw.github.com/skybert/my-little-friends/master/bash/bash_unit
 fi
+if [ ! -e alexandria ]; then
+  wget --quiet https://raw.github.com/skybert/my-little-friends/master/bash/alexandria
+fi
 
 source bash_unit
 
