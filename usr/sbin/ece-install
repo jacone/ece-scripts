@@ -193,6 +193,8 @@ function install_packages_if_missing() {
       run apt-get install $apt_opts --assume-yes $@
     fi
   elif [ $on_redhat_or_derivative -eq 1 ]; then
+    # since some versions of yum use --assume-yes and some use
+    # --assumeyes (!), we use the short form, -y, here
     run yum install -y $@
   fi
 }
@@ -1681,6 +1683,10 @@ function common_pre_install()
         on_debian=1
     fi
 
+    # git sometimes, for some reason fails to verify the SSL
+    # certifacte of github.
+    export GIT_SSL_NO_VERIFY=true
+    
     make_dir $download_dir
     install_common_os_packages
     create_user_and_group_if_not_present $ece_user $ece_group
