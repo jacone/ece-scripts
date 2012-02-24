@@ -116,7 +116,7 @@ function init() {
 
     # load ece-install modules
     for el in $dir/ece-install.d/*.sh; do
-      print "Loading $(basename $0) module:" $el
+      log "Loading $(basename $0) module:" $el
       source $el
     done
   else
