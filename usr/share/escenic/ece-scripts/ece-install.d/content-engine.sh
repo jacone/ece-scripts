@@ -27,7 +27,7 @@ function get_publication_short_name_list()
         return
     fi
 
-    for el in $(find ${publication_def_dir} -name "*.properties"); do
+    for el in $(find ${publication_def_dir} -maxdepth 1 -name "*.properties"); do
         local short_name=$(basename $el .properties)
         short_name_list="${short_name_list} ${short_name}"
     done
