@@ -115,7 +115,10 @@ function init() {
     done
 
     # load ece-install modules
-    source $dir/ece-install.d/*.sh
+    for el in $dir/ece-install.d/*.sh; do
+      print "Loading $(basename $0) module:" $el
+      source $el
+    done
   else
     echo "I cannot find $(basename $0)'s dependencies, exiting :-("
     exit 1
