@@ -6,12 +6,12 @@ the latest Ubuntu LTS or most other Debian based operating systems,
 but it should work without any problems on any Unix like system that
 has BASH version 4.2 or newer.
 
-*** Debian based operating systems
+** Debian based operating systems
 If running on a Debian based operating system, ece-install will take
 care of installing all required third party software, such as database
 & caching server.
 
-*** Other GNU/Linux and Unix systems 
+** Other GNU/Linux and Unix systems 
 If you're installing on another Linux or Unix system, you must first
 make sure that these 3rd party components are installed. ece-install
 will tell you which ones it cannot find and tell you to install these,
@@ -20,6 +20,14 @@ so you can simply run it to find out which ones you need.
 You may also look inside the ece-install script for all calls to the
 'assert\_pre\_prequesite' method and you'll get a list of the binaries
 ece-install assumes are present.
+
+** Tested Operating Systems
+| Operating system     | Status                                                     | Date updated     |
+|----------------------+------------------------------------------------------------+------------------|
+| Debian 6.0 (squeeze) | Everything is 100% automatic                               | 2012-02-27 13:18 |
+| Ubuntu LTS 10.04     | Everything except Tomcat/APR wrappers are automatic        | 2012-02-27 13:19 |
+| Ubuntu 11.10         | Everything except Tomcat/APR wrappers are automatic        | 2012-02-27 13:19 |
+| CentOS 6.2           | Sun Java, Cache server, APR & monitoring are not automatic | 2012-02-27 13:21 |
 
 * A Note on Running ece-install On Non-GNU/Linux Systems
 Please note, it's assumed that the OS uses GNU's tools, i.e. find, cp
