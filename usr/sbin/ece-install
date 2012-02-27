@@ -84,10 +84,14 @@ http://technet.escenic.com/downloads/release/53/community-engine-3.6.1.0.zip
 http://technet.escenic.com/downloads/release/53/dashboard-1.0.0.0.zip
 http://technet.escenic.com/downloads/release/53/engine-5.3.4.7.zip
 http://technet.escenic.com/downloads/release/53/forum-3.0.0.0.zip
+http://technet.escenic.com/downloads/release/53/geocode-dist-2.3.1.0.zip
 http://technet.escenic.com/downloads/release/53/inpage-1.3.0.0.zip
 http://technet.escenic.com/downloads/release/53/lucy-dist-4.1.6.0.zip
 http://technet.escenic.com/downloads/release/53/menu-editor-dist-2.0.6.0.zip
+http://technet.escenic.com/downloads/release/53/mobile-expansion-3.0.0.0.zip
 http://technet.escenic.com/downloads/release/53/poll-2.1.3.0.zip
+http://technet.escenic.com/downloads/release/53/revision-history-dist-1.0.0.1.zip
+http://technet.escenic.com/downloads/release/53/section-feed-dist-2.0.4.0.zip
 http://technet.escenic.com/downloads/release/53/xml-editor-dist-2.1.0.0.zip
 "
 wf_download_list="
@@ -730,27 +734,6 @@ function set_ece_instance_conf()
     set_conf_file_value $1 $2 $instance_conf_file
 }
 
-function create_java_deb_packages_and_repo()
-{
-    print $(lsb_release -i | cut -d':' -f2) \
-        $(lsb_release -r | cut -d':' -f2) \
-        "doesn't have official Sun/Oracle Java packages,"
-    
-    local tmp_dir=$(mktemp -d)
-    $(
-        run cd $tmp_dir
-        run git clone https://github.com/flexiondotorg/oab-java6.git
-        run cd oab-java6
-        run bash oab-java6.sh
-        run rm -rf $tmp_dir
-    ) &
-    show_pulse $! "I'm creating packages & local repo for you"
-
-    add_next_step "Local APT repository with Sun/Oracle Java packages"
-    add_next_step "has been installed at /var/local/oab/deb and added"
-    add_next_step "to your APT system with /etc/apt/sources.list.d/oab.list"
-}
-
 # Installs third party packages needed by the ECE (i.e. Java related).
 # Also see install_common_os_packages for packages common to all
 # servers in the architecture.
@@ -818,7 +801,10 @@ function install_ece_third_party_packages
         mysql-connector-java
         wget
       "
+
       # TODO no tomcat APR wrappers in official repositories
+      
+      install_sun_java_on_redhat
     fi
     
     install_packages_if_missing $packages
