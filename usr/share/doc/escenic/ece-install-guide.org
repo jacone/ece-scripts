@@ -11,6 +11,15 @@ If running on a Debian based operating system, ece-install will take
 care of installing all required third party software, such as database
 & caching server.
 
+** RedHat based operating systems
+ece-install constantly gets better support for automatic installation
+on RedHat based operating systems. However, since the public RedHat
+repositories are significantly smaller than the Debian ones, there
+will often be the case that you'll have to do some manually
+installation of 3rd party dependencies prior to running
+ece-install. Don't despair though, ece-install will tell you what you
+need to do. 
+
 ** Other GNU/Linux and Unix systems 
 If you're installing on another Linux or Unix system, you must first
 make sure that these 3rd party components are installed. ece-install
