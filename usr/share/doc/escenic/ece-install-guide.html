@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="title" content="Welcome to the /usr/sbin/ece-install Guide"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2012-02-28 12:37:37 CST"/>
+<meta name="generated" content="2012-02-28 18:55:47 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -231,8 +231,9 @@ div.note {
 <li><a href="#sec-1">1 Supported Operating Systems</a>
 <ul>
 <li><a href="#sec-1-1">1.1 Debian based operating systems</a></li>
-<li><a href="#sec-1-2">1.2 Other GNU/Linux and Unix systems</a></li>
-<li><a href="#sec-1-3">1.3 Tested Operating Systems</a></li>
+<li><a href="#sec-1-2">1.2 RedHat based operating systems</a></li>
+<li><a href="#sec-1-3">1.3 Other GNU/Linux and Unix systems</a></li>
+<li><a href="#sec-1-4">1.4 Tested Operating Systems</a></li>
 </ul>
 </li>
 <li><a href="#sec-2">2 A Note on Running ece-install On Non-GNU/Linux Systems</a></li>
@@ -261,16 +262,17 @@ div.note {
 <li><a href="#sec-5-9">5.9 Profile - Create Publication</a></li>
 <li><a href="#sec-5-10">5.10 Profile - Monitoring Server</a></li>
 <li><a href="#sec-5-11">5.11 Profile - Restoring from backup</a></li>
-<li><a href="#sec-5-12">5.12 Running interactively</a>
+<li><a href="#sec-5-12">5.12 Profile - Analysis Server</a></li>
+<li><a href="#sec-5-13">5.13 Running interactively</a>
 <ul>
-<li><a href="#sec-5-12-1">5.12.1 Start ece-install and choose the Option, "Restore from backup"</a></li>
-<li><a href="#sec-5-12-2">5.12.2 Select Which Backup to Restore</a></li>
-<li><a href="#sec-5-12-3">5.12.3 Choose What to Restore</a></li>
-<li><a href="#sec-5-12-4">5.12.4 Sit Back and Watch ece-install Restore the Data for You</a></li>
+<li><a href="#sec-5-13-1">5.13.1 Start ece-install and choose the Option, "Restore from backup"</a></li>
+<li><a href="#sec-5-13-2">5.13.2 Select Which Backup to Restore</a></li>
+<li><a href="#sec-5-13-3">5.13.3 Choose What to Restore</a></li>
+<li><a href="#sec-5-13-4">5.13.4 Sit Back and Watch ece-install Restore the Data for You</a></li>
 </ul>
 </li>
-<li><a href="#sec-5-13">5.13 Running in FAI mode</a></li>
-<li><a href="#sec-5-14">5.14 Data security</a></li>
+<li><a href="#sec-5-14">5.14 Running in FAI mode</a></li>
+<li><a href="#sec-5-15">5.15 Data security</a></li>
 </ul>
 </li>
 <li><a href="#sec-6">6 Full Automatic Install (FAI)</a>
@@ -335,8 +337,24 @@ care of installing all required third party software, such as database
 </div>
 
 <div id="outline-container-1-2" class="outline-3">
-<h3 id="sec-1-2"><span class="section-number-3">1.2</span> Other GNU/Linux and Unix systems</h3>
+<h3 id="sec-1-2"><span class="section-number-3">1.2</span> RedHat based operating systems</h3>
 <div class="outline-text-3" id="text-1-2">
+
+<p>ece-install constantly gets better support for automatic installation
+on RedHat based operating systems. However, since the public RedHat
+repositories are significantly smaller than the Debian ones, there
+will often be the case that you'll have to do some manually
+installation of 3rd party dependencies prior to running
+ece-install. Don't despair though, ece-install will tell you what you
+need to do. 
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-1-3" class="outline-3">
+<h3 id="sec-1-3"><span class="section-number-3">1.3</span> Other GNU/Linux and Unix systems</h3>
+<div class="outline-text-3" id="text-1-3">
 
 <p>If you're installing on another Linux or Unix system, you must first
 make sure that these 3rd party components are installed. ece-install
@@ -352,9 +370,9 @@ ece-install assumes are present.
 
 </div>
 
-<div id="outline-container-1-3" class="outline-3">
-<h3 id="sec-1-3"><span class="section-number-3">1.3</span> Tested Operating Systems</h3>
-<div class="outline-text-3" id="text-1-3">
+<div id="outline-container-1-4" class="outline-3">
+<h3 id="sec-1-4"><span class="section-number-3">1.4</span> Tested Operating Systems</h3>
+<div class="outline-text-3" id="text-1-4">
 
 <table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
 <caption></caption>
@@ -885,15 +903,27 @@ what's available on the host where it's run):
 </div>
 
 <div id="outline-container-5-12" class="outline-3">
-<h3 id="sec-5-12"><span class="section-number-3">5.12</span> Running interactively</h3>
+<h3 id="sec-5-12"><span class="section-number-3">5.12</span> Profile - Analysis Server</h3>
 <div class="outline-text-3" id="text-5-12">
+
+<p>This profile will install the Escenic Analysis Engine and configure it
+for production use with sane defaults. Be sure to use a different DB
+than you use for ECE.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-5-13" class="outline-3">
+<h3 id="sec-5-13"><span class="section-number-3">5.13</span> Running interactively</h3>
+<div class="outline-text-3" id="text-5-13">
 
 
 </div>
 
-<div id="outline-container-5-12-1" class="outline-4">
-<h4 id="sec-5-12-1"><span class="section-number-4">5.12.1</span> Start ece-install and choose the Option, "Restore from backup"</h4>
-<div class="outline-text-4" id="text-5-12-1">
+<div id="outline-container-5-13-1" class="outline-4">
+<h4 id="sec-5-13-1"><span class="section-number-4">5.13.1</span> Start ece-install and choose the Option, "Restore from backup"</h4>
+<div class="outline-text-4" id="text-5-13-1">
 
 
 
@@ -906,9 +936,9 @@ what's available on the host where it's run):
 
 </div>
 
-<div id="outline-container-5-12-2" class="outline-4">
-<h4 id="sec-5-12-2"><span class="section-number-4">5.12.2</span> Select Which Backup to Restore</h4>
-<div class="outline-text-4" id="text-5-12-2">
+<div id="outline-container-5-13-2" class="outline-4">
+<h4 id="sec-5-13-2"><span class="section-number-4">5.13.2</span> Select Which Backup to Restore</h4>
+<div class="outline-text-4" id="text-5-13-2">
 
 
 
@@ -937,9 +967,9 @@ and the ece-install script will hence expect to find them here.
 
 </div>
 
-<div id="outline-container-5-12-3" class="outline-4">
-<h4 id="sec-5-12-3"><span class="section-number-4">5.12.3</span> Choose What to Restore</h4>
-<div class="outline-text-4" id="text-5-12-3">
+<div id="outline-container-5-13-3" class="outline-4">
+<h4 id="sec-5-13-3"><span class="section-number-4">5.13.3</span> Choose What to Restore</h4>
+<div class="outline-text-4" id="text-5-13-3">
 
 
 
@@ -957,9 +987,9 @@ Your choice [1]&gt; 2
 
 </div>
 
-<div id="outline-container-5-12-4" class="outline-4">
-<h4 id="sec-5-12-4"><span class="section-number-4">5.12.4</span> Sit Back and Watch ece-install Restore the Data for You</h4>
-<div class="outline-text-4" id="text-5-12-4">
+<div id="outline-container-5-13-4" class="outline-4">
+<h4 id="sec-5-13-4"><span class="section-number-4">5.13.4</span> Sit Back and Watch ece-install Restore the Data for You</h4>
+<div class="outline-text-4" id="text-5-13-4">
 
 
 
@@ -977,9 +1007,9 @@ Your choice [1]&gt; 2
 
 </div>
 
-<div id="outline-container-5-13" class="outline-3">
-<h3 id="sec-5-13"><span class="section-number-3">5.13</span> Running in FAI mode</h3>
-<div class="outline-text-3" id="text-5-13">
+<div id="outline-container-5-14" class="outline-3">
+<h3 id="sec-5-14"><span class="section-number-3">5.14</span> Running in FAI mode</h3>
+<div class="outline-text-3" id="text-5-14">
 
 <p>If you're running in FAI mode, you can choose between these settings
 to decide what to restore and where to find the backup file to
@@ -1021,9 +1051,9 @@ need this in your ece-install.conf:
 
 </div>
 
-<div id="outline-container-5-14" class="outline-3">
-<h3 id="sec-5-14"><span class="section-number-3">5.14</span> Data security</h3>
-<div class="outline-text-3" id="text-5-14">
+<div id="outline-container-5-15" class="outline-3">
+<h3 id="sec-5-15"><span class="section-number-3">5.15</span> Data security</h3>
+<div class="outline-text-3" id="text-5-15">
 
 <p>You should take heed when running restore, so that you're not
 restoring a system which you didn't want to change (yes, this mishap
@@ -1270,6 +1300,14 @@ $HOME/ece-install.conf file of the root user:
 </thead>
 <tbody>
 <tr><td class="left">fai_all_install</td><td class="left">0</td><td class="left">Install all components on your server.</td></tr>
+<tr><td class="left">fai_analysis_db_port</td><td class="left">3306</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
+<tr><td class="left">fai_analysis_db_host</td><td class="left">localhost</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
+<tr><td class="left">fai_analysis_db_user</td><td class="left">ece5user</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
+<tr><td class="left">fai_analysis_db_password</td><td class="left">read-the-source-luke</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
+<tr><td class="left">fai_analysis_db_schema</td><td class="left">ece5db</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
+<tr><td class="left">fai_analysis_port</td><td class="left">8080</td><td class="left">Port of the EAE</td></tr>
+<tr><td class="left">fai_analysis_shutdown</td><td class="left">8005</td><td class="left">Shutdown port for the EAE app server</td></tr>
+<tr><td class="left">fai_analysis_name</td><td class="left">analysis1</td><td class="left">EAE instance name</td></tr>
 <tr><td class="left">fai_cache_backends</td><td class="left">${HOSTNAME}:8080</td><td class="left">Space separated, e.g. "app1:8080 app2:8080"</td></tr>
 <tr><td class="left">fai_cache_install</td><td class="left">0</td><td class="left">Install cache server profile</td></tr>
 <tr><td class="left">fai_db_host</td><td class="left">$HOSTNAME</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
@@ -1776,7 +1814,7 @@ The following output is produced from ece-install:
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2012-02-28 12:37:37 CST
+  Date: 2012-02-28 18:55:47 CST
 </p>
 </div>
 </body>
