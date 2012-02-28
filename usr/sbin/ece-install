@@ -143,7 +143,9 @@ function download_escenic_components()
         return
     fi
 
-    cd $download_dir
+    print "Downloading software from technet.escenic.com ..."
+    
+    run cd $download_dir
     for el in $technet_download_list; do
       if [ -e $(basename $el) ]; then
         continue
@@ -409,6 +411,8 @@ function set_up_engine_and_plugins()
         if [ $(basename $el | grep ^engine-.*.zip | wc -l) -gt 0 ]; then
             continue
         elif [ $(basename $el | grep ^assemblytool-.*.zip | wc -l) -gt 0 ]; then
+            continue
+        elif [ $(basename $el | grep ^jdk-.*.zip | wc -l) -gt 0 ]; then
             continue
         fi
         
@@ -2637,25 +2641,25 @@ EOF
 
 function add_server_to_runlevels()
 {
-    # no need to add init.d scripts to the runlevel(s) for these
-    # profiles
-    if [ $install_profile_number -eq $PROFILE_WIDGET_FRAMEWORK -o \
-        $install_profile_number -eq $PROFILE_DB_SERVER -o \
-        $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
-        return
-    fi
+  # no need to add init.d scripts to the runlevel(s) for these
+  # profiles
+  if [ $install_profile_number -eq $PROFILE_WIDGET_FRAMEWORK -o \
+    $install_profile_number -eq $PROFILE_DB_SERVER -o \
+    $install_profile_number -eq $PROFILE_CACHE_SERVER ]; then
+    return
+  fi
 
-    if [ $on_debian_or_derivative -eq 1 ]; then
-        print_and_log "Adding the ece init.d script to the default run levels ..."
-        run update-rc.d ece defaults
-    else
-        add_next_step "Remember to add /etc/init.d/ece to the desired "\
-"run levels." 
-        # TODO add init.d to the default runlevels, for other
-        # distributions too:
-        # - RedHat/chekcconfig  chkconfig --level 35 ece on
-        # - Gentoo: rc-update add ece default
-    fi
+  if [ $on_debian_or_derivative -eq 1 ]; then
+    print_and_log "Adding the ece init.d script to the default run levels ..."
+    run update-rc.d ece defaults
+  elif [ $on_redhat_or_derivative -eq 1 ]; then
+    run chkconfig --level 35 ece on      
+  else
+    add_next_step "Remember to add /etc/init.d/ece to the desired run levels." 
+    # TODO add init.d to the default runlevels, for other
+    # distributions too:
+    # - Gentoo: rc-update add ece default
+  fi
 }
 
 function restore_from_backup()
