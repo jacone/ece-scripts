@@ -79,8 +79,8 @@ function install_ece_instance()
 
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
     $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
-    assemble_deploy_and_restart_type
     install_memory_cache
+    assemble_deploy_and_restart_type
   fi
   
   update_type_instances_to_start_up
