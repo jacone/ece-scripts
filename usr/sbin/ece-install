@@ -562,7 +562,7 @@ function set_up_ecedb()
 
 function set_up_basic_nursery_configuration()
 {
-    log "Setting up basic Nursery configuration ..."
+    print_and_log "Setting up basic Nursery configuration ..."
 
     # we always copy the default plugin configuration (even if there
     # is an archive)
@@ -654,22 +654,24 @@ EOF
 
 function set_up_instance_specific_nursery_configuration()
 {
-    for el in $escenic_conf_dir/engine/instance/*; do
-        i=$(( i + 1 ))
-        if [ $(basename $el) = $instance_name ]; then
-            rmi_port="8${i}23"
-            run echo "port=$rmi_port" > $el/RMI.properties
-        fi
-    done
-
-    nursery_context=neo/io/managers/HubConnectionManager.properties
-    file=$escenic_conf_dir/engine/instance/$instance_name/$nursery_context
-    make_dir $(dirname $file)
-    
-    # we don't touch it if the file already exists.
-    if [ ! -e $file ]; then
-        run echo "hostname=$HOSTNAME" >> $file
+  print_and_log "Setting up instance specific Nursery configuration ..."
+  
+  for el in $escenic_conf_dir/engine/instance/*; do
+    i=$(( i + 1 ))
+    if [ $(basename $el) = $instance_name ]; then
+      rmi_port="8${i}23"
+      run echo "port=$rmi_port" > $el/RMI.properties
     fi
+  done
+
+  nursery_context=neo/io/managers/HubConnectionManager.properties
+  file=$escenic_conf_dir/engine/instance/$instance_name/$nursery_context
+  make_dir $(dirname $file)
+  
+    # we don't touch it if the file already exists.
+  if [ ! -e $file ]; then
+    run echo "hostname=$HOSTNAME" >> $file
+  fi
 }
 
 function set_up_proper_logging_configuration()
@@ -1438,45 +1440,6 @@ function set_up_user_environment()
   fi
 }
 
-function set_up_solr()
-{
-    run_hook set_up_solr.preinst
-    
-    print_and_log "Setting up solr ..."
-    if [ ! -d $escenic_conf_dir/solr ]; then
-        if [ $(is_using_conf_archive) -eq 1 ]; then
-            print_and_log "Using the supplied Solr configuration from" 
-            print_and_log "bundle: $ece_instance_conf_archive"
-            local a_tmp_dir=$(mktemp -d)
-            run cd $a_tmp_dir
-            run tar xzf $ece_instance_conf_archive engine/solr/conf
-            run cp -r engine/solr/conf $escenic_conf_dir/solr
-            run rm -r $a_tmp_dir
-        else
-            print_and_log "Installing default Solr conf shipped with ECE ..."
-            run cp -r $escenic_root_dir/engine/solr/conf $escenic_conf_dir/solr
-        fi
-    else
-        print_and_log "$escenic_conf_dir/solr already exists, not touching it."
-    fi
-
-    make_dir $escenic_data_dir/solr/
-    run cd $escenic_data_dir/solr/
-    if  [ ! -h conf ]; then
-        run ln -s $escenic_conf_dir/solr conf
-    fi
-
-    local editorial_search_instance=${fai_search_for_editor-0}
-    local file=$escenic_conf_dir/solr/solrconfig.xml
-    if [ $editorial_search_instance -eq 1 ]; then
-        run sed -i "s#<maxTime>[0-9]*</maxTime>#<maxTime>5000</maxTime>#g" $file
-    else
-        run sed -i "s#<maxTime>[0-9]*</maxTime>#<maxTime>60000</maxTime>#g" $file
-    fi
-
-    run_hook set_up_solr.postinst
-}
-
 # So far, I've used this method for copy/past-ing it into the shell
 # before running ece-insatll anew. It might be useful for its own
 # command later, though.
@@ -1785,7 +1748,6 @@ function set_archive_files_depending_on_profile()
     fi
 }
 
-
 # Returns 1 if we're installing the ECE instances from a provided EAR
 # file
 function is_installing_from_ear()
@@ -1832,65 +1794,6 @@ function verify_that_files_exist_and_are_readable()
         fi
     done
 }   
-
-## $1=<default instance name>
-function install_ece_instance()
-{
-    install_ece_third_party_packages
-    
-    ask_for_instance_name $1
-    set_up_engine_directories
-    set_up_ece_scripts
-
-    set_archive_files_depending_on_profile
-    
-    # most likely, the user is _not_ installing from archives (EAR +
-    # configuration bundle), hence the false test goes first.
-    if [ $(is_installing_from_ear) -eq 0 ]; then
-        download_escenic_components
-        check_for_required_downloads
-        set_up_engine_and_plugins
-        set_up_assembly_tool
-    else
-        verify_that_files_exist_and_are_readable \
-            $ece_instance_ear_file \
-            $ece_instance_conf_archive
-    fi
-    
-    set_up_basic_nursery_configuration
-    set_up_instance_specific_nursery_configuration
-    
-    set_up_app_server
-    set_up_proper_logging_configuration
-
-    # We set a WAR white list for all profiles except all in one
-    if [ $install_profile_number -ne $PROFILE_ALL_IN_ONE ]; then
-        file=$escenic_conf_dir/ece-${instance_name}.conf
-        print_and_log "Creating deployment white list in $file ..."
-        set_conf_file_value \
-            deploy_webapp_white_list \
-            $(get_deploy_white_list) \
-            $file
-    fi
-
-    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
-        $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
-        assemble_deploy_and_restart_type
-    fi
-    
-    update_type_instances_to_start_up
-    set_conf_file_value ece_unix_user $ece_user /etc/default/ece
-    set_conf_file_value ece_unix_group $ece_group /etc/default/ece
-
-    admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin/
-    add_next_step "New ECE instance $instance_name installed."
-    add_next_step "Admin interface: $admin_uri"
-    add_next_step "View installed versions with:" \
-      " ece -i $instance_name versions"
-    add_next_step "Type 'ece help' to see all the options of this script"
-    add_next_step "Read its guide: /usr/share/doc/escenic/ece-guide.txt"
-    add_next_step "/etc/default/ece lists all instances started at boot time"
-}
 
 function install_presentation_server()
 {
@@ -2002,100 +1905,6 @@ function run_hook()
         bash ${ece_install_scripts_dir}/${1}
         print_and_log "Finished hook $1 ..."
     fi
-}
-
-function install_analysis_server()
-{
-    run_hook install_analysis_server.preinst
-    
-    print_and_log "Installing an analysis server on $HOSTNAME ..."
-    type=analysis
-    
-    install_ece_instance "analysis1"
-
-    run cp ${escenic_root_dir}/analysis-engine-*/wars/*.war \
-        ${tomcat_base}/webapps
-
-    if [ -n "${fai_analysis_host}" ]; then
-        appserver_host=${fai_analysis_host}
-    fi
-    if [ -n "${fai_analysis_port}" ]; then
-        appserver_port=${fai_analysis_port}
-    fi
-    
-    # deploy the EAE WARs
-    run cp ${escenic_root_dir}/analysis-engine-*/wars/*.war \
-        ${tomcat_base}/webapps
-
-    set_correct_permissions
-    
-    local ece_command="ece -i ${instance_name} -t ${type} start"
-    su - $ece_user -c "$ece_command" 1>>$log 2>>$log
-    exit_on_error "su - $ece_user -c \"$ece_command\""
-
-    local seconds=3
-    print_and_log "Waiting ${seconds} seconds for EAE to come up ..."
-    sleep 10
-    
-    # EAE cannot handle .cfg files with quotes values (!)
-    dont_quote_conf_values=1
-    
-    print_and_log "Configuring EAE Reports ..."
-    local file=${tomcat_base}/webapps/analysis-reports/WEB-INF/config/reports.cfg
-    set_conf_file_value queryServiceUrl \
-        http://${appserver_host}:${appserver_port}/analysis-qs/QueryService \
-        ${file}
-
-    print_and_log "Configuring EAE Logger ..."
-    local file=${tomcat_base}/webapps/analysis-logger/WEB-INF/config/logger.cfg
-    set_conf_file_value databaseQueueManager.reinsertcount \
-        6 \
-        ${file}
-    set_conf_file_value pageview.maintenance.cron.expr '0 0 4 * * ? *' $file
-    set_conf_file_value pageview.aggr.hour.cron.expr '0 10 * * * ?' $file
-    set_conf_file_value imageResponse false $file
-    set_conf_file_value pageview.maintenance.older.than.months 6 $file
-    set_conf_file_value pageview.aggr.day.older.than.days 7 $file
-    set_conf_file_value pageview.aggr.day.cron.expr '0 0 5 * * ? *' $file
-    set_conf_file_value pageview.aggr.hour.older.than.hours 2 $file
-    set_conf_file_value pageview.maintenance.older.than.days 0 $file
-
-    # important to turn this off here, it's only for the EAE .cfg
-    # files, see above.
-    dont_quote_conf_values=0
-
-    # touching web.xml to trigger a re-deploy of the EAE Reports
-    # application.
-    run touch ${tomcat_base}/webapps/analysis-reports/WEB-INF/web.xml
-    run_hook install_analysis_server.postinst
-}
-
-function install_rmi_hub()
-{
-    make_dir $escenic_conf_dir/rmi-hub
-    
-    run cp -r $escenic_root_dir/engine/contrib/rmi-hub/config/* \
-        $escenic_conf_dir/rmi-hub/
-
-    hub_host=$HOSTNAME
-    file=$common_nursery_dir
-    file=$file/neo/io/managers/HubConnectionManager.properties
-
-    make_dir $(basename $file)
-    set_conf_file_value hub \
-        "rmi://${hub_host}:1099/hub/Hub" \
-        $file
-
-    cat > $common_nursery_dir/io/api/EventManager.properties <<EOF
-clientConfiguration=/neo/io/services/HubConnection
-pingTime=10000
-EOF
-
-    add_next_step "Restart all your instances to make the hub see them."
-
-    print_and_log "Starting the RMI-hub on $HOSTNAME ..."
-    ece_command="ece -t rmi-hub restart"
-    su - $ece_user -c "$ece_command" 1>>$log 2>>$log
 }
 
 # reads the value of the desired setting from $conf_file
@@ -2218,37 +2027,6 @@ EOF
       " Maven repo"
 }
 
-function install_search_server()
-{
-    print_and_log "Installing a search server on $HOSTNAME ..."
-    type=search
-    install_ece_instance "search1" 0
-    
-    # TODO update instead of append
-    local dir=$common_nursery_dir/com/escenic/framework/search/solr
-    make_dir $dir
-    echo "solrServerURI=http://${search_host}:${search_port}/solr" \
-        >>  $dir/SolrSearchEngine.properties
-    
-    dir=$common_nursery_dir/com/escenic/webservice/search
-    make_dir $dir
-    echo "solrURI=http://${search_host}:${search_port}/solr/select" \
-        >> $dir/DelegatingSearchEngine.properties
-
-    dir=$common_nursery_dir/com/escenic/lucy
-    make_dir $dir
-    echo "solrURI=http://${search_host}:${search_port}/solr" \
-        >> $dir/LucySearchEngine.properties
-
-    dir=$common_nursery_dir/com/escenic/forum/search/lucy
-    make_dir $dir
-    echo "solrURI=http://${search_host}:${search_port}/solr" \
-        >> $dir/SearchEngine.properties
-
-    set_up_solr
-    assemble_deploy_and_restart_type
-}
-
 # useful for development and test environments.
 function install_all_in_one_environment()
 {
@@ -2349,294 +2127,6 @@ EOF
         add_next_step "http://${HOSTNAME}:${port}/       gives the Munin interface"
         add_next_step "http://${HOSTNAME}:${port}/binary gives the Adactus endpoint"
     fi
-}
-
-function install_munin_gatherer()
-{
-    print_and_log "Installing a Munin gatherer on $HOSTNAME ..."
-
-    if [ $on_debian_or_derivative -eq 1 ]; then
-        packages="munin"
-        install_packages_if_missing $packages
-    else
-        print_and_log "Munin gatherer installation not supported on your"
-        print_and_log "system :-( You will have to install it manually."
-        return
-    fi
-
-    if [ $fai_enabled -eq 0 ]; then
-        print "Which nodes shall this Munin monitor gather from?"
-        print "Separate your hosts with a space, e.g.: 'editor01 db01 web01'"
-        echo -n "Your choice> "
-        read user_munin_nodes
-        
-        if [ -n "$user_munin_nodes" ]; then
-            node_list=$user_munin_nodes
-        fi
-    else
-        node_list=${fai_monitoring_munin_node_list}
-    fi
-    
-    if [ -z "$node_list" ]; then
-        return
-    fi
-
-    for el in $node_list; do
-        print_and_log "Adding ${el} to the Munin gatherer on ${HOSTNAME} ..."
-        local file=/etc/munin/munin-conf.d/escenic.conf
-        cat >> $file <<EOF
-[${el}]
-    address $(get_ip $el)
-    use_node_name yes
-EOF
-    done
-
-    # TODO add the priveleged network to the Allowed stanza (i.e. the
-    # network wich will do the monitoring of the servers.
-    local file=/etc/apache2/conf.d/munin
-    if [ -n "$(get_privileged_hosts)" ]; then
-        local privileged_hosts=$(
-            echo $(get_privileged_hosts) | sed "s#\ #\\\ #g"
-        )
-        sed -i "s#Allow\ from\ localhost#Allow\ from\ ${privileged_hosts}\ localhost#g" \
-            $file
-        exit_on_error "Failed adding ${fai_privileged_hosts} to" \
-            "Munin's allowed addresses."
-        run /etc/init.d/apache2 reload
-    fi
-
-    add_next_step "Munin gatherer admin interface: http://${HOSTNAME}/munin"
-    add_next_step "Make sure all nodes allows its IP to connect to them."
-}
-
-## Installs the Nagios monitoring server.
-## $1 the nagios vendor/falvour, "nagios" and "icinga" are supported.
-function install_nagios_monitoring_server()
-{
-    print "Installing an $1 server on $HOSTNAME ..."
-    local monitoring_vendor=$1
-    
-    if [ $on_debian_or_derivative -eq 1 ]; then
-        if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
-            install_packages_if_missing apache2 nagios3 nagios-nrpe-plugin
-        else
-            install_packages_if_missing \
-                apache2 icinga nagios-nrpe-plugin icinga-doc
-        fi
-    fi
-
-    if [[ $monitoring_vendor == $MONITORING_VENDOR_ICINGA ]]; then
-        print "Setting user/pass for icinga admin ..."
-        local file=/etc/icinga/htpasswd.users
-        run htpasswd -b -c $file icingaadmin \
-            ${fai_monitoring_admin_password-admin}
-    fi
-    
-    # enable remote commands
-    if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
-        local file=/etc/nagios3/nagios.cfg
-    else
-        local file=/etc/icinga/icinga.cfg
-    fi
-    
-    dont_quote_conf_values=1
-    set_conf_file_value check_external_commands 1 $file
-    dont_quote_conf_values=0
-
-    for el in $fai_monitoring_host_list; do
-        set_up_monitoring_host_def $monitoring_vendor $el
-    done
-
-    if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
-        file=/etc/nagios3/conf.d/hostgroups_nagios2.cfg
-    else
-        file=/etc/icinga/objects/hostgroups_icinga.cfg
-    fi
-    
-    set_up_monitoring_host_group \
-        $file \
-        "ece-hosts" \
-        'Hosts running one or more ECE' \
-        ${fai_monitoring_ece_host_list}
-
-    set_up_monitoring_host_group \
-        $file \
-        "search-hosts" \
-        'Hosts running search instance(s) (Solr + indexer)' \
-        ${fai_monitoring_search_host_list}
-
-    if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
-        run /etc/init.d/nagios3 restart
-        add_next_step "Icinga monitoring interface: http://${HOSTNAME}/nagios3"
-    else
-        run /etc/init.d/icinga restart
-        add_next_step "Icinga monitoring interface: http://${HOSTNAME}/icinga"
-    fi
-    
-    run /etc/init.d/apache2 reload
-
-}
-
-## Sets up the definition file for a given monitoring host.
-##
-## $1 nagios flavour/vendor
-## $2 <host name>:<ip>, e.g.: fire:192.168.1.100
-function set_up_monitoring_host_def()
-{
-    local file=/etc/icinga/objects/${host_name}_icinga.cfg
-    if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
-        file=/etc/nagios3/conf.d/${host_name}_nagios2.cfg
-    fi
-    
-    local old_ifs=$IFS
-    IFS='#'
-    read host_name ip <<< "$2"
-    IFS=$old_ifs
-    
-    if [ $(grep "host_name $host_name" $file 2>/dev/null | wc -l) -gt 0 ]; then
-        print "$1 host" $host_name "already defined, skipping it."
-        return
-    fi
-
-    # TODO add more services based on what kind of host it is.
-    cat >> $file <<EOF
-define host {
-  use generic-host
-  host_name $host_name
-  alias $host_name
-  address $ip
-}
-
-define service {
-  use generic-service
-  host_name $host_name
-  service_description CPU load
-  check_command check_nrpe_1arg!check_load
-}
-EOF
-
-}
-
-function install_nagios_node()
-{
-    print "Installing a Nagios client on $HOSTNAME ..."
-    if [ $on_debian_or_derivative -eq 1 ]; then
-        install_packages_if_missing nagios-nrpe-server nagios-plugins
-    else
-      print_and_log "Nagios node installation not supported on your system"
-      print_and_log "You will have to install it manually."
-      return
-    fi
-    
-    local file=/etc/nagios/nrpe.cfg
-    dont_quote_conf_values=1
-    set_conf_file_value \
-        allowed_hosts \
-        127.0.0.1,${fai_monitoring_server_ip} \
-        $file
-    dont_quote_conf_values=0
-
-    run /etc/init.d/nagios-nrpe-server restart
-    add_next_step "A Nagios NRPE node has been installed on ${HOSTNAME}"
-}
-
-function install_munin_node()
-{
-    print_and_log "Installing a Munin node on $HOSTNAME ..."
-
-    # the IP of the monitoring server
-    local default_ip=127.0.0.1
-    if [ $fai_enabled -eq 1 ]; then
-        if [ -n "fai_monitoring_server_ip" ]; then
-            monitoring_server_ip=${fai_monitoring_server_ip}
-        fi
-    elif [ $install_profile_number -ne $PROFILE_MONITORING_SERVER ]; then
-        print "What is the IP of your monitoring server? If you don't know"
-        print "this, don't worry and just press ENTER"
-        echo -n "Your choice [${default_ip}]> "
-        read user_monitoring_server
-
-        if [ -n "$user_monitoring_server" ]; then
-            monitoring_server_ip=$user_monitoring_server
-        fi
-    fi
-
-    if [ -z "$monitoring_server_ip" ]; then
-        monitoring_server_ip=$default_ip
-    fi
-    
-    if [ $on_debian_or_derivative -eq 1 ]; then
-        packages="munin-node munin-plugins-extra munin-java-plugins"
-        install_packages_if_missing $packages
-    else
-        print_and_log "Munin node installation not supported on your system"
-        print_and_log "You will have to install it manually."
-        return
-    fi
-
-    if [ -n "$monitoring_server_ip" ]; then
-        escaped_munin_gather_ip=$(get_perl_escaped ${monitoring_server_ip})
-        file=/etc/munin/munin-node.conf
-        cat >> $file <<EOF
-
-# added by ece-install $(date)
-allow ${escaped_munin_gather_ip}
-EOF
-    fi
-    
-    # install the escenic_jstat munin plugin
-    local file=/usr/share/munin/plugins/escenic_jstat_
-    run wget $wget_opts \
-        https://github.com/mogsie/escenic-munin/raw/master/escenic_jstat_ \
-        -O $file
-    run chmod 755 $file
-
-    local instance_list=$(get_instance_list)
-    if [ -z "${instance_list}" ]; then
-        print_and_log "No ECE instances found on $HOSTNAME, so I'm not adding"
-        print_and_log "additional Munin configuration"  
-        add_next_step "A Munin node has been installed on $HOSTNAME"
-        return
-    fi
-    
-    local escenic_jstat_modules="_gc _gcoverhead _heap _uptime"
-    for current_instance in $instance_list; do
-        for module in $escenic_jstat_modules; do
-	          cd /usr/share/munin/plugins/
-	          make_ln escenic_jstat_ escenic_jstat_${current_instance}${module}
-        done
-
-        # we need to hack a bit since escenic_jstat_ looks for
-        # instance PIDs in $escenic_run_dir ece-<instance>.pid. It's
-        # now <type>-<instance>.pid
-        file=$escenic_run_dir/$type-${instance_name}.pid
-        if [ ! -e $file ]; then
-            run touch $file
-        fi
-
-        # enabling the instance specific munin entries:
-        for el in /usr/share/munin/plugins/escenic_jstat_[a-z]*; do
-            run cd /etc/munin/plugins
-            make_ln $el
-        done
-    done
-
-    # TODO in which version(s) of munin is this directory called
-    # client-conf.d?
-    file=/etc/munin/plugin-conf.d/munin-node
-    if [ -e $file ]; then
-        cat >> $file <<EOF
-[escenic*]
-user $ece_user
-
-EOF
-    fi
-    
-    if [ $on_debian_or_derivative -eq 1 ]; then
-        run service munin-node restart
-    fi
-
-    add_next_step "A Munin node has been installed on $HOSTNAME"
 }
 
 function add_server_to_runlevels()

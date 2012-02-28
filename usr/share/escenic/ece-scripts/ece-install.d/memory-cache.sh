@@ -1,3 +1,5 @@
+# ece-install module for installing the memory cache
+
 memcached_java_lib_url=http://img.whalin.com/memcached/jdk5/log4j/java_memcached-release_2.0.1.tar.gz
 
 ## $1: root directory of the publication
@@ -12,15 +14,15 @@ function memcached_create_publication_nursery_component() {
   make_dir $dir
   local file=$dir/PresentationArticleCache.properties
   sed -i "s#\$class=.*#\$class=neo.util.cache.Memcached#g" $file
+  exit_on_error "sed on $file"
 }
 
-function install_memcached()
+function install_memory_cache()
 {
-  if [ $on_debian_or_derivative ]; then
-    install_packages_if_missing "memcached"
-  fi
+  install_packages_if_missing "memcached"
+  assert_pre_requisite memcached
   
-  run $download_dir
+  run cd $download_dir
   run wget $wget_opts $memcached_java_lib_url
   local name=$(get_base_dir_from_bundle $memcached_java_lib_url)
   run cp $name/$name.jar $assemblytool_home/lib
