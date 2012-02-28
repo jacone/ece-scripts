@@ -37,14 +37,15 @@ function install_sun_java_on_redhat() {
   # calculating start and stop offset from where to extract the zip
   # from the java data blob. calculation taken from
   # git://github.com/rraptorr/sun-java6.git
+  local tmp_jdk=jdk-tmp.zip
   local file_name=$(basename $sun_java_bin_url)
   local binsize=$(wc -c $file_name | awk '{print $1}');
 	local zipstart=$(unzip -ql $file_name 2>&1 >/dev/null | \
     sed -n -e 's/.* \([0-9][0-9]*\) extra bytes.*/\1/p');
-	tail -c $(expr $binsize - $zipstart) $file_name > tmp-jdk.zip
+	tail -c $(expr $binsize - $zipstart) $file_name > $tmp_jdk
 
   run cd /opt
-  run unzip -q -o $download_dir/tmp-jdk.zip
+  run unzip -q -o $download_dir/$tmp_jdk
   local latest_jdk=$(find . -maxdepth 1 -type d -name "jdk*" | sort -r | head -1)
   run rm -f /opt/jdk
   run ln -s $latest_jdk jdk
