@@ -46,11 +46,12 @@ ece_script=/usr/bin/ece
 # The values above may be overidden a file named the same as this
 # init.d script. This init.d configuration must also hold the
 # variables controlling which ECE instances to start. The list of
-# locations per default caters (at least) for Debian & Gentoo based
-# systems:
+# locations per default caters (at least) for Debian, RedHat & Gentoo
+# based systems:
 conf_file_location_list="
 /etc/default
 /etc/conf.d
+/etc/sysconfig
 "
 
 function read_conf_file()
