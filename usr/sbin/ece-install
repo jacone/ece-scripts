@@ -77,15 +77,16 @@ ece_software_setup_completed=0
 # components.
 next_steps=()
 
+
 technet_download_list="
 http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
 http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.7.0.zip
 http://technet.escenic.com/downloads/release/53/community-engine-3.6.1.0.zip
-http://technet.escenic.com/downloads/release/53/dashboard-1.0.0.0.zip
-http://technet.escenic.com/downloads/release/53/engine-5.3.4.7.zip
+http://technet.escenic.com/downloads/release/53/dashboard-1.1.0.2.zip
+http://technet.escenic.com/downloads/release/53/engine-5.3.5.121857.zip
 http://technet.escenic.com/downloads/release/53/forum-3.0.0.0.zip
 http://technet.escenic.com/downloads/release/53/geocode-dist-2.3.1.0.zip
-http://technet.escenic.com/downloads/release/53/inpage-1.3.0.0.zip
+http://technet.escenic.com/downloads/release/53/inpage-2.0.0.0.zip
 http://technet.escenic.com/downloads/release/53/lucy-dist-4.1.6.0.zip
 http://technet.escenic.com/downloads/release/53/menu-editor-dist-2.0.6.0.zip
 http://technet.escenic.com/downloads/release/53/mobile-expansion-3.0.0.0.zip
