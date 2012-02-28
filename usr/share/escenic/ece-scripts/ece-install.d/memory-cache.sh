@@ -9,55 +9,62 @@ function memcached_create_publication_nursery_component() {
     return
   fi
 
-  log "Adding memcached wrapper to PresenationArticle in $1 ..."
-  local dir=$1/webapp/WEB-INF/localconfig/neo/xredsys/presentation/cache
+  print_and_log "Adding memcached wrapper to PresenationArticle in $1 ..."
+  local dir=$1/WEB-INF/localconfig/neo/xredsys/presentation/cache
   make_dir $dir
   local file=$dir/PresentationArticleCache.properties
-  sed -i "s#\$class=.*#\$class=neo.util.cache.Memcached#g" $file
+  
+  if [[ -e $file && $(grep "\$class" $file | wc -l) -gt 0 ]]; then
+    sed -i "s#\$class=.*#\$class=neo.util.cache.Memcached#g" $file
+  else
+    echo "\$class=neo.util.cache.Memcached" >> $file
+  fi
+  
   exit_on_error "sed on $file"
 }
 
 function install_memory_cache()
 {
+  print "Installing a distributed memory cache on $HOSTNAME ..."
+  
   install_packages_if_missing "memcached"
   assert_pre_requisite memcached
   
   run cd $download_dir
   run wget $wget_opts $memcached_java_lib_url
+
+  local tmp_dir=$(mktemp -d)
+  run cd $tmp_dir
+  run tar xzf $download_dir/$(basename $memcached_java_lib_url)
   local name=$(get_base_dir_from_bundle $memcached_java_lib_url)
-  run cp $name/$name.jar $assemblytool_home/lib
+  run cp $name/$name.jar ${escenic_root_dir}/assemblytool/lib
+  run rm -rf $tmp_dir
   
   memcached_set_up_common_nursery
   
-  log "Configuring all publications for using memcached ..."
-  for el in $assemblytool_home/publications/*.properties; do
+  print_and_log "Configuring all publications for using memcached ..."
+  for el in $(ls $escenic_root_dir/assemblytool/publications/*.properties \
+    2>/dev/null); do
     local publication=$(basename $el .properties)
-    
-    if [[ $appserver == "tomcat" ]]; then
-      dir=$tomcat_base/webapps/$publication
-      make_dir $dir
-      memcached_create_publication_nursery_component $dir
-    fi
+    dir=$tomcat_base/webapps/$publication
+    make_dir $dir
+    memcached_create_publication_nursery_component $dir
   done
   
   # fixing the deployed publications on host
-  if [[ $appserver == "tomcat" ]]; then
-    for el in $(
-      find $tomcat_base/webapps/ \
-        -mindepth 1 \
-        -maxdepth 1 \
-        -type d | \
-        egrep -v "solr|webservice|escenic|escenic-admin|indexer-webservice" | \
-        egrep -v "indexer-webapp|studio"
-    ); do
-      memcached_create_publication_nursery_component $el
-    done
-    
-  fi
+  for el in $(
+    find $tomcat_base/webapps/ \
+      -mindepth 1 \
+      -maxdepth 1 \
+      -type d | \
+      egrep -v "solr|webservice|escenic|escenic-admin|indexer-webservice" | \
+      egrep -v "indexer-webapp|studio"
+  ); do
+    memcached_create_publication_nursery_component $el
+  done
   
   # TODO inform the user that he/she might want to do tihs in the
   # publication tree as well.
-  assemble_deploy_and_restart_type_p
 }
 
 function memcached_set_up_common_nursery() {
@@ -84,7 +91,7 @@ EOF
 
   cat >> $common_nursery_dir/Initial.properties <<EOF
 
-# using memcached
+# using memcached, added by $(basename $0) @ $(date --iso)
 service.0.0-memcached-socket-pool=/com/danga/SockIOPool
 EOF
 }
