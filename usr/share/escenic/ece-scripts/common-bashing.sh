@@ -55,7 +55,7 @@ function print_and_log() {
 function log_call_stack() {
   log "Call stack (top most is the last one, main is the first):"
 
-    # skipping i=0 as this is log_call_stack itself
+  # skipping i=0 as this is log_call_stack itself
   for ((i = 1; i < ${#FUNCNAME[@]}; i++)); do
     echo -n  ${BASH_SOURCE[$i]}:${BASH_LINENO[$i-1]}:${FUNCNAME[$i]}"()" >> $log
     if [ -e ${BASH_SOURCE[$i]} ]; then
