@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="title" content="Welcome to the /usr/sbin/ece-install Guide"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2012-02-17 12:59:41 CST"/>
+<meta name="generated" content="2012-02-28 12:37:37 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -230,11 +230,9 @@ div.note {
 <ul>
 <li><a href="#sec-1">1 Supported Operating Systems</a>
 <ul>
-<li>
-<ul>
 <li><a href="#sec-1-1">1.1 Debian based operating systems</a></li>
 <li><a href="#sec-1-2">1.2 Other GNU/Linux and Unix systems</a></li>
-</ul></li>
+<li><a href="#sec-1-3">1.3 Tested Operating Systems</a></li>
 </ul>
 </li>
 <li><a href="#sec-2">2 A Note on Running ece-install On Non-GNU/Linux Systems</a></li>
@@ -319,14 +317,14 @@ div.note {
 <p>For the best experience, run this script on Debian Squeeze (or newer),
 the latest Ubuntu LTS or most other Debian based operating systems,
 but it should work without any problems on any Unix like system that
-has a recent version of BASH.
+has BASH version 4.2 or newer.
 </p>
 
 </div>
 
-<div id="outline-container-1-1" class="outline-4">
-<h4 id="sec-1-1"><span class="section-number-4">1.1</span> Debian based operating systems</h4>
-<div class="outline-text-4" id="text-1-1">
+<div id="outline-container-1-1" class="outline-3">
+<h3 id="sec-1-1"><span class="section-number-3">1.1</span> Debian based operating systems</h3>
+<div class="outline-text-3" id="text-1-1">
 
 <p>If running on a Debian based operating system, ece-install will take
 care of installing all required third party software, such as database
@@ -336,9 +334,9 @@ care of installing all required third party software, such as database
 
 </div>
 
-<div id="outline-container-1-2" class="outline-4">
-<h4 id="sec-1-2"><span class="section-number-4">1.2</span> Other GNU/Linux and Unix systems</h4>
-<div class="outline-text-4" id="text-1-2">
+<div id="outline-container-1-2" class="outline-3">
+<h3 id="sec-1-2"><span class="section-number-3">1.2</span> Other GNU/Linux and Unix systems</h3>
+<div class="outline-text-3" id="text-1-2">
 
 <p>If you're installing on another Linux or Unix system, you must first
 make sure that these 3rd party components are installed. ece-install
@@ -350,6 +348,30 @@ You may also look inside the ece-install script for all calls to the
 'assert_pre_prequesite' method and you'll get a list of the binaries
 ece-install assumes are present.
 </p>
+</div>
+
+</div>
+
+<div id="outline-container-1-3" class="outline-3">
+<h3 id="sec-1-3"><span class="section-number-3">1.3</span> Tested Operating Systems</h3>
+<div class="outline-text-3" id="text-1-3">
+
+<table border="2" cellspacing="0" cellpadding="6" rules="groups" frame="hsides">
+<caption></caption>
+<colgroup><col class="left" /><col class="left" /><col class="left" />
+</colgroup>
+<thead>
+<tr><th scope="col" class="left">Operating system</th><th scope="col" class="left">Status</th><th scope="col" class="left">Date updated</th></tr>
+</thead>
+<tbody>
+<tr><td class="left">Debian 6.0 (squeeze)</td><td class="left">Everything is 100% automatic</td><td class="left">2012-02-27 13:18</td></tr>
+<tr><td class="left">Ubuntu LTS 10.04</td><td class="left">Everything except Tomcat/APR wrappers are automatic</td><td class="left">2012-02-27 13:19</td></tr>
+<tr><td class="left">Ubuntu 11.10</td><td class="left">Everything except Tomcat/APR wrappers are automatic</td><td class="left">2012-02-27 13:19</td></tr>
+<tr><td class="left">CentOS 6.2</td><td class="left">APR &amp; monitoring are not automatic</td><td class="left">2012-02-28 12:37</td></tr>
+</tbody>
+</table>
+
+
 </div>
 </div>
 
@@ -1754,7 +1776,7 @@ The following output is produced from ece-install:
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2012-02-17 12:59:41 CST
+  Date: 2012-02-28 12:37:37 CST
 </p>
 </div>
 </body>

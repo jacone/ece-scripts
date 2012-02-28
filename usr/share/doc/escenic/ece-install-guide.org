@@ -22,12 +22,12 @@ You may also look inside the ece-install script for all calls to the
 ece-install assumes are present.
 
 ** Tested Operating Systems
-| Operating system     | Status                                                     | Date updated     |
-|----------------------+------------------------------------------------------------+------------------|
-| Debian 6.0 (squeeze) | Everything is 100% automatic                               | 2012-02-27 13:18 |
-| Ubuntu LTS 10.04     | Everything except Tomcat/APR wrappers are automatic        | 2012-02-27 13:19 |
-| Ubuntu 11.10         | Everything except Tomcat/APR wrappers are automatic        | 2012-02-27 13:19 |
-| CentOS 6.2           | Sun Java, Cache server, APR & monitoring are not automatic | 2012-02-27 13:21 |
+| Operating system     | Status                                              | Date updated     |
+|----------------------+-----------------------------------------------------+------------------|
+| Debian 6.0 (squeeze) | Everything is 100% automatic                        | 2012-02-27 13:18 |
+| Ubuntu LTS 10.04     | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
+| Ubuntu 11.10         | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
+| CentOS 6.2           | APR & monitoring are not automatic                  | 2012-02-28 12:37 |
 
 * A Note on Running ece-install On Non-GNU/Linux Systems
 Please note, it's assumed that the OS uses GNU's tools, i.e. find, cp
