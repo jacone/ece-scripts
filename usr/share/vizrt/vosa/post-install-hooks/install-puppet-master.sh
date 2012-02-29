@@ -25,7 +25,7 @@ ssh -F $2/ssh.conf root@guest patch /etc/puppet/auth.conf <<EOF
 -allow \$1
 +#allow \$1
 +# allow the generic cert to retrieve any node's catalog
-+allow generic-puppetmaster-client
++allow generic-$hostname-client
 
  # allow nodes to retrieve their own node definition
  path ~ ^/node/([^/]+)\$
