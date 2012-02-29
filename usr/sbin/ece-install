@@ -159,6 +159,10 @@ function download_escenic_components()
     done
 }
 
+# we need to do one apt-get update to be sure the package list is
+# fresh. However, we don't want to do this in a common method, since
+# it *might* be that all pre-requisite packages already are present. 
+one_time_apt_update_done=0
 
 # Will install the passed packages if these are not installed from
 # before.
@@ -181,6 +185,10 @@ function install_packages_if_missing() {
     
     if [ $some_are_missing -eq 0 ]; then
       return
+    elif [ $one_time_apt_update_done -eq 0 ]; then
+      log "Running one time APT update to ensure package list is up to date"
+      run apt-get update
+      one_time_apt_update_done=1
     fi
 
     if [ $force_packages -eq 1 ]; then
