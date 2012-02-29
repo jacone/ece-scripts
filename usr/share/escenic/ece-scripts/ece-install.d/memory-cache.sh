@@ -37,6 +37,7 @@ function install_memory_cache()
   run cd $tmp_dir
   run tar xzf $download_dir/$(basename $memcached_java_lib_url)
   local name=$(get_base_dir_from_bundle $memcached_java_lib_url)
+  make_dir ${escenic_root_dir}/assemblytool/lib
   run cp $name/$name.jar ${escenic_root_dir}/assemblytool/lib
   run rm -rf $tmp_dir
   
