@@ -4,6 +4,7 @@
 # the ability to prime puppet hosts.  
 
 hostname=$(basename $2)
+ipaddress=$(ssh -F $2/ssh.conf root@guest hostname -I | cut -f 1 -d ' ')
 
 # First get newly installed packages to not auto-start on installation:
 ssh -F $2/ssh.conf root@guest tee > /dev/null /usr/sbin/policy-rc.d  <<EOF
@@ -101,6 +102,7 @@ awk ' BEGIN { RS="" }
    $2/generic-$hostname-client-certificate.pem \
    /usr/share/vizrt/vosa/puppet/client-postinst-script.tmpl \
    | sed s/'@@HOSTNAME@@'/"$hostname"/g \
+   | sed s/'@@IPADDRESS@@'/"$ipaddress"/g \
    > /etc/vizrt/vosa/puppet/$hostname-client.sh || exit 2
 
 # Make private and executable to root only (since it contains the private keys of

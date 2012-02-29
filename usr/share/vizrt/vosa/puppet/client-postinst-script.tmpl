@@ -2,6 +2,9 @@
 
 ## This file is generated from /var/lib/vizrt/vosa/puppet/client-postinst-script.tmpl!!!
 
+ssh -F $2/ssh.conf root@guest tee > /dev/null -a /etc/hosts <<EOF
+@@IPADDRESS@@	@@HOSTNAME@@
+EOF
 
 # First get newly installed packages to not auto-start on installation:
 ssh -F $2/ssh.conf root@guest tee > /dev/null /usr/sbin/policy-rc.d  <<EOF
