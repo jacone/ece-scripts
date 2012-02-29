@@ -50,7 +50,7 @@ The ece-install script can be downloaded from:
 https://raw.github.com/skybert/ece-scripts/master/usr/sbin/ece-install
 or be downloaded together with the other ece-scripts using git:
 #+BEGIN_SRC conf
-$ git clone git@github.com:skybert/ece-scripts.git
+$ git clone https://github.com/skybert/ece-scripts.git
 #+END_SRC
 
 * Running the ece-install Script
