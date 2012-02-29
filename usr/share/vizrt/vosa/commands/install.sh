@@ -200,7 +200,11 @@ function delete_overlay() {
 function postinstall() {
   for o in "${install_config_postinstall[@]}" ; do
     echo "Executing postinstall $o"
-    local cmd="$(dirname $0)/../post-install-hooks/$o"
+    if [ "${o:0:1}" == "/" ] ; then
+      local cmd=$o
+    else
+      local cmd="$(dirname $0)/../post-install-hooks/$o"
+    fi
     if [ ! -x "$cmd" ] ; then
       echo "Unable to execute non-executable post-install hook: $cmd"
       delete_overlay
