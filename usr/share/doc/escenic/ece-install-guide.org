@@ -99,8 +99,11 @@ below.
 
 With the configuration file in place, you're now ready to run it:
 #+BEGIN_SRC conf
-# bash ece-install [-v|--verbose]
+# bash ece-install [-v|--verbose|<-f|--file> <conf-file>]
 #+END_SRC
+
+It will output everything from internal and external commands to its
+log file located at /var/log/ece-install.log.
 
 ece-install will try to "fail fast", exiting as soon as it detects an
 error during its execution:
@@ -520,18 +523,19 @@ $HOME/ece-install.conf file of the root user:
 | Parameter                               | Default                                           | Description                                                                                                                           |
 |-----------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------|
 | fai\_all\_install                       | 0                                                 | Install all components on your server.                                                                                                |
-| fai\_analysis\_db\_port                 | 3306                                              | For the EAE DB (different from ECE's)                                                                                                 |
 | fai\_analysis\_db\_host                 | localhost                                         | For the EAE DB (different from ECE's)                                                                                                 |
-| fai\_analysis\_db\_user                 | ece5user                                          | For the EAE DB (different from ECE's)                                                                                                 |
+| fai\_analysis\_db\_install                    | 0                                                 | Install db profile                                                                                                                    |
 | fai\_analysis\_db\_password             | read-the-source-luke                              | For the EAE DB (different from ECE's)                                                                                                 |
+| fai\_analysis\_db\_port                 | 3306                                              | For the EAE DB (different from ECE's)                                                                                                 |
 | fai\_analysis\_db\_schema               | ece5db                                            | For the EAE DB (different from ECE's)                                                                                                                                      |
+| fai\_analysis\_db\_user                 | ece5user                                          | For the EAE DB (different from ECE's)                                                                                                 |
+| fai\_analysis\_name                     | analysis1                                         | EAE instance name                                                                                                                     |
 | fai\_analysis\_port                     | 8080                                              | Port of the EAE                                                                                                                       |
 | fai\_analysis\_shutdown                 | 8005                                              | Shutdown port for the EAE app server                                                                                                  |
-| fai\_analysis\_name                     | analysis1                                         | EAE instance name                                                                                                                     |
 | fai\_cache\_backends                    | ${HOSTNAME}:8080                                  | Space separated, e.g. "app1:8080 app2:8080"                                                                                           |
 | fai\_cache\_install                     | 0                                                 | Install cache server profile                                                                                                          |
-| fai\_db\_host                           | $HOSTNAME                                         | Useful for editor & presentation profiles                                                                                             |
 | fai\_db\_drop\_old\_db\_first           | 0                                                 | Warning: this will drop the old database before installing a new one                                                                  |
+| fai\_db\_host                           | $HOSTNAME                                         | Useful for editor & presentation profiles                                                                                             |
 | fai\_db\_install                        | 0                                                 | Install db profile                                                                                                                    |
 | fai\_db\_password                       | read-the-source-luke                              | Useful for DB installation profile                                                                                                    |
 | fai\_db\_port                           | 3306                                              | Useful for editor & presentation profiles                                                                                             |
@@ -544,6 +548,7 @@ $HOME/ece-install.conf file of the root user:
 | fai\_editor\_port                       | 8080                                              | HTTP port of the editor instance                                                                                                      |
 | fai\_editor\_shutdown                   | 8005                                              | Shutdown port of the editor instance                                                                                                  |
 | fai\_enabled                            | 0                                                 | Whether or not to run ece-install in FAI mode                                                                                         |
+| fai\_keep\_off\_etc\_hosts              | 0                                                 | Set this to 1 if you don't want ece-install adding entries to /etc/hosts                                                              |
 | fai\_monitoring\_server\_install        | 0                                                 | Install the monitoring server profile.                                                                                                |
 | fai\_monitoring\_server\_ip             | 127.0.0.1                                         | The IP of the monitoring server.                                                                                                      |
 | fai\_presentation\_conf\_archive        | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
@@ -554,11 +559,11 @@ $HOME/ece-install.conf file of the root user:
 | fai\_presentation\_shutdown             | 8005                                              | Shutdown port of the presentation instance                                                                                            |
 | fai\_public\_host\_name                 | ${HOSTNAME}:8080                                  | The public address for your website                                                                                                   |
 | fai\_publication\_create                | 0                                                 | Create a new publication                                                                                                              |
+| fai\_publication\_domain\_mapping\_list | ""                                                | Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com"                          |
 | fai\_publication\_name                  | mypub                                             | Name of the publication                                                                                                               |
 | fai\_publication\_use\_instance         | dev1                                              | Name of local instance to use for creation                                                                                            |
 | fai\_publication\_war                   | "WF or ECE demo WAR"                              | WAR to base the new publication on                                                                                                    |
 | fai\_publication\_war\_uri\_list        | ""                                                | Publication WARs used for setting up Assembly tool. Supported: http[s]://tmp.com/mypub.war, file:///tmp/mypub.war and /tmp/mypub.war. |
-| fai\_publication\_domain\_mapping\_list | ""                                                | Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com"                          |
 | fai\_rmi\_install                       | 0                                                 | Install RMI hub profile                                                                                                               |
 | fai\_search\_conf\_archive              | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
 | fai\_search\_ear                        | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
@@ -568,7 +573,6 @@ $HOME/ece-install.conf file of the root user:
 | fai\_search\_name                       | search1                                           | Name of the search instance                                                                                                           |
 | fai\_search\_port                       | 8080                                              | HTTP port of the search instance                                                                                                      |
 | fai\_search\_shutdown                   | 8005                                              | Shutdown port of the search instance                                                                                                  |
-| fai\_keep\_off\_etc\_hosts              | 0                                                 | Set this to 1 if you don't want ece-install adding entries to /etc/hosts                                                              |
 | fai\_wf\_install                        | 0                                                 | Install Widget Framework profile                                                                                                      |
 |-----------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------|
 #+TBLFM: $2=http://$fai_editor_name:$fai_editor_port/indexer-webservice/index/                   0
