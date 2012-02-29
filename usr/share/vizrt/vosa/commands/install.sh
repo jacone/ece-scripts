@@ -145,7 +145,7 @@ function create_overlay() {
 #cloud-config
 manage_etc_hosts: true
 timezone: ${install_config_timezone}
-apt_update: false
+apt_update: true
 apt_upgrade: false
 apt_mirror: ${install_config_mirror}
 EOF

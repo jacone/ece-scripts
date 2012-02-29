@@ -2,9 +2,40 @@
 
 ## This file is generated from /var/lib/vizrt/vosa/puppet/client-postinst-script.tmpl!!!
 
-## THE @@ stuff below is replaced on the fly.
-cat <<EOF
+
+# First get newly installed packages to not auto-start on installation:
+ssh -F $2/ssh.conf root@guest tee > /dev/null /usr/sbin/policy-rc.d  <<EOF
+#!/bin/sh
+exit 101
+EOF
+ssh -F $2/ssh.conf root@guest chmod +x /usr/sbin/policy-rc.d
+
+
+# Install the puppet master package on the guest, and patch the configuration file
+ssh -F $2/ssh.conf root@guest apt-get -y install puppet || exit 2
+ssh -F $2/ssh.conf root@guest tee > /dev/null /etc/puppet/puppet.conf <<EOF
+[agent]
+server = @@HOSTNAME@@
+certname = "generic-@@HOSTNAME@@-client"
+node_name_fact = "fqdn"
+runinterval = 15
+environment = production
+EOF
+
+
+ssh -F $2/ssh.conf root@guest tee > /dev/null /var/lib/puppet/ssl/private_keys/generic-@@HOSTNAME@@-client.pem <<EOF
 @@PRIVATE_KEY@@
 EOF
+
+ssh -F $2/ssh.conf root@guest tee > /dev/null /var/lib/puppet/ssl/certs/generic-@@HOSTNAME@@-client.pem <<EOF
+@@CERTIFICATE@@
+EOF
+
+# Allow future installations to auto-start their services...
+ssh -F $2/ssh.conf root@guest rm -f /usr/sbin/policy-rc.d || exit $2
+
+
+# Finally start puppet!!!
+ssh -F $2/ssh.conf root@guest /etc/init.d/puppet start || exit $2
 
 
