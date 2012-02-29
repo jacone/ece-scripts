@@ -77,4 +77,9 @@ awk ' BEGIN { RS="" }
    | sed s/'@@HOSTNAME@@'/"$hostname"/g \
    > /etc/vizrt/vosa/puppet/$hostname-client.sh || exit 2
 
+# Make private and executable to root only (since it contains the private keys of
+# the SSL certificate.
+chmod 0500 /etc/vizrt/vosa/puppet/$hostname-client.sh || exit 2
+
 ssh -F $2/ssh.conf root@guest /etc/init.d/puppetmaster restart || exit 2
+
