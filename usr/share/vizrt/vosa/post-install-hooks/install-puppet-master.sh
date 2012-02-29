@@ -31,6 +31,32 @@ ssh -F $2/ssh.conf root@guest patch /etc/puppet/auth.conf <<EOF
  path ~ ^/node/([^/]+)\$
 EOF
 
+
+ssh -F $2/ssh.conf root@guest tee > /dev/null /etc/puppet/puppet.conf <<EOF
+[main]
+logdir=/var/log/puppet
+vardir=/var/lib/puppet
+ssldir=/var/lib/puppet/ssl
+rundir=/var/run/puppet
+factpath=$vardir/lib/facter
+templatedir=$confdir/templates
+prerun_command=/etc/puppet/etckeeper-commit-pre
+postrun_command=/etc/puppet/etckeeper-commit-post
+
+[master]
+# These are needed when the puppetmaster is run by passenger
+# and can safely be removed if webrick is used.
+ssl_client_header = SSL_CLIENT_S_DN 
+ssl_client_verify_header = SSL_CLIENT_VERIFY
+
+# Force the server to use an unqualified name as its certificate,
+# as FQDNs make everything depend on a DNS Server providing a domain
+# name that might cause problems in the future, if the domain name
+# changes or DNS is unavailable.
+certname=$hostname
+
+EOF
+
 # Name the certificate based on the hostname, to avoid conflicts.
 # Usually this would be called "puppetmaster" or "puppet" but it could be "puppet-3"
 # or whatever.
