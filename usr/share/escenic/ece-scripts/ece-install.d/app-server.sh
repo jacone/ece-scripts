@@ -130,9 +130,9 @@ function set_up_app_server()
   run cd $tomcat_base/lib
   make_ln $jdbc_driver
 
-    # it's important to append (and not pre-pend) the ECE libraries so
-    # that things put it in the standard loader behaves as expected,
-    # such as log4j configuration put in ${tomcat.base}/lib.
+  # it's important to append (and not pre-pend) the ECE libraries so
+  # that things put it in the standard loader behaves as expected,
+  # such as log4j configuration put in ${tomcat.base}/lib.
   file=$tomcat_base/conf/catalina.properties
   common_loader=$(grep ^common.loader $file)
   escaped_common_loader=$(get_escaped_bash_string ${common_loader})
