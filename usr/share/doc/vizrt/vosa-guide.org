@@ -30,36 +30,36 @@ Initialize it:
 
 Download an Ubuntu Enterprise Cloud image to use as the base OS
 
-    vosa -v oneiric download
+   : vosa -v oneiric download
 
 Make a bridge, br0 or something (outside the scope of this document)
 
 make 10 tap interfaces and make them known to vosa (this probably needs to happen every boot...
 
-    for i in $(seq 1 10) ; do
-      tap=$(tunctl -b)
-      touch /var/run/vizrt/vosa/$tap.availablenetwork
-      brctl addif br0 $tap
-      ifconfig $tap up 0.0.0.0
-    done
+   : for i in $(seq 1 10) ; do
+   :   tap=$(tunctl -b)
+   :   touch /var/run/vizrt/vosa/$tap.availablenetwork
+   :   brctl addif br0 $tap
+   :   ifconfig $tap up 0.0.0.0
+   : done
 
 Define a virtual machine:
 
-    mkdir /etc/vizrt/vosa/available.d/my-first-vm &&
-    cp /etc/vizrt/vosa/skeleton/* /etc/vizrt/vosa/available.d/my-first-vm/
+   : mkdir /etc/vizrt/vosa/available.d/my-first-vm &&
+   : cp /etc/vizrt/vosa/skeleton/* /etc/vizrt/vosa/available.d/my-first-vm/
 
 Configure these files (they're well documented)
 
-    vi /etc/vizrt/vosa/available.d/my-first-vm/*
+   : vi /etc/vizrt/vosa/available.d/my-first-vm/*
 
 Make sure your IP and MAC addresses are unique
 
 Finally, enable and install your virtual machine:
 
-    vosa -i my-first-vm enable install
+   : vosa -i my-first-vm enable install
 
 When it's done you can SSH into the system:
 
-    ssh -F /var/lib/vizrt/vosa/my-first-vm/ssh.conf root@guest
+   : ssh -F /var/lib/vizrt/vosa/my-first-vm/ssh.conf root@guest
 
 
