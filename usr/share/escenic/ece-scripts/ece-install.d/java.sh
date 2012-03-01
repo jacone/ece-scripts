@@ -63,7 +63,7 @@ function install_sun_java_on_redhat() {
     if [ ! -e /usr/bin/$el ]; then
       ln -s /usr/bin/$el /etc/alternatives/$el
     fi
-    alternatives --set $el /opt/jdk/bin/$el
+    run alternatives --set $el /opt/jdk/bin/$el
   done
 
   # setting java_home to the newly installed location
