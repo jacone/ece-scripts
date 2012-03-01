@@ -1,7 +1,88 @@
+* What is VOSA?
+
+Vosa is short for Vizrt Online System Administration, a set of tools
+created by Vizrt to ease various system administration chores.
+
+It facilitates the set up and installation of virtual machines,
+booting them up and installing software on them.  It also includes
+steps to set up a puppet master with a generic client certificate,
+and tools to install puppets that do what that puppet master says.
+
+All of this is possible manually by apt-get'ing and configuring
+manualy; the value of these scripts is that all of this is
+made possible without intervention.
+
+There are various post-installation hooks available which perform
+various tasks, for simple things like creating an /etc/motd file,
+to more advanced things like setting up a puppet master or
+installing a production ready Escenic Content Engine using
+ece-install.
+
+** Who is it for?
+
+It is aimed at anyone who needs to install lots of virtual machines,
+and particularly at those who agree that it is valuable to be able
+to completely reinstall a virtual machine from scratch without
+intervention, and then put that virtual machine in production.
+
+** Why should I use it?
+
+The normal way of virtualizing is to sit someone in front of a
+fresh VM and start to install software on it.  The software is
+configured, and more software piles on until it's production ready.
+Some final tweaks are made and then it might go into production.
+All of this installation, configuration and tweaking is /valuable/
+in the sense that doing it all over again actually costs money since
+someone needs to sit down and do it.  Most of the time, the people
+who did the original installation are no longer around, so doing it
+all from scratch would also revert some tweaks.
+
+A different way of looking at virtualization is to ascribe /no
+value/ to the virtual machine itself, or at least to the the disk
+image that constitutes the virtual machine. In order to do so, you
+need to make sure that it is possible to create a fully functional
+virtual machine at any time.  One that is production ready, with all
+the last-minute-tweaks in place.
+
+The Vosa scripts do just that.
+
+A short definition file tells vosa what base image to start with;
+this is an Ubuntu Enterprise Cloud image, but in theory other image
+types could be supported.  The file also provides it an IP address
+and the machine's time zone, and so on.  Most importantly, these
+files also tell vosa what to do with the virtual machine once it
+has booted, so-called "post install hooks".  Each of these are
+executed when the "first boot" has completed.  These hooks run
+only the first time the virtual machine has booted, and should be
+written in such a way that they end up with a production ready
+system that can go straight into production.
+
+The machines can be stopped, started, and so on, and since vosa
+relies on simple kvm, you can access the kvm monitor or vnc if you
+want to.  Vosa also sets up throw-away ssh keys that the host uses
+to interact with the guest during the first boot.
+
+** What can I do with this?
+
+Probably the most advanced thing you could do with this is to
+automate the setup of a complete data center, with database, nfs,
+a virtualized server park, and various virtual machines, tomcats,
+varnishes and so on, all from a single set of configuration files,
+without intervention.
+
+But you could also use it to just easily re-install a VM using the
+latest and greatest Ubuntu release, instead of (as is usual) not even
+daring to run apt-get upgrade.
+
 * Installation of VOSA package
 
+This is a terse description of what it takes to get a system to run
+vosa.
 
 ** Requirements:
+
+In order to benefit from vosa, you need the following:
+
 - kvm or qemu-kvm
 - genisoimage
 - nc
@@ -9,32 +90,58 @@
 - sudo access to kvm (or the more usual, which is to run vosa as root...)
 - a bridged network
 
-This installation will:
-
-- download an UEC image and kernel
-- create 10 tap interfaces (or less) (see below)
-- create ten "tap*.availablenetwork" fileis (where * is a number between 0 and 10)
-  in /var/run/vizrt/vosa/ signifying the names of the tap interfaces that can be used.
-- write (exclusively?) access to /var/run/vizrt/vosa/
-
+In theory, it should be possible to script this too, or to get e.g.
+puppet to do this for us.  Watch this space!
 
 ** Setup
-Install the vosa command itself and its required libraries
+
+Setting up vosa entails a few manual installation steps.  Among other
+things it will
+- provide the "vosa" command and its required libraries
+- download an image of an Ubuntu Enterprise Cloud
+- create 10 tap interfaces (an arbitrary number, really, see below
+  for an explanation).
+- create the same number of "tap*.availablenetwork" files in
+  /var/run/vizrt/vosa/ each one signifying the names of the tap
+  interfaces that can be used.
+
+So without further ado, let's get started.  First of all, we need to
+onstall the vosa command itself and its required libraries:
 
    : ln -s $PWD/usr/bin/vosa /usr/bin/vosa
    : ln -s $PWD/usr/share/vizrt/ /usr/share/vizrt
 
-Initialize it:
+The vosa command should now work (to a certain extent)
+
+   : vosa help
+   : vosa commands
+   : vosa longhelp | less
+
+To make vosa usable, you need to initialize it:
 
    : vosa init
 
-Download an Ubuntu Enterprise Cloud image to use as the base OS
+This will create the /etc/vizrt/vosa directory structure, and a
+skeleton of a virtual machine definition.
+
+Let's download an Ubuntu Enterprise Cloud (UEC) image to use as the
+base OS.  vosa does this for you:
 
    : vosa -v oneiric download
 
-Make a bridge, br0 or something (outside the scope of this document)
+** Networking
 
-make 10 tap interfaces and make them known to vosa (this probably needs to happen every boot...
+For this to be useful, your machines need to be accessible directly
+on the local network.  The scripts have only been tested on a bridged
+network.  So make a bridge, call it br0 or something.  How this is
+done is, however outside the scope of this document.
+
+Once you have a bridged network, you need to create tap interfaces
+for each of your virtual machines.  Let's make 10 to start with.
+The reason these need to be pre-allocated is that we've seen that
+doing this temporarily (ca 10 seconds) makes the network go
+completely dark, and so shouldn't happen whenever any virtual
+machines are running.
 
    : for i in $(seq 1 10) ; do
    :   tap=$(tunctl -b)
@@ -43,23 +150,90 @@ make 10 tap interfaces and make them known to vosa (this probably needs to happe
    :   ifconfig $tap up 0.0.0.0
    : done
 
-Define a virtual machine:
+tunctl creates the tap interface, and we create a file with the name
+of the created tap interface in a directory.  This little snippet
+needs to run every time the host machine boots.
+
+** Defining a virtual machine
+
+Defining a virtual machine is a bit different than when using virsh
+or VMware of VirtualBox.  Vosa exploits the fact that the UEC images
+are pre-seeded with cloud-init, and so have a hook to execute code
+during the first boot.  This means we don't need to make any changes
+to the image file itself, but can boot the unmodified UEC image.
+
+A big benefit of this is that the exact same UEC images are available
+in Amazon EC2, and also in a Eucalyptus private cloud.  This means
+that vosa will be able to control Amazon EC2 images in the same way.
+
+Defining a virtual machine means creating two files (boot.conf and
+install.conf) in a directory.  "vosa init" has already created a
+documented skeleton which you can customize as you see fit.
 
    : mkdir /etc/vizrt/vosa/available.d/my-first-vm &&
    : cp /etc/vizrt/vosa/skeleton/* /etc/vizrt/vosa/available.d/my-first-vm/
-
-Configure these files (they're well documented)
-
    : vi /etc/vizrt/vosa/available.d/my-first-vm/*
 
-Make sure your IP and MAC addresses are unique
+Note that the name you choose ("my-first-vm") must be a valid
+internet host name with no domain part.  I.e. only lowercase
+alphanumerics and hyphens.  The name you choose will become the
+virtual machine's host name.
 
-Finally, enable and install your virtual machine:
+When you're happy with them you should of course track these in a
+version control system, so you don't lose them.  Over time, these
+will become more valuable than the virtual machine images themselves.
 
-   : vosa -i my-first-vm enable install
+Make sure your IP and MAC addresses are unique, or make a script to
+randomize them.
+
+Now, enable your virtual machine:
+
+   : vosa -i my-first-vm enable
+
+This creates a symlink from available.d/my-first-vm to enabled.d, it
+serves no other purpose than to differentiate between a possibly long
+list of virtual machine definitions (in available.d), and the ones
+you have decided to actually run on this machine.
+
+To install the machine, just issue the "install" command:
+
+   : vosa -i my-first-vm install
+
+This will copy the disk image to /var/lib/vizrt/vosa/images/my-first-vm/
+and put some more files in there (like the SSH private key), and
+finally it will boot up the image and use the UEC's cloud-init
+support to prime the image and execute any post-installation hooks
+you defined.
+
+The host name (as the machine sees it, at least) will be the same as
+the name of the virtual machine; in this case "my-first-vm"
 
 When it's done you can SSH into the system:
 
    : ssh -F /var/lib/vizrt/vosa/my-first-vm/ssh.conf root@guest
+
+Not that you should need to do that, of course.
+
+* Puppet Master
+
+Setting up a puppet master is also an important piece of vosa.
+
+To make this possible, vosa supplies a post-install hook. This hook:
+
+- installs the puppet master from the apt repositories,
+- configures the puppet master to use hostnames instead of its DNS
+  name for certificates
+- configures a self signed certificate for all guests (mainly to avoid
+  having to sign or auto-sign the puppets, since that would be
+  problematic when a puppet happens to be re-installed)
+- creates vosa post-installation hook to set up a pre-authenticated
+  puppet in /etc/vizrt/vosa/puppet/<puppetmaster-name>-client.sh
+
+This makes it possible to define more virtual machines that
+automatically dance to the puppet master's tune.
+
+Making this useful of course means pushing your puppet configuration
+into the puppet master, but that's outside the scope of this
+document.
 
 
