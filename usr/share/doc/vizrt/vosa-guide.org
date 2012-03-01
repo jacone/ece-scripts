@@ -1,0 +1,63 @@
+Installation of VOSA package
+============================
+
+
+Requirements:
+---------------
+- kvm or qemu-kvm
+- genisoimage
+- nc
+- tunctl
+- sudo access to kvm (or run vosa as root...)
+- a bridged network
+
+This installation will:
+
+- download an UEC image and kernel
+- create 10 tap interfaces (or less) (see below)
+- create ten "tap*.availablenetwork" fileis (where * is a number between 0 and 10)
+  in /var/run/vizrt/vosa/ signifying the names of the tap interfaces that can be used.
+- write (exclusively?) access to /var/run/vizrt/vosa/
+
+
+Setup
+-----
+
+    mkdir -p /etc/vizrt/vosa/available.d/vm-1
+    mkdir -p /etc/vizrt/vosa/enabled.d
+    mkdir -p /var/run/vizrt/vosa/
+    mkdir -p /var/lib/vizrt/vosa/images/
+    mkdir -p /var/lib/vizrt/vosa/original-images/
+
+Install the vosa command itself and its required libraries
+
+    ln -s $PWD/usr/bin/vosa /usr/bin/vosa
+    ln -s $PWD/usr/share/vizrt/ /usr/share/vizrt
+
+Set up an image
+
+    cd /var/lib/vizrt/vosa/original-images/
+    mkdir oneiric-2012-01-29
+    ln -s oneiric-2012-01-29 latest
+    cd latest
+    tar xfz ~/mogsie-autovm/downloads/oneiric-server-cloudimg-amd64.tar.gz 
+    mv oneiric-server-cloudimg-amd64.img disk.img
+    mv oneiric-server-cloudimg-amd64-vmlinuz-virtual vmlinuz
+    rm oneiric-server-cloudimg-amd64-*
+    rm README.files 
+
+Make a bridge, br0 or something (outside the scope of this document)
+
+make 10 tap interfaces and make them known to vosa (this probably needs to happen every boot...
+
+    for i in $(seq 1 10) ; do
+      tap=$(tunctl -b)
+      touch /var/run/vizrt/vosa/$tap.availablenetwork
+      brctl addif br0 $tap
+      ifconfig $tap up 0.0.0.0
+    done
+
+
+
+
+
