@@ -107,7 +107,7 @@ function print()
 
 function log()
 {
-    echo "$id" `date` $@ 2>/dev/null >> $log_file 
+    echo $(date) "$id" $@ 2>/dev/null >> $log_file 
 }
 
 function print_and_log()
@@ -576,6 +576,7 @@ function deploy()
                     jar xf $war \
                         1>>$log_file \
                         2>>$log_file)
+                add_memcached_support $tomcat_base/webapps/$name
                 exit_on_error "extracting $war to $tomcat_base/webapps/"
             done
             ;;
@@ -596,6 +597,42 @@ function deploy()
     esac
 
     run rm -rf ${dir}
+}
+
+## $1 : dir of the webapp 
+function add_memcached_support() {
+    if [[ "$do_not_add_memcached_support" == "1" ]]; then
+        return
+    fi
+
+    if [ ! -d "$1" ]; then
+        log $1 "doesn't exist"
+        return
+    fi
+
+    local exempt_from_memcached_list="
+      escenic escenic-admin indexer-webservice indexer-webapp studio
+      inpage-ws dashboard
+    "
+
+    for el in $exempt_from_memcached_list; do
+        if [[ $(basename $1) == "$el" ]]; then
+          return
+        fi
+    done
+
+    log "Adding memcached support in $1 ..."
+    local dir=$1/WEB-INF/localconfig/neo/xredsys/presentation/cache
+    run mkdir -p $dir
+    local file=$dir/PresentationArticleCache.properties
+
+    if [[ -e $file && $(grep "\$class" $file | wc -l) -gt 0 ]]; then
+        sed -i "s#\$class=.*#\$class=neo.util.cache.Memcached#g" $file
+    else
+        echo "\$class=neo.util.cache.Memcached" >> $file
+    fi
+
+    exit_on_error "sed on $file"
 }
 
 # Returns the file (can be a directory) passed to the function only
