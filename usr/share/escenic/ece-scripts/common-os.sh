@@ -8,6 +8,9 @@
 common_bashing_is_loaded > /dev/null 2>&1 || source common-bashing.sh
 common_pulse_is_loaded > /dev/null 2>&1 || source common-bashing.sh
 
+## Only used if the Tomcat download mirror couldn't be determined
+fallback_tomcat_url="http://mirrorservice.nomedia.no/apache.org/tomcat/tomcat-6/v6.0.35/bin/apache-tomcat-6.0.35.tar.gz"
+
 wget_opts="--continue --inet4-only --quiet"
 
 # Can be used like this:
@@ -110,8 +113,14 @@ function get_tomcat_download_url() {
       cut -d'"' -f2
   )
 
+  if [ -z $url ]; then
+    url=$fallback_tomcat_url
+    log "Failed to get Tomcat mirror URL, will use fallback URL $url"
+  fi
+
   echo $url
 }
+
 
 ## Downloads Tomcat from the regional mirror
 ##
@@ -119,11 +128,6 @@ function get_tomcat_download_url() {
 function download_tomcat() {
   local url=$(get_tomcat_download_url)
   
-  if [ -z $url ]; then
-    print_and_log "Failed to get Tomcat download URL"
-    kill $$
-  fi
-
   print "Downloading Tomcat ..."
   log "Downloading Tomcat from $url ..."
   run cd $1
