@@ -47,7 +47,7 @@ function set_up_app_server()
     print "Press ENTER to accept the default " \
       "($HOSTNAME:${default_db_port}:${default_db_schema})"
     print "Or enter: <host>:<port>:<schema>, e.g.: 'db1:${default_db_port}:mydb'"
-    echo -n "Your choice [$HOSTNAME:${default_db_port}:schema]> "
+    echo -n "Your choice [$HOSTNAME:${default_db_port}:${default_db_schema}]> "
     read user_database
 
     db_host=$(echo $user_database | cut -d':' -f1)
