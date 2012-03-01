@@ -25,11 +25,12 @@ function create_java_deb_packages_and_repo() {
 
 
 function install_sun_java_on_redhat() {
-  if [[ $(java -version 2>&1 | grep HotSpot | wc -l) -gt 0 ]]; then
+  if [[ $(${java_home}/bin/java -version 2>&1 | \
+    grep HotSpot | wc -l) -gt 0 ]]; then
     print_and_log "Sun Java is already installed on $HOSTNAME"
     return
   fi
-
+  
   print_and_log "Downloading Sun Java from download.oracle.com ..."
   run cd $download_dir
   run wget $wget_opts $sun_java_bin_url
@@ -63,7 +64,8 @@ function install_sun_java_on_redhat() {
     if [ ! -e /usr/bin/$el ]; then
       ln -s /usr/bin/$el /etc/alternatives/$el
     fi
-    run alternatives --set $el /opt/jdk/bin/$el
+    # doesn't seem to like running inside the run wrapper
+    alternatives --set $el /opt/jdk/bin/$el 1>>$log 2>>$log
   done
 
   # setting java_home to the newly installed location

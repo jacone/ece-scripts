@@ -110,11 +110,6 @@ function get_tomcat_download_url() {
       cut -d'"' -f2
   )
 
-  if [ -z $url ]; then
-    print_and_log "Failed to get Tomcat download URL"
-    kill $$
-  fi
-  
   echo $url
 }
 
@@ -122,11 +117,16 @@ function get_tomcat_download_url() {
 ##
 ## $1: target directory
 function download_tomcat() {
-  (
-    local url=$(get_tomcat_download_url)
-    log "Downloading Tomcat from $url ..."
-    run cd $1
-    run wget $wget_opts $url
-  )
+  local url=$(get_tomcat_download_url)
+  
+  if [ -z $url ]; then
+    print_and_log "Failed to get Tomcat download URL"
+    kill $$
+  fi
+
+  print "Downloading Tomcat ..."
+  log "Downloading Tomcat from $url ..."
+  run cd $1
+  run wget $wget_opts $url
 }
 
