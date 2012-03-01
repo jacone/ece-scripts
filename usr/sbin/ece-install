@@ -673,6 +673,7 @@ function set_ece_instance_conf()
 function install_ece_third_party_packages
 {
     run_hook install_ece_third_party_packages.preinst
+    print_and_log "Installing 3rd party packages needed by $type instances"
     
     if [ $on_debian_or_derivative -eq 1 ]; then
         if [ $on_ubuntu -eq 1 ]; then
