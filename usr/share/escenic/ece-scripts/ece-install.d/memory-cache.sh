@@ -28,6 +28,10 @@ function install_memory_cache()
   print "Installing a distributed memory cache on $HOSTNAME ..."
   
   install_packages_if_missing "memcached"
+  if [ $on_redhat_or_derivative -eq 1 ]; then
+    run /etc/init.d/memcached restart
+  fi
+  
   assert_pre_requisite memcached
   
   run cd $download_dir
@@ -71,10 +75,10 @@ function install_memory_cache()
 function memcached_set_up_common_nursery() {
   local dir=$common_nursery_dir/com/danga
   make_dir $dir
-  cat > $dir/SockIOPool <<EOF
+  cat > $dir/SockIOPool.properties <<EOF
 $class=com.danga.MemCached.SockIOPool
 # fill in memcached servers here.
-servers=${fai_memcached_node_list}
+servers=${fai_memcached_node_list-localhost:11211}
 
 # how many connections to use
 initConn = 10
