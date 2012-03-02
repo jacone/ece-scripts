@@ -1,17 +1,12 @@
 # ece-install module for installing the database.
 
+# Setting the correct URLs for the percona releas (bootstrap) RPM package.
 percona_rpm_release_version=0.0-1
 percona_rpm_release_package_name=percona-release-${percona_rpm_release_version}
 percona_rpm_release_url=http://www.percona.com/downloads/percona-release/$percona_rpm_release_package_name.x86_64.rpm
 if [[ $(uname -m) != "x86_64" ]]; then
   percona_rpm_release_url=http://www.percona.com/downloads/percona-release/$percona_rpm_release_package_name.i386.rpm
 fi
-
-default_db_port=3306
-default_db_host=localhost
-default_db_user=ece5user
-default_db_password=ece5password
-default_db_schema=ece5db
 
 ## $1: optional parameter, binaries_only. If passed, $1=binaries_only,
 ##     the ECE DB schema is not set up. 
