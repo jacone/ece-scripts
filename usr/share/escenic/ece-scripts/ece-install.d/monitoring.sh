@@ -1,5 +1,8 @@
 # module for installing monitoring software, both server and client side.
 
+MONITORING_VENDOR_NAGIOS=nagios
+MONITORING_VENDOR_ICINGA=icinga
+
 ## Installs the Nagios monitoring server.
 ## $1 the nagios vendor/falvour, "nagios" and "icinga" are supported.
 function install_nagios_monitoring_server()
@@ -287,4 +290,37 @@ EOF
 
   add_next_step "Munin gatherer admin interface: http://${HOSTNAME}/munin"
   add_next_step "Make sure all nodes allows its IP to connect to them."
+}
+
+## $1 nagios vendor
+function create_monitoring_server_overview()
+{
+    local file=/var/www/index.html
+    cat > $file <<EOF
+<html>
+  <body>
+    <h1>Welcome to the might monitoring server @ ${HOSTNAME}</h1>
+    <ul>
+EOF
+    if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
+        echo '<li><a href="/nagios3">Nagios</a></li>' \
+            else
+        echo '<li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' \
+            >> $file
+    fi
+    cat > $file <<EOF
+      <li><a href="/munin">Munin</a></li>
+    </ul>
+  </body>
+</html>
+EOF
+    add_next_step "Start page for all monitoring interfaces: http://${HOSTNAME}/"
+}
+
+function install_monitoring_server()
+{
+    local nagios_flavour=${fai_monitoring_nagios_flavour-$MONITORING_VENDOR_ICINGA}
+    install_nagios_monitoring_server $nagios_flavour
+    install_munin_gatherer
+    create_monitoring_server_overview $nagios_flavour
 }
