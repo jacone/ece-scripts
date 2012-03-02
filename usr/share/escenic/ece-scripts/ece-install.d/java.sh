@@ -7,17 +7,15 @@ function create_java_deb_packages_and_repo() {
   print $(lsb_release -i | cut -d':' -f2) \
     $(lsb_release -r | cut -d':' -f2) \
     "doesn't have official Sun/Oracle Java packages,"
+  print "creating packages & local repo for you ..."
   
   local tmp_dir=$(mktemp -d)
-  $(
-    run cd $tmp_dir
-    run git clone https://github.com/flexiondotorg/oab-java6.git
-    run cd oab-java6
-    run bash oab-java6.sh
-    run rm -rf $tmp_dir
-  ) &
-  show_pulse $! "I'm creating packages & local repo for you"
-
+  run cd $tmp_dir
+  run git clone https://github.com/flexiondotorg/oab-java6.git
+  run cd oab-java6
+  run bash oab-java6.sh
+  run rm -rf $tmp_dir
+    
   add_next_step "Local APT repository with Sun/Oracle Java packages"
   add_next_step "has been installed at /var/local/oab/deb and added"
   add_next_step "to your APT system with /etc/apt/sources.list.d/oab.list"
