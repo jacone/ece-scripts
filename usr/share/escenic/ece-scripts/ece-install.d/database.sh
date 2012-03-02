@@ -68,7 +68,6 @@ function install_database_server()
       
       add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
       packages="percona-server-server percona-server-client"
-      install_packages_if_missing $packages
       force_packages=0
     else
       print_and_log "The Percona APT repsository doesn't have packages" 
