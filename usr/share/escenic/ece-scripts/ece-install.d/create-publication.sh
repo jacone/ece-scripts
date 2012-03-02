@@ -1,5 +1,4 @@
-function create_publication()
-{
+function create_publication() {
   if [ ! -e $escenic_root_dir/engine -o \
     ! -e $escenic_root_dir/assemblytool ]; then
     print_and_log "Please install ECE and an assembly environment before"
@@ -67,8 +66,7 @@ function add_publication_to_deployment_lists() {
   done
 }
 
-function ensure_that_instance_is_running()
-{
+function ensure_that_instance_is_running() {
   local ece_command="ece -i $1 -t $type status"
   if [ $(su - $ece_user -c "$ece_command" | grep UP | wc -l) -lt 1 ]; then
     ece_command="ece -i $1 -t $type start"
@@ -76,4 +74,86 @@ function ensure_that_instance_is_running()
     # TODO improve this by adding a timed while loop
     sleep 60
   fi
+}
+
+# Based on Erik Mogensen's work:
+# //depot/branches/personal/mogsie/fromscratch/create-publication.sh
+function create_publication_in_db() {
+  print_and_log "Creating ${publication_name} using $instance_name ..."
+
+  ece_admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin
+  
+  cookie=$(curl ${curl_opts} -I ${ece_admin_uri}/ | \
+    grep -i "^Set-Cookie" | \
+    sed s/.*'JSESSIONID=\([^;]*\).*'/'\1'/)
+
+  if [ "$cookie" == "" ] ; then
+    print_and_log "Unable to get a session cookie."
+    remove_pid_and_exit_in_error;
+  fi
+
+  run curl ${curl_opts} \
+    -F "type=webapp" \
+    -F "resourceFile=@${1}" \
+    --cookie JSESSIONID="$cookie" \
+    "${ece_admin_uri}/do/publication/resource"
+  
+  run curl ${curl_opts}  \
+    -F "name=${publication_name}" \
+    -F "publisherName=Escenic" \
+    -F "adminPassword=${publication_name}" \
+    -F "adminPasswordConfirm=${publication_name}" \
+    --cookie JSESSIONID="$cookie" \
+    "${ece_admin_uri}/do/publication/insert"
+}
+
+function create_publication_definition_and_war()
+{
+  publication_name=mypub
+
+  if [ $fai_enabled -eq 0 ]; then
+    print "What name do you wish to give your publication?"
+    print "Press ENTER to accept ${publication_name}"
+    echo -n "Your choice [${publication_name}]> "
+    read publication_name
+  else
+    publication_name=$(get_conf_value fai_publication_name)
+  fi
+
+  if [ -z "$publication_name" ]; then
+    publication_name=mypub
+  fi
+
+  print_and_log "Setting up the ${publication_name} publication ..."
+  make_dir $escenic_root_dir/assemblytool/publications/
+  run cd $escenic_root_dir/assemblytool/publications/
+  cat > $escenic_root_dir/assemblytool/publications/${publication_name}.properties <<EOF
+name: ${publication_name}
+source-war: ${publication_name}.war
+context-root: ${publication_name}
+EOF
+
+  publication_war=$escenic_root_dir/assemblytool/publications/${publication_name}.war
+  if [[ $fai_enabled -eq 1 && -n "${fai_publication_war}" ]]; then
+    print_and_log "Basing ${publication_name}.war on the one specified in $conf_file"
+    run cp ${fai_publication_war} ${publication_war}
+  elif [ -d $escenic_root_dir/widget-framework-core-* ]; then
+    print_and_log "Basing ${publication_name}.war on Widget Framework Demo ..."
+    run cd $escenic_root_dir/widget-framework-core-*/publications/demo-core
+    assert_pre_requisite mvn
+    run mvn $maven_opts package
+    run cp target/demo-core-*.war ${publication_war}
+  else
+    print_and_log "Basing your ${publication_name}.war on ECE/demo-clean ..."
+    run cp $escenic_root_dir/engine/contrib/wars/demo-clean.war ${publication_war}
+  fi
+
+    # TODO add support for the community widgets
+    #
+    # 1 - add the core widgets to the
+    # publications/demo-community/pom.xml
+    # 
+    # 2 - add the <ui:group name="core-widgets"/> definition for core
+    # widgets in:
+    # publications/demo-community/src/main/webapp/META-INF/escenic/publication-resources/escenic/content-type
 }

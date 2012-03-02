@@ -268,10 +268,10 @@ function install_munin_gatherer()
     print_and_log "Adding ${el} to the Munin gatherer on ${HOSTNAME} ..."
     local file=/etc/munin/munin-conf.d/escenic.conf
     cat >> $file <<EOF
-[${el}]
+    [${el}]
     address $(get_ip $el)
     use_node_name yes
-EOF
+    EOF
   done
 
     # TODO add the priveleged network to the Allowed stanza (i.e. the
@@ -295,32 +295,67 @@ EOF
 ## $1 nagios vendor
 function create_monitoring_server_overview()
 {
-    local file=/var/www/index.html
-    cat > $file <<EOF
+  local file=/var/www/index.html
+  cat > $file <<EOF
 <html>
   <body>
     <h1>Welcome to the might monitoring server @ ${HOSTNAME}</h1>
     <ul>
 EOF
-    if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
-        echo '<li><a href="/nagios3">Nagios</a></li>' \
-            else
-        echo '<li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' \
-            >> $file
-    fi
-    cat > $file <<EOF
+  if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
+    echo '<li><a href="/nagios3">Nagios</a></li>' \
+      else
+    echo '<li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' \
+      >> $file
+  fi
+  cat > $file <<EOF
       <li><a href="/munin">Munin</a></li>
     </ul>
   </body>
 </html>
 EOF
-    add_next_step "Start page for all monitoring interfaces: http://${HOSTNAME}/"
+  add_next_step "Start page for all monitoring interfaces: http://${HOSTNAME}/"
 }
 
 function install_monitoring_server()
 {
-    local nagios_flavour=${fai_monitoring_nagios_flavour-$MONITORING_VENDOR_ICINGA}
-    install_nagios_monitoring_server $nagios_flavour
-    install_munin_gatherer
-    create_monitoring_server_overview $nagios_flavour
+  local nagios_flavour=${fai_monitoring_nagios_flavour-$MONITORING_VENDOR_ICINGA}
+  install_nagios_monitoring_server $nagios_flavour
+  install_munin_gatherer
+  create_monitoring_server_overview $nagios_flavour
+}
+
+## $1 configuration file name
+## $2 host group name
+## $3 host group alias
+## $4..n host group members
+function set_up_monitoring_host_group()
+{
+  local file=$1
+  local host_group_name=$2
+  local host_group_alias=$3
+    # the remainding arguments passed to the methods is the member
+    # list members
+  local host_group_member_list=${@:4:$(( $# - 3 ))}
+
+  if [ $(grep "hostgroup_name $host_group_name" $file | wc -l) -gt 0 ]; then
+    print "Icinga group member" \
+      $host_group_name \
+      "already defined, skipping it."
+    return
+  fi
+  
+  cat >> $file <<EOF
+define hostgroup {
+  hostgroup_name $host_group_name
+  alias $host_group_alias
+EOF
+  echo -n "  members" >> $file
+  for el in $host_group_member_list; do
+    echo -n " ${el}," >> $file
+  done
+  cat >> $file <<EOF
+
+}
+EOF
 }
