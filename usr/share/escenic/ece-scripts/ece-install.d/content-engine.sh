@@ -12,7 +12,7 @@ function get_deploy_white_list()
   elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
     white_list="${white_list} "$(get_publication_short_name_list)
   elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
-    white_list="${white_list} escenic studio indexer-webservice"
+    white_list="${white_list} escenic studio indexer-webservice webservice"
     white_list="${white_list} "$(get_publication_short_name_list)
   fi
 
