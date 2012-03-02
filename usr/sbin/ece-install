@@ -1355,17 +1355,6 @@ function assemble_deploy_and_restart_type()
     exit_on_error "su - $ece_user -c \"$ece_command\""
 }
 
-function ensure_that_instance_is_running()
-{
-    ece_command="ece -i $1 -t $type status"
-    if [ $(su - $ece_user -c "$ece_command" | grep UP | wc -l) -lt 1 ]; then
-        ece_command="ece -i $1 -t $type start"
-        su - $ece_user -c "$ece_command" 1>>$log 2>>$log
-        # TODO improve this by adding a timed while loop
-        sleep 60
-    fi
-}
-
 # If the system is installed using the recommended paths, the method
 # will return a list of the instances configured in
 # ${escenic_conf_dir}/engine/instance
@@ -1378,42 +1367,6 @@ function get_instance_list()
     fi
 
     echo $instance_list
-}
-
-function create_publication()
-{
-    if [ ! -e $escenic_root_dir/engine -o \
-        ! -e $escenic_root_dir/assemblytool ]; then
-        print_and_log "Please install ECE and an assembly environment before"
-        print_and_log "running this installation profile again."
-        remove_pid_and_exit_in_error
-    fi
-
-    print_and_log "Getting ready to create a new publication ..."
-    create_publication_definition_and_war
-
-    local instance_list=$(get_instance_list)
-    local default_instance=$(echo ${instance_list} | cut -d' ' -f1)
-
-    if [ $fai_enabled -eq 0 ]; then
-        print "Which ECE instance do you wish to use to create it?"
-        print "These instances are available: $instance_list"
-        echo -n "Your choice [$default_instance]> "
-        read instance_name
-    else
-        instance_name=$(get_conf_value fai_publication_use_instance)
-    fi
-
-    if [ -z "$instance_name" ]; then
-        instance_name=$default_instance
-    fi
-
-    type=engine
-    ensure_that_instance_is_running $instance_name
-    create_publication_in_db $publication_war
-    assemble_deploy_and_restart_type
-
-    add_next_step "A new publication $publication_name has been created."
 }
 
 function install_editorial_server()
@@ -1489,92 +1442,6 @@ function install_all_in_one_environment()
 
     install_widget_framework
     create_publication
-}
-
-# parameters:
-# $1 - what kind of webserver. Available options are:
-#      * 0 - cache server
-#      * 1 - monitoring server
-#      * 2 - both cache & monitoring server
-function install_web_server()
-{
-    print_and_log "Installing a web server on $HOSTNAME ..."
-
-    if [ $on_debian_or_derivative -eq 1 ]; then
-        packages="nginx"
-        install_packages_if_missing $packages
-    else
-        debug "Web server installation not supported on your system."
-        return
-    fi
-    
-    file=/etc/nginx/sites-available/default
-    # in some very unusual cases, this file will not exist (can occur
-    # when re-running ece-install several times).
-    if [ -e $file ]; then
-        run mv $file $file.orig
-    fi
-
-    if [ $1 -eq 0 ]; then
-        port=81
-        cat > $file <<EOF
-server {
-  listen ${port} default;
-  access_log  /var/log/nginx/localhost.access.log;
-
-  # Typical endpoint for Adactus/Mobilize to get the videos to
-  # transcode.
-  location /binary {
-    root $escenic_data_dir;
-    index index.html;
-  }
-}
-EOF
-    elif [ $1 -eq 1 ]; then
-        port=80
-        cat > $file <<EOF
-server {
-  listen ${port} default;
-  access_log  /var/log/nginx/localhost.access.log;
-
-  location / {
-    root /var/cache/munin/www;
-    index index.html;
-  }
-}
-EOF
-    elif [ $1 -eq 3 ]; then
-        port=81
-        cat > $file <<EOF
-server {
-  listen ${port} default;
-  access_log  /var/log/nginx/localhost.access.log;
-
-  location / {
-    root /var/cache/munin/www;
-    index index.html;
-  }
-
-  # Typical endpoint for Adactus/Mobilize to get the videos to
-  # transcode.
-  location /binary {
-    root $escenic_data_dir;
-    index index.html;
-  }
-}
-EOF
-    fi
-    
-    run /etc/init.d/nginx restart
-
-    if [ $1 -eq 0 ]; then
-        add_next_step "http://${HOSTNAME}:${port}/binary gives the Adactus endpoint"
-    elif [ $1 -eq 1 ]; then
-        add_next_step "http://${HOSTNAME}:${port}/ gives the Munin interface"
-    elif [ $1 -eq 2 ]; then
-        add_next_step "http://${HOSTNAME}:${port}/       gives the Munin interface"
-        add_next_step "http://${HOSTNAME}:${port}/binary gives the Adactus endpoint"
-    fi
 }
 
 function add_server_to_runlevels()
