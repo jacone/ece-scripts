@@ -976,6 +976,12 @@ function get_info_for_type()
     if [ -n "${java_home}" ]; then
         print "Java location: $java_home"
     fi
+    
+    print "Log files:"
+    print "|-> System out log:" $log_file
+    print "|-> App server log:" $(get_app_log)
+    print "|-> Log4j log:     " $(get_log4j_log)
+    
     if [ -n "${appserver}" ]; then
         print "Application server:"
         set_type_port
@@ -1000,11 +1006,6 @@ function get_info_for_type()
                 ;;
         esac
     fi
-
-    print "Log files:"
-    print "|-> System out log:" $log_file
-    print "|-> App server log:" $(get_app_log)
-    print "|-> Log4j log:     " $(get_log4j_log)
 }
 
 function print_tomcat_resources() {
