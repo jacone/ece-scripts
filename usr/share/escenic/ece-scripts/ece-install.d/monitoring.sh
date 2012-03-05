@@ -271,7 +271,7 @@ function install_munin_gatherer()
     [${el}]
     address $(get_ip $el)
     use_node_name yes
-    EOF
+EOF
   done
 
     # TODO add the priveleged network to the Allowed stanza (i.e. the
