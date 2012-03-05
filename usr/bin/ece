@@ -990,6 +990,7 @@ function get_info_for_type()
                 if [ -n "${tomcat_home}" ]; then
                     print "|-> Tomcat home:" $tomcat_home
                     print "|-> Tomcat base:" $tomcat_base
+                    print_tomcat_resources
                 fi
             ;;
             resin)
@@ -999,6 +1000,51 @@ function get_info_for_type()
                 ;;
         esac
     fi
+
+    print "Log files:"
+    print "|-> System out log:" $log_file
+    print "|-> App server log:" $(get_app_log)
+    print "|-> Log4j log:     " $(get_log4j_log)
+}
+
+function print_tomcat_resources() {
+  if [ "$(which xml_grep)x" == "x" ]; then
+    log "Install xml_grep to get more 'ece info' details"
+    return
+  fi
+
+  print "Application server resources:"
+
+  xml_grep  --nowrap --cond Context/Environment \
+    $tomcat_base/conf/context.xml | \
+    sed 's/^[ \t]//g' | \
+    sed "s#><#>\n<#g" | \
+    cut -d' ' -f2,5 |  \
+    cut -d'"' -f2,4 | \
+    while read line ; do
+    local key=$(echo $line | cut -d'"' -f1)
+    local value=$(echo $line | cut -d'"' -f2)
+    print "|->" ${key}: ${value}
+  done
+   
+  print "Database:"
+  xml_grep \
+    --nowrap \
+    --cond 'Server/GlobalNamingResources/Resource[@type="javax.sql.DataSource"]' \
+    $tomcat_base/conf/server.xml | \
+    sed 's/^[ \t]//g' | \
+    sed "s#><#>\n<#g" | \
+    while read line ; do
+    for el in $(echo $line | cut -d' ' -f1- ); do
+      if [[ $el == "name"* || $el == "url"* || $el == "username"* ]]; then
+        local key=$(echo $el | cut -d'"' -f1 | cut -d'=' -f1)
+        local value=$(echo $el | cut -d'"' -f2)
+        print "|->" ${key}: ${value}
+      fi
+
+    done
+  done
+  
 }
 
 function restart_type()
