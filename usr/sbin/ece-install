@@ -273,7 +273,7 @@ function install_ece_third_party_packages_p() {
   show_pulse $! "Installing 3rd party packages needed by ECE"
 }
 
-function set_up_assembly_tool() {
+function set_up_assembly_tool_p() {
   $(set_up_assembly_tool) &
   show_pulse $! "Setting up the Assembly Tool"
 }
