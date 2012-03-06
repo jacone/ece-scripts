@@ -28,7 +28,12 @@ function create_publication() {
   type=engine
   ensure_that_instance_is_running $instance_name
   create_publication_in_db $publication_war
-  add_publication_to_deployment_lists
+
+  # don't set/introduce the deployment white list for profile=all
+  if [ $install_profile_number -ne $PROFILE_ALL_IN_ONE ]; then
+    add_publication_to_deployment_lists
+  fi
+  
   assemble_deploy_and_restart_type
 
   add_next_step "A new publication $publication_name has been created."
