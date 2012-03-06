@@ -426,15 +426,15 @@ function set_correct_permissions()
 
 function print_status_and_next_steps()
 {
-    now=`date +%s`
-    started=`stat -c %Y $pid_file`
-    seconds=$(( now - started ))
-    days=$(( seconds / ( 60 * 60 * 24 ) ))
-    seconds_left=$(( seconds - ( $days * 60 * 60 * 24 ) ))
-    hours=$(( seconds_left / ( 60 * 60 ) ))
-    seconds_left=$(( seconds_left - ( $hours * 60 * 60 ) ))
-    minutes=$(( seconds_left / 60 ))
-    seconds_left=$(( seconds_left - $minutes * 60 ))
+    local now=`date +%s`
+    local started=`stat -c %Y $pid_file`
+    local seconds=$(( now - started ))
+    local days=$(( seconds / ( 60 * 60 * 24 ) ))
+    local seconds_left=$(( seconds - ( $days * 60 * 60 * 24 ) ))
+    local hours=$(( seconds_left / ( 60 * 60 ) ))
+    local seconds_left=$(( seconds_left - ( $hours * 60 * 60 ) ))
+    local minutes=$(( seconds_left / 60 ))
+    local seconds_left=$(( seconds_left - $minutes * 60 ))
 
     if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]; then
         s="The installation is now $(green complete)!"
