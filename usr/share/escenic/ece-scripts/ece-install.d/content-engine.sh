@@ -51,22 +51,28 @@ function install_ece_instance() {
     download_escenic_components
     check_for_required_downloads
     set_up_engine_and_plugins
-    set_up_assembly_tool
+
+    if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+      set_up_assembly_tool
+    fi
   else
     verify_that_files_exist_and_are_readable \
       $ece_instance_ear_file \
       $ece_instance_conf_archive
   fi
-  
-  set_up_basic_nursery_configuration
-  set_up_instance_specific_nursery_configuration
+
+  if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+    set_up_basic_nursery_configuration
+    set_up_instance_specific_nursery_configuration
+  fi
   
   set_up_app_server
   set_up_proper_logging_configuration
 
     # We set a WAR white list for all profiles except all in one
-  if [ $install_profile_number -ne $PROFILE_ALL_IN_ONE ]; then
-    file=$escenic_conf_dir/ece-${instance_name}.conf
+  if [ $install_profile_number -ne $PROFILE_ALL_IN_ONE -a \
+    $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+    local file=$escenic_conf_dir/ece-${instance_name}.conf
     print_and_log "Creating deployment white list in $file ..."
     set_conf_file_value \
       deploy_webapp_white_list \
@@ -113,7 +119,7 @@ function set_up_engine_and_plugins() {
     fi
   done
   
-  if [ ! -d "${engine_dir}" ]; then
+  if [ -n "$engine_dir" -a ! -d "${engine_dir}" ]; then
     run unzip -q -u $download_dir/${engine_file}
     if [ -h engine ]; then
       run rm engine
@@ -124,8 +130,8 @@ function set_up_engine_and_plugins() {
     debug "${engine_dir} is already there, skipping to next step."
   fi
 
-    # we now extract all the plugins. We extract them in $escenic_root_dir
-    # as we want to re-use them between minor updates of ECE.
+  # we now extract all the plugins. We extract them in $escenic_root_dir
+  # as we want to re-use them between minor updates of ECE.
   cd $escenic_root_dir/
   for el in $download_dir/*.zip; do
     if [ $(basename $el | grep ^engine-.*.zip | wc -l) -gt 0 ]; then
@@ -153,10 +159,10 @@ function set_up_assembly_tool() {
   fi
 
     # adding an instance layer to the Nursery configuration
-  cp -r $escenic_root_dir/engine/siteconfig/bootstrap-skeleton \
+  run cp -r $escenic_root_dir/engine/siteconfig/bootstrap-skeleton \
     $escenic_root_dir/assemblytool/conf
-  cd $escenic_root_dir/assemblytool/conf/
-  cp -r layers/host layers/instance
+  run cd $escenic_root_dir/assemblytool/conf/
+  run cp -r layers/host layers/instance
   cat > layers/instance/Files.properties <<EOF
 \$class=neo.nursery.FileSystemDepot
 fileSystemRoot = $escenic_conf_dir/engine/instance/\${com.escenic.instance}/
