@@ -1,4 +1,5 @@
-# module to install & configure network file systems
+# module to install & configure network file systems, both server and
+# client side.
 
 default_nfs_export_list="/exports/multimedia"
 
@@ -13,7 +14,6 @@ function get_nfs_configuration() {
     fai_nfs_allowed_client_network
   fi
 }
-
 
 function install_nfs_server() {
   print_and_log "Installing an NFS server on $HOSTNAME ..."
