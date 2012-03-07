@@ -160,7 +160,7 @@ function install_munin_node()
   fi
   
   if [ $on_debian_or_derivative -eq 1 ]; then
-    packages="munin-node munin-plugins-extra munin-java-plugins"
+    packages="munin-node munin-plugins-extra"
     install_packages_if_missing $packages
   else
     print_and_log "Munin node installation not supported on your system"
