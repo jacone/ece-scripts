@@ -5,7 +5,7 @@ default_nfs_export_list="/exports/multimedia"
 function get_nfs_configuration() {
   nfs_export_list=${fai_nfs_export_list-$default_nfs_export_list}
   nfs_server_address=${fai_nfs_server_address}
-  nfs_allowed_network=${fai_nfs_allowed_client_network}
+  nfs_allowed_client_network=${fai_nfs_allowed_client_network}
 }
 
 
@@ -15,17 +15,23 @@ function install_nfs_server() {
   get_nfs_configuration
   
   for el in $nfs_export_list; do
-    cat >> /etc/exports <<EOF
+    local entry="$el ${nfs_allowed_client_network}(rw,sync)"
+    if [ $(grep "$entry" /etc/exports | wc -l) -lt 1 ]; then
+      cat >> /etc/exports <<EOF
+# added by $(basename $0) @ $(date)
 $el ${nfs_allowed_client_network}(rw,sync)
 EOF
-
+    fi
+    
     make_dir $el
     run chown ${ece_user}:${ece_group} $el
   done
 
   run /etc/init.d/portmap restart
   run /etc/init.d/nfs-kernel-server restart
-  run /etc/init.d/nfs-common restart
+
+  add_next_step "An NFS server has been installed on ${HOSTNAME},"
+  add_next_step "NFS exports: $nfs_export_list"
 }
 
 function install_nfs_client() {
@@ -34,15 +40,23 @@ function install_nfs_client() {
   install_packages_if_missing "nfs-common"
   get_nfs_configuration
 
-  for el in $nfs_export_list; do
-    make_dir /mnt/${basename $el}
-
-    cat >> /etc/fstab <<EOF
-# added by $(basename $el) @ $(date)
-${nfs_server_address}:$el /mnt/$(basename $el) nfs defaults 0 0
-EOF
-
-    run mount /mnt/$(basename $el)
-  done
+  local mount_point_list=""
   
+  for el in $nfs_export_list; do
+    local entry="${nfs_server_address}:$el /mnt/$(basename $0) nfs defaults 0 0"
+    if [ $(grep "$entry" /etc/exports | wc -l) -lt 1 ]; then
+      cat >> /etc/fstab <<EOF
+# added by $(basename $el) @ $(date)
+${nfs_server_address}:$el /mnt/$(basename $0) nfs defaults 0 0
+EOF
+    fi
+
+    local mount_point=/mnt/${basename $el}
+    make_dir $mount_point
+    run mount $mount_point
+    mount_point_list="$mount_point $mount_point_list"
+  done
+
+  add_next_step "An NFS client has been added to $HOSTNAME"
+  add_next_step "NFS mount points: $mount_point_list"
 }
