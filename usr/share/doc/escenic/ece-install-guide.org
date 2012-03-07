@@ -27,7 +27,7 @@ will tell you which ones it cannot find and tell you to install these,
 so you can simply run it to find out which ones you need.
 
 You may also look inside the ece-install script for all calls to the
-'assert\_pre\_prequesite' method and you'll get a list of the binaries
+'assert_pre_prequesite' method and you'll get a list of the binaries
 ece-install assumes are present.
 
 ** Tested Operating Systems
@@ -153,7 +153,7 @@ any Escenic server components.
 *** Sun Java 6
 *** Apache Tomcat application server
 - Compression of textual content (previously, this was typically set
-  up with Apache and its mod\_deflate module).
+  up with Apache and its mod_deflate module).
 - pooling set up tweaked for high read/write performance.
 - proper logging configuration directing solr messages to its own log.
 - routing information in the cookies
@@ -172,7 +172,7 @@ may be removed after the installation if you want to.
 *** Compression of content 
 This was was previously accomplished by having a web server in fron t
 of the application server (or cache server if you used ESI). A typical
-system architecture would contain Apache with mod\_deflate. However,
+system architecture would contain Apache with mod_deflate. However,
 this is no longer necessary as Varnish can handles ESI parsing of
 compressed content (and many other things that we before needed Apache
 for). Thus, we'll let the application server do the compression for us
@@ -350,12 +350,12 @@ restore from:
 |----------------------------------+---------+------------------------------------------------|
 | Parameter                        | Default | Description                                    |
 |----------------------------------+---------+------------------------------------------------|
-| fai\_restore\_all                |       0 | Restore everything found in the backup file    |
-| fai\_restore\_db                 |       0 | Install the DB server & restore its contents   |
-| fai\_restore\_data\_files        |       0 | Restore the Solr & ECE data files              |
-| fai\_restore\_configuration      |       0 | Restore the Solr & ECE configuration files     |
-| fai\_restore\_software\_binaries |       0 | Restore the Escenic and Apache Tomcat software |
-| fai\_restore\_from\_file         |      "" | The .tar.gz produced by "ece -i <instance> backup" |
+| fai_restore_all                |       0 | Restore everything found in the backup file    |
+| fai_restore_db                 |       0 | Install the DB server & restore its contents   |
+| fai_restore_data_files        |       0 | Restore the Solr & ECE data files              |
+| fai_restore_configuration      |       0 | Restore the Solr & ECE configuration files     |
+| fai_restore_software_binaries |       0 | Restore the Escenic and Apache Tomcat software |
+| fai_restore_from_file         |      "" | The .tar.gz produced by "ece -i <instance> backup" |
 |----------------------------------+---------+------------------------------------------------|
 
 For example, to restore everything possible from a given tarball, you
@@ -513,7 +513,7 @@ add entries for these domains in the machine's /etc/hosts:
 #+END_SRC
 
 If you do not want ece-install to touch your /etc/hosts, you can set
-fai\_keep\_off\_etc\_hosts=1 in your ece-install.conf
+fai_keep_off_etc_hosts=1 in your ece-install.conf
 
 ** Overview of All FAI Parameters
 The ece-install script understands for the following settings in the
@@ -522,58 +522,58 @@ $HOME/ece-install.conf file of the root user:
 |-----------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------|
 | Parameter                               | Default                                           | Description                                                                                                                           |
 |-----------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------|
-| fai\_all\_install                       | 0                                                 | Install all components on your server.                                                                                                |
-| fai\_analysis\_db\_host                 | localhost                                         | For the EAE DB (different from ECE's)                                                                                                 |
-| fai\_analysis\_db\_install                    | 0                                                 | Install db profile                                                                                                                    |
-| fai\_analysis\_db\_password             | read-the-source-luke                              | For the EAE DB (different from ECE's)                                                                                                 |
-| fai\_analysis\_db\_port                 | 3306                                              | For the EAE DB (different from ECE's)                                                                                                 |
-| fai\_analysis\_db\_schema               | ece5db                                            | For the EAE DB (different from ECE's)                                                                                                                                      |
-| fai\_analysis\_db\_user                 | ece5user                                          | For the EAE DB (different from ECE's)                                                                                                 |
-| fai\_analysis\_name                     | analysis1                                         | EAE instance name                                                                                                                     |
-| fai\_analysis\_port                     | 8080                                              | Port of the EAE                                                                                                                       |
-| fai\_analysis\_shutdown                 | 8005                                              | Shutdown port for the EAE app server                                                                                                  |
-| fai\_cache\_backends                    | ${HOSTNAME}:8080                                  | Space separated, e.g. "app1:8080 app2:8080"                                                                                           |
-| fai\_cache\_install                     | 0                                                 | Install cache server profile                                                                                                          |
-| fai\_db\_drop\_old\_db\_first           | 0                                                 | Warning: this will drop the old database before installing a new one                                                                  |
-| fai\_db\_host                           | $HOSTNAME                                         | Useful for editor & presentation profiles                                                                                             |
-| fai\_db\_install                        | 0                                                 | Install db profile                                                                                                                    |
-| fai\_db\_password                       | read-the-source-luke                              | Useful for DB installation profile                                                                                                    |
-| fai\_db\_port                           | 3306                                              | Useful for editor & presentation profiles                                                                                             |
-| fai\_db\_schema                         | ece5db                                            | Useful for DB installation profile                                                                                                    |
-| fai\_db\_user                           | ece5user                                          | Useful for DB installation profile                                                                                                    |
-| fai\_editor\_conf\_archive              | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
-| fai\_editor\_ear                        | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
-| fai\_editor\_install                    | 0                                                 | Install the editorial profile                                                                                                         |
-| fai\_editor\_name                       | editor1                                           | Name of the editor instance                                                                                                           |
-| fai\_editor\_port                       | 8080                                              | HTTP port of the editor instance                                                                                                      |
-| fai\_editor\_shutdown                   | 8005                                              | Shutdown port of the editor instance                                                                                                  |
-| fai\_enabled                            | 0                                                 | Whether or not to run ece-install in FAI mode                                                                                         |
-| fai\_keep\_off\_etc\_hosts              | 0                                                 | Set this to 1 if you don't want ece-install adding entries to /etc/hosts                                                              |
-| fai\_monitoring\_server\_install        | 0                                                 | Install the monitoring server profile.                                                                                                |
-| fai\_monitoring\_server\_ip             | 127.0.0.1                                         | The IP of the monitoring server.                                                                                                      |
-| fai\_presentation\_conf\_archive        | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
-| fai\_presentation\_ear                  | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
-| fai\_presentation\_install              | 0                                                 | Install the presentation server profile                                                                                               |
-| fai\_presentation\_name                 | web1                                              | Name of the presentation server instance                                                                                              |
-| fai\_presentation\_port                 | 8080                                              | HTTP port of the presentation server instance                                                                                         |
-| fai\_presentation\_shutdown             | 8005                                              | Shutdown port of the presentation instance                                                                                            |
-| fai\_public\_host\_name                 | ${HOSTNAME}:8080                                  | The public address for your website                                                                                                   |
-| fai\_publication\_create                | 0                                                 | Create a new publication                                                                                                              |
-| fai\_publication\_domain\_mapping\_list | ""                                                | Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com"                          |
-| fai\_publication\_name                  | mypub                                             | Name of the publication                                                                                                               |
-| fai\_publication\_use\_instance         | dev1                                              | Name of local instance to use for creation                                                                                            |
-| fai\_publication\_war                   | "WF or ECE demo WAR"                              | WAR to base the new publication on                                                                                                    |
-| fai\_publication\_war\_uri\_list        | ""                                                | Publication WARs used for setting up Assembly tool. Supported: http[s]://tmp.com/mypub.war, file:///tmp/mypub.war and /tmp/mypub.war. |
-| fai\_rmi\_install                       | 0                                                 | Install RMI hub profile                                                                                                               |
-| fai\_search\_conf\_archive              | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
-| fai\_search\_ear                        | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
-| fai\_search\_for\_editor                | 0                                                 | If 1 (true), will configure Solr for use with an editorial server, if not conf for presentation servers will be chosen.               |
-| fai\_search\_indexer\_ws\_uri           | http://${HOSTNAME}:8080/indexer-webservice/index/ | URI of the indexer-webservice that the search instance shall use for knowing what to index.                                           |
-| fai\_search\_install                    | 0                                                 | Install the search server profile (Solr + indexer)                                                                                    |
-| fai\_search\_name                       | search1                                           | Name of the search instance                                                                                                           |
-| fai\_search\_port                       | 8080                                              | HTTP port of the search instance                                                                                                      |
-| fai\_search\_shutdown                   | 8005                                              | Shutdown port of the search instance                                                                                                  |
-| fai\_wf\_install                        | 0                                                 | Install Widget Framework profile                                                                                                      |
+| fai_all_install                       | 0                                                 | Install all components on your server.                                                                                                |
+| fai_analysis_db_host                 | localhost                                         | For the EAE DB (different from ECE's)                                                                                                 |
+| fai_analysis_db_install                    | 0                                                 | Install db profile                                                                                                                    |
+| fai_analysis_db_password             | read-the-source-luke                              | For the EAE DB (different from ECE's)                                                                                                 |
+| fai_analysis_db_port                 | 3306                                              | For the EAE DB (different from ECE's)                                                                                                 |
+| fai_analysis_db_schema               | ece5db                                            | For the EAE DB (different from ECE's)                                                                                                                                      |
+| fai_analysis_db_user                 | ece5user                                          | For the EAE DB (different from ECE's)                                                                                                 |
+| fai_analysis_name                     | analysis1                                         | EAE instance name                                                                                                                     |
+| fai_analysis_port                     | 8080                                              | Port of the EAE                                                                                                                       |
+| fai_analysis_shutdown                 | 8005                                              | Shutdown port for the EAE app server                                                                                                  |
+| fai_cache_backends                    | ${HOSTNAME}:8080                                  | Space separated, e.g. "app1:8080 app2:8080"                                                                                           |
+| fai_cache_install                     | 0                                                 | Install cache server profile                                                                                                          |
+| fai_db_drop_old_db_first           | 0                                                 | Warning: this will drop the old database before installing a new one                                                                  |
+| fai_db_host                           | $HOSTNAME                                         | Useful for editor & presentation profiles                                                                                             |
+| fai_db_install                        | 0                                                 | Install db profile                                                                                                                    |
+| fai_db_password                       | read-the-source-luke                              | Useful for DB installation profile                                                                                                    |
+| fai_db_port                           | 3306                                              | Useful for editor & presentation profiles                                                                                             |
+| fai_db_schema                         | ece5db                                            | Useful for DB installation profile                                                                                                    |
+| fai_db_user                           | ece5user                                          | Useful for DB installation profile                                                                                                    |
+| fai_editor_conf_archive              | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
+| fai_editor_ear                        | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
+| fai_editor_install                    | 0                                                 | Install the editorial profile                                                                                                         |
+| fai_editor_name                       | editor1                                           | Name of the editor instance                                                                                                           |
+| fai_editor_port                       | 8080                                              | HTTP port of the editor instance                                                                                                      |
+| fai_editor_shutdown                   | 8005                                              | Shutdown port of the editor instance                                                                                                  |
+| fai_enabled                            | 0                                                 | Whether or not to run ece-install in FAI mode                                                                                         |
+| fai_keep_off_etc_hosts              | 0                                                 | Set this to 1 if you don't want ece-install adding entries to /etc/hosts                                                              |
+| fai_monitoring_server_install        | 0                                                 | Install the monitoring server profile.                                                                                                |
+| fai_monitoring_server_ip             | 127.0.0.1                                         | The IP of the monitoring server.                                                                                                      |
+| fai_presentation_conf_archive        | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
+| fai_presentation_ear                  | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
+| fai_presentation_install              | 0                                                 | Install the presentation server profile                                                                                               |
+| fai_presentation_name                 | web1                                              | Name of the presentation server instance                                                                                              |
+| fai_presentation_port                 | 8080                                              | HTTP port of the presentation server instance                                                                                         |
+| fai_presentation_shutdown             | 8005                                              | Shutdown port of the presentation instance                                                                                            |
+| fai_public_host_name                 | ${HOSTNAME}:8080                                  | The public address for your website                                                                                                   |
+| fai_publication_create                | 0                                                 | Create a new publication                                                                                                              |
+| fai_publication_domain_mapping_list | ""                                                | Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com"                          |
+| fai_publication_name                  | mypub                                             | Name of the publication                                                                                                               |
+| fai_publication_use_instance         | dev1                                              | Name of local instance to use for creation                                                                                            |
+| fai_publication_war                   | "WF or ECE demo WAR"                              | WAR to base the new publication on                                                                                                    |
+| fai_publication_war_uri_list        | ""                                                | Publication WARs used for setting up Assembly tool. Supported: http[s]://tmp.com/mypub.war, file:///tmp/mypub.war and /tmp/mypub.war. |
+| fai_rmi_install                       | 0                                                 | Install RMI hub profile                                                                                                               |
+| fai_search_conf_archive              | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
+| fai_search_ear                        | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
+| fai_search_for_editor                | 0                                                 | If 1 (true), will configure Solr for use with an editorial server, if not conf for presentation servers will be chosen.               |
+| fai_search_indexer_ws_uri           | http://${HOSTNAME}:8080/indexer-webservice/index/ | URI of the indexer-webservice that the search instance shall use for knowing what to index.                                           |
+| fai_search_install                    | 0                                                 | Install the search server profile (Solr + indexer)                                                                                    |
+| fai_search_name                       | search1                                           | Name of the search instance                                                                                                           |
+| fai_search_port                       | 8080                                              | HTTP port of the search instance                                                                                                      |
+| fai_search_shutdown                   | 8005                                              | Shutdown port of the search instance                                                                                                  |
+| fai_wf_install                        | 0                                                 | Install Widget Framework profile                                                                                                      |
 |-----------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------|
 #+TBLFM: $2=http://$fai_editor_name:$fai_editor_port/indexer-webservice/index/                   0
 
@@ -651,9 +651,9 @@ folder, and only download the missing ones (if any).
 To get a list of the artifacts it'll pull from
 http://technet.escenic.com and http://tomcat.apache.org search for the
 following variables:
-- technet\_download\_list
-- wf\_download\_list
-- tomcat\_download
+- technet_download_list
+- wf_download_list
+- tomcat_download
 
 Two other ways of speeding up the installation is (of course) to use
 the backup/restore feature or install from a EAR and configuration
@@ -689,8 +689,8 @@ but these should be the most interesting ones.
 | /opt/escenic/assemblytool                   | The assembly tool                                                |
 | /opt/escenic/assemblytool/plugins           | Contains symlinks to all plugins in /opt/escenic                 |
 | /opt/escenic/engine                         | Symlink pointing to the current ECE                              |
-| /opt/tomcat                                 | Symlink pointing to the install Apache Tomcat (catalina\_home)   |
-| /opt/tomcat-<instance>                      | Instance specific Tomcat files (catalina\_base)                  |
+| /opt/tomcat                                 | Symlink pointing to the install Apache Tomcat (catalina_home)   |
+| /opt/tomcat-<instance>                      | Instance specific Tomcat files (catalina_base)                  |
 | /usr/bin/ece                                | Script for operating all ECE instances + RMI hub and EAE         |
 | /usr/sbin/drop-and-create-ecedb             | DB script used by the ece-install script                         |
 | /usr/sbin/ece-install                       | The installation script described in this guide                  |
@@ -788,7 +788,7 @@ host. However, this may be useful if you're installing a clean
 environment and want to e.g. undo your previous install to install a
 different profile.
 
-Open the ece-install script and look for the "un\_install\_ece"
+Open the ece-install script and look for the "un_install_ece"
 function, it has copy and pastable commands for undoing most/all
 things set up by the script.
 
