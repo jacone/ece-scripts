@@ -6,11 +6,17 @@ function get_nfs_configuration() {
   nfs_export_list=${fai_nfs_export_list-$default_nfs_export_list}
   nfs_server_address=${fai_nfs_server_address}
   nfs_allowed_client_network=${fai_nfs_allowed_client_network}
+
+  ensure_variable_is_set fai_nfs_server_address
+
+  if [ $install_profile_number -eq $PROFILE_NFS_SERVER ]; then
+    fai_nfs_allowed_client_network
+  fi
 }
 
 
 function install_nfs_server() {
-  print "Installing an NFS server on $HOSTNAME ..."
+  print_and_log "Installing an NFS server on $HOSTNAME ..."
   install_packages_if_missing "portmap nfs-kernel-server nfs-common"
   get_nfs_configuration
   
@@ -35,23 +41,24 @@ EOF
 }
 
 function install_nfs_client() {
-  print "Installing an NFS client on $HOSTNAME ..."
+  print_and_log "Installing an NFS client on $HOSTNAME ..."
   
   install_packages_if_missing "nfs-common"
   get_nfs_configuration
 
   local mount_point_list=""
+  local file=/etc/fstab
   
   for el in $nfs_export_list; do
     local entry="${nfs_server_address}:$el /mnt/$(basename $0) nfs defaults 0 0"
-    if [ $(grep "$entry" /etc/exports | wc -l) -lt 1 ]; then
-      cat >> /etc/fstab <<EOF
+    if [ $(grep "$entry" $file | wc -l) -lt 1 ]; then
+      cat >> $file <<EOF
 # added by $(basename $el) @ $(date)
-${nfs_server_address}:$el /mnt/$(basename $0) nfs defaults 0 0
+${nfs_server_address}:$el /mnt/$(basename $el) nfs defaults 0 0
 EOF
     fi
 
-    local mount_point=/mnt/${basename $el}
+    local mount_point=/mnt/$(basename $el)
     make_dir $mount_point
     run mount $mount_point
     mount_point_list="$mount_point $mount_point_list"
