@@ -773,11 +773,14 @@ set_up_solr.postinst
 #+END_SRC
 
 * Assumptions
-** /etc/esecenic is shared
-It's assumed that the /etc/escenic directory is either on a shared
-file system or rsync-ed among the hosts that are running the ECE
-instances (the exception being database and cache servers).
- 
+** The machine on which ece-install has enough RAM
+It is assumed that the machine on which ece-install has enough RAM to
+install the profiles the user asks for.
+
+A common error by users, is to run ece-install in a (virtual) machine
+that has e.g. only 1GB RAM. For happy running, we recommend having a
+machine with at least 3GB when installing a full ECE stack on it.
+
 * Uninstalling Everything That the ece-install Set Up
 WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
