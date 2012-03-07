@@ -5,6 +5,7 @@ default_nfs_export_list="/exports/multimedia"
 function get_nfs_configuration() {
   nfs_export_list=${fai_nfs_export_list-$default_nfs_export_list}
   nfs_server_address=${fai_nfs_server_address}
+  nfs_allowed_network=${fai_nfs_allowed_client_network}
 }
 
 
@@ -15,7 +16,7 @@ function install_nfs_server() {
   
   for el in $nfs_export_list; do
     cat >> /etc/exports <<EOF
-$el ${nfs_allowed_network}(rw,sync)
+$el ${nfs_allowed_client_network}(rw,sync)
 EOF
 
     make_dir $el
