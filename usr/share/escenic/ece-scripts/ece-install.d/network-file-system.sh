@@ -21,10 +21,12 @@ function install_nfs_server() {
   print_and_log "Installing an NFS server on $HOSTNAME ..."
   install_packages_if_missing "portmap nfs-kernel-server nfs-common"
   get_nfs_configuration
-  
+
+  local i=1
   for el in $nfs_export_list; do
     # using no_subtree_check and async to speed up transfers.
-    local entry="$el ${nfs_allowed_client_network}(rw,no_subtree_check,async)"
+    local nfs_opts="(rw,no_subtree_check,sync,fsid=$i)"
+    local entry="$el ${nfs_allowed_client_network}${nfs_opts}"
     if [ $(grep "$entry" /etc/exports 2>/dev/null | wc -l) -lt 1 ]; then
       cat >> /etc/exports <<EOF
 # added by $(basename $0) @ $(date)
@@ -34,6 +36,7 @@ EOF
     
     make_dir $el
     run chown ${ece_user}:${ece_group} $el
+    i=$(( $i + 1 ))
   done
 
 
