@@ -179,3 +179,25 @@ function get_base_dir_from_bundle()
     echo $file_name
 }
 
+## Will assert that all the passed variable names are set, if not, it
+## will exit in error.
+## 
+## $@ : a list of variable names
+##
+## Requires $conf_file to be set.
+function ensure_variable_is_set() {
+  local requirements_failed=0
+  
+  for el in $@; do
+    if [ -n "$(eval echo $`echo $el`)" ]; then
+      continue
+    fi
+    
+    print "You need to specifiy '$el' in your $conf_file"
+    requirements_failed=1
+  done
+  
+  if [ $requirements_failed -eq 1 ]; then
+    remove_pid_and_exit_in_error
+  fi
+}
