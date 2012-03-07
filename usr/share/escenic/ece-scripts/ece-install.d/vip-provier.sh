@@ -14,6 +14,11 @@ function get_vip_configuration() {
   vip_primary_node_ip=${fai_vip_primary_node_ip}
   vip_secondary_node_name=${fai_vip_secondary_node_name}
   vip_secondary_node_ip=${fai_vip_secondary_node_ip}
+
+  # only useful when installing the secondary node (from its
+  # /etc/ha.d/authkeys), looks something like:
+  # e19f39c09e9affafc23fc5bcd0404186
+  vip_primary_node_auth_key=${fai_vip_primary_node_auth_key}
 }
 
 function install_vip_provider() {
@@ -25,7 +30,6 @@ function install_vip_provider() {
   create_ha_auth_keys
   set_up_ha_conf
   set_up_ha_resources
-  propagate_ha_settings
 
   print_and_log "Restarting hearbeat to activate new configuration ..."
   run /etc/init.d/heartbeat restart
@@ -37,7 +41,7 @@ function install_vip_provider() {
 function set_kernel_vip_parameters() {
   local file=/etc/sysctl.conf
   local entry="net.ipv4.ip_nonlocal_bind=1"
-  if [ $(grep "$entry" $file | wc -l) -gt 0 ]; then
+  if [ $(grep "$entry" $file 2>/dev/null | wc -l) -gt 0 ]; then
     return
   fi
   
@@ -53,15 +57,11 @@ EOF
   # print "Making sure the kernel parameters are loaded at boot time"
 }
 
-function propagate_ha_settings() {
-  run /usr/share/heartbeat/ha_propagate
-}
-
 function set_up_ha_resources() {
   local file=/etc/ha.d/haresources
   local entry="$vip_primary_node_name $vip_address $vip_service_list"
 
-  if [ $(grep "$entry" $file | wc -l) -lt 1 ]; then
+  if [ $(grep "$entry" $file 2>/dev/null | wc -l) -lt 1 ]; then
     cat > $file <<EOF
 # <primary node> <virtual IP (VIP)>
 $entry
@@ -76,17 +76,14 @@ function assure_vip_hosts_are_resolvable() {
   fi
 
   local file=/etc/hosts
-  local entry="$vip_primary_node_name $vip_primary_node_ip"
-  if [ $(grep "$entry" $file | wc -l) -lt 1 ]; then
-    cat >> $file <<EOF
 
-# added by $(basename $0) @ $(date)
-$entry
-EOF
+  if [[ $(uname -n) == "$vip_primary_node_name" ]]; then
+    local entry="$vip_secondary_node_ip $vip_secondary_node_name"
+  else
+    local entry="$vip_primary_node_ip $vip_primary_node_name"
   fi
-
-  entry="$vip_secondary_node_name $vip_secondary_node_ip"
-  if [ $(grep "$entry" $file | wc -l) -lt 1 ]; then
+    
+  if [ $(grep "$entry" $file 2>/dev/null | wc -l) -lt 1 ]; then
     cat >> $file <<EOF
 
 # added by $(basename $0) @ $(date)
@@ -107,9 +104,14 @@ debugfile ${vip_log_file}
 
 ###############################
 # communication
+
+# do not use discovery, instead insist on explicit listing of nodes
+# (see below)
 autojoin none
+
 udpport 694
 auto_failback on
+
 # the other node                                                               
 ucast $vip_interface $vip_sibling_ip
 bcast $vip_interface
@@ -132,8 +134,18 @@ function create_ha_auth_keys() {
   local file=/etc/ha.d/authkeys
   print_and_log "Creating HA/heartbeat keys in $file ..."
 
-  (echo -ne "auth 1\n1 sha1 "; \
-    dd if=/dev/urandom bs=512 count=1 | openssl md5) \
-    > $file
+  echo -ne "auth 1\n1 sha1 " > $file
+  
+  if [ -n "${vip_primary_node_auth_key}" ]; then
+    echo "${vip_primary_node_auth_key}" >> $file
+  else
+    # the cut -d' ' -f2 is because 1.0.0e produces "(stdin)=" in front
+    # of the output, something which the old, 0.9.8o didn't do.
+    dd if=/dev/urandom bs=512 count=1 2>> $log | \
+      openssl md5 | \
+      cut -d' ' -f2 \
+      >> $file
+  fi
+  
   run chmod 0600 $file
 }
