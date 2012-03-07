@@ -4,7 +4,7 @@ default_nfs_export_list="/exports/multimedia"
 
 function get_nfs_configuration() {
   nfs_export_list=${fai_nfs_export_list-$default_nfs_export_list}
-  nfs_server=${fai_nfs_server}
+  nfs_server_address=${fai_nfs_server_address}
 }
 
 
@@ -38,7 +38,7 @@ function install_nfs_client() {
 
     cat >> /etc/fstab <<EOF
 # added by $(basename $el) @ $(date)
-${nfs_server}:$el /mnt/$(basename $el) nfs defaults 0 0
+${nfs_server_address}:$el /mnt/$(basename $el) nfs defaults 0 0
 EOF
 
     run mount /mnt/$(basename $el)

@@ -1124,6 +1124,24 @@ if [ $fai_enabled -eq 1 ]; then
         no_fai_profile=0
     fi
     
+    if [ $(get_boolean_conf_value fai_vip_install) -eq 1 ]; then
+      install_profile_number=$PROFILE_VIP_PROVIDER
+      install_vip_provider
+      no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_nfs_server_install) -eq 1 ]; then
+      install_profile_number=$PROFILE_NFS_SERVER
+      install_nfs_server
+      no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_nfs_client_install) -eq 1 ]; then
+      install_profile_number=$PROFILE_NFS_CLIENT
+      install_nfs_client
+      no_fai_profile=0
+    fi
+    
     if [ $no_fai_profile -eq 1 ]; then
         print_and_log "No install profile selected, be sure to have one of the "
         print_and_log "fai_<profile>_install=1 in your $conf_file"
@@ -1170,6 +1188,9 @@ else
             ;;
         $PROFILE_RESTORE_FROM_BACKUP)
             restore_from_backup
+            ;;
+        $PROFILE_VIP_PROVIDER)
+            install_vip_provider
             ;;
         *)
             print "Invalid profile number $install_profile_number, must be 1-11"
