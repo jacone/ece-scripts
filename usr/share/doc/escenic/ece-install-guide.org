@@ -365,7 +365,7 @@ add this to ece-install.conf when installing the secondary
 node. Generate this key, do:
 
 #+BEGIN_SRC sh
-$ dd if=/dev/urandom bs=512 count=1 2>> $log | \
+$ dd if=/dev/urandom bs=512 count=1 | \
     openssl md5 | \
     cut -d' ' -f2   
 #+END_SRC
