@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="title" content="Welcome to the /usr/sbin/ece-install Guide"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2012-02-28 18:55:47 CST"/>
+<meta name="generated" content="2012-03-08 15:10:00 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -253,26 +253,29 @@ div.note {
 <li><a href="#sec-5-2-7">5.2.7 Compression of content</a></li>
 </ul>
 </li>
-<li><a href="#sec-5-3">5.3 Profile - Full Stack on One Host</a></li>
-<li><a href="#sec-5-4">5.4 Profile - Editorial Server (Publication Server)</a></li>
-<li><a href="#sec-5-5">5.5 Profile - Presentation Server</a></li>
-<li><a href="#sec-5-6">5.6 Profile - Database Server</a></li>
-<li><a href="#sec-5-7">5.7 Profile - Cache Server</a></li>
-<li><a href="#sec-5-8">5.8 Profile - Install Widget Framework</a></li>
-<li><a href="#sec-5-9">5.9 Profile - Create Publication</a></li>
-<li><a href="#sec-5-10">5.10 Profile - Monitoring Server</a></li>
-<li><a href="#sec-5-11">5.11 Profile - Restoring from backup</a></li>
-<li><a href="#sec-5-12">5.12 Profile - Analysis Server</a></li>
-<li><a href="#sec-5-13">5.13 Running interactively</a>
+<li><a href="#sec-5-3">5.3 Profile :: Full Stack on One Host</a></li>
+<li><a href="#sec-5-4">5.4 Profile :: Editorial Server (Publication Server)</a></li>
+<li><a href="#sec-5-5">5.5 Profile :: Presentation Server</a></li>
+<li><a href="#sec-5-6">5.6 Profile :: Database Server</a></li>
+<li><a href="#sec-5-7">5.7 Profile :: Cache Server</a></li>
+<li><a href="#sec-5-8">5.8 Profile :: Install Widget Framework</a></li>
+<li><a href="#sec-5-9">5.9 Profile :: Create Publication</a></li>
+<li><a href="#sec-5-10">5.10 Profile :: Monitoring Server</a></li>
+<li><a href="#sec-5-11">5.11 Profile :: Restoring from backup</a></li>
+<li><a href="#sec-5-12">5.12 Profile :: Analysis Server</a></li>
+<li><a href="#sec-5-13">5.13 Profile :: NFS server</a></li>
+<li><a href="#sec-5-14">5.14 Profile :: NFS client</a></li>
+<li><a href="#sec-5-15">5.15 Profile :: VIP provider</a></li>
+<li><a href="#sec-5-16">5.16 Running interactively</a>
 <ul>
-<li><a href="#sec-5-13-1">5.13.1 Start ece-install and choose the Option, "Restore from backup"</a></li>
-<li><a href="#sec-5-13-2">5.13.2 Select Which Backup to Restore</a></li>
-<li><a href="#sec-5-13-3">5.13.3 Choose What to Restore</a></li>
-<li><a href="#sec-5-13-4">5.13.4 Sit Back and Watch ece-install Restore the Data for You</a></li>
+<li><a href="#sec-5-16-1">5.16.1 Start ece-install and choose the Option, "Restore from backup"</a></li>
+<li><a href="#sec-5-16-2">5.16.2 Select Which Backup to Restore</a></li>
+<li><a href="#sec-5-16-3">5.16.3 Choose What to Restore</a></li>
+<li><a href="#sec-5-16-4">5.16.4 Sit Back and Watch ece-install Restore the Data for You</a></li>
 </ul>
 </li>
-<li><a href="#sec-5-14">5.14 Running in FAI mode</a></li>
-<li><a href="#sec-5-15">5.15 Data security</a></li>
+<li><a href="#sec-5-17">5.17 Running in FAI mode</a></li>
+<li><a href="#sec-5-18">5.18 Data security</a></li>
 </ul>
 </li>
 <li><a href="#sec-6">6 Full Automatic Install (FAI)</a>
@@ -303,7 +306,7 @@ div.note {
 </li>
 <li><a href="#sec-13">13 Assumptions</a>
 <ul>
-<li><a href="#sec-13-1">13.1 /etc/esecenic is shared</a></li>
+<li><a href="#sec-13-1">13.1 The machine on which ece-install has enough RAM</a></li>
 </ul>
 </li>
 <li><a href="#sec-14">14 Uninstalling Everything That the ece-install Set Up</a></li>
@@ -363,7 +366,7 @@ so you can simply run it to find out which ones you need.
 </p>
 <p>
 You may also look inside the ece-install script for all calls to the
-'assert_pre_prequesite' method and you'll get a list of the binaries
+'assert<sub>pre</sub><sub>prequesite'</sub> method and you'll get a list of the binaries
 ece-install assumes are present.
 </p>
 </div>
@@ -385,7 +388,7 @@ ece-install assumes are present.
 <tr><td class="left">Debian 6.0 (squeeze)</td><td class="left">Everything is 100% automatic</td><td class="left">2012-02-27 13:18</td></tr>
 <tr><td class="left">Ubuntu LTS 10.04</td><td class="left">Everything except Tomcat/APR wrappers are automatic</td><td class="left">2012-02-27 13:19</td></tr>
 <tr><td class="left">Ubuntu 11.10</td><td class="left">Everything except Tomcat/APR wrappers are automatic</td><td class="left">2012-02-27 13:19</td></tr>
-<tr><td class="left">CentOS 6.2</td><td class="left">APR &amp; monitoring are not automatic</td><td class="left">2012-02-28 12:37</td></tr>
+<tr><td class="left">CentOS 6.2</td><td class="left">HA, APR &amp; monitoring are not automatic</td><td class="left">2012-03-07 13:42</td></tr>
 </tbody>
 </table>
 
@@ -419,7 +422,7 @@ or be downloaded together with the other ece-scripts using git:
 </p>
 
 
-<pre class="src src-conf"><span style="color: #f0dfaf;">$ git clone git@github.com</span>:skybert/ece-scripts.git
+<pre class="src src-conf"><span style="color: #f0dfaf;">$ git clone https</span>://github.com/skybert/ece-scripts.git
 </pre>
 
 
@@ -504,10 +507,14 @@ With the configuration file in place, you're now ready to run it:
 </p>
 
 
-<pre class="src src-conf"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash ece-install [-v|--verbose]</span>
+<pre class="src src-conf"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">bash ece-install [-v|--verbose|&lt;-f|--file&gt; &lt;conf-file&gt;]</span>
 </pre>
 
 
+<p>
+It will output everything from internal and external commands to its
+log file located at /var/log/ece-install.log.
+</p>
 <p>
 ece-install will try to "fail fast", exiting as soon as it detects an
 error during its execution:
@@ -602,7 +609,7 @@ any Escenic server components.
 
 <ul>
 <li>Compression of textual content (previously, this was typically set
-  up with Apache and its mod_deflate module).
+  up with Apache and its mod<sub>deflate</sub> module).
 </li>
 <li>pooling set up tweaked for high read/write performance.
 </li>
@@ -663,7 +670,7 @@ may be removed after the installation if you want to.
 
 <p>This was was previously accomplished by having a web server in fron t
 of the application server (or cache server if you used ESI). A typical
-system architecture would contain Apache with mod_deflate. However,
+system architecture would contain Apache with mod<sub>deflate</sub>. However,
 this is no longer necessary as Varnish can handles ESI parsing of
 compressed content (and many other things that we before needed Apache
 for). Thus, we'll let the application server do the compression for us
@@ -675,7 +682,7 @@ now.
 </div>
 
 <div id="outline-container-5-3" class="outline-3">
-<h3 id="sec-5-3"><span class="section-number-3">5.3</span> Profile - Full Stack on One Host</h3>
+<h3 id="sec-5-3"><span class="section-number-3">5.3</span> Profile :: Full Stack on One Host</h3>
 <div class="outline-text-3" id="text-5-3">
 
 <p>This profile is suitable for developers and admins wanting to set up a
@@ -693,7 +700,7 @@ the different profile descriptions bellow.
 </div>
 
 <div id="outline-container-5-4" class="outline-3">
-<h3 id="sec-5-4"><span class="section-number-3">5.4</span> Profile - Editorial Server (Publication Server)</h3>
+<h3 id="sec-5-4"><span class="section-number-3">5.4</span> Profile :: Editorial Server (Publication Server)</h3>
 <div class="outline-text-3" id="text-5-4">
 
 <p>Will set up a typical editorial server (often referred to as the
@@ -704,7 +711,7 @@ publication server in Escenic literature).
 </div>
 
 <div id="outline-container-5-5" class="outline-3">
-<h3 id="sec-5-5"><span class="section-number-3">5.5</span> Profile - Presentation Server</h3>
+<h3 id="sec-5-5"><span class="section-number-3">5.5</span> Profile :: Presentation Server</h3>
 <div class="outline-text-3" id="text-5-5">
 
 <p>This will set up a typical presentation server:
@@ -722,7 +729,7 @@ publication server in Escenic literature).
 </div>
 
 <div id="outline-container-5-6" class="outline-3">
-<h3 id="sec-5-6"><span class="section-number-3">5.6</span> Profile - Database Server</h3>
+<h3 id="sec-5-6"><span class="section-number-3">5.6</span> Profile :: Database Server</h3>
 <div class="outline-text-3" id="text-5-6">
 
 <p>If ece-install is run on a support version of Debian or Ubuntu, this
@@ -756,7 +763,7 @@ The script will fail by itself if the DB already exists:
 </div>
 
 <div id="outline-container-5-7" class="outline-3">
-<h3 id="sec-5-7"><span class="section-number-3">5.7</span> Profile - Cache Server</h3>
+<h3 id="sec-5-7"><span class="section-number-3">5.7</span> Profile :: Cache Server</h3>
 <div class="outline-text-3" id="text-5-7">
 
 <p>If ece-install is run on a support version of Debian or Ubuntu, it
@@ -817,7 +824,7 @@ TBD:
 </div>
 
 <div id="outline-container-5-8" class="outline-3">
-<h3 id="sec-5-8"><span class="section-number-3">5.8</span> Profile - Install Widget Framework</h3>
+<h3 id="sec-5-8"><span class="section-number-3">5.8</span> Profile :: Install Widget Framework</h3>
 <div class="outline-text-3" id="text-5-8">
 
 <p>You'll need a user name and password for accessing the
@@ -840,7 +847,7 @@ complain:
 </div>
 
 <div id="outline-container-5-9" class="outline-3">
-<h3 id="sec-5-9"><span class="section-number-3">5.9</span> Profile - Create Publication</h3>
+<h3 id="sec-5-9"><span class="section-number-3">5.9</span> Profile :: Create Publication</h3>
 <div class="outline-text-3" id="text-5-9">
 
 <p>This profile will create a publication for you, only asking you the
@@ -856,7 +863,7 @@ is used as a basis.
 </div>
 
 <div id="outline-container-5-10" class="outline-3">
-<h3 id="sec-5-10"><span class="section-number-3">5.10</span> Profile - Monitoring Server</h3>
+<h3 id="sec-5-10"><span class="section-number-3">5.10</span> Profile :: Monitoring Server</h3>
 <div class="outline-text-3" id="text-5-10">
 
 <p>This will install a Munin gatherer and web server. The latter for
@@ -871,7 +878,7 @@ monitoring the different nodes.
 </div>
 
 <div id="outline-container-5-11" class="outline-3">
-<h3 id="sec-5-11"><span class="section-number-3">5.11</span> Profile - Restoring from backup</h3>
+<h3 id="sec-5-11"><span class="section-number-3">5.11</span> Profile :: Restoring from backup</h3>
 <div class="outline-text-3" id="text-5-11">
 
 <p>ece-install can restore from a backup made by the ece script:
@@ -903,7 +910,7 @@ what's available on the host where it's run):
 </div>
 
 <div id="outline-container-5-12" class="outline-3">
-<h3 id="sec-5-12"><span class="section-number-3">5.12</span> Profile - Analysis Server</h3>
+<h3 id="sec-5-12"><span class="section-number-3">5.12</span> Profile :: Analysis Server</h3>
 <div class="outline-text-3" id="text-5-12">
 
 <p>This profile will install the Escenic Analysis Engine and configure it
@@ -915,15 +922,110 @@ than you use for ECE.
 </div>
 
 <div id="outline-container-5-13" class="outline-3">
-<h3 id="sec-5-13"><span class="section-number-3">5.13</span> Running interactively</h3>
+<h3 id="sec-5-13"><span class="section-number-3">5.13</span> Profile :: NFS server</h3>
 <div class="outline-text-3" id="text-5-13">
+
+<p>Will install an NFS server.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-5-14" class="outline-3">
+<h3 id="sec-5-14"><span class="section-number-3">5.14</span> Profile :: NFS client</h3>
+<div class="outline-text-3" id="text-5-14">
+
+<p>Will install an NFS client, create all the mountpoints and mount these
+on the host.
+</p>
+</div>
+
+</div>
+
+<div id="outline-container-5-15" class="outline-3">
+<h3 id="sec-5-15"><span class="section-number-3">5.15</span> Profile :: VIP provider</h3>
+<div class="outline-text-3" id="text-5-15">
+
+
+<p>
+This profile will make the host capable of serving a certain virtual
+IP (VIP) for one or more services. This is a useful thing for all
+<a href="http://en.wikipedia.org/wiki/Single_point_of_failure">SPOFs</a> in your architecture, such as the file server or database.
+</p>
+<p>
+You will typically install another profile at the same time as the VIP
+provider. For instance, you will install both an NFS server and a VIP
+provider for that NFS server (and perhaps other services too running
+on the same host).
+</p>
+<p>
+The following ece-install.conf configuration will install an NFS
+server and make it a VIP provider exposing its NFS service. The two
+VIP providers have have the IP addresses 192.168.1.111 and
+192.168.1.112 and both provide the VIP 192.168.1.200
+</p>
+
+
+
+<pre class="src src-sh"><span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">install the NFS server</span>
+<span style="color: #f0dfaf;">fai_enabled</span>=1
+<span style="color: #f0dfaf;">fai_nfs_server_install</span>=1
+<span style="color: #f0dfaf;">fai_nfs_export_list</span>=<span style="color: #ffa07a;">"/var/exports/multimedia"</span>
+<span style="color: #f0dfaf;">fai_nfs_allowed_client_network</span>=<span style="color: #ffa07a;">"192.168.1.0/255.255.255.0"</span>
+
+<span style="color: #7f9f7f; font-style: italic;"># </span><span style="color: #7f9f7f; font-style: italic;">install the VIP provider, primary node</span>
+<span style="color: #f0dfaf;">fai_vip_install</span>=1
+<span style="color: #f0dfaf;">fai_vip_service_list</span>=<span style="color: #ffa07a;">"nfs-kernel-server"</span>
+<span style="color: #f0dfaf;">fai_vip_primary_node_name</span>=ubiquitous
+<span style="color: #f0dfaf;">fai_vip_primary_node_ip</span>=192.168.1.112
+<span style="color: #f0dfaf;">fai_vip_primary_node_auth_key</span>=d41d8cd98f00b204e9800998ecf8427e
+<span style="color: #f0dfaf;">fai_vip_secondary_node_name</span>=ubiquitous-lts
+<span style="color: #f0dfaf;">fai_vip_secondary_node_ip</span>=192.168.1.111
+<span style="color: #f0dfaf;">fai_vip_address</span>=192.168.1.200
+<span style="color: #f0dfaf;">fai_vip_sibling_ip</span>=$<span style="color: #f0dfaf;">fai_vip_secondary_node_ip</span>
+</pre>
+
+
+<p>
+The secondary node, also an NFS VIP provider can have the exact same
+configuration except for having a different sibling:
+</p>
+
+
+
+<pre class="src src-sh"><span style="color: #f0dfaf;">fai_vip_sibling_ip</span>=$<span style="color: #f0dfaf;">fai_vip_primary_node_ip</span>
+</pre>
+
+
+<p>
+Note that the fai<sub>vip</sub><sub>primary</sub><sub>node</sub><sub>auth</sub><sub>key</sub> is optional. If not set,
+ece-install will generate it for you. However, you will then have to
+add this to ece-install.conf when installing the secondary
+node. Generate this key, do:
+</p>
+
+
+
+<pre class="src src-sh">$ dd <span style="color: #f0dfaf;">if</span>=/dev/urandom <span style="color: #f0dfaf;">bs</span>=512 <span style="color: #f0dfaf;">count</span>=1 2&gt;&gt; $<span style="color: #f0dfaf;">log</span> | <span style="color: #ffa07a;">\</span>
+    openssl md5 | <span style="color: #ffa07a;">\</span>
+    cut -d<span style="color: #ffa07a;">' '</span> -f2   
+</pre>
 
 
 </div>
 
-<div id="outline-container-5-13-1" class="outline-4">
-<h4 id="sec-5-13-1"><span class="section-number-4">5.13.1</span> Start ece-install and choose the Option, "Restore from backup"</h4>
-<div class="outline-text-4" id="text-5-13-1">
+</div>
+
+<div id="outline-container-5-16" class="outline-3">
+<h3 id="sec-5-16"><span class="section-number-3">5.16</span> Running interactively</h3>
+<div class="outline-text-3" id="text-5-16">
+
+
+</div>
+
+<div id="outline-container-5-16-1" class="outline-4">
+<h4 id="sec-5-16-1"><span class="section-number-4">5.16.1</span> Start ece-install and choose the Option, "Restore from backup"</h4>
+<div class="outline-text-4" id="text-5-16-1">
 
 
 
@@ -936,9 +1038,9 @@ than you use for ECE.
 
 </div>
 
-<div id="outline-container-5-13-2" class="outline-4">
-<h4 id="sec-5-13-2"><span class="section-number-4">5.13.2</span> Select Which Backup to Restore</h4>
-<div class="outline-text-4" id="text-5-13-2">
+<div id="outline-container-5-16-2" class="outline-4">
+<h4 id="sec-5-16-2"><span class="section-number-4">5.16.2</span> Select Which Backup to Restore</h4>
+<div class="outline-text-4" id="text-5-16-2">
 
 
 
@@ -967,9 +1069,9 @@ and the ece-install script will hence expect to find them here.
 
 </div>
 
-<div id="outline-container-5-13-3" class="outline-4">
-<h4 id="sec-5-13-3"><span class="section-number-4">5.13.3</span> Choose What to Restore</h4>
-<div class="outline-text-4" id="text-5-13-3">
+<div id="outline-container-5-16-3" class="outline-4">
+<h4 id="sec-5-16-3"><span class="section-number-4">5.16.3</span> Choose What to Restore</h4>
+<div class="outline-text-4" id="text-5-16-3">
 
 
 
@@ -987,9 +1089,9 @@ Your choice [1]&gt; 2
 
 </div>
 
-<div id="outline-container-5-13-4" class="outline-4">
-<h4 id="sec-5-13-4"><span class="section-number-4">5.13.4</span> Sit Back and Watch ece-install Restore the Data for You</h4>
-<div class="outline-text-4" id="text-5-13-4">
+<div id="outline-container-5-16-4" class="outline-4">
+<h4 id="sec-5-16-4"><span class="section-number-4">5.16.4</span> Sit Back and Watch ece-install Restore the Data for You</h4>
+<div class="outline-text-4" id="text-5-16-4">
 
 
 
@@ -1007,9 +1109,9 @@ Your choice [1]&gt; 2
 
 </div>
 
-<div id="outline-container-5-14" class="outline-3">
-<h3 id="sec-5-14"><span class="section-number-3">5.14</span> Running in FAI mode</h3>
-<div class="outline-text-3" id="text-5-14">
+<div id="outline-container-5-17" class="outline-3">
+<h3 id="sec-5-17"><span class="section-number-3">5.17</span> Running in FAI mode</h3>
+<div class="outline-text-3" id="text-5-17">
 
 <p>If you're running in FAI mode, you can choose between these settings
 to decide what to restore and where to find the backup file to
@@ -1023,12 +1125,12 @@ restore from:
 <tr><th scope="col" class="left">Parameter</th><th scope="col" class="right">Default</th><th scope="col" class="left">Description</th></tr>
 </thead>
 <tbody>
-<tr><td class="left">fai_restore_all</td><td class="right">0</td><td class="left">Restore everything found in the backup file</td></tr>
-<tr><td class="left">fai_restore_db</td><td class="right">0</td><td class="left">Install the DB server &amp; restore its contents</td></tr>
-<tr><td class="left">fai_restore_data_files</td><td class="right">0</td><td class="left">Restore the Solr &amp; ECE data files</td></tr>
-<tr><td class="left">fai_restore_configuration</td><td class="right">0</td><td class="left">Restore the Solr &amp; ECE configuration files</td></tr>
-<tr><td class="left">fai_restore_software_binaries</td><td class="right">0</td><td class="left">Restore the Escenic and Apache Tomcat software</td></tr>
-<tr><td class="left">fai_restore_from_file</td><td class="right">""</td><td class="left">The .tar.gz produced by "ece -i &lt;instance&gt; backup"</td></tr>
+<tr><td class="left">fai<sub>restore</sub><sub>all</sub></td><td class="right">0</td><td class="left">Restore everything found in the backup file</td></tr>
+<tr><td class="left">fai<sub>restore</sub><sub>db</sub></td><td class="right">0</td><td class="left">Install the DB server &amp; restore its contents</td></tr>
+<tr><td class="left">fai<sub>restore</sub><sub>data</sub><sub>files</sub></td><td class="right">0</td><td class="left">Restore the Solr &amp; ECE data files</td></tr>
+<tr><td class="left">fai<sub>restore</sub><sub>configuration</sub></td><td class="right">0</td><td class="left">Restore the Solr &amp; ECE configuration files</td></tr>
+<tr><td class="left">fai<sub>restore</sub><sub>software</sub><sub>binaries</sub></td><td class="right">0</td><td class="left">Restore the Escenic and Apache Tomcat software</td></tr>
+<tr><td class="left">fai<sub>restore</sub><sub>from</sub><sub>file</sub></td><td class="right">""</td><td class="left">The .tar.gz produced by "ece -i &lt;instance&gt; backup"</td></tr>
 </tbody>
 </table>
 
@@ -1051,9 +1153,9 @@ need this in your ece-install.conf:
 
 </div>
 
-<div id="outline-container-5-15" class="outline-3">
-<h3 id="sec-5-15"><span class="section-number-3">5.15</span> Data security</h3>
-<div class="outline-text-3" id="text-5-15">
+<div id="outline-container-5-18" class="outline-3">
+<h3 id="sec-5-18"><span class="section-number-3">5.18</span> Data security</h3>
+<div class="outline-text-3" id="text-5-18">
 
 <p>You should take heed when running restore, so that you're not
 restoring a system which you didn't want to change (yes, this mishap
@@ -1278,7 +1380,7 @@ add entries for these domains in the machine's /etc/hosts:
 
 <p>
 If you do not want ece-install to touch your /etc/hosts, you can set
-fai_keep_off_etc_hosts=1 in your ece-install.conf
+fai<sub>keep</sub><sub>off</sub><sub>etc</sub><sub>hosts</sub>=1 in your ece-install.conf
 </p>
 </div>
 
@@ -1299,57 +1401,58 @@ $HOME/ece-install.conf file of the root user:
 <tr><th scope="col" class="left">Parameter</th><th scope="col" class="left">Default</th><th scope="col" class="left">Description</th></tr>
 </thead>
 <tbody>
-<tr><td class="left">fai_all_install</td><td class="left">0</td><td class="left">Install all components on your server.</td></tr>
-<tr><td class="left">fai_analysis_db_port</td><td class="left">3306</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
-<tr><td class="left">fai_analysis_db_host</td><td class="left">localhost</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
-<tr><td class="left">fai_analysis_db_user</td><td class="left">ece5user</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
-<tr><td class="left">fai_analysis_db_password</td><td class="left">read-the-source-luke</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
-<tr><td class="left">fai_analysis_db_schema</td><td class="left">ece5db</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
-<tr><td class="left">fai_analysis_port</td><td class="left">8080</td><td class="left">Port of the EAE</td></tr>
-<tr><td class="left">fai_analysis_shutdown</td><td class="left">8005</td><td class="left">Shutdown port for the EAE app server</td></tr>
-<tr><td class="left">fai_analysis_name</td><td class="left">analysis1</td><td class="left">EAE instance name</td></tr>
-<tr><td class="left">fai_cache_backends</td><td class="left">${HOSTNAME}:8080</td><td class="left">Space separated, e.g. "app1:8080 app2:8080"</td></tr>
-<tr><td class="left">fai_cache_install</td><td class="left">0</td><td class="left">Install cache server profile</td></tr>
-<tr><td class="left">fai_db_host</td><td class="left">$HOSTNAME</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
-<tr><td class="left">fai_db_drop_old_db_first</td><td class="left">0</td><td class="left">Warning: this will drop the old database before installing a new one</td></tr>
-<tr><td class="left">fai_db_install</td><td class="left">0</td><td class="left">Install db profile</td></tr>
-<tr><td class="left">fai_db_password</td><td class="left">read-the-source-luke</td><td class="left">Useful for DB installation profile</td></tr>
-<tr><td class="left">fai_db_port</td><td class="left">3306</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
-<tr><td class="left">fai_db_schema</td><td class="left">ece5db</td><td class="left">Useful for DB installation profile</td></tr>
-<tr><td class="left">fai_db_user</td><td class="left">ece5user</td><td class="left">Useful for DB installation profile</td></tr>
-<tr><td class="left">fai_editor_conf_archive</td><td class="left">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
-<tr><td class="left">fai_editor_ear</td><td class="left">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
-<tr><td class="left">fai_editor_install</td><td class="left">0</td><td class="left">Install the editorial profile</td></tr>
-<tr><td class="left">fai_editor_name</td><td class="left">editor1</td><td class="left">Name of the editor instance</td></tr>
-<tr><td class="left">fai_editor_port</td><td class="left">8080</td><td class="left">HTTP port of the editor instance</td></tr>
-<tr><td class="left">fai_editor_shutdown</td><td class="left">8005</td><td class="left">Shutdown port of the editor instance</td></tr>
-<tr><td class="left">fai_enabled</td><td class="left">0</td><td class="left">Whether or not to run ece-install in FAI mode</td></tr>
-<tr><td class="left">fai_monitoring_server_install</td><td class="left">0</td><td class="left">Install the monitoring server profile.</td></tr>
-<tr><td class="left">fai_monitoring_server_ip</td><td class="left">127.0.0.1</td><td class="left">The IP of the monitoring server.</td></tr>
-<tr><td class="left">fai_presentation_conf_archive</td><td class="left">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
-<tr><td class="left">fai_presentation_ear</td><td class="left">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
-<tr><td class="left">fai_presentation_install</td><td class="left">0</td><td class="left">Install the presentation server profile</td></tr>
-<tr><td class="left">fai_presentation_name</td><td class="left">web1</td><td class="left">Name of the presentation server instance</td></tr>
-<tr><td class="left">fai_presentation_port</td><td class="left">8080</td><td class="left">HTTP port of the presentation server instance</td></tr>
-<tr><td class="left">fai_presentation_shutdown</td><td class="left">8005</td><td class="left">Shutdown port of the presentation instance</td></tr>
-<tr><td class="left">fai_public_host_name</td><td class="left">${HOSTNAME}:8080</td><td class="left">The public address for your website</td></tr>
-<tr><td class="left">fai_publication_create</td><td class="left">0</td><td class="left">Create a new publication</td></tr>
-<tr><td class="left">fai_publication_name</td><td class="left">mypub</td><td class="left">Name of the publication</td></tr>
-<tr><td class="left">fai_publication_use_instance</td><td class="left">dev1</td><td class="left">Name of local instance to use for creation</td></tr>
-<tr><td class="left">fai_publication_war</td><td class="left">"WF or ECE demo WAR"</td><td class="left">WAR to base the new publication on</td></tr>
-<tr><td class="left">fai_publication_war_uri_list</td><td class="left">""</td><td class="left">Publication WARs used for setting up Assembly tool. Supported: http[s]://tmp.com/mypub.war, <a href="file:////tmp/mypub.war">///tmp/mypub.war</a> and /tmp/mypub.war.</td></tr>
-<tr><td class="left">fai_publication_domain_mapping_list</td><td class="left">""</td><td class="left">Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com"</td></tr>
-<tr><td class="left">fai_rmi_install</td><td class="left">0</td><td class="left">Install RMI hub profile</td></tr>
-<tr><td class="left">fai_search_conf_archive</td><td class="left">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
-<tr><td class="left">fai_search_ear</td><td class="left">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
-<tr><td class="left">fai_search_for_editor</td><td class="left">0</td><td class="left">If 1 (true), will configure Solr for use with an editorial server, if not conf for presentation servers will be chosen.</td></tr>
-<tr><td class="left">fai_search_indexer_ws_uri</td><td class="left"><a href="http://${HOSTNAME}:8080/indexer-webservice/index/">http://${HOSTNAME}:8080/indexer-webservice/index/</a></td><td class="left">URI of the indexer-webservice that the search instance shall use for knowing what to index.</td></tr>
-<tr><td class="left">fai_search_install</td><td class="left">0</td><td class="left">Install the search server profile (Solr + indexer)</td></tr>
-<tr><td class="left">fai_search_name</td><td class="left">search1</td><td class="left">Name of the search instance</td></tr>
-<tr><td class="left">fai_search_port</td><td class="left">8080</td><td class="left">HTTP port of the search instance</td></tr>
-<tr><td class="left">fai_search_shutdown</td><td class="left">8005</td><td class="left">Shutdown port of the search instance</td></tr>
-<tr><td class="left">fai_keep_off_etc_hosts</td><td class="left">0</td><td class="left">Set this to 1 if you don't want ece-install adding entries to /etc/hosts</td></tr>
-<tr><td class="left">fai_wf_install</td><td class="left">0</td><td class="left">Install Widget Framework profile</td></tr>
+<tr><td class="left">fai<sub>all</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install all components on your server.</td></tr>
+<tr><td class="left">fai<sub>analysis</sub><sub>db</sub><sub>host</sub></td><td class="left">localhost</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
+<tr><td class="left">fai<sub>analysis</sub><sub>db</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install db profile</td></tr>
+<tr><td class="left">fai<sub>analysis</sub><sub>db</sub><sub>password</sub></td><td class="left">read-the-source-luke</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
+<tr><td class="left">fai<sub>analysis</sub><sub>db</sub><sub>port</sub></td><td class="left">3306</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
+<tr><td class="left">fai<sub>analysis</sub><sub>db</sub><sub>schema</sub></td><td class="left">ece5db</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
+<tr><td class="left">fai<sub>analysis</sub><sub>db</sub><sub>user</sub></td><td class="left">ece5user</td><td class="left">For the EAE DB (different from ECE's)</td></tr>
+<tr><td class="left">fai<sub>analysis</sub><sub>name</sub></td><td class="left">analysis1</td><td class="left">EAE instance name</td></tr>
+<tr><td class="left">fai<sub>analysis</sub><sub>port</sub></td><td class="left">8080</td><td class="left">Port of the EAE</td></tr>
+<tr><td class="left">fai<sub>analysis</sub><sub>shutdown</sub></td><td class="left">8005</td><td class="left">Shutdown port for the EAE app server</td></tr>
+<tr><td class="left">fai<sub>cache</sub><sub>backends</sub></td><td class="left">${HOSTNAME}:8080</td><td class="left">Space separated, e.g. "app1:8080 app2:8080"</td></tr>
+<tr><td class="left">fai<sub>cache</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install cache server profile</td></tr>
+<tr><td class="left">fai<sub>db</sub><sub>drop</sub><sub>old</sub><sub>db</sub><sub>first</sub></td><td class="left">0</td><td class="left">Warning: this will drop the old database before installing a new one</td></tr>
+<tr><td class="left">fai<sub>db</sub><sub>host</sub></td><td class="left">$HOSTNAME</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
+<tr><td class="left">fai<sub>db</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install db profile</td></tr>
+<tr><td class="left">fai<sub>db</sub><sub>password</sub></td><td class="left">read-the-source-luke</td><td class="left">Useful for DB installation profile</td></tr>
+<tr><td class="left">fai<sub>db</sub><sub>port</sub></td><td class="left">3306</td><td class="left">Useful for editor &amp; presentation profiles</td></tr>
+<tr><td class="left">fai<sub>db</sub><sub>schema</sub></td><td class="left">ece5db</td><td class="left">Useful for DB installation profile</td></tr>
+<tr><td class="left">fai<sub>db</sub><sub>user</sub></td><td class="left">ece5user</td><td class="left">Useful for DB installation profile</td></tr>
+<tr><td class="left">fai<sub>editor</sub><sub>conf</sub><sub>archive</sub></td><td class="left">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
+<tr><td class="left">fai<sub>editor</sub><sub>ear</sub></td><td class="left">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
+<tr><td class="left">fai<sub>editor</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install the editorial profile</td></tr>
+<tr><td class="left">fai<sub>editor</sub><sub>name</sub></td><td class="left">editor1</td><td class="left">Name of the editor instance</td></tr>
+<tr><td class="left">fai<sub>editor</sub><sub>port</sub></td><td class="left">8080</td><td class="left">HTTP port of the editor instance</td></tr>
+<tr><td class="left">fai<sub>editor</sub><sub>shutdown</sub></td><td class="left">8005</td><td class="left">Shutdown port of the editor instance</td></tr>
+<tr><td class="left">fai<sub>enabled</sub></td><td class="left">0</td><td class="left">Whether or not to run ece-install in FAI mode</td></tr>
+<tr><td class="left">fai<sub>keep</sub><sub>off</sub><sub>etc</sub><sub>hosts</sub></td><td class="left">0</td><td class="left">Set this to 1 if you don't want ece-install adding entries to /etc/hosts</td></tr>
+<tr><td class="left">fai<sub>monitoring</sub><sub>server</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install the monitoring server profile.</td></tr>
+<tr><td class="left">fai<sub>monitoring</sub><sub>server</sub><sub>ip</sub></td><td class="left">127.0.0.1</td><td class="left">The IP of the monitoring server.</td></tr>
+<tr><td class="left">fai<sub>presentation</sub><sub>conf</sub><sub>archive</sub></td><td class="left">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
+<tr><td class="left">fai<sub>presentation</sub><sub>ear</sub></td><td class="left">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
+<tr><td class="left">fai<sub>presentation</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install the presentation server profile</td></tr>
+<tr><td class="left">fai<sub>presentation</sub><sub>name</sub></td><td class="left">web1</td><td class="left">Name of the presentation server instance</td></tr>
+<tr><td class="left">fai<sub>presentation</sub><sub>port</sub></td><td class="left">8080</td><td class="left">HTTP port of the presentation server instance</td></tr>
+<tr><td class="left">fai<sub>presentation</sub><sub>shutdown</sub></td><td class="left">8005</td><td class="left">Shutdown port of the presentation instance</td></tr>
+<tr><td class="left">fai<sub>public</sub><sub>host</sub><sub>name</sub></td><td class="left">${HOSTNAME}:8080</td><td class="left">The public address for your website</td></tr>
+<tr><td class="left">fai<sub>publication</sub><sub>create</sub></td><td class="left">0</td><td class="left">Create a new publication</td></tr>
+<tr><td class="left">fai<sub>publication</sub><sub>domain</sub><sub>mapping</sub><sub>list</sub></td><td class="left">""</td><td class="left">Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com"</td></tr>
+<tr><td class="left">fai<sub>publication</sub><sub>name</sub></td><td class="left">mypub</td><td class="left">Name of the publication</td></tr>
+<tr><td class="left">fai<sub>publication</sub><sub>use</sub><sub>instance</sub></td><td class="left">dev1</td><td class="left">Name of local instance to use for creation</td></tr>
+<tr><td class="left">fai<sub>publication</sub><sub>war</sub></td><td class="left">"WF or ECE demo WAR"</td><td class="left">WAR to base the new publication on</td></tr>
+<tr><td class="left">fai<sub>publication</sub><sub>war</sub><sub>uri</sub><sub>list</sub></td><td class="left">""</td><td class="left">Publication WARs used for setting up Assembly tool. Supported: http[s]://tmp.com/mypub.war, <a href="file:////tmp/mypub.war">///tmp/mypub.war</a> and /tmp/mypub.war.</td></tr>
+<tr><td class="left">fai<sub>rmi</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install RMI hub profile</td></tr>
+<tr><td class="left">fai<sub>search</sub><sub>conf</sub><sub>archive</sub></td><td class="left">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
+<tr><td class="left">fai<sub>search</sub><sub>ear</sub></td><td class="left">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
+<tr><td class="left">fai<sub>search</sub><sub>for</sub><sub>editor</sub></td><td class="left">0</td><td class="left">If 1 (true), will configure Solr for use with an editorial server, if not conf for presentation servers will be chosen.</td></tr>
+<tr><td class="left">fai<sub>search</sub><sub>indexer</sub><sub>ws</sub><sub>uri</sub></td><td class="left"><a href="http://${HOSTNAME}:8080/indexer-webservice/index/">http://${HOSTNAME}:8080/indexer-webservice/index/</a></td><td class="left">URI of the indexer-webservice that the search instance shall use for knowing what to index.</td></tr>
+<tr><td class="left">fai<sub>search</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install the search server profile (Solr + indexer)</td></tr>
+<tr><td class="left">fai<sub>search</sub><sub>name</sub></td><td class="left">search1</td><td class="left">Name of the search instance</td></tr>
+<tr><td class="left">fai<sub>search</sub><sub>port</sub></td><td class="left">8080</td><td class="left">HTTP port of the search instance</td></tr>
+<tr><td class="left">fai<sub>search</sub><sub>shutdown</sub></td><td class="left">8005</td><td class="left">Shutdown port of the search instance</td></tr>
+<tr><td class="left">fai<sub>wf</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install Widget Framework profile</td></tr>
 </tbody>
 </table>
 
@@ -1493,11 +1596,11 @@ To get a list of the artifacts it'll pull from
 <a href="http://technet.escenic.com">http://technet.escenic.com</a> and <a href="http://tomcat.apache.org">http://tomcat.apache.org</a> search for the
 following variables:
 </p><ul>
-<li>technet_download_list
+<li>technet<sub>download</sub><sub>list</sub>
 </li>
-<li>wf_download_list
+<li>wf<sub>download</sub><sub>list</sub>
 </li>
-<li>tomcat_download
+<li>tomcat<sub>download</sub>
 </li>
 </ul>
 
@@ -1559,8 +1662,8 @@ but these should be the most interesting ones.
 <tr><td class="left">/opt/escenic/assemblytool</td><td class="left">The assembly tool</td></tr>
 <tr><td class="left">/opt/escenic/assemblytool/plugins</td><td class="left">Contains symlinks to all plugins in /opt/escenic</td></tr>
 <tr><td class="left">/opt/escenic/engine</td><td class="left">Symlink pointing to the current ECE</td></tr>
-<tr><td class="left">/opt/tomcat</td><td class="left">Symlink pointing to the install Apache Tomcat (catalina_home)</td></tr>
-<tr><td class="left">/opt/tomcat-&lt;instance&gt;</td><td class="left">Instance specific Tomcat files (catalina_base)</td></tr>
+<tr><td class="left">/opt/tomcat</td><td class="left">Symlink pointing to the install Apache Tomcat (catalina<sub>home</sub>)</td></tr>
+<tr><td class="left">/opt/tomcat-&lt;instance&gt;</td><td class="left">Instance specific Tomcat files (catalina<sub>base</sub>)</td></tr>
 <tr><td class="left">/usr/bin/ece</td><td class="left">Script for operating all ECE instances + RMI hub and EAE</td></tr>
 <tr><td class="left">/usr/sbin/drop-and-create-ecedb</td><td class="left">DB script used by the ece-install script</td></tr>
 <tr><td class="left">/usr/sbin/ece-install</td><td class="left">The installation script described in this guide</td></tr>
@@ -1710,12 +1813,16 @@ set_up_solr.postinst
 </div>
 
 <div id="outline-container-13-1" class="outline-3">
-<h3 id="sec-13-1"><span class="section-number-3">13.1</span> /etc/esecenic is shared</h3>
+<h3 id="sec-13-1"><span class="section-number-3">13.1</span> The machine on which ece-install has enough RAM</h3>
 <div class="outline-text-3" id="text-13-1">
 
-<p>It's assumed that the /etc/escenic directory is either on a shared
-file system or rsync-ed among the hosts that are running the ECE
-instances (the exception being database and cache servers).
+<p>It is assumed that the machine on which ece-install has enough RAM to
+install the profiles the user asks for.
+</p>
+<p>
+A common error by users, is to run ece-install in a (virtual) machine
+that has e.g. only 1GB RAM. For happy running, we recommend having a
+machine with at least 3GB when installing a full ECE stack on it.
 </p>
 </div>
 </div>
@@ -1733,7 +1840,7 @@ environment and want to e.g. undo your previous install to install a
 different profile.
 </p>
 <p>
-Open the ece-install script and look for the "un_install_ece"
+Open the ece-install script and look for the "un<sub>install</sub><sub>ece</sub>"
 function, it has copy and pastable commands for undoing most/all
 things set up by the script.
 </p>
@@ -1814,7 +1921,7 @@ The following output is produced from ece-install:
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2012-02-28 18:55:47 CST
+  Date: 2012-03-08 15:10:00 CST
 </p>
 </div>
 </body>
