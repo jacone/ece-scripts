@@ -232,7 +232,7 @@ function set_db_defaults_if_not_set()
 
 function create_replication_user() {
   print_and_log "Creating replication user $db_replication_user ..."
-  mysql -u $db_user -p${db_password} <<EOF
+  mysql <<EOF
 grant replication slave on *.* to '${db_replication_user}'@'%' identified by '${db_replication_password}';
 flush privileges;
 quit;
@@ -262,7 +262,7 @@ EOF
   fi
 
   if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
-    sed -i "s#$old#$new#g" $file
+    sed -i "s~$old~$new~g" $file
   else
     echo "$new" >> $file
   fi
@@ -274,7 +274,7 @@ EOF
     old="bind-address.*= 127.0.0.1"
     new="# bind-address = 127.0.0.1"
     if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
-      sed -i "s#$old#$new#g" $file
+      sed -i "s~$old~$new~g" $file
     else
       echo "$new" >> $file
     fi
@@ -283,7 +283,7 @@ EOF
     old="#log_bin.*= /var/log/mysql/mysql-bin.log"
     new="log_bin = /var/log/mysql/mysql-bin.log"
     if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
-      sed -i "s#$old#$new#g" $file
+      sed -i "s~$old~$new~g" $file
     else
       echo "$new" >> $file
     fi
@@ -292,7 +292,7 @@ EOF
     new="binlog_do_db = ${db_schema}"
 
     if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
-      sed -i "s#$old#$new#g" $file
+      sed -i "s~$old~$new~g" $file
     else
       echo "$new" >> $file
     fi
