@@ -186,7 +186,8 @@ function install_packages_if_missing() {
     if [ $some_are_missing -eq 0 ]; then
       return
     elif [ $one_time_apt_update_done -eq 0 ]; then
-      log "Running one time APT update to ensure package list is up to date"
+      print_and_log \
+        "Running one time APT update to ensure package list is fresh"
       run apt-get update
       one_time_apt_update_done=1
     fi
@@ -614,15 +615,15 @@ function read_user_input()
 function assert_correct_runtime_environment()
 {
     if [ $(whoami) != "root" ]; then
-        print "You must be root when running $(basename $0)"
+        echo "You must be root when running $(basename $0)"
         exit 1
     fi
     
     if [ -e $pid_file ]; then
-        print "There's already one $(basename $0) process running."
-        print "If you blelieve this is wrong, e.g. if a previous run of" 
-        print "$(basename $0) was aborted before it completed, you"
-        print "may remove ${pid_file} and run $(basename $0) again."
+        echo "There's already one $(basename $0) process running."
+        echo "If you blelieve this is wrong, e.g. if a previous run of" 
+        echo "$(basename $0) was aborted before it completed, you"
+        echo "may remove ${pid_file} and run $(basename $0) again."
         exit 1
     else
         echo $BASHPID > $pid_file
@@ -630,8 +631,8 @@ function assert_correct_runtime_environment()
     fi
 
     if [ ! -e "$conf_file" ]; then
-        print $conf_file "doesn't exist."
-        print "I cannot live without it, so I'm exiting :-("
+        echo $conf_file "doesn't exist."
+        echo "I cannot live without it, so I'm exiting :-("
         remove_pid_and_exit_in_error
     fi
 }
@@ -1038,8 +1039,8 @@ for el in $@; do
     fi
 done
 
-init
 assert_correct_runtime_environment
+init
 fai_enabled=$(get_boolean_conf_value fai_enabled)
 
 if [ $fai_enabled -eq 1 ]; then
@@ -1124,12 +1125,6 @@ if [ $fai_enabled -eq 1 ]; then
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_vip_install) -eq 1 ]; then
-      install_profile_number=$PROFILE_VIP_PROVIDER
-      install_vip_provider
-      no_fai_profile=0
-    fi
-    
     if [ $(get_boolean_conf_value fai_nfs_server_install) -eq 1 ]; then
       install_profile_number=$PROFILE_NFS_SERVER
       install_nfs_server
@@ -1139,6 +1134,15 @@ if [ $fai_enabled -eq 1 ]; then
     if [ $(get_boolean_conf_value fai_nfs_client_install) -eq 1 ]; then
       install_profile_number=$PROFILE_NFS_CLIENT
       install_nfs_client
+      no_fai_profile=0
+    fi
+
+    # checking for VIP profile last so that ece-install can (if so
+    # configured in the ece-install.con) install all dependent
+    # services first.
+    if [ $(get_boolean_conf_value fai_vip_install) -eq 1 ]; then
+      install_profile_number=$PROFILE_VIP_PROVIDER
+      install_vip_provider
       no_fai_profile=0
     fi
     
