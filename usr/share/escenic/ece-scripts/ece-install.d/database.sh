@@ -100,6 +100,17 @@ function install_database_server()
     set_up_engine_and_plugins
     set_up_ecedb
   fi
+
+  if [ $db_replication -eq 1 ]; then
+    if [ $db_master -eq 1 ]; then
+      create_replication_user
+    fi
+    configure_mysql_for_replication
+
+    if [ $db_master -eq 0 ]; then
+      set_slave_to_replicate_master
+    fi
+  fi
 }
 
 function set_up_ecedb()
@@ -179,6 +190,18 @@ function set_db_settings_from_fai_conf()
       print_and_log "$(yellow WARNING): fai_db_drop_old_db_first is 1 (true)"
     fi
   fi
+  
+  # replication is only available in FAI mode
+  db_replication=${fai_db_replication-0}
+  db_replication_user=${fai_db_replication_user-replicationuser}
+  db_replication_password=${fai_db_replication_password-replicationpassword}
+  
+  db_master=${fai_db_master-0}
+  db_master_host=${fai_db_master_host}
+  db_master_log_file=${fai_db_master_log_file}
+  db_master_log_position=${fai_db_master_log_position}
+  
+  # TODO assert set
 }
 
 # Method used both from interactive mode to set any missing values
@@ -204,5 +227,91 @@ function set_db_defaults_if_not_set()
   if [ -z "$db_schema" ]; then
     db_schema=${default_db_schema}
   fi
+
 }
 
+function create_replication_user() {
+  print_and_log "Creating replication user $db_replication_user ..."
+  mysql -u $db_user -p${db_password} <<EOF
+grant replication slave on *.* to '${db_replication_user}'@'%' identified by '${db_replication_password}';
+flush privileges;
+quit;
+EOF
+}
+
+function configure_mysql_for_replication() {
+  print_and_log "Configuring DB for replication ..."
+  
+  local file=/etc/mysql/my.cnf
+
+  # On old versions of MySQL/Percona, this file isn't there by
+  # default, although it's read from /etc/init.d/mysql
+  if [ ! -e $file ]; then
+    cat > $file <<EOF
+[mysqld]
+EOF
+  fi
+
+  # server ID
+  local old="#server-id.*= 1"
+
+  if [ $db_master -eq 1 ]; then
+    local new="server-id = 1"
+  else
+    local new="server-id = 2"
+  fi
+
+  if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
+    sed -i "s#$old#$new#g" $file
+  else
+    echo "$new" >> $file
+  fi
+
+  run /etc/init.d/mysql restart
+
+  # replication log configuration of the master
+  if [ $db_master -eq 1 ]; then
+    old="bind-address.*= 127.0.0.1"
+    new="# bind-address = 127.0.0.1"
+    if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
+      sed -i "s#$old#$new#g" $file
+    else
+      echo "$new" >> $file
+    fi
+    
+    
+    old="#log_bin.*= /var/log/mysql/mysql-bin.log"
+    new="log_bin = /var/log/mysql/mysql-bin.log"
+    if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
+      sed -i "s#$old#$new#g" $file
+    else
+      echo "$new" >> $file
+    fi
+      
+    old="#binlog_do_db.* =.*"
+    new="binlog_do_db = ${db_schema}"
+
+    if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
+      sed -i "s#$old#$new#g" $file
+    else
+      echo "$new" >> $file
+    fi
+  fi
+}
+
+function set_slave_to_replicate_master() {
+  print_and_log "Setting slave to replicate master DB @ $db_master_host ..."
+  mysql ${db_schema} <<EOF 
+change master to
+  master_host='${db_master_host}',
+  master_user='${db_replication_user}',
+  master_password='${db_replication_password}',
+  master_log_file='${db_master_log_file}',
+  master_log_pos=${db_master_log_position}
+;
+
+start slave;
+EOF
+}
+
+  
