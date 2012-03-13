@@ -722,13 +722,13 @@ function add_apt_source() {
 # $1 : your added line
 function add_next_step()
 {
-    next_steps[${#next_steps[@]}]="${1}"
+    next_steps[${#next_steps[@]}]="$@"
     return
     
     if [ -n "$next_steps" ]; then
         next_steps=${next_steps}$'\n'"[$(basename $0)] "${1}
     else
-        next_steps="[$(basename $0)] "${1}
+        next_steps="[$(basename $0)] $@"
     fi
 }
 
