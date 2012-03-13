@@ -218,6 +218,47 @@ ERROR 1007 (HY000) at line 1: Can't create database 'ece5db'; database exists
 ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already exists
 [ece-install] running tables FAILED, exiting :-(
 #+END_SRC
+If you for some reason wish to make ece-install drop the DB fro you
+before creating a new one, you can set
+#+BEGIN_SRC sh
+  fai_db_drop_old_db_first=1
+#+END_SRC
+
+*** Master & slave setup
+It's easy to set up master and slave DBs, here's how you'd configure
+ece-install to install these:
+
+On the master, create an ece-install.conf with:
+#+BEGIN_SRC sh
+fai_enabled=1
+fai_db_install=1
+fai_db_master=1
+fai_db_replication=1
+#+END_SRC
+
+The script will itself output some replication log settings you need
+for the slave:
+#+BEGIN_SRC sh
+[ece-install-35] - DB is now set up on localhost:3306
+[ece-install-35] - ece-install.conf for slave: fai_db_master_log_file=mysql-bin.000013
+[ece-install-35] - ece-install.conf for slave: fai_db_master_log_position=106
+#+END_SRC
+
+Once this is done, create and use an ece-install.conf on the slave
+with this:
+#+BEGIN_SRC sh
+fai_enabled=1
+fai_db_install=1
+fai_db_replication=1
+fai_db_master=0
+fai_db_master_host=my-db-master
+fai_db_master_log_file=mysql-bin.000013
+fai_db_master_log_position=106
+#+END_SRC
+
+The script will set up and use the replication user & credentials with
+default values, if you wish to override these, have a look in the FAI
+parameter overview.
 
 ** Profile :: Cache Server
 If ece-install is run on a support version of Debian or Ubuntu, it
