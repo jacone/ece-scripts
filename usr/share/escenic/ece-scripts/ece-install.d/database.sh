@@ -12,7 +12,7 @@ fi
 ##     the ECE DB schema is not set up. 
 function install_database_server()
 {
-  print_and_log "Installing the database server on $HOSTNAME ..."
+  print_and_log "Installing database server on $HOSTNAME ..."
 
   source $(dirname $0)/drop-and-create-ecedb
 
@@ -232,10 +232,9 @@ function set_db_defaults_if_not_set()
 
 function create_replication_user() {
   print_and_log "Creating replication user $db_replication_user ..."
-  mysql <<EOF
+  mysql ${db_schema} <<EOF
 grant replication slave on *.* to '${db_replication_user}'@'%' identified by '${db_replication_password}';
 flush privileges;
-quit;
 EOF
 }
 
@@ -261,8 +260,8 @@ EOF
     local new="server-id = 2"
   fi
 
-  if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
-    sed -i "s~$old~$new~g" $file
+  if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
+    sed -i "s~^$old~$new~g" $file
   else
     echo "$new" >> $file
   fi
@@ -273,31 +272,38 @@ EOF
   if [ $db_master -eq 1 ]; then
     old="bind-address.*= 127.0.0.1"
     new="# bind-address = 127.0.0.1"
-    if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
-      sed -i "s~$old~$new~g" $file
-    else
-      echo "$new" >> $file
+    if [ $(grep ^"${old}" $file | wc -l) -gt 0 ]; then
+      sed -i "s~^${old}~$new~g" $file
     fi
-    
     
     old="#log_bin.*= /var/log/mysql/mysql-bin.log"
     new="log_bin = /var/log/mysql/mysql-bin.log"
-    if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
-      sed -i "s~$old~$new~g" $file
-    else
+    if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
+      sed -i "s~^${old}~${new}~g" $file
+    elif [ $(grep ^$new $file | wc -l) -lt 1 ]; then
       echo "$new" >> $file
     fi
       
-    old="#binlog_do_db.* =.*"
+    old="#binlog_do_db.*=.*"
     new="binlog_do_db = ${db_schema}"
 
-    if [ $(grep "$old" $file | wc -l) -gt 0 ]; then
-      sed -i "s~$old~$new~g" $file
-    else
+    if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
+      sed -i "s~^${old}~${new}~g" $file
+    elif [ $(grep ^$new $file | wc -l) -lt 1 ]; then
       echo "$new" >> $file
     fi
+    
+    # report the needed settings for a slave
+    local master_status=$(mysql $db_schema -e "show master status" | tail -1)
+    local file=$(echo $master_status | cut -d' ' -f1)
+    local position=$(echo $master_status | cut -d' ' -f2)
+    add_next_step "ece-install.conf for slave: fai_db_master_log_file=$file"
+    add_next_step "ece-install.conf for slave:" \
+      fai_db_master_log_position=$position
   fi
 }
+
+
 
 function set_slave_to_replicate_master() {
   print_and_log "Setting slave to replicate master DB @ $db_master_host ..."
