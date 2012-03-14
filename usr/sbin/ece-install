@@ -186,8 +186,8 @@ function install_packages_if_missing() {
     if [ $some_are_missing -eq 0 ]; then
       return
     elif [ $one_time_apt_update_done -eq 0 ]; then
-      print_and_log \
-        "Running one time APT update to ensure package list is fresh"
+      log "First running APT update to ensure fresh package list, " \
+        "then continuing the above"
       run apt-get update
       one_time_apt_update_done=1
     fi
