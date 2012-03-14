@@ -8,6 +8,15 @@ if [[ $(uname -m) != "x86_64" ]]; then
   percona_rpm_release_url=http://www.percona.com/downloads/percona-release/$percona_rpm_release_package_name.i386.rpm
 fi
 
+function get_percona_supported_list() {
+  echo $(
+    curl -s http://repo.percona.com/apt/dists/ | \
+      grep ^"<li><a href" | \
+      cut -d'"' -f2 | \
+      cut -d'/' -f1
+  )
+}
+
 ## $1: optional parameter, binaries_only. If passed, $1=binaries_only,
 ##     the ECE DB schema is not set up. 
 function install_database_server()
@@ -21,7 +30,7 @@ function install_database_server()
     code_name=$(lsb_release -s -c)
     
     supported_code_name=0
-    supported_list="lenny squeeze hardy lucid maverick"
+    supported_list=$(get_percona_supported_list)
     for el in $supported_list; do
       if [ $code_name = $el ]; then
         supported_code_name=1
@@ -37,13 +46,14 @@ function install_database_server()
       print_and_log "Installing the Percona database ..."
 
       if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
-        run gpg --keyserver hkp://keys.gnupg.net \
-          --recv-keys 1C4CBDCDCD2EFD2A
+        gpg --keyserver hkp://keys.gnupg.net \
+          --recv-keys 1C4CBDCDCD2EFD2A \
+          1>>$log 2>>$log
         
-        # There has been twice now, during six months, that
-        # the key cannot be retrieved from
-        # keys.gnupg.net. Therefore, we're checking if it
-        # failed and if yes, force the package installation.
+        # There has been three times now, during six months, that the
+        # key cannot be retrieved from keys.gnupg.net. Therefore,
+        # we're checking if it failed and if yes, force the package
+        # installation.
         if [ $? -gt 0 ]; then
           s="Failed retrieving the Percona key from keys.gnupg.net"
           print_and_log $s
@@ -62,8 +72,7 @@ function install_database_server()
       fi
       
       add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
-      packages="percona-server-server percona-server-client"
-      force_packages=0
+      packages="percona-server-server percona-server-client libmysqlclient16"
     else
       print_and_log "The Percona APT repsository doesn't have packages" 
       print_and_log "for your Debian (or derivative) version with code"
@@ -86,6 +95,7 @@ function install_database_server()
   fi
   
   install_packages_if_missing $packages
+  force_packages=0
 
   if [ $on_redhat_or_derivative -eq 1 ]; then
     run chkconfig --level 35 mysql on
@@ -251,25 +261,17 @@ function configure_mysql_for_replication() {
 EOF
   fi
 
-  # server ID
-  local old="#server-id.*= 1"
-
-  if [ $db_master -eq 1 ]; then
-    local new="server-id = 1"
-  else
-    local new="server-id = 2"
-  fi
-
-  if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
-    sed -i "s~^$old~$new~g" $file
-  else
-    echo "$new" >> $file
-  fi
-
-  run /etc/init.d/mysql restart
-
   # replication log configuration of the master
   if [ $db_master -eq 1 ]; then
+    local old="#server-id.*= 1"
+    local new="server-id = 1"
+    
+    if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
+      sed -i "s~^$old~$new~g" $file
+    elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
+      echo "$new" >> $file
+    fi
+  
     old="bind-address.*= 127.0.0.1"
     new="# bind-address = 127.0.0.1"
     if [ $(grep ^"${old}" $file | wc -l) -gt 0 ]; then
@@ -280,7 +282,7 @@ EOF
     new="log_bin = /var/log/mysql/mysql-bin.log"
     if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
       sed -i "s~^${old}~${new}~g" $file
-    elif [ $(grep ^$new $file | wc -l) -lt 1 ]; then
+    elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
       echo "$new" >> $file
     fi
       
@@ -289,10 +291,12 @@ EOF
 
     if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
       sed -i "s~^${old}~${new}~g" $file
-    elif [ $(grep ^$new $file | wc -l) -lt 1 ]; then
+    elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
       echo "$new" >> $file
     fi
     
+    run /etc/init.d/mysql restart
+
     # report the needed settings for a slave
     local master_status=$(mysql $db_schema -e "show master status" | tail -1)
     local file=$(echo $master_status | cut -d' ' -f1)
@@ -300,6 +304,17 @@ EOF
     add_next_step "ece-install.conf for slave: fai_db_master_log_file=$file"
     add_next_step "ece-install.conf for slave:" \
       fai_db_master_log_position=$position
+  else
+    local old="#server-id.*= 1"
+    local new="server-id = 2"
+    
+    if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
+      sed -i "s~^$old~$new~g" $file
+    elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
+      echo "$new" >> $file
+    fi
+    
+    run /etc/init.d/mysql restart
   fi
 }
 
@@ -307,7 +322,9 @@ EOF
 
 function set_slave_to_replicate_master() {
   print_and_log "Setting slave to replicate master DB @ $db_master_host ..."
-  mysql ${db_schema} <<EOF 
+  mysql ${db_schema} <<EOF
+stop slave;
+
 change master to
   master_host='${db_master_host}',
   master_user='${db_replication_user}',
@@ -318,6 +335,8 @@ change master to
 
 start slave;
 EOF
+
+  add_next_step "DB on $HOSTNAME replicates master DB @ ${db_master_host}"
 }
 
   
