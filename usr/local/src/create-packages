@@ -7,7 +7,7 @@
 
 target_dir=target
 package_name=escenic-content-engine-installer
-package_version=$(date +%s)
+package_version=$(date +%Y-%m-%d.%H%M%S)
 
 function clean_up() {
   rm -rf $target_dir
@@ -37,16 +37,19 @@ function get_user_options() {
 
 function set_up_target_directory() {
   mkdir -p $target_dir/{etc,usr,/etc/default}
-  mkdir -p $target_dir/usr/{bin,share/doc}
+  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
   
   if [[ $package_name == "escenic-content-engine-installer" ]]; then
     mkdir -p $target_dir/usr/share/doc/escenic
     
     cp -r ../../bin/{ece,system-info} $target_dir/usr/bin/
+    cp -r ../../sbin/{ece-install,drop-and-create-ecedb} $target_dir/usr/sbin/
+    cp -r ../../bin/{ece,system-info} $target_dir/usr/bin/
     cp -r ../../share/escenic/ $target_dir/usr/share/
     cp -r ../../share/doc/escenic/*.{org,html} $target_dir/usr/share/doc/escenic
     cp -r ../../../etc/escenic/ $target_dir/etc/
     cp -r ../../../etc/default/ece $target_dir/etc/default
+    
   elif [[ $package_name == "vosa" ]]; then
     mkdir -p $target_dir/usr/share/doc/vosa
     cp -r ../../bin/vosa $target_dir/usr/bin/
