@@ -3,17 +3,7 @@
 
 chmod +x /usr/sbin/ece-install /usr/bin/{ece,system-info}
 
-echo "Do you wish to run the Escenic Content Engine installer now?"
-
-answer=no
-echo -n "Your choice: yes/[no] "
-read answer
-
-if [ "$answer" = "yes" ]; then
-    ece-install
-else
-    echo "Run the Escenic Content Engine installer by typing 'ece-install'"
-fi
+echo "Run the Escenic Content Engine installer by typing 'ece-install'"
 
 exit 0
 
