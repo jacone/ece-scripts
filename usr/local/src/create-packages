@@ -20,7 +20,6 @@ function get_user_options() {
         package_version=${OPTARG}
         ;;
       p)
-        echo "-p was triggered, Parameter: $OPTARG" >&2
         package_name=${OPTARG}
         ;;
       \?)
@@ -37,14 +36,22 @@ function get_user_options() {
 }
 
 function set_up_target_directory() {
-  mkdir -p $target_dir/{etc,usr}
+  mkdir -p $target_dir/{etc,usr,/etc/default}
   mkdir -p $target_dir/usr/{bin,share/doc}
   
   if [[ $package_name == "escenic-content-engine-installer" ]]; then
+    mkdir -p $target_dir/usr/share/doc/escenic
+    
     cp -r ../../bin/{ece,system-info} $target_dir/usr/bin/
     cp -r ../../share/escenic/ $target_dir/usr/share/
-    cp -r ../../share/doc/escenic/*.{org,html} $target_dir/usr/share/doc/
+    cp -r ../../share/doc/escenic/*.{org,html} $target_dir/usr/share/doc/escenic
     cp -r ../../../etc/escenic/ $target_dir/etc/
+    cp -r ../../../etc/default/ece $target_dir/etc/default
+  elif [[ $package_name == "vosa" ]]; then
+    mkdir -p $target_dir/usr/share/doc/vosa
+    cp -r ../../bin/vosa $target_dir/usr/bin/
+    cp -r ../../share/vizrt/ $target_dir/usr/share/
+    cp -r ../../share/doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
   fi
 
   debian_dir=$target_dir/DEBIAN
@@ -67,26 +74,38 @@ function create_packages() {
   sed -i "s#MAINTAINER_EMAIL#$(get_email)#g" $debian_dir/control
 
   # fix permissions
-  chmod 755 $debian_dir/postinst
-
+  if [ -e $debian_dir/postinst ]; then
+    chmod 755 $debian_dir/postinst
+  fi
+  
   if [ ! -x /usr/bin/dpkg-deb ]; then
     echo "You must have dpkg-deb installed :-("
     exit 1
   fi
 
-  dpkg-deb --build $target_dir
+  dpkg-deb --build $target_dir \
+    2>&1 > /dev/null
   mv ${target_dir}.deb $target_dir/${package_name}-${package_version}.deb
   
   if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
-    cd $target_dir
-    fakeroot alien --to-rpm --scripts \
-      ${package_name}-${package_version}.deb
+    (
+      cd $target_dir
+      fakeroot alien --to-rpm --scripts \
+        ${package_name}-${package_version}.deb \
+        2>&1 > /dev/null
+    )
   else
     echo "You must have 'alien' and 'fakeroot' installed to create RPMs"
   fi
 }  
 
+function list_packages() {
+  echo "Sir, the packages are now ready:"
+  ls $target_dir/*.{deb,rpm}
+}
+
 clean_up
 get_user_options $@
 set_up_target_directory
 create_packages
+list_packages
