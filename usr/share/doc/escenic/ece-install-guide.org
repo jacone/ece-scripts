@@ -245,7 +245,7 @@ for the slave:
 #+END_SRC
 
 Once this is done, create and use an ece-install.conf on the slave
-with this:
+with this configuration:
 #+BEGIN_SRC sh
 fai_enabled=1
 fai_db_install=1
@@ -359,6 +359,7 @@ fai_nfs_export_list="/var/exports/multimedia"
 #+END_SRC
 
 ** Profile :: VIP provider
+[[file:images/nfs-vip.png]]
 
 This profile will make the host capable of serving a certain virtual
 IP (VIP) for one or more services. This is a useful thing for all
