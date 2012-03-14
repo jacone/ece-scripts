@@ -3,7 +3,8 @@
 
 chmod +x /usr/sbin/ece-install /usr/bin/{ece,system-info}
 
-echo "Run the Escenic Content Engine installer by typing 'ece-install' as root"
+echo "You can now run the Escenic Content Engine installer "
+echo "by typing 'ece-install' as root"
 
 exit 0
 
