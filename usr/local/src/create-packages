@@ -5,60 +5,88 @@
 
 # by tkj@vizrt.com
 
-rm -rf debian/{etc,usr}
-
-target_dir=debian
+target_dir=target
 package_name=escenic-content-engine-installer
+package_version=$(date +%s)
 
-function get_version()
-{
-    engine_file=$(grep http ../../sbin/ece-install | grep "/engine")
-    version=$(basename $engine_file .zip | cut -d'-' -f2)
-    echo $version
+function clean_up() {
+  rm -rf $target_dir
 }
 
-function get_name()
-{
-    name=$(grep $USER /etc/passwd | cut -d':' -f5 | cut -d',' -f1)
-    echo "${name}"
+function get_user_options() {
+  while getopts ":p:r:" opt; do
+    case $opt in
+      r)
+        package_version=${OPTARG}
+        ;;
+      p)
+        echo "-p was triggered, Parameter: $OPTARG" >&2
+        package_name=${OPTARG}
+        ;;
+      \?)
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+      :)
+        echo "Option -$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+    esac
+  done
+  
 }
 
-function get_email()
-{
-    echo ${USER}@${HOSTNAME}
+function set_up_target_directory() {
+  mkdir -p $target_dir/{etc,usr}
+  mkdir -p $target_dir/usr/{bin,share/doc}
+  
+  if [[ $package_name == "escenic-content-engine-installer" ]]; then
+    cp -r ../../bin/{ece,system-info} $target_dir/usr/bin/
+    cp -r ../../share/escenic/ $target_dir/usr/share/
+    cp -r ../../share/doc/escenic/*.{org,html} $target_dir/usr/share/doc/
+    cp -r ../../../etc/escenic/ $target_dir/etc/
+  fi
+
+  debian_dir=$target_dir/DEBIAN
+  mkdir -p $debian_dir
+  cp debian/${package_name}/* $debian_dir
 }
 
-version=$(get_version)
+function get_name() {
+  name=$(grep $USER /etc/passwd | cut -d':' -f5 | cut -d',' -f1)
+  echo "${name}"
+}
 
-cp -r ../../../etc $target_dir
+function get_email() {
+  echo ${USER}@${HOSTNAME}
+}
 
-mkdir -p $target_dir/usr
-cp -r ../../../usr/bin $target_dir/usr
-cp -r ../../../usr/sbin $target_dir/usr
-cp -r ../../../usr/share $target_dir/usr
+function create_packages() {
+  sed -i "s#VERSION#${package_version}#g" $debian_dir/control
+  sed -i "s#MAINTAINER_NAME#$(get_name)#g" $debian_dir/control
+  sed -i "s#MAINTAINER_EMAIL#$(get_email)#g" $debian_dir/control
 
-cp $target_dir/DEBIAN/control $target_dir/DEBIAN/control.orig
+  # fix permissions
+  chmod 755 $debian_dir/postinst
 
-sed -i "s#VERSION#${version}#g" $target_dir/DEBIAN/control
-sed -i "s#MAINTAINER_NAME#$(get_name)#g" $target_dir/DEBIAN/control
-sed -i "s#MAINTAINER_EMAIL#$(get_email)#g" $target_dir/DEBIAN/control
-
-# fix permissions
-chmod 755 $target_dir/DEBIAN/postinst
-
-if [ ! -x /usr/bin/dpkg-deb ]; then
+  if [ ! -x /usr/bin/dpkg-deb ]; then
     echo "You must have dpkg-deb installed :-("
     exit 1
-fi
+  fi
 
-dpkg-deb --build debian
-mv debian.deb ${package_name}-${version}.deb
-
-if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
-    fakeroot alien --to-rpm --scripts ${package_name}-${version}.deb
-else
+  dpkg-deb --build $target_dir
+  mv ${target_dir}.deb $target_dir/${package_name}-${package_version}.deb
+  
+  if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
+    cd $target_dir
+    fakeroot alien --to-rpm --scripts \
+      ${package_name}-${package_version}.deb
+  else
     echo "You must have 'alien' and 'fakeroot' installed to create RPMs"
-fi
+  fi
+}  
 
-# cleanup
-cp $target_dir/DEBIAN/control.orig $target_dir/DEBIAN/control
+clean_up
+get_user_options $@
+set_up_target_directory
+create_packages
