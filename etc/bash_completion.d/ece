@@ -5,25 +5,19 @@ _ece_commands()
     local cur=${COMP_WORDS[COMP_CWORD]}
     local prev=${COMP_WORDS[COMP_CWORD-1]}
 
-    commands="applog assemble backup clean deploy edit help info kill log loglist \
-              flush outlog package restart start status stop threaddump update versions"
-    options="-i --instance -p --publication -r --publication-resource \
+    commands="applog assemble backup clean deploy edit help info kill log loglist
+              flush outlog package restart start status stop threaddump update versions
+              list-instances
+    "
+    options="-i --instance -p --publication -r --publication-resource
              -t --type -u --user -w --password"
-    resources="content-type feature layout layout-group image-version menu \
+    resources="content-type feature layout layout-group image-version menu
                security root-section-parameters"
     types="engine search analysis rmi-hub"
 
     # default completions is the list of commands
     completions=$commands" "$options
 
-    instances=""
-    dir=/etc/escenic/engine/instance
-    if [ -r $dir ] ; then
-        for el in ${dir}/*; do
-            instances=$(basename ${el})" "$instances
-        done
-    fi
-    
     publications=""
     dir=/opt/escenic/assemblytool/publications
     if [ -r $dir ] ; then
@@ -40,7 +34,7 @@ _ece_commands()
             completions=$types
             ;;
         -i|--instance)
-            completions=$instances
+            completions=$(ece -q list-instances)
             ;;
         -p|--publication)
             completions=$publications
