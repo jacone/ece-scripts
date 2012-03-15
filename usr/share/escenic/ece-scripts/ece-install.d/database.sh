@@ -301,9 +301,14 @@ EOF
     local master_status=$(mysql $db_schema -e "show master status" | tail -1)
     local file=$(echo $master_status | cut -d' ' -f1)
     local position=$(echo $master_status | cut -d' ' -f2)
-    add_next_step "ece-install.conf for slave: fai_db_master_log_file=$file"
-    add_next_step "ece-install.conf for slave:" \
-      fai_db_master_log_position=$position
+    local slave_conf_file=$HOME/ece-install-db-slave.conf.add
+    cat > $slave_conf_file <<EOF
+fai_db_master_log_file=$file
+fai_db_master_log_position=$position
+EOF
+    local message="See $slave_conf_file for settings needed for the slave DB(s)"
+    log $message
+    add_next_step $message
   else
     local old="#server-id.*= 1"
     local new="server-id = 2"
