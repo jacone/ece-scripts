@@ -102,6 +102,8 @@ function print()
 {
     if [ "$quiet" -eq 0 ]; then
         echo "$id" $@
+    else
+      echo $@
     fi
 }
 
@@ -175,16 +177,29 @@ function read_conf_file()
     done
 }
 
-# If the system is installed using the recommended paths, the method
-# will return a list of the instances configured in
-# ${escenic_conf_dir}/engine/instance
+## If the system is installed using the recommended paths, the method
+## will return a list of the instances configured in
+## ${escenic_conf_dir}/ece-*.conf
 function get_instance_list()
 {
+    local allowed_types="engine analysis changelogd search rmi-hub"
     instance_list=""
-
-    if [ -r ${escenic_conf_dir}/engine/instance ]; then
-        instance_list=$(ls ${escenic_conf_dir}/engine/instance)
-    fi
+    for el in $(\ls /etc/escenic/ece-*.conf 2>/dev/null); do
+      
+      local instance=$(basename $el .conf)
+      instance=${instance##ece-}
+      
+      for ele in $allowed_types; do
+        if [[ $instance == $ele ]]; then
+          instance=""
+          continue
+        fi
+        
+        local away="${ele}-"
+        instance=${instance##${away}}
+      done
+      instance_list="$instance_list $instance"
+    done
 
     echo $instance_list
 }
@@ -454,6 +469,10 @@ function sanity_check()
     if [ -z "$command" ]; then
         print "You must specificy a command, see 'ece help'."
         exit 1
+    fi
+
+    if [[ "$command"=="list-instances" ]]; then
+      return
     fi
 
     # checks if the user is using the default instance when he/she
@@ -1803,6 +1822,9 @@ for el in $command; do
             ;;
         versions)
             list_versions
+            ;;
+        list-instances)
+            print $(get_instance_list)
             ;;
         update)
             update_publication_resources
