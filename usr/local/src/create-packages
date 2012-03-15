@@ -103,7 +103,7 @@ function create_packages() {
   if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
     (
       cd $target_dir
-      fakeroot alien --to-rpm --scripts \
+      fakeroot alien --keep-version --to-rpm --scripts \
         ${package_name}-${package_version}.deb \
         2>&1 > /dev/null
     )
