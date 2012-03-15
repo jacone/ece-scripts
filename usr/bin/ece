@@ -340,14 +340,21 @@ function set_instance_settings()
     # * java.security for configuring the Java security framework with ECE.
     # * garbage collection log: this is paramount to keep an eye on
     #   when running in production.
-    ece_args="-Descenic.server=$ece_server\
-              -Dsolr.solr.home=$solr_home\
-              -Djava.awt.headless=true\
-              -Djava.security.auth.login.config=$ece_security_configuration_dir/jaas.config\
-              -Djava.security.policy=$ece_security_configuration_dir/java.policy\
-              -XX:+PrintGCTimeStamps\
-              -XX:+PrintGCDetails\
-              -Xloggc:${log_dir}/${type}-${instance}-gc.log"
+    ece_args="
+      -Descenic.server=$ece_server
+      -Djava.awt.headless=true
+      -Djava.security.auth.login.config=$ece_security_configuration_dir/jaas.config
+      -Djava.security.policy=$ece_security_configuration_dir/java.policy
+      -Dsolr.solr.home=$solr_home
+      -XX:+PrintGCDetails
+      -XX:+PrintGCTimeStamps
+      -Xloggc:${log_dir}/${type}-${instance}-gc.log
+    "
+
+    if [ "$jvm_gc_settings" ]; then
+      ece_args=$ece_args" "$jvm_gc_settings
+    fi
+    
 
     if [ "$instance" != "default" ]; then
         ece_args=$ece_args" -Dcom.escenic.instance=$instance"
