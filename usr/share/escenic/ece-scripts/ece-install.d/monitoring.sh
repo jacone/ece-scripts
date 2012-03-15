@@ -320,6 +320,14 @@ EOF
 function install_monitoring_server()
 {
   local nagios_flavour=${fai_monitoring_nagios_flavour-$MONITORING_VENDOR_ICINGA}
+  
+  if [ "$(lsb_release -s -c 2>/dev/null)" = "lucid" ]; then
+    log "Version $(lsb_release -s -c 2>/dev/null) of" \
+      $(lsb_release -s -c 2>/dev/null) \
+      "doesn't support Icinga, will use vanilla Nagios instead."
+    nagios_flavour=$MONITORING_VENDOR_NAGIOS
+  fi
+  
   install_nagios_monitoring_server $nagios_flavour
   install_munin_gatherer
   create_monitoring_server_overview $nagios_flavour
@@ -334,9 +342,15 @@ function set_up_monitoring_host_group()
   local file=$1
   local host_group_name=$2
   local host_group_alias=$3
-    # the remainding arguments passed to the methods is the member
-    # list members
+  # the remainding arguments passed to the methods is the member
+  # list members
   local host_group_member_list=${@:4:$(( $# - 3 ))}
+
+  # don't set up host groups for empty node lists, so we exit here if
+  # the member list is empty.
+  if [ -z "${host_group_member_list}" ]; then
+    return
+  fi
 
   if [ $(grep "hostgroup_name $host_group_name" $file | wc -l) -gt 0 ]; then
     print "Icinga group member" \
