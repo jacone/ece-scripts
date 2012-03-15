@@ -633,7 +633,12 @@ function assert_correct_runtime_environment()
     if [ ! -e "$conf_file" ]; then
         echo $conf_file "doesn't exist."
         echo "I cannot live without it, so I'm exiting :-("
-        remove_pid_and_exit_in_error
+        
+        if [ -e $pid_file ]; then
+          rm $pid_file
+        fi
+        
+        exit 1
     fi
 }
 
