@@ -471,17 +471,17 @@ function sanity_check()
         exit 1
     fi
 
-    if [[ "$command"=="list-instances" ]]; then
+    if [ $command == "list-instances" ]; then
       return
     fi
 
+    local instance_list=$(get_instance_list)
     # checks if the user is using the default instance when he/she
     # really wants to start one of the instances installed on the
     # system.
     if [ "$instance" == "default" -a \
         "$type" == "engine" -a \
         $(echo $command | egrep 'help' | wc -l) -eq 0 ]; then
-        instance_list=$(get_instance_list)
         if [[ -n "$instance_list" && \
             $(echo $instance_list | grep ' ' | wc -l) -gt 0 ]]; then
             print "You must specify the instance with -i <instance>"
@@ -491,6 +491,19 @@ function sanity_check()
         fi
     fi
 
+    local instance_exists=0
+    for el in $instance_list; do
+      if [ $el == $instance ]; then
+        instance_exists=1
+        break
+      fi
+    done
+
+    if [ $instance_exists -eq 0 ]; then
+      print "Instance '$instance' doesn't exist on $HOSTNAME"
+      exit 1
+    fi
+    
     # verifies that java_home exists and has the java executable
     if [ ! -d $java_home ]; then
         print "java_home $java_home doesn't exist"
