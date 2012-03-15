@@ -189,6 +189,11 @@ EOF
   if [ -z "${instance_list}" ]; then
     print_and_log "No ECE instances found on $HOSTNAME, so I'm not adding"
     print_and_log "additional Munin configuration"  
+
+    if [ $on_debian_or_derivative -eq 1 ]; then
+      run service munin-node restart
+    fi
+
     add_next_step "A Munin node has been installed on $HOSTNAME"
     return
   fi
