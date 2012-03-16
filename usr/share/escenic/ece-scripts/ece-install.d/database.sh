@@ -210,8 +210,13 @@ function set_db_settings_from_fai_conf()
   db_master_host=${fai_db_master_host}
   db_master_log_file=${fai_db_master_log_file}
   db_master_log_position=${fai_db_master_log_position}
-  
-  # TODO assert set
+
+  if [ $fai_db_master -eq 0 ]; then
+    ensure_variable_is_set \
+      fai_db_master_host \
+      fai_db_master_log_file \
+      fai_db_master_log_position
+  fi
 }
 
 # Method used both from interactive mode to set any missing values
