@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 # set -e
 
-chmod +x /usr/sbin/ece-install /usr/bin/{ece,system-info}
+chmod +x /usr/sbin/ece-install
 
 echo "You can now run the Escenic Content Engine installer "
 echo "by typing 'ece-install' as root"
