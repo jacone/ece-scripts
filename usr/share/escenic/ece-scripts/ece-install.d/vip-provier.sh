@@ -19,6 +19,14 @@ function get_vip_configuration() {
   # /etc/ha.d/authkeys), looks something like:
   # e19f39c09e9affafc23fc5bcd0404186
   vip_primary_node_auth_key=${fai_vip_primary_node_auth_key}
+
+  ensure_variable_is_set \
+    fai_vip_address \
+    fai_vip_sibling_ip \
+    fai_vip_primary_node_name \
+    fai_vip_primary_node_ip \
+    fai_vip_secondary_node_name \
+    fai_vip_secondary_node_ip
 }
 
 function install_vip_provider() {
