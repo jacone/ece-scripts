@@ -264,6 +264,8 @@ function set_up_basic_nursery_configuration() {
     print_and_log "Using the supplied Nursery & JAAS configuration from" 
     print_and_log "bundle: $ece_instance_conf_archive"
     local a_tmp_dir=$(mktemp -d)
+    run cd $a_tmp_dir
+    run tar xzf $ece_instance_conf_archive
     
     if [ ! -d ${a_tmp_dir}/engine/security ]; then
       print "Archive $ece_instance_conf_archive doesn't have JAAS config,"
@@ -271,8 +273,6 @@ function set_up_basic_nursery_configuration() {
       run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/
     fi
     
-    run cd $a_tmp_dir
-    run tar xzf $ece_instance_conf_archive
     run cp -r engine/siteconfig/config-skeleton/* $common_nursery_dir/
   else
     run cp -r $escenic_root_dir/engine/siteconfig/config-skeleton/* \
