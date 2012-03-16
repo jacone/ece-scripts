@@ -108,18 +108,20 @@ backend static {
 }
 
 EOF
+  local i=0
   for el in $backend_servers; do
     appserver_id=$(echo $el | cut -d':' -f1 | sed 's/-/_/g')
     appserver_host=$(echo $el | cut -d':' -f1)
     appserver_port=$(echo $el | cut -d':' -f2)
 
     cat >> /etc/varnish/default.vcl <<EOF
-backend $appserver_id {
+backend ${appserver_id}${i} {
   .host = "$appserver_host";
   .port = "$appserver_port";
 }
 
 EOF
+    i=$(( $i+1 ))
   done
 
   cat >> /etc/varnish/default.vcl <<EOF
@@ -127,14 +129,17 @@ EOF
  * IP. */
 director webdirector client {
 EOF
+
+  i=0
   for el in $backend_servers; do
-	  appserver_id=$(echo $el | cut -d':' -f1 | sed 's/-/_/g' )        
+	  appserver_id=$(echo $el | cut -d':' -f1 | sed 's/-/_/g')        
     cat >> /etc/varnish/default.vcl <<EOF
   {
-     .backend = $appserver_id;
+     .backend = ${appserver_id}${i};
      .weight = 1;
   }
 EOF
+    i=$(( $i+1 ))
   done
 
   cat >> /etc/varnish/default.vcl <<EOF
