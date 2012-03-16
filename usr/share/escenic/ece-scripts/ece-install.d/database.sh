@@ -211,7 +211,7 @@ function set_db_settings_from_fai_conf()
   db_master_log_file=${fai_db_master_log_file}
   db_master_log_position=${fai_db_master_log_position}
 
-  if [ $db_master -eq 0 ]; then
+  if [ $db_master -eq 0 -a $db_replication -eq 1 ]; then
     ensure_variable_is_set \
       fai_db_master_host \
       fai_db_master_log_file \
