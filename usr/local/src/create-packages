@@ -49,15 +49,23 @@ function set_up_target_directory() {
     
   elif [[ $package_name == "escenic-content-engine-scripts" ]]; then
     mkdir -p $target_dir/usr/share/doc/escenic
+    mkdir -p $target_dir/etc/init.d
     mkdir -p $target_dir/usr/share/escenic/ece-scripts
-    
+
     cp -r ../../bin/{ece,system-info} $target_dir/usr/bin/
-    cp -r ../../share/escenic/ece-scripts/common* \
-      $target_dir/usr/share/escenic/ece-scripts/
+
+    # The common files are also provided in the installer. Later, when
+    # we've got a repo up and running, we'll let the -installer depend
+    # on the scripts package, and then remove the common scripts from
+    # the installer.
+    # cp -r ../../share/escenic/ece-scripts/common* \
+    # $target_dir/usr/share/escenic/ece-scripts/
+    
     cp -r ../../share/doc/escenic/{ece,system-info}-guide.{org,html} \
       $target_dir/usr/share/doc/escenic
     cp -r ../../../etc/escenic/ $target_dir/etc/
-    cp -r ../../../etc/default/ece $target_dir/etc/default
+    cp -r ../../../etc/default/ece $target_dir/etc/default/
+    cp -r ../../../etc/init.d/ece $target_dir/etc/init.d/
     
   elif [[ $package_name == "vosa" ]]; then
     mkdir -p $target_dir/usr/share/doc/vosa
