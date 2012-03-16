@@ -105,7 +105,7 @@ function set_up_engine_and_plugins() {
     return
   fi
   
-  log "Setting up the Escenic Content Engine & its plugins ..."
+  print_and_log "Setting up the Escenic Content Engine & its plugins ..."
 
   make_dir $escenic_root_dir
   cd $escenic_root_dir/
