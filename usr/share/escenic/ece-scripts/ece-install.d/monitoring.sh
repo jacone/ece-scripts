@@ -130,7 +130,11 @@ function install_nagios_node()
     $file
   dont_quote_conf_values=0
 
+  # bug in nagios-nrpe-server, restart fails (sometimes) if the PID
+  # isn't there (!)
+  run touch /var/run/nagios/nrpe.pid
   run /etc/init.d/nagios-nrpe-server restart
+  
   add_next_step "A Nagios NRPE node has been installed on ${HOSTNAME}"
 }
 
