@@ -223,66 +223,6 @@ function install_common_os_packages()
   done
 }
 
-######################################################################
-# <pulse-methods>
-######################################################################
-function download_escenic_components_p() {
-  $(download_escenic_components) &
-  show_pulse $! "Downloading Escenic components from Technet"
-}
-
-function set_up_instance_specific_nursery_configuration_p() {
-  $(set_up_instance_specific_nursery_configuration) &
-  show_pulse $! "Setting up instance specific Nursery configuration"
-}
-
-function assemble_deploy_and_restart_type_p() {
-  echo $(assemble_deploy_and_restart_type) &
-  show_pulse $! "Assembling, deploying & starting $instance_name"
-}
-
-function set_up_engine_and_plugins_p() {
-  $(set_up_engine_and_plugins) &
-  show_pulse $! "Setting up the Escenic Content Engine & its plugins"
-}
-  
-function check_for_required_downloads_p() {
-  $(check_for_required_downloads) &
-  show_pulse $! "Asserting that required downloads succeeded"
-}
-
-function set_up_user_environment_p() {
-  $(set_up_user_environment) &
-  show_pulse $! "Setting up the ${ece_user} user's UNIX environment"
-}
-
-function set_up_ece_scripts_p() {
-  $(set_up_ece_scripts) &
-  show_pulse $! 'Setting up the ece UNIX scripts'
-  if [ -n "${messages}" ]; then
-    echo $message
-  fi
-}
-
-function install_common_os_packages_p() {
-  $(install_common_os_packages) &
-  show_pulse $! "Installing 3rd party packages needed by $(basename $0)"
-}
-
-function install_ece_third_party_packages_p() {
-  $(install_ece_third_party_packages) &
-  show_pulse $! "Installing 3rd party packages needed by ECE"
-}
-
-function set_up_assembly_tool_p() {
-  $(set_up_assembly_tool) &
-  show_pulse $! "Setting up the Assembly Tool"
-}
-  
-######################################################################
-# </pulse-methods>
-######################################################################
-
 function set_up_ece_scripts()
 {
   print_and_log 'Setting up the ece UNIX scripts ...'
