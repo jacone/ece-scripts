@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
-# script fro creating DEB and RPM packages of the ece-install and ece
-# scripts.
+# script fro creating DEB and RPM packages of the vosa, ece-install
+# and ece scripts.
 
 # by tkj@vizrt.com
 
