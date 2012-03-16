@@ -486,3 +486,71 @@ function install_ece_third_party_packages
     assert_pre_requisite $el
   done
 }
+
+ece_instance_ear_file=""
+ece_instance_conf_archive=""
+
+function set_archive_files_depending_on_profile()
+{
+  if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+    ece_instance_ear_file=$fai_presentation_ear
+    ece_instance_conf_archive=$fai_presentation_conf_archive
+  elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+    ece_instance_ear_file=$fai_editor_ear
+    ece_instance_conf_archive=$fai_editor_conf_archive
+  elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+    ece_instance_ear_file=$fai_search_ear
+    ece_instance_conf_archive=$fai_search_conf_archive
+  fi
+}
+
+# Returns 1 if we're installing the ECE instances from a provided EAR
+# file
+function is_installing_from_ear()
+{
+  log install_profile_number=$install_profile_number
+  log ece_instance_ear_file=$ece_instance_ear_file
+
+  if [[ -z "$ece_instance_ear_file" || \
+    $fai_enabled -eq 0 ]]; then
+    echo 0
+    return
+  fi
+
+  echo 1
+}
+
+# Returns 1 if we're using a tarball with the Nursery & JAAS configuration.
+function is_using_conf_archive(){
+  log install_profile_number=$install_profile_number
+  log ece_instance_conf_archive=$ece_instance_conf_archive
+
+  if [[ -z "$ece_instance_conf_archive" || \
+    $fai_enabled -eq 0 ]]; then
+    echo 0
+    return
+  fi
+
+  echo 1
+}
+
+function assemble_deploy_and_restart_type()
+{
+  set_correct_permissions
+
+    # need to run clean here since we might be running multiple
+    # profiles in the same ece-install process.
+  ece_command="ece -i $instance_name -t $type clean assemble deploy restart"
+  if [ $(is_installing_from_ear) -eq 1 ]; then
+    run cp $ece_instance_ear_file $escenic_cache_dir/engine.ear
+    ece_command="ece -i $instance_name -t $type deploy restart"
+    print_and_log "Deploying the supplied EAR on instance $instance_name"
+    print_and_log "and restarting it ..."
+  else
+    print_and_log "Assembling, deploying & starting $instance_name ..."
+  fi
+  
+  su - $ece_user -c "$ece_command" 1>>$log 2>>$log
+  exit_on_error "su - $ece_user -c \"$ece_command\""
+}
+
