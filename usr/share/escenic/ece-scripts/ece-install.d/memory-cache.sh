@@ -23,6 +23,7 @@ function install_memory_cache()
   make_dir ${escenic_root_dir}/assemblytool/lib
   run cp $name/$name.jar ${escenic_root_dir}/assemblytool/lib
   run rm -rf $tmp_dir
+  run cd ~/
   
   memcached_set_up_common_nursery
 
