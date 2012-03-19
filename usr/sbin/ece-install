@@ -955,13 +955,6 @@ if [ $fai_enabled -eq 1 ]; then
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_cache_install) -eq 1 ]; then
-        install_profile_number=$PROFILE_CACHE_SERVER
-        install_cache_server
-        install_web_server 0
-        no_fai_profile=0
-    fi
-    
     if [ $(get_boolean_conf_value fai_wf_install) -eq 1 ]; then
         install_profile_number=$PROFILE_WIDGET_FRAMEWORK
         install_widget_framework
@@ -971,6 +964,13 @@ if [ $fai_enabled -eq 1 ]; then
     if [ $(get_boolean_conf_value fai_presentation_install) -eq 1 ]; then
         install_profile_number=$PROFILE_PRESENTATION_SERVER
         install_presentation_server
+        no_fai_profile=0
+    fi
+    
+    if [ $(get_boolean_conf_value fai_cache_install) -eq 1 ]; then
+        install_profile_number=$PROFILE_CACHE_SERVER
+        install_cache_server
+        install_web_server 0
         no_fai_profile=0
     fi
     
