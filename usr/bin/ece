@@ -1058,36 +1058,46 @@ function print_tomcat_resources() {
 
   print "Application server resources:"
 
-  xml_grep  --nowrap --cond Context/Environment \
-    $tomcat_base/conf/context.xml | \
-    sed 's/^[ \t]//g' | \
-    sed "s#><#>\n<#g" | \
-    cut -d' ' -f2,5 |  \
-    cut -d'"' -f2,4 | \
-    while read line ; do
-    local key=$(echo $line | cut -d'"' -f1)
-    local value=$(echo $line | cut -d'"' -f2)
-    print "|->" ${key}: ${value}
-  done
-   
-  print "Database:"
-  xml_grep \
-    --nowrap \
-    --cond 'Server/GlobalNamingResources/Resource[@type="javax.sql.DataSource"]' \
-    $tomcat_base/conf/server.xml | \
-    sed 's/^[ \t]//g' | \
-    sed "s#><#>\n<#g" | \
-    while read line ; do
-    for el in $(echo $line | cut -d' ' -f1- ); do
-      if [[ $el == "name"* || $el == "url"* || $el == "username"* ]]; then
-        local key=$(echo $el | cut -d'"' -f1 | cut -d'=' -f1)
-        local value=$(echo $el | cut -d'"' -f2)
-        print "|->" ${key}: ${value}
-      fi
-
+  local file=$tomcat_base/conf/context.xml
+  if [ -r $file ]; then
+    xml_grep  --nowrap --cond Context/Environment \
+      $file | \
+      sed 's/^[ \t]//g' | \
+      sed "s#><#>\n<#g" | \
+      cut -d' ' -f2,5 |  \
+      cut -d'"' -f2,4 | \
+      while read line ; do
+      local key=$(echo $line | cut -d'"' -f1)
+      local value=$(echo $line | cut -d'"' -f2)
+      print "|->" ${key}: ${value}
     done
-  done
+  else
+    print "|-> $USER cannot read $file"
+  fi
   
+  print "Database:"
+  file=$tomcat_base/conf/server.xml
+  if [ -r $file ]; then
+    xml_grep \
+      --nowrap \
+      --cond 'Server/GlobalNamingResources/Resource[@type="javax.sql.DataSource"]' \
+      $file | \
+      sed 's/^[ \t]//g' | \
+      sed "s#><#>\n<#g" | \
+      while read line ; do
+      for el in $(echo $line | cut -d' ' -f1- ); do
+        if [[ $el == "name"* || $el == "url"* || $el == "username"* ]]; then
+          local key=$(echo $el | cut -d'"' -f1 | cut -d'=' -f1)
+          local value=$(echo $el | cut -d'"' -f2)
+          print "|->" ${key}: ${value}
+        fi
+
+      done
+    done
+  else
+    print "|-> $USER cannot read $file"
+  fi
+
 }
 
 function restart_type()
