@@ -1089,6 +1089,10 @@ function print_tomcat_resources() {
         if [[ $el == "name"* || $el == "url"* || $el == "username"* ]]; then
           local key=$(echo $el | cut -d'"' -f1 | cut -d'=' -f1)
           local value=$(echo $el | cut -d'"' -f2)
+          if [[ $value == "jdbc:mysql"* ]]; then
+            value=${value:5}
+          fi
+          
           print "|->" ${key}: ${value}
         fi
 
