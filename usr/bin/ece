@@ -1039,15 +1039,29 @@ function get_info_for_type()
                     print "|-> Tomcat home:" $tomcat_home
                     print "|-> Tomcat base:" $tomcat_base
                     print_tomcat_resources
+                    print_deployed_webapps $tomcat_base
                 fi
             ;;
             resin)
                 if [ -n "${resin_home}" ]; then
                     print "  |-> Resin home:" $resin_home
+                    print_deployed_webapps $resin_home
                 fi
                 ;;
         esac
     fi
+}
+
+## $1: dir
+function print_deployed_webapps() {
+  local webapps=""
+  
+  print "Deployed web applications:"
+  for el in $(find $1/webapps -maxdepth 1 -type d | \
+    grep -v webapps$); do
+    print "|-> http://${HOSTNAME}:${port}/"$(basename $el)
+  done
+
 }
 
 function print_tomcat_resources() {
@@ -1101,7 +1115,6 @@ function print_tomcat_resources() {
   else
     print "|-> user $USER cannot read $file"
   fi
-
 }
 
 function restart_type()
