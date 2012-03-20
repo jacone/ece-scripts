@@ -1072,7 +1072,7 @@ function print_tomcat_resources() {
       print "|->" ${key}: ${value}
     done
   else
-    print "|-> $USER cannot read $file"
+    print "|-> user $USER cannot read $file"
   fi
   
   print "Database:"
@@ -1095,7 +1095,7 @@ function print_tomcat_resources() {
       done
     done
   else
-    print "|-> $USER cannot read $file"
+    print "|-> user $USER cannot read $file"
   fi
 
 }
