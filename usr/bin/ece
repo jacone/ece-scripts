@@ -1588,7 +1588,7 @@ function list_versions()
     version_manager=browser/Global/neo/io/managers/VersionManager
     url=$(get_escenic_admin_url)/$version_manager
         
-    print "Installed on the ${type} running on ${host}:${port} is:"
+    print "Installed on the ${instance} instance running on port ${port}:"
     wget $wget_auth -O - $url  2>/dev/null | \
         grep "\[\[" | \
         sed 's/\[//g' | \
