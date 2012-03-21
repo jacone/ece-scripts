@@ -46,16 +46,15 @@ function create_header() {
   if [ $format == "html" ]; then
 cat <<EOF
 
-<html xmlns=\"http://www.w3.org/1999/xhtml\">
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>$title @ $(date)</title>
-    <style type=\"text/css\">
+    <style type="text/css">
 $(cat $ece_scripts_dir/vizrt.css)
     </style>
   </head>
   <body>
-$(cat $ece_scripts_dir/html-vizrt-logo-svg.html)
-"
+$(cat $ece_scripts_dir/vizrt-logo-svg.html)
 EOF
 fi
 
