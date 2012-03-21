@@ -164,9 +164,9 @@ $@
 {code}
 EOF
   elif [ $format == "json" ]; then
-    # hack to make JSON work, TODO: replace linebreaks with \n
+    # JSON doesn't accept newline characters
     cat <<EOF
-    "data": "$(json_escape_string $(echo $@ | head -1))",
+    "data": "$(json_escape_string $(echo $@ | sed 's/$/\\n/'))",
 EOF
   fi
 }
