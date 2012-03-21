@@ -60,6 +60,13 @@ function set_up_target_directory() {
     # the installer.
     # cp -r ../../share/escenic/ece-scripts/common* \
     # $target_dir/usr/share/escenic/ece-scripts/
+
+    cp -r ../../share/escenic/ece-scripts/*.css \
+      $target_dir/usr/share/escenic/ece-scripts/
+    cp -r ../../share/escenic/ece-scripts/*.html \
+      $target_dir/usr/share/escenic/ece-scripts/
+    cp -r ../../share/escenic/ece-scripts/system-info.d \
+      $target_dir/usr/share/escenic/ece-scripts/
     
     cp -r ../../share/doc/escenic/{ece,system-info}-guide.{org,html} \
       $target_dir/usr/share/doc/escenic
