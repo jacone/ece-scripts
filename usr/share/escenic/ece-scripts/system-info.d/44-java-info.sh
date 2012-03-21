@@ -4,5 +4,5 @@
 
 print_h2_header "Java information"
 print_pre_text $(java -version 2>&1)
-
+print_section_end
 

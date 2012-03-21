@@ -6,4 +6,4 @@ if [ $(whoami) != "root" ]; then
   print_p_text "Run $(basename $0) as  root to get more details in this listing"
 fi
 
-
+print_section_end

@@ -49,7 +49,10 @@ function get_overview_of_all_instances() {
     print_h3_header "Overview of instance $el"
     print_un_ordered_list_start
     create_ece_overview $el
+    print_section_end
   done
+
+  print_section_end
 }
 
 get_overview_of_all_instances
