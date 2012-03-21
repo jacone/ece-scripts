@@ -11,7 +11,7 @@
 
 ece_user=""
 
-## possible values: html, org, confluence
+## possible values: html, org, confluence, json
 format=org
 
 function init() {
@@ -56,22 +56,32 @@ $(cat $ece_scripts_dir/vizrt.css)
   <body>
 $(cat $ece_scripts_dir/vizrt-logo-svg.html)
 EOF
-fi
+  elif [ $format == "json" ]; then
+    cat <<EOF
+{
+  "title": "$title",
+  "generated-date": "$(date)",
+EOF
+  else
+    print_h1_header $title
+    print_p_text "Generated @ $(date)"
+  fi
 
-  print_h1_header $title
-  print_p_text "Generated @ $(date)"
 }
 
 function create_footer() {
-  if [ $format != "html" ]; then
-    return
-  fi
-  
-  local footer="
+    if [ $format == "html" ]; then
+      cat <<EOF
+
   </body>
 </html>
-"
-  echo "$footer"
+EOF
+
+    elif [ $format == "json" ]; then
+      cat <<EOF
+}
+EOF
+    fi
 }
 
 function wrap_in_anchor_if_applicable() {
@@ -99,6 +109,8 @@ function print_un_ordered_list_start() {
     echo "<ul>"
   elif [ $format == "confluence" ]; then
     echo ""
+  elif [ $format == "json" ]; then
+    echo "    \"list\": ["
   fi
 }
 
@@ -109,6 +121,8 @@ function print_un_ordered_list_end() {
     echo "</ul>"
   elif [ $format == "confluence" ]; then
     echo ""
+  elif [ $format == "json" ]; then
+    echo "    ],"
   fi
 }
 
@@ -121,7 +135,13 @@ function print_list_item() {
       "</li>"
   elif [ $format == "confluence" ]; then
     echo "* $@"
+  elif [ $format == "json" ]; then
+    echo "      \"$@\", "
   fi
+}
+
+function json_escape_string() {
+  echo "$@" | sed 's/\"/\\"/g'
 }
  
 function print_pre_text() {
@@ -143,7 +163,16 @@ EOF
 $@
 {code}
 EOF
+  elif [ $format == "json" ]; then
+    # hack to make JSON work, TODO: replace linebreaks with \n
+    cat <<EOF
+    "data": "$(json_escape_string $(echo $@ | head -1))",
+EOF
   fi
+}
+
+function make_string_into_json_label() {
+  echo "$@" | tr [A-Z] [a-z] | sed 's/ /-/g'
 }
 
 function print_h3_header() {
@@ -154,6 +183,10 @@ function print_h3_header() {
     echo "<h3>$@</h3>"
   elif [ $format == "confluence" ]; then
     echo "h3. $@"
+  elif [ $format == "json" ]; then
+    cat <<EOF
+    "$(make_string_into_json_label $@)": {
+EOF
   fi
 }
 
@@ -176,6 +209,16 @@ function print_h2_header() {
     echo "<h2>$@</h2>"
   elif [ $format == "confluence" ]; then
     echo "h2. $@"
+  elif [ $format == "json" ]; then
+    cat <<EOF
+  "$(echo $@ | tr [A-Z] [a-z] | sed 's/ /-/g')" : {
+EOF
+  fi
+}
+
+function print_section_end {
+  if [ $format == "json" ]; then
+    echo "},"
   fi
 }
 
@@ -200,6 +243,8 @@ function print_p_text() {
 EOF
   elif [ $format == "confluence" ]; then
     echo "$@"
+  elif [ $format == "json" ]; then
+    echo "    \"message\": \"$@\","
   fi
 }
 
