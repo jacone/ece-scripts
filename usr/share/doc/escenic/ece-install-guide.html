@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1"/>
 <meta name="title" content="Welcome to the /usr/sbin/ece-install Guide"/>
 <meta name="generator" content="Org-mode"/>
-<meta name="generated" content="2012-03-08 15:10:00 CST"/>
+<meta name="generated" content="2012-03-14 18:08:27 CST"/>
 <meta name="author" content="Torstein Krause Johansen"/>
 <meta name="description" content=""/>
 <meta name="keywords" content=""/>
@@ -256,7 +256,11 @@ div.note {
 <li><a href="#sec-5-3">5.3 Profile :: Full Stack on One Host</a></li>
 <li><a href="#sec-5-4">5.4 Profile :: Editorial Server (Publication Server)</a></li>
 <li><a href="#sec-5-5">5.5 Profile :: Presentation Server</a></li>
-<li><a href="#sec-5-6">5.6 Profile :: Database Server</a></li>
+<li><a href="#sec-5-6">5.6 Profile :: Database Server</a>
+<ul>
+<li><a href="#sec-5-6-1">5.6.1 Master &amp; slave setup</a></li>
+</ul>
+</li>
 <li><a href="#sec-5-7">5.7 Profile :: Cache Server</a></li>
 <li><a href="#sec-5-8">5.8 Profile :: Install Widget Framework</a></li>
 <li><a href="#sec-5-9">5.9 Profile :: Create Publication</a></li>
@@ -757,7 +761,72 @@ The script will fail by itself if the DB already exists:
 <span style="color: #ffa07a;">[ece-install] running tables FAILED, exiting :-(</span>
 </pre>
 
+<p>
+If you for some reason wish to make ece-install drop the DB fro you
+before creating a new one, you can set
+</p>
 
+
+<pre class="src src-sh"><span style="color: #f0dfaf;">fai_db_drop_old_db_first</span>=1
+</pre>
+
+
+
+</div>
+
+<div id="outline-container-5-6-1" class="outline-4">
+<h4 id="sec-5-6-1"><span class="section-number-4">5.6.1</span> Master &amp; slave setup</h4>
+<div class="outline-text-4" id="text-5-6-1">
+
+<p>It's easy to set up master and slave DBs, here's how you'd configure
+ece-install to install these:
+</p>
+<p>
+On the master, create an ece-install.conf with:
+</p>
+
+
+<pre class="src src-sh"><span style="color: #f0dfaf;">fai_enabled</span>=1
+<span style="color: #f0dfaf;">fai_db_install</span>=1
+<span style="color: #f0dfaf;">fai_db_master</span>=1
+<span style="color: #f0dfaf;">fai_db_replication</span>=1
+</pre>
+
+
+<p>
+The script will itself output some replication log settings you need
+for the slave:
+</p>
+
+
+<pre class="src src-sh">[ece-install-35] - DB is now set up on localhost:3306
+[ece-install-35] - ece-install.conf for slave: <span style="color: #f0dfaf;">fai_db_master_log_file</span>=mysql-bin.000013
+[ece-install-35] - ece-install.conf for slave: <span style="color: #f0dfaf;">fai_db_master_log_position</span>=106
+</pre>
+
+
+<p>
+Once this is done, create and use an ece-install.conf on the slave
+with this configuration:
+</p>
+
+
+<pre class="src src-sh"><span style="color: #f0dfaf;">fai_enabled</span>=1
+<span style="color: #f0dfaf;">fai_db_install</span>=1
+<span style="color: #f0dfaf;">fai_db_replication</span>=1
+<span style="color: #f0dfaf;">fai_db_master</span>=0
+<span style="color: #f0dfaf;">fai_db_master_host</span>=my-db-master
+<span style="color: #f0dfaf;">fai_db_master_log_file</span>=mysql-bin.000013
+<span style="color: #f0dfaf;">fai_db_master_log_position</span>=106
+</pre>
+
+
+<p>
+The script will set up and use the replication user &amp; credentials with
+default values, if you wish to override these, have a look in the FAI
+parameter overview.
+</p>
+</div>
 </div>
 
 </div>
@@ -938,6 +1007,19 @@ than you use for ECE.
 <p>Will install an NFS client, create all the mountpoints and mount these
 on the host.
 </p>
+<p>
+Configuration example for setting up an NFS client mounting the
+multimedia archive on the NFS server:
+</p>
+
+
+<pre class="src src-sh"><span style="color: #f0dfaf;">fai_enabled</span>=1
+<span style="color: #f0dfaf;">fai_nfs_client_install</span>=1
+<span style="color: #f0dfaf;">fai_nfs_server_address</span>=192.168.1.200
+<span style="color: #f0dfaf;">fai_nfs_export_list</span>=<span style="color: #ffa07a;">"/var/exports/multimedia"</span>  
+</pre>
+
+
 </div>
 
 </div>
@@ -946,7 +1028,8 @@ on the host.
 <h3 id="sec-5-15"><span class="section-number-3">5.15</span> Profile :: VIP provider</h3>
 <div class="outline-text-3" id="text-5-15">
 
-
+<p><img src="images/db-vip.png"  alt="images/db-vip.png" />
+</p>
 <p>
 This profile will make the host capable of serving a certain virtual
 IP (VIP) for one or more services. This is a useful thing for all
@@ -1006,7 +1089,7 @@ node. Generate this key, do:
 
 
 
-<pre class="src src-sh">$ dd <span style="color: #f0dfaf;">if</span>=/dev/urandom <span style="color: #f0dfaf;">bs</span>=512 <span style="color: #f0dfaf;">count</span>=1 2&gt;&gt; $<span style="color: #f0dfaf;">log</span> | <span style="color: #ffa07a;">\</span>
+<pre class="src src-sh">$ dd <span style="color: #f0dfaf;">if</span>=/dev/urandom <span style="color: #f0dfaf;">bs</span>=512 <span style="color: #f0dfaf;">count</span>=1 | <span style="color: #ffa07a;">\</span>
     openssl md5 | <span style="color: #ffa07a;">\</span>
     cut -d<span style="color: #ffa07a;">' '</span> -f2   
 </pre>
@@ -1430,6 +1513,12 @@ $HOME/ece-install.conf file of the root user:
 <tr><td class="left">fai<sub>keep</sub><sub>off</sub><sub>etc</sub><sub>hosts</sub></td><td class="left">0</td><td class="left">Set this to 1 if you don't want ece-install adding entries to /etc/hosts</td></tr>
 <tr><td class="left">fai<sub>monitoring</sub><sub>server</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install the monitoring server profile.</td></tr>
 <tr><td class="left">fai<sub>monitoring</sub><sub>server</sub><sub>ip</sub></td><td class="left">127.0.0.1</td><td class="left">The IP of the monitoring server.</td></tr>
+<tr><td class="left">fai<sub>nfs</sub><sub>allowed</sub><sub>client</sub><sub>network</sub></td><td class="left">""</td><td class="left">IP/netmwask of allowed NFS clients, example: 192.168.1.0/255.255.255.0</td></tr>
+<tr><td class="left">fai<sub>nfs</sub><sub>client</sub><sub>install</sub></td><td class="left">0</td><td class="left">Installs an NFS client</td></tr>
+<tr><td class="left">fai<sub>nfs</sub><sub>client</sub><sub>mount</sub><sub>point</sub><sub>parent</sub></td><td class="left">/mnt</td><td class="left">Mount point parent directory</td></tr>
+<tr><td class="left">fai<sub>nfs</sub><sub>export</sub><sub>list</sub></td><td class="left">""</td><td class="left">Space separated list of NFS export directories, full paths as seen on the NFS server. E.g.: /var/exports/multimedia</td></tr>
+<tr><td class="left">fai<sub>nfs</sub><sub>server</sub><sub>address</sub></td><td class="left">""</td><td class="left">Address of the NFS server, useful for the NFS client profile</td></tr>
+<tr><td class="left">fai<sub>nfs</sub><sub>server</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install an NFS server</td></tr>
 <tr><td class="left">fai<sub>presentation</sub><sub>conf</sub><sub>archive</sub></td><td class="left">""</td><td class="left">conf.tar.gz to use for Nursery &amp; JAAS configuration</td></tr>
 <tr><td class="left">fai<sub>presentation</sub><sub>ear</sub></td><td class="left">""</td><td class="left">EAR to use instead of the Escenic binaries</td></tr>
 <tr><td class="left">fai<sub>presentation</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install the presentation server profile</td></tr>
@@ -1452,6 +1541,15 @@ $HOME/ece-install.conf file of the root user:
 <tr><td class="left">fai<sub>search</sub><sub>name</sub></td><td class="left">search1</td><td class="left">Name of the search instance</td></tr>
 <tr><td class="left">fai<sub>search</sub><sub>port</sub></td><td class="left">8080</td><td class="left">HTTP port of the search instance</td></tr>
 <tr><td class="left">fai<sub>search</sub><sub>shutdown</sub></td><td class="left">8005</td><td class="left">Shutdown port of the search instance</td></tr>
+<tr><td class="left">fai<sub>vip</sub><sub>address</sub></td><td class="left">""</td><td class="left">The virtual IP the provider will claim</td></tr>
+<tr><td class="left">fai<sub>vip</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install a VIP provider</td></tr>
+<tr><td class="left">fai<sub>vip</sub><sub>primary</sub><sub>node</sub><sub>auth</sub><sub>key</sub></td><td class="left">""</td><td class="left">Optional, but useful to set to make conf files consistent. Will be generated if not set</td></tr>
+<tr><td class="left">fai<sub>vip</sub><sub>primary</sub><sub>node</sub><sub>ip</sub></td><td class="left">""</td><td class="left">Primary node IP</td></tr>
+<tr><td class="left">fai<sub>vip</sub><sub>primary</sub><sub>node</sub><sub>name</sub></td><td class="left">""</td><td class="left">Primary node name, must be what $(uname -n) returns</td></tr>
+<tr><td class="left">fai<sub>vip</sub><sub>secondary</sub><sub>node</sub><sub>ip</sub></td><td class="left">""</td><td class="left">Secondary node IP</td></tr>
+<tr><td class="left">fai<sub>vip</sub><sub>secondary</sub><sub>node</sub><sub>name</sub></td><td class="left">""</td><td class="left">Secondary node name, must be what $(uname -n) returns</td></tr>
+<tr><td class="left">fai<sub>vip</sub><sub>service</sub><sub>list</sub></td><td class="left">""</td><td class="left">List of init.d scripts to invoke when the VIP is acclaimed/revoked, script must support start &amp; stop</td></tr>
+<tr><td class="left">fai<sub>vip</sub><sub>sibling</sub><sub>ip</sub></td><td class="left">""</td><td class="left">The IP of the other node offering the VIP</td></tr>
 <tr><td class="left">fai<sub>wf</sub><sub>install</sub></td><td class="left">0</td><td class="left">Install Widget Framework profile</td></tr>
 </tbody>
 </table>
@@ -1921,7 +2019,7 @@ The following output is produced from ece-install:
 <hr/>
 <p class="author">
   Author: Torstein Krause Johansen (<a href="mailto:tkj@vizrt.com">tkj@vizrt.com</a>)
-  Date: 2012-03-08 15:10:00 CST
+  Date: 2012-03-14 18:08:27 CST
 </p>
 </div>
 </body>
