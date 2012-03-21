@@ -58,9 +58,9 @@ function set_up_target_directory() {
     # we've got a repo up and running, we'll let the -installer depend
     # on the scripts package, and then remove the common scripts from
     # the installer.
-    # cp -r ../../share/escenic/ece-scripts/common* \
-    # $target_dir/usr/share/escenic/ece-scripts/
-
+    cp -r ../../share/escenic/ece-scripts/common* \
+      $target_dir/usr/share/escenic/ece-scripts/
+    
     cp -r ../../share/escenic/ece-scripts/*.css \
       $target_dir/usr/share/escenic/ece-scripts/
     cp -r ../../share/escenic/ece-scripts/*.html \
