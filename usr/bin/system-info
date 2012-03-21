@@ -11,7 +11,7 @@
 
 ece_user=""
 
-## possible values: html, org, confluence, json
+## possible values: html, org, confluence, json (not coplete)
 format=org
 
 function init() {
