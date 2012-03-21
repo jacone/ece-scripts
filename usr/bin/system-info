@@ -9,8 +9,7 @@
 ## Add this to /etc/cronttab
 # echo '* *     * * *   root    system-info -f html > /var/www/index.html' >> /etc/crontab
 
-
-instance=dev1
+ece_user=""
 
 ## 1 : html
 ## 2 : org
@@ -187,10 +186,13 @@ EOF
 }
 
 function get_user_options() {
-  while getopts ":i:f:" opt; do
+  while getopts ":i:f:u:" opt; do
     case $opt in
       i)
         instance=${OPTARG}
+        ;;
+      u)
+        ece_user=${OPTARG}
         ;;
       f)
         format=${OPTARG}
