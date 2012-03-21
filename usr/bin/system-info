@@ -11,9 +11,8 @@
 
 ece_user=""
 
-## 1 : html
-## 2 : org
-format=html
+## possible values: html, org, confluence
+format=org
 
 function init() {
   # first, try to be nice
@@ -44,13 +43,9 @@ function run_system_info_modules() {
 function create_header() {
   local title="Overview of $HOSTNAME"
   
-  if [ $format == "org" ]; then
-    echo "* $title"
-    echo "Generated @ $(date)"
-    return
-  fi
+  if [ $format == "html" ]; then
+cat <<EOF
 
-  local header="
 <html xmlns=\"http://www.w3.org/1999/xhtml\">
   <head>
     <title>$title @ $(date)</title>
@@ -60,10 +55,12 @@ $(cat $ece_scripts_dir/vizrt.css)
   </head>
   <body>
 $(cat $ece_scripts_dir/html-vizrt-logo-svg.html)
-    <h1>$title</h1>
-    <p>Generated @ $(date)</p>
 "
-  echo "$header"
+EOF
+fi
+
+  print_h1_header $title
+  print_p_text "Generated @ $(date)"
 }
 
 function create_footer() {
@@ -79,20 +76,20 @@ function create_footer() {
 }
 
 function wrap_in_anchor_if_applicable() {
-  if [ $format == "org" ]; then
-    echo "$@"
-    return
+  local result=""
+  
+  if [ $format == "html" ]; then
+    for el in "$@"; do
+      if [[ $el == "/"* || $el == "http://"* || $el == "mysql://"* ]]; then
+        result="$result <a href=\"${el}\">$el</a>"
+      else
+        result="$result $el"
+      fi
+    done
+  else
+    result="$@"
   fi
 
-  local result=""
-  for el in "$@"; do
-    if [[ $el == "/"* || $el == "http://"* || $el == "mysql://"* ]]; then
-      result="$result <a href=\"${el}\">$el</a>"
-    else
-      result="$result $el"
-    fi
-    
-  done
   echo "$result"
 }
 
@@ -101,6 +98,8 @@ function print_un_ordered_list_start() {
     echo ""
   elif [ $format == "html" ]; then
     echo "<ul>"
+  elif [ $format == "confluence" ]; then
+    echo ""
   fi
 }
 
@@ -109,6 +108,8 @@ function print_un_ordered_list_end() {
     echo ""
   elif [ $format == "html" ]; then
     echo "</ul>"
+  elif [ $format == "confluence" ]; then
+    echo ""
   fi
 }
 
@@ -119,6 +120,8 @@ function print_list_item() {
     echo "<li>" \
       "$@" \
       "</li>"
+  elif [ $format == "confluence" ]; then
+    echo "* $@"
   fi
 }
  
@@ -135,6 +138,12 @@ EOF
 $@
 </pre>
 EOF
+  elif [ $format == "confluence" ]; then
+    cat <<EOF
+{code}
+$@
+{code}
+EOF
   fi
 }
 
@@ -144,6 +153,8 @@ function print_h3_header() {
     echo "*** $@"
   elif [ $format == "html" ]; then
     echo "<h3>$@</h3>"
+  elif [ $format == "confluence" ]; then
+    echo "h3. $@"
   fi
 }
 
@@ -153,6 +164,8 @@ function print_h4_header() {
     echo "**** $@"
   elif [ $format == "html" ]; then
     echo "<h4>$@</h4>"
+  elif [ $format == "confluence" ]; then
+    echo "h4. $@"
   fi
 }
 
@@ -162,6 +175,8 @@ function print_h2_header() {
     echo "** $@"
   elif [ $format == "html" ]; then
     echo "<h2>$@</h2>"
+  elif [ $format == "confluence" ]; then
+    echo "h2. $@"
   fi
 }
 
@@ -170,6 +185,8 @@ function print_h1_header() {
     echo "* $@"
   elif [ $format == "html" ]; then
     echo "<h1>$@</h1>"
+  elif [ $format == "confluence" ]; then
+    echo "h1. $@"
   fi
 }
 
@@ -182,6 +199,8 @@ function print_p_text() {
   $@
 </p>
 EOF
+  elif [ $format == "confluence" ]; then
+    echo "$@"
   fi
 }
 
