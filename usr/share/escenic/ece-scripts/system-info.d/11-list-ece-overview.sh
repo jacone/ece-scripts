@@ -4,8 +4,18 @@
 
 ## $1 is instance
 function create_ece_overview() {
-  local data="$(ece -q -i $1 info)"$'\n'
-  data="$data $(ece -q -i $1 versions | cut -d'*' -f2-)"
+  if [ $(whoami) == "root" ]; then
+    local command="ece -q -i $1 info"
+    local data="$(su - $ece_user -c $command)"$'\n'
+    echo $data
+
+    kill $$
+    data="$data $(su - $ece_user -c ece -q -i $1 versions | cut -d'*' -f2-)"
+  else
+    local data="$(ece -q -i $1 info)"$'\n'
+    data="$data $(ece -q -i $1 versions | cut -d'*' -f2-)"
+  fi
+  
   
   echo "$data" | while read line; do
     if [[ $line == "|->"* ]]; then
