@@ -6,11 +6,10 @@
 function create_ece_overview() {
   if [ $(whoami) == "root" ]; then
     local command="ece -q -i $1 info"
-    local data="$(su - $ece_user -c $command)"$'\n'
-    echo $data
+    local data="$(su - $ece_user -c " $command ")"$'\n'
 
-    kill $$
-    data="$data $(su - $ece_user -c ece -q -i $1 versions | cut -d'*' -f2-)"
+    comman="ece -q -i $1 versions"
+    data="$data $(su - $ece_user -c" $command " | cut -d'*' -f2-)"
   else
     local data="$(ece -q -i $1 info)"$'\n'
     data="$data $(ece -q -i $1 versions | cut -d'*' -f2-)"
