@@ -1,193 +1,218 @@
 #! /usr/bin/env bash
 
-# Getting system info, especially useful before reporting to Escenic
-# select Support.
+## Script which creates an overview of system information related to
+## the specified ECE/EAE/Search instance, example invocation:
+##
+## $ ece-overview -i web1 | xmllint --format - > /var/www/web1.html
 
-# can be: ascii, confluence
-output_format=ascii
-on_debian_or_derivate=0
-on_gentoo_or_derivate=0
-on_redhat_or_derivate=0
-on_linux=0
+instance=dev1
 
-important_packages_on_debian="
-ant
-apache2
-libapr1
-libmysql-java
-libtcnative-1
-maven2
-mysql-server
-nginx
-percona-server-server
-slapd
-sun-java6-jdk
-sun-java6-jre
-tomcat6
-tomcat6-user
-varnish
+## 1 : html
+## 2 : org
+format=html
+
+function create_header() {
+  local title="Overview of the $instance instance on $HOSTNAME"
+  
+  if [ $format == "org" ]; then
+    echo "* $title"
+    echo "Generated @ $(date)"
+    return
+  fi
+
+  local header="
+<html xmlns=\"http://www.w3.org/1999/xhtml\">
+  <head>
+    <title>$title @ $(date)</title>
+    <style type=\"text/css\">
+$(cat ../share/escenic/ece-scripts/vizrt.css)
+    </style>
+  </head>
+  <body>
+$(cat ../share/escenic/ece-scripts/html-vizrt-logo-svg.html)
+    <h1>$title</h1>
+    <p>Generated @ $(date)</p>
+    <ul>
 "
-important_packages_on_gentoo="
-dev-db/percona-server
-dev-java/ant-contrib
-dev-java/ant-nodeps
-dev-java/maven-bin
-dev-libs/apr
-net-misc/memcached
-net-nds/openldap
-virtual/jre-1.6.0
-www-servers/apache
-www-servers/nginx
-www-servers/varnish
+  echo "$header"
+}
+
+function create_footer() {
+  if [ $format != "html" ]; then
+    return
+  fi
+  
+  local footer="
+  </body>
+</html>
 "
-
-if [ `uname -s` = "Linux" ]; then
-    on_linux=1
-fi
-
-if [ -x /usr/bin/dpkg -a -e /etc/debian_version ]; then
-    on_debian_or_derivate=1
-elif [ -x /usr/bin/emerge -a -e /etc/gentoo-release ]; then
-    on_gentoo_or_derivate=1
-fi
-
-
-function print_ruler()
-{
-    if [ $output_format = "ascii" ]; then
-        for i in {0..72}; do
-            echo -n $1
-        done
-    fi
+  echo "$footer"
 }
 
-function print_pre_start()
-{
-    if [ $output_format = "confluence" ]; then
-        echo "{code}"
-    fi
-}
+function wrap_in_anchor_if_applicable() {
+  if [ $format == "org" ]; then
+    echo "$@"
+    return
+  fi
 
-function print_pre_end()
-{
-    if [ $output_format = "confluence" ]; then
-        echo "{code}"
-    fi
-}
-
-function print_header()
-{
-    if [ $output_format = "confluence" ]; then
-        echo "h2. $1"
-    elif [ $output_format = "ascii" ]; then
-        echo ""
-        print_ruler "#"
-        echo ""
-        echo $1
-        print_ruler "#"
-        echo ""
-    fi
-}
-
-function list_useful_package_info()
-{
-    print_header "Important packages"
-    print_pre_start
-
-    if [ $on_debian_or_derivate -eq 1 ]; then
-        for el in $important_packages_on_debian; do
-            dpkg -l $el 2>/dev/null | grep ^ii | sed 's/ii\ \ //g'
-        done
-    elif [ $on_gentoo_or_derivate -eq 1 ]; then
-        for el in $important_packages_on_gentoo; do
-	    equery  --no-color --no-pipe list $el 2>/dev/null | \
-		grep -v "Searching for" | \
-		cut -d']' -f3- 2>/dev/null
-        done
-    fi
-
-    print_pre_end
-}
-
-function list_os_info()
-{
-    print_header "Kernel version"
-    uname -a
-
-    print_header "Distribution information"
-    if [ $on_debian_or_derivate -eq 1 ]; then
-        echo "Debian or derivate, version "`cat /etc/debian_version`
-    elif [ -r /etc/gentoo-release ]; then
-        cat /etc/gentoo-release
-    fi
-}
-
-function list_db_information()
-{
-    print_header "Database details"
-    if [ -x /usr/sbin/mysqld ]; then
-        /usr/sbin/mysqld -V
+  local result=""
+  for el in "$@"; do
+    if [[ $el == "/"* || $el == "http://"* || $el == "mysql://"* ]]; then
+      result="$result <a href=\"${el}\">$el</a>"
     else
-        mysql -V 2>/dev/null
-        mysql5 -V 2>/dev/null
+      result="$result $el"
     fi
-}
-
-function list_java_information()
-{
-    print_header "Java version"
-    java -version
-}
-
-function list_hardware_information()
-{
-    if [ $on_linux -eq 1 ]; then
-        print_header "Processors"
-        echo "Processor type: " `grep "model name" /proc/cpuinfo | head -1 | cut -d':' -f2`
-        echo "Number of processors/cores:" `grep processor /proc/cpuinfo | wc -l`
-
-        print_header "Memory"
-        echo "Total memory: " `grep MemTotal /proc/meminfo | cut -d':' -f2`
-        echo "Free memory: " `grep MemFree /proc/meminfo | cut -d':' -f2`
-    fi
-
-    print_header "Disk Storage"
-    print_pre_start
-    if [ $(df --version | grep GNU | wc -l) -gt 0 ]; then
-	df -hT
-    else
-	df
-    fi
-    print_pre_end
-}
-
-function print_report_header()
-{
-    if [ $output_format = "confluence" ]; then
-	echo "h1. System details for $HOSTNAME"
-    elif [ $output_format = "ascii" ]; then
-        echo ""
-        print_ruler "#"
-        echo ""
-        echo "System details for $HOSTNAME"
-        print_ruler "#"
-        echo ""
-    fi
-
-}
-
-for el in $@; do
-    if [ $el = "-c" -o $el = "--confluence" ]; then
-        output_format=confluence
-    fi
-done
-
-print_report_header
-list_os_info
-list_db_information
-list_java_information
-list_useful_package_info
-list_hardware_information
-
-   
     
+  done
+  echo "$result"
+}
+
+function print_un_ordered_list_start() {
+  if [ $format == "org" ]; then
+    echo ""
+  elif [ $format == "html" ]; then
+    echo "<ul>"
+  fi
+}
+
+function print_un_ordered_list_end() {
+  if [ $format == "org" ]; then
+    echo ""
+  elif [ $format == "html" ]; then
+    echo "</ul>"
+  fi
+}
+
+function print_list_item() {
+  if [ $format == "org" ]; then
+    echo "- $@"
+  elif [ $format == "html" ]; then
+    echo "<li>" \
+      "$@" \
+      "</li>"
+  fi
+}
+
+ 
+function do_create-overview() {
+  local data="$(ece -q -i $instance info)"$'\n'
+  data="$data $(ece -q -i $instance versions | cut -d'*' -f2-)"
+  
+  echo "$data" | while read line; do
+    if [[ $line == "|->"* ]]; then
+      print_list_item $(wrap_in_anchor_if_applicable ${line:3})
+    elif [ $(echo $line | cut -d':' -f2- | wc -c) -gt 1 ]; then
+      print_list_item $(wrap_in_anchor_if_applicable $line)
+    else
+      print_un_ordered_list_end
+      print_h2_header $(echo $line | cut -d: -f1)
+      print_un_ordered_list_start
+    fi
+    
+  done
+
+  list_services_running
+  list_hw
+}
+
+function print_pre_text() {
+  if [ $format == "org" ]; then
+    cat <<EOF
+#+BEGIN_SRC sh
+$@  
+#+END_SRC
+EOF
+  elif [ $format == "html" ]; then
+    cat <<EOF
+<pre>
+$@
+</pre>
+EOF
+  fi
+}
+
+function print_h2_header() {
+  if [ $format == "org" ]; then
+    echo ""
+    echo "** $@"
+  elif [ $format == "html" ]; then
+    echo "<h2>$@</h2>"
+  fi
+}
+
+function print_h1_header() {
+  if [ $format == "org" ]; then
+    echo "* $@"
+  elif [ $format == "html" ]; then
+    echo "<h1>$@</h1>"
+  fi
+}
+
+function print_p_text() {
+  if [ $format == "org" ]; then
+    echo "$@"
+  elif [ $format == "html" ]; then
+    cat <<EOF
+<p>
+  $@
+</p>
+EOF
+  fi
+}
+
+function list_hw() {
+  print_h2_header "Disks used on $HOSTNAME"
+  print_pre_text "$(df -hT)"
+  
+  print_h2_header "Memory on $HOSTNAME</h2>"
+  print_pre_text "$(free -m)"
+
+  print_h2_header "CPU(s) on $HOSTNAME"
+  print_p_text "Number of CPUs:" $(grep "model name" /proc/cpuinfo | wc -l)
+  print_pre_text "$(grep "model name" /proc/cpuinfo | sort | uniq)"
+}
+
+
+
+function list_services_running() {
+  cat <<EOF
+    </ul>
+    <h2>Overview of all server services on $HOSTNAME</h2>
+    <pre>
+$(netstat -nlp | egrep -v "tcp6|ACC" | grep LISTEN)
+    </pre>
+EOF
+
+  if [ $(whoami) != "root" ]; then
+    echo "<p>Run $(basename $0) as  root to get more details in this listing</p>"
+  fi
+}
+
+function get_user_options() {
+  while getopts ":i:f:" opt; do
+    case $opt in
+      i)
+        instance=${OPTARG}
+        ;;
+      f)
+        format=${OPTARG}
+        ;;
+      \?)
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+      :)
+        echo "Option -$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+    esac
+  done
+  
+}
+
+get_user_options $@
+create_header
+do_create-overview
+create_footer
+
+
