@@ -1030,7 +1030,11 @@ function get_info_for_type()
         set_type_pid
         print "|-> Status:" $(get_status)
         print "|-> Port:" $port
-        print "|-> PID:" $type_pid
+
+        if [ $(get_status | cut -d' ' -f1) == "UP" ]; then
+          print "|-> PID:" $type_pid
+        fi
+        
         print "|-> Type: " $appserver
         
         case "$appserver" in
