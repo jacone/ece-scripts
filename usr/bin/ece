@@ -1055,7 +1055,11 @@ function get_info_for_type()
 ## $1: dir
 function print_deployed_webapps() {
   local webapps=""
-  
+
+  if [ ! -d $1/webapps ]; then
+    return
+  fi
+
   print "Deployed web applications:"
   for el in $(find $1/webapps -maxdepth 1 -type d | \
     grep -v webapps$); do
