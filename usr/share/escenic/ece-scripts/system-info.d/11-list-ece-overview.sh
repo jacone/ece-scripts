@@ -2,9 +2,10 @@
 
 # by tkj@vizrt.com
 
+## $1 is instance
 function create_ece_overview() {
-  local data="$(ece -q -i $instance info)"$'\n'
-  data="$data $(ece -q -i $instance versions | cut -d'*' -f2-)"
+  local data="$(ece -q -i $1 info)"$'\n'
+  data="$data $(ece -q -i $1 versions | cut -d'*' -f2-)"
   
   echo "$data" | while read line; do
     if [[ $line == "|->"* ]]; then
@@ -32,7 +33,7 @@ function get_overview_of_all_instances() {
   for el in $(get_instance_list); do
     print_h3_header "Overview of instance $el"
     print_un_ordered_list_start
-    create_ece_overview
+    create_ece_overview $el
   done
 }
 
