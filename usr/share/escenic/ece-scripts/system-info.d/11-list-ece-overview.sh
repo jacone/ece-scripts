@@ -30,7 +30,7 @@ function create_ece_overview() {
       print_list_item $(wrap_in_anchor_if_applicable ${line:3})
     elif [ $(echo $line | cut -d':' -f2- | wc -c) -gt 1 ]; then
       print_list_item $(wrap_in_anchor_if_applicable $line)
-    else
+    elif [ -n "$line" ]; then
       print_un_ordered_list_end
       print_h4_header $(echo $line | cut -d: -f1)
       print_un_ordered_list_start
