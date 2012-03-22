@@ -894,6 +894,7 @@ function common_post_install() {
     fi
   fi
 
+  install_system_info
   set_correct_permissions
   
   print_status_and_next_steps

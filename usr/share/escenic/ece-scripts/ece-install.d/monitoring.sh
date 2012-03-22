@@ -382,3 +382,38 @@ EOF
 }
 EOF
 }
+
+## Installs and sets up self-reporting of the current host
+function install_system_info() {
+  print_and_log "Setting up self-reporting on $HOSTNAME ..."
+  
+  install_packages_if_missing dhttpd
+  assert_pre_requisite dhttpd
+
+  local dir=/var/www/system-info
+  local port=5678
+  
+  # configure dhttpd
+
+  # set system-info to be run every minute on the host
+  echo '* *     * * *   root    system-info -f html -u $ece_user > $dir/index.html' \
+    >> /etc/crontab
+
+  # creating symlinks like:
+  # /var/www/system-info/var/log/escenic -> /var/log/escenic
+  # /var/www/system-info/etc/escenic -> /etc/escenic
+  make_dir ${dir}/$(dirname $log_dir)
+  make_dir ${dir}/$(dirname $escenic_conf_dir)
+  run ln -s ${log_dir} \
+    ./$(dirname ${log_dir})/$(basename ${log_dir})
+  run ln -s ${escenic_conf_dir} \
+    ./$(dirname $escenic_conf_dir)/$(basename $escenic_conf_dir)
+
+  # thttpd doesn't serve files if they've got the execution bit set
+  # (it then think it's a misnamed CGI script)
+  find $log_dir -type f | egrep ".log$|.out$" | xargs chmod 644
+  find $escenic_conf_dir -type f | egrep ".conf$|.properties$" | xargs chmod 644
+
+  add_next_step "Max 1 min old system info available: http://$HOSTNAME:$port/"
+  add_next_step "you can also see system-info in the shell, type: system-info"
+}
