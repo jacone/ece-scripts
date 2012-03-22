@@ -134,3 +134,8 @@ function download_tomcat() {
   run wget $wget_opts $url
 }
 
+function get_free_memory_in_mega_bytes() {
+  if [ $(uname -s) == "Linux" ]; then
+    grep  MemFree /proc/meminfo | cut -d: -f2- | sed 's/^[ ]*//g' | cut -d' ' -f1
+  fi
+}
