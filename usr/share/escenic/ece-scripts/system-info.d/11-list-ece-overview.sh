@@ -4,19 +4,22 @@
 
 ## $1 is instance
 function create_ece_overview() {
+  
   if [ $(whoami) == "root" ]; then
-    local command="ece -q -i $1 info"
-    local data="$(su - $ece_user -c " $command ")"$'\n'
-
-    command="ece -q -i $1 status"
-    if [ "UP" == $(su - $ece_user -c "$command" | cut -d' ' -f1) ]; then
+    if [ -n "$ece_user" ]; then
+      local command="ece -q -i $1 info"
+      local data="$(su - $ece_user -c " $command ")"$'\n'
+      
+      command="ece -q -i $1 status"
+      if [ "UP" == "$(su - $ece_user -c "$command" | cut -d' ' -f1)" ]; then
         command="ece -q -i $1 versions"
         data="$data $(su - $ece_user -c" $command " | cut -d'*' -f2-)"
+      fi
     fi
   else
     local data="$(ece -q -i $1 info)"$'\n'
     
-    if [ "UP" == $(ece -q -i $1 status | cut -d' ' -f1) ]; then
+    if [ "UP" == "$(ece -q -i $1 status | cut -d' ' -f1)" ]; then
       data="$data $(ece -q -i $1 versions | cut -d'*' -f2-)"
     fi
   fi
