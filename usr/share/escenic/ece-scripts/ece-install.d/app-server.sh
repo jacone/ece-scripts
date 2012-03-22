@@ -126,6 +126,7 @@ function set_up_app_server()
   set_ece_instance_conf tomcat_base $tomcat_base   
   set_ece_instance_conf tomcat_home $tomcat_home
   set_ece_instance_conf appserver_port $appserver_port
+  set_appropriate_jvm_heap_sizes
   
   run cd $tomcat_base/lib
   make_ln $jdbc_driver
@@ -398,4 +399,21 @@ EOF
 </Context>
 EOF
   fi
+}
+
+function set_appropriate_jvm_heap_sizes() {
+  # in MB
+  local heap_size=2024
+
+  local free_size=$(get_free_memory_in_mega_bytes)
+  if [ $free_size -lt $heap_size ]; then
+    print_and_log "You only have $free_size MBs free, I will use this for the"
+    print_and_log "use heap sizes, but you should really consider adding some"
+    print_and_log "more RAM so that you at least have 2GBs for $instance_name"
+
+    heap_size=$free_size
+  fi
+  
+  set_ece_instance_conf min_heap_size "${heap_size}m"
+  set_ece_instance_conf max_heap_size "${heap_size}m"
 }
