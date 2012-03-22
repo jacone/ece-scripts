@@ -110,7 +110,7 @@ function print_un_ordered_list_start() {
   elif [ $format == "confluence" ]; then
     echo ""
   elif [ $format == "json" ]; then
-    echo "    \"list\": ["
+    echo "    ["
   fi
 }
 
@@ -166,13 +166,13 @@ EOF
   elif [ $format == "json" ]; then
     # JSON doesn't accept newline characters
     cat <<EOF
-    "data": "$(json_escape_string $(echo $@ | sed 's/$/\\n/'))",
+"$(json_escape_string $(echo $@ | sed 's/$/\\n/'))",
 EOF
   fi
 }
 
 function make_string_into_json_label() {
-  echo "$@" | tr [A-Z] [a-z] | sed 's/ /-/g'
+  echo "$@" | tr [A-Z] [a-z] | sed -e 's/ /-/g'
 }
 
 function print_h3_header() {
@@ -185,7 +185,7 @@ function print_h3_header() {
     echo "h3. $@"
   elif [ $format == "json" ]; then
     cat <<EOF
-    "$(make_string_into_json_label $@)": {
+    "$(make_string_into_json_label $@)" :
 EOF
   fi
 }
