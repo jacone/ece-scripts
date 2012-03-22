@@ -145,3 +145,15 @@ function get_free_memory_in_mega_bytes() {
     echo $(( $free_in_kb / 1024 ))
   fi
 }
+
+function get_total_memory_in_mega_bytes() {
+  if [ $(uname -s) == "Linux" ]; then
+    local total_in_kb=$(
+      grep  MemTotal /proc/meminfo | \
+        cut -d: -f2- | \
+        sed 's/^[ ]*//g' | \
+        cut -d' ' -f1
+    )
+    echo $(( $total_in_kb / 1024 ))
+  fi
+}
