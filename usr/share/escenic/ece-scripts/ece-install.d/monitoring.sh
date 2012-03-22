@@ -385,33 +385,63 @@ EOF
 
 ## Installs and sets up self-reporting of the current host
 function install_system_info() {
-  print_and_log "Setting up self-reporting on $HOSTNAME ..."
+  print_and_log "Setting up self-reporting module on $HOSTNAME ..."
   
-  install_packages_if_missing dhttpd
-  assert_pre_requisite dhttpd
+  install_packages_if_missing thttpd
+  assert_pre_requisite thttpd
 
-  local dir=/var/www/system-info
-  local port=5678
+  local port=${fai_reporting_port-5678}
+  local dir=${fai_reporting_dir-/var/www/system-info}
+  make_dir $dir
   
   # configure dhttpd
+  local file=/etc/thttpd/thttpd.conf
 
+  # set the port
+  sed -i "s~^port=80~port=$port~g" $file
+  
+  # set the document root
+  sed -i "s~^dir=/var/www$~dir=$dir~g" $file
+  
+  # set a non-chroot environment to make the symlinking outside the
+  # document root work
+  sed -i "s~^#nochroot~nochroot~g" $file
+  sed -i "s~^chroot~#chroot~g" $file
+
+  # prevent symlink checking
+  sed -i "s~^symlinks~#symlinks~g" $file
+  sed -i "s~^#nosymlinks~nosymlinks~g" $file
+  
+  # make thttpd start
+  file=/etc/default/thttpd
+  sed -i "s~^ENABLED=no~ENABLED=yes~g" $file
+  run /etc/init.d/thttpd restart
+  
   # set system-info to be run every minute on the host
-  echo '* *     * * *   root    system-info -f html -u $ece_user > $dir/index.html' \
-    >> /etc/crontab
+  local command="system-info -f html -u $ece_user > $dir/index.html"
+  if [ $(grep -v ^# /etc/crontab | grep "$command" | wc -l) -lt 1 ]; then
+    echo '* *     * * *   root    '$command >> /etc/crontab
+  fi
 
   # creating symlinks like:
   # /var/www/system-info/var/log/escenic -> /var/log/escenic
   # /var/www/system-info/etc/escenic -> /etc/escenic
-  make_dir ${dir}/$(dirname $log_dir)
+  make_dir ${dir}/$(dirname $escenic_log_dir)
   make_dir ${dir}/$(dirname $escenic_conf_dir)
-  run ln -s ${log_dir} \
-    ./$(dirname ${log_dir})/$(basename ${log_dir})
-  run ln -s ${escenic_conf_dir} \
-    ./$(dirname $escenic_conf_dir)/$(basename $escenic_conf_dir)
+  
+  local target=${dir}/$(dirname ${escenic_log_dir})/$(basename ${escenic_log_dir})
+  if [ ! -h $target ]; then
+    run ln -s ${escenic_log_dir} $target
+  fi
 
+  target=${dir}/$(dirname $escenic_conf_dir)/$(basename $escenic_conf_dir)
+  if [ ! -h $target ]; then
+    run ln -s ${escenic_conf_dir} $target
+  fi
+  
   # thttpd doesn't serve files if they've got the execution bit set
   # (it then think it's a misnamed CGI script)
-  find $log_dir -type f | egrep ".log$|.out$" | xargs chmod 644
+  find $escenic_log_dir -type f | egrep ".log$|.out$" | xargs chmod 644
   find $escenic_conf_dir -type f | egrep ".conf$|.properties$" | xargs chmod 644
 
   add_next_step "Max 1 min old system info available: http://$HOSTNAME:$port/"
