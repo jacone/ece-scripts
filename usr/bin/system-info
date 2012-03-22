@@ -7,7 +7,7 @@
 ##
 ## TODO:
 ## Add this to /etc/cronttab
-# echo '* *     * * *   root    system-info -f html > /var/www/index.html' >> /etc/crontab
+## echo '* *     * * *   root    system-info -f html > /var/www/index.html' >> /etc/crontab
 
 ece_user=""
 
