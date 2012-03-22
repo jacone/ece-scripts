@@ -404,16 +404,17 @@ EOF
 function set_appropriate_jvm_heap_sizes() {
   # in MB
   local heap_size=2048
+  local percent=70
+  local total_size=$(get_total_memory_in_mega_bytes)
+  
+  if [ $total_size -lt $heap_size ]; then
+    local warning="$(yellow WARNING)"
+    print_and_log "$warning $HOSTNAME only has $total_size MBs of memory, I will"
+    print_and_log "$warning use ${percent}% of this for the JVM heap sizes, but you"
+    print_and_log "$warning should really consider adding more RAM so that"
+    print_and_log "$warning the $instance_name instance gets 2GBs"
 
-  local free_size=$(get_free_memory_in_mega_bytes)
-  if [ $free_size -lt $heap_size ]; then
-    print_and_log "$(yellow WARNING) You only have $free_size MBs of memory free,"
-    print_and_log "$(yellow WARNING) I will use this for the use heap sizes, but"
-    print_and_log "$(yellow WARNING) you should really consider adding some"
-    print_and_log "$(yellow WARNING) more RAM so that you have at least 2GBs"
-    print_and_log "$(yellow WARNING) for the $instance_name instance"
-
-    heap_size=$free_size
+    heap_size=$(echo "$total_size * 0.${percent}" | bc | cut -d'.' -f1)
   fi
   
   set_ece_instance_conf min_heap_size "${heap_size}m"
