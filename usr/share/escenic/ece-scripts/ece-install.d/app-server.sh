@@ -403,13 +403,15 @@ EOF
 
 function set_appropriate_jvm_heap_sizes() {
   # in MB
-  local heap_size=2024
+  local heap_size=2048
 
   local free_size=$(get_free_memory_in_mega_bytes)
   if [ $free_size -lt $heap_size ]; then
-    print_and_log "You only have $free_size MBs free, I will use this for the"
-    print_and_log "use heap sizes, but you should really consider adding some"
-    print_and_log "more RAM so that you at least have 2GBs for $instance_name"
+    print_and_log "$(yellow WARNING) You only have $free_size MBs of memory free,"
+    print_and_log "$(yellow WARNING) I will use this for the use heap sizes, but"
+    print_and_log "$(yellow WARNING) you should really consider adding some"
+    print_and_log "$(yellow WARNING) more RAM so that you have at least 2GBs"
+    print_and_log "$(yellow WARNING) for the $instance_name instance"
 
     heap_size=$free_size
   fi
