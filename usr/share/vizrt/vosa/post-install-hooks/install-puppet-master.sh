@@ -14,8 +14,11 @@ EOF
 ssh -F $2/ssh.conf root@guest chmod +x /usr/sbin/policy-rc.d
 
 
-# Install the puppet master package on the guest, and patch the configuration file
-ssh -F $2/ssh.conf root@guest apt-get -y install puppetmaster || exit 2
+# Install the puppet master package + VIM & Emacs support for editing
+# Puppet onfiguration files on the guest, and patch the configuration
+# file
+packages="puppetmaster emacs23-nox puppet-el vim-puppet"
+ssh -F $2/ssh.conf root@guest apt-get -y install $packages || exit 2
 ssh -F $2/ssh.conf root@guest patch /etc/puppet/auth.conf <<EOF
 --- /etc/puppet/auth.conf    2011-06-27 16:50:51.000000000 +0200
 +++ /etc/puppet/auth.conf.orig       2012-02-21 07:26:54.361610001 +0100
