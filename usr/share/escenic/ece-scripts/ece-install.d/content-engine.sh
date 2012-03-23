@@ -1,6 +1,13 @@
 # ece-install module Content Engine specific code.
 
 function get_deploy_white_list() {
+  
+  # user's deploy white list, if present, takes precedence.
+  if [ $fai_enabled -eq 1 -a -n "${fai_publication_deploy_white_list}" ]; then
+    echo $fai_publication_deploy_white_list
+    return
+  fi
+  
   local white_list="escenic-admin"
   
   if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER \
