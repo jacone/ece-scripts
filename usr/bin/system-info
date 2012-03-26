@@ -13,6 +13,8 @@ ece_user=""
 
 ## possible values: html, org, confluence, json (not coplete)
 format=org
+generate_output_file_per_module=0
+output_dir=$(pwd)
 
 function init() {
   # first, try to be nice
@@ -35,7 +37,11 @@ function run_system_info_modules() {
     fi
     
     for el in $(\ls $ece_scripts_dir/system-info.d/*.sh 2>/dev/null); do
-      source $el
+      if [ $generate_output_file_per_module -eq 1 ]; then
+        source $el | tee ${output_dir}/$(basename $el).${format}
+      else
+        source $el
+      fi
     done
   fi
 }
@@ -249,16 +255,23 @@ EOF
 }
 
 function get_user_options() {
-  while getopts ":i:f:u:" opt; do
+  while getopts ":d:i:f:u:m" opt; do
     case $opt in
       i)
         instance=${OPTARG}
+        ;;
+      d)
+        output_dir=${OPTARG}
+        mkdir -p $output_dir
         ;;
       u)
         ece_user=${OPTARG}
         ;;
       f)
         format=${OPTARG}
+        ;;
+      m)
+        generate_output_file_per_module=1
         ;;
       \?)
         echo "Invalid option: -$OPTARG" >&2
