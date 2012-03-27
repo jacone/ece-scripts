@@ -1,6 +1,13 @@
 # ece-install module Content Engine specific code.
 
 function get_deploy_white_list() {
+  
+  # user's deploy white list, if present, takes precedence.
+  if [ $fai_enabled -eq 1 -a -n "${fai_publication_deploy_white_list}" ]; then
+    echo $fai_publication_deploy_white_list
+    return
+  fi
+  
   local white_list="escenic-admin"
   
   if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER \
@@ -22,6 +29,12 @@ function get_publication_short_name_list() {
   local short_name_list=""
   
   local publication_def_dir=${escenic_root_dir}/assemblytool/publications
+
+  if [ ! -d $publication_def_dir ]; then
+    echo ${short_name_list}
+    return
+  fi
+
   if [ $(ls ${publication_def_dir} | grep .properties$ | wc -l) -eq 0 ]; then
     echo ${short_name_list}
     return
@@ -267,7 +280,9 @@ function set_up_basic_nursery_configuration() {
     run cd $a_tmp_dir
     run tar xzf $ece_instance_conf_archive
     
-    if [ ! -d ${a_tmp_dir}/engine/security ]; then
+    if [ -d ${a_tmp_dir}/engine/security ]; then
+      run cp -r $a_tmp_dir/engine/security/ $common_nursery_dir/
+    else
       print "Archive $ece_instance_conf_archive doesn't have JAAS config,"
       print "I'll use standard JAAS (engine/security) instead."
       run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/

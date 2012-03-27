@@ -22,8 +22,8 @@ logdir = /var/log/puppet
 vardir = /var/lib/puppet
 ssldir = /var/lib/puppet/ssl
 rundir = /var/run/puppet
-factpath = $vardir/lib/facter
-templatedir = $confdir/templates
+factpath = \$vardir/lib/facter
+templatedir = \$confdir/templates
 prerun_command = /etc/puppet/etckeeper-commit-pre
 postrun_command = /etc/puppet/etckeeper-commit-post
 
@@ -34,7 +34,8 @@ ssl_client_verify_header = SSL_CLIENT_VERIFY
 [agent]
 server = @@HOSTNAME@@
 certname = "generic-@@HOSTNAME@@-client"
-node_name_fact = "fqdn"
+node_name = "facter"
+node_name_fact = "hostname"
 runinterval = 15
 environment = production
 EOF

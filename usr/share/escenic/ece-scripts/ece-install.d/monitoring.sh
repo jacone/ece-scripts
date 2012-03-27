@@ -444,6 +444,6 @@ function install_system_info() {
   find $escenic_log_dir -type f | egrep ".log$|.out$" | xargs chmod 644
   find $escenic_conf_dir -type f | egrep ".conf$|.properties$" | xargs chmod 644
 
-  add_next_step "Max 1 min old system info available: http://$HOSTNAME:$port/"
+  add_next_step "Always up to date system info: http://$HOSTNAME:$port/"
   add_next_step "you can also see system-info in the shell, type: system-info"
 }
