@@ -43,12 +43,27 @@ function get_info_for_type() {
         ;;
       resin)
         if [ -n "${resin_home}" ]; then
-          print "  |-> Resin home:" $resin_home
+          print "|-> Resin home:" $resin_home
           print_deployed_webapps $resin_home
         fi
         ;;
     esac
   fi
+
+  print_deployment_state
+}
+
+print_deployment_state() {
+  local file=$data_dir/$instance.state
+  if [ ! -r $file ]; then
+    return
+  fi
+
+  print "Deployment state:"
+  print "|-> Version:" $(grep ^version $file | cut -d'=' -f2-)
+  print "|-> EAR used:" $(grep ^ear_used $file | cut -d'=' -f2-)
+  print "|-> MD5 sum:" $(grep ^md5_sum $file | cut -d'=' -f2-)
+  print "|-> Deployment date:" $(grep ^deployed_date $file | cut -d'=' -f2-)
 }
 
 ## $1: dir
