@@ -10,7 +10,6 @@
 ######################################################################
 # Script defaults, my be overriden in any of the configration files
 ######################################################################
-verbose=0
 force_ipv4=0
 quiet=0
 everything_but_the_kitchen_sink=0
@@ -28,6 +27,7 @@ http_user=""
 http_password=""
 wget_auth=""
 curl_auth=""
+log="/tmp/arne"
 
 type_list="
 engine
@@ -45,6 +45,7 @@ engine_required_fields="
 appserver
 assemblytool_home
 cache_dir
+data_dir
 escenic_conf_dir
 ece_home
 ece_security_configuration_dir
@@ -70,6 +71,38 @@ appserver
 java_home
 tmp_dir
 "
+
+## Bootstrapping, load files from /usr/share/escenic/ece-scripts The
+## method will first try to be smart, in case the user has copied the
+## ece-scripts somewhere else., e.g.: moved everything to ~/ece-scrpts
+## or /opt/escenic/ece-scripts, this should also work.
+function init() {
+  # first, try to be nice
+  local dir=$(dirname $0)/../share/escenic/ece-scripts
+
+  # then check the standard location
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
+
+  if [ -d $dir ]; then
+    # load common libraries
+    common_libraries="common-bashing.sh common-io.sh common-os.sh"
+    for el in $common_libraries; do
+      source $dir/${el}
+    done
+    
+    # load ece-install modules
+    for el in $dir/ece.d/*.sh; do
+      log "Loading $(basename $0) module:" $el
+      source $el
+    done
+  else
+    echo "I cannot find $(basename $0)'s dependencies, exiting :-("
+    exit 1
+  fi
+}
+
 ####################################################################
 # Will exit the ece execution if the last operation failed. While
 # failing, it will print the message passed to the function.
@@ -84,38 +117,8 @@ function exit_on_error()
 
 function run()
 {
-    $@ 1>>$log_file 2>>$log_file
+    $@ 1>>$log 2>>$log
     exit_on_error $@
-}
-
-####################################################################
-# debug/verbose method
-####################################################################
-function debug()
-{
-    if [ "$verbose" -eq 1 ]; then
-        print $@
-    fi
-}
-
-function print()
-{
-    if [ "$quiet" -eq 0 ]; then
-        echo "$id" $@
-    else
-      echo $@
-    fi
-}
-
-function log()
-{
-    echo $(date) "$id" $@ 2>/dev/null >> $log_file 
-}
-
-function print_and_log()
-{
-    print "$@"
-    log "$@"
 }
 
 function verify_that_directory_and_file_are_writeable()
@@ -227,16 +230,16 @@ function set_common_settings()
     read_conf_file `basename $0`.conf
 
     if [ "$instance" == "default" ]; then
-        log_file=$log_dir/$type.out
+        log=$log_dir/$type.out
         pid_file=$pid_dir/$type.pid
     else
-        log_file=$log_dir/$type-$instance.out
+        log=$log_dir/$type-$instance.out
         pid_file=$pid_dir/$type-$instance.pid
     fi
     
     gc_log=${log_dir}/${type}-${instance}-gc.log
 
-    log_file_list="
+    log_list="
       $log_dir/${HOSTNAME}-${instance}-messages
       $log_dir/messages
       $log_dir/Escenic-error.log
@@ -296,7 +299,7 @@ function set_type_port()
             # for tomcat6-user packaged tomcats (and perhaps others)
             out_log=$tomcat_base/logs/catalina.out
         else
-            out_log=$log_file
+            out_log=$log
         fi
 
         if [ -r $out_log ]; then
@@ -465,7 +468,7 @@ function sanity_check()
         exit 1
     fi
     
-    verify_that_directory_and_file_are_writeable $log_file
+    verify_that_directory_and_file_are_writeable $log
     verify_that_directory_and_file_are_writeable $pid_file
 
     if [ -z "$command" ]; then
@@ -517,127 +520,9 @@ function sanity_check()
     fi
 }
 
-function deploy()
-{
-    ear=$cache_dir/engine.ear
-    if [ ! -e "$ear" ]; then
-        print_and_log "$ear does not exist. "
-        print_and_log "Did you run '"`basename $0`" -i" $instance "assemble'?"
-        exit 1
-    fi
-    
-    # extract EAR to a temporary area
-    local dir=$(mktemp -d)
-    (mkdir -p $dir && cd $dir && jar xf $ear)
-    exit_on_error "extracting $ear to $dir"
-
-    print "Deploying $ear on $appserver ..."
-    
-    case $appserver in
-        tomcat)
-            # We do not want the Escenic jars to share the same
-            # classloader folder as tomcat does We thereby want
-            # clients to use a separate escenic classloader to avoid
-            # strange upgrade problems i.e wrong versions of certain
-            # libraries.
-            if [ -d $tomcat_base/escenic/lib ]; then
-                if [ `ls $tomcat_base/escenic/lib | grep .jar | wc -l` -gt 0 ]; then
-                    rm $tomcat_base/escenic/lib/*.jar
-                    exit_on_error "removing previous deployed libraries"
-                fi
-                cp $dir/lib/*.jar \
-                    $tomcat_base/escenic/lib  \
-                    1>>$log_file \
-                    2>>$log_file
-                exit_on_error "deploying jar files to $tomcat_base/escenic/lib"
-            else
-                print "Could not find $tomcat_base/escenic/lib. Exiting."
-                print "Also make sure that you have defined this directory in"
-                print "  $tomcat_base/conf/catalina.properties"
-                print "see sample configuration in the engine distribution"
-                print "  contrib/appserver/tomcat/catalina-sample.properties"
-                exit 1
-            fi
-            
-            exit_on_error "copying lib files to app server classpath"
-
-            rm -rf $tomcat_base/work/* \
-                1>>$log_file \
-                2>>$log_file
-            
-            exit_on_error "removing work files from tomcat"
-
-            for war in $dir/*.war ; do
-                if [ -d $tomcat_base/webapps/`basename $war .war` ] ; then
-                    rm -rf $tomcat_base/webapps/`basename $war .war` \
-                        1>>$log_file \
-                        2>>$log_file
-                    exit_on_error "removing already deployed escenic wars in $tomcat_base/webapps/"
-                fi
-            done
-
-            # this scenario is likely when running many minimal
-            # instances of tomcat and some of these are not properly
-            # initialised.
-            if [ ! -d $tomcat_base/webapps ]; then
-                print $tomcat_base/webapps "doesn't exist, exiting."
-                exit 1
-            fi
-            
-            if [ -n "$deploy_webapp_white_list" ]; then
-                deploy_this_war=0
-                message="Deployment white list active, only deploying: "
-                message=$message"$deploy_webapp_white_list"
-                print $message
-                log $message
-            fi
-                        
-            for war in $dir/*.war ; do
-                name=`basename $war .war`
-
-                deploy_this_war=1
-                if [ -n "$deploy_webapp_white_list" ]; then
-                    deploy_this_war=0
-
-                    for el in $deploy_webapp_white_list; do
-                        if [ "$el" == $name ]; then
-                            debug "found $war in white list, will deploy it"
-                            deploy_this_war=1
-                        fi
-                    done
-                fi
-
-                if [ "$deploy_this_war" -eq 0 ]; then
-                    continue
-                fi
-                
-                (cd $tomcat_base/webapps &&
-                    mkdir $name &&
-                    cd $name &&
-                    jar xf $war \
-                        1>>$log_file \
-                        2>>$log_file)
-                add_memcached_support $tomcat_base/webapps/$name
-                exit_on_error "extracting $war to $tomcat_base/webapps/"
-            done
-            ;;
-        
-        resin)
-            if [ ! -d $resin_home/deploy ]; then
-                mkdir -p $resin_home/deploy \
-                    1>>$log_file \
-                    2>>$log_file
-            fi
-            cp $ear $resin_home/deploy \
-                1>>$log_file \
-                2>>$log_file
-            ;;
-        *)
-            print "Deployment is only implemented for Resin and Tomcat so far."
-            ;;
-    esac
-
-    run rm -rf ${dir}
+function run() {
+  $@ >> $log 2>> $log
+  exit_on_error "$@"
 }
 
 ## $1 : dir of the webapp 
@@ -844,8 +729,8 @@ function start_type()
         $java_home/bin/java \
             -Djava.rmi.server.hostname=${ece_server_hostname} \
             neo.nursery.GlobalBus /Initial \
-            1>>$log_file \
-            2>>$log_file & pid=$!
+            1>>$log \
+            2>>$log & pid=$!
         
         echo $pid > $pid_file
         exit 0
@@ -880,14 +765,14 @@ function start_type()
 
             # We call run here to get the log output to the stdout log
             $tomcat_home/bin/catalina.sh run \
-                1>>$log_file \
-                2>>$log_file & pid=$!
+                1>>$log \
+                2>>$log & pid=$!
             ;;
         oc4j)
             export OC4J_JVM_ARGS=$ece_args
             $oc4j_home/bin/oc4j -start\
-                1>>$log_file\
-                2>>$log_file & pid=$!
+                1>>$log\
+                2>>$log & pid=$!
             ;;
         resin)
             # Resin has stared insisting on a -J prefix of the -D
@@ -901,23 +786,23 @@ function start_type()
                     -name httpd \
                     -class com.caucho.server.resin.Resin \
                     $resin_ece_args ${1+"$@"} \
-                    1>>$log_file \
-                    2>>$log_file & pid=$!
+                    1>>$log \
+                    2>>$log & pid=$!
             else
                 # works for Resin 3.1
                 $java_home/bin/java $ece_args \
                     -jar $resin_home/lib/resin.jar \
                     start \
-                    1>>$log_file \
-                    2>>$log_file & pid=$!
+                    1>>$log \
+                    2>>$log & pid=$!
             fi
             ;;
         jboss)
             $jboss_home/bin/run.sh \
                 -b 0.0.0.0 \
                 -c $jboss_conf \
-                1>>$log_file \
-                2>>$log_file & pid=$!
+                1>>$log \
+                2>>$log & pid=$!
             ;;
         *)
             echo "" # extra line feed, because of the echo -n above
@@ -1019,7 +904,7 @@ function get_info_for_type()
     fi
     
     print "Log files:"
-    print "|-> System out log:" $log_file
+    print "|-> System out log:" $log
     print "|-> App server log:" $(get_app_log)
     print "|-> Log4j log:     " $(get_log4j_log)
     print "|-> GC log:        " $(get_gc_log)
@@ -1161,12 +1046,12 @@ function assemble()
 
     message="Assembling your EAR file"
     print $message "..."
-    log $message "..." >> $log_file
+    log $message "..." >> $log
 
     cd $assemblytool_home && \
         ant -q ear -DskipRedundancyCheck=true \
-        1>>$log_file \
-        2>>$log_file
+        1>>$log \
+        2>>$log
     exit_on_error "$message"
 
     # test to see if the new versions of ECE & plugins are upgrades of
@@ -1353,7 +1238,7 @@ function tail_messages_log()
 
 function tail_out_log()
 {
-    tail_list=$log_file
+    tail_list=$log
 
     # if needs be, we can add more system out logs here. For now,
     # we're sticking with the default one.
@@ -1364,10 +1249,11 @@ function tail_out_log()
 
 function get_app_log()
 {
+    local app_log=""
     if [ "$appserver" == "tomcat" ]; then
-        log_file=$tomcat_base/logs/localhost.`date +%F`.log
+        app_log=$tomcat_base/logs/localhost.`date +%F`.log
     elif [ "$appserver" == "resin" -a -e $resin_home/log/jvm-default.log ]; then
-        log_file=$resin_home/log/jvm-default.log
+        app_log=$resin_home/log/jvm-default.log
     else
         print "I don't know where the logs for $appserver are."
         print "Ask support@escenic.com to add support for $appserver in "
@@ -1375,7 +1261,7 @@ function get_app_log()
         exit 1
     fi
 
-    echo $log_file
+    echo $app_log
 }
 
 
@@ -1396,12 +1282,12 @@ function make_thread_dump()
     if [ -n "$type_pid" ]; then
         print "Thread dump (PID" $type_pid") written to system out log."
         print "Type 'ece -t $type -i $instance outlog' to see it or view"
-        print $log_file "directly."
+        print $log "directly."
 
         if [ -x $java_home/bin/jstack ]; then
-            jstack -l $type_pid >> $log_file
+            jstack -l $type_pid >> $log
         else
-            kill -QUIT $type_pid >> $log_file
+            kill -QUIT $type_pid >> $log
         fi
     else
         print "$(get_status)"
@@ -1410,16 +1296,17 @@ function make_thread_dump()
 
 function set_type_command_and_instance()
 {
-    next_is_type=0
-    next_is_instance=0
-    next_is_publication=0
-    next_is_resource=0
-    next_is_http_user=0
-    next_is_http_password=0
+    local next_is_type=0
+    local next_is_instance=0
+    local next_is_publication=0
+    local next_is_resource=0
+    local next_is_http_user=0
+    local next_is_http_password=0
+    local next_is_file=0
     
     for el in $@; do
         if [ "$el" == "-v" -o "$el" == "--verbose" ]; then
-            verbose=1
+            debug=1
             continue
         fi
         
@@ -1427,7 +1314,13 @@ function set_type_command_and_instance()
             everything_but_the_kitchen_sink=1
             continue
         fi
-        
+
+        if [ "$el" == "-f" -o $el == "--file" ]; then
+          next_is_file=1
+          continue
+        fi
+
+         
         if [ "$el" == "-q" -o $el == "--quiet" ]; then
             quiet=1
             continue
@@ -1438,6 +1331,12 @@ function set_type_command_and_instance()
             continue
         fi
 
+        if [ "$next_is_file" -eq 1 ]; then
+          file=$el
+          next_is_file=0
+          continue
+        fi
+        
         if [ "$next_is_type" -eq 1 ]; then
             type=$el
             next_is_type=0
@@ -1690,8 +1589,8 @@ function update_publication_resources()
 
         $EDITOR ${resource}
         md5sum -c ${resource}.md5sum \
-            1>>$log_file \
-            2>>$log_file
+            1>>$log \
+            2>>$log
         if [ $? -eq 0 ]; then
             print "You didn't make any changes to ${resource}, I will exit."
             exit 1
@@ -1706,13 +1605,13 @@ function update_publication_resources()
         curl -T ${resource} \
           ${curl_auth} \
             ${url} \
-            1>>$log_file 2>>$log_file
+            1>>$log 2>>$log
     else
         wget $wget_auth \
             -O - \
             --post-file ${resource} \
             $url \
-            1>>$log_file 2>>$log_file
+            1>>$log 2>>$log
     fi
 
     if [ -d $tmp_dir ]; then
@@ -1723,12 +1622,12 @@ function update_publication_resources()
 function show_all_log_paths()
 {
     if [ "$quiet" -eq 0 ]; then
-        print "System out log: "$log_file
+        print "System out log: "$log
         print "App server log: "$(get_app_log)
         print "log4j log:  "$(get_log4j_log)
         print "GC log:  "$(get_gc_log)
     else
-        echo $log_file
+        echo $log
         echo $(get_app_log)
         echo $(get_log4j_log)
         echo $(get_gc_log)
@@ -1763,9 +1662,10 @@ function flush_caches()
         -O - \
         --post-data='confirm=Confirm' \
         $url \
-        1>>$log_file 2>>$log_file
+        1>>$log 2>>$log
 }
 
+init
 read_rc_file_if_present
 set_type_command_and_instance $@
 set_id
@@ -1773,6 +1673,7 @@ set_common_settings
 set_type_settings
 set_instance_settings
 sanity_check
+
 
 function print_help()
 {
@@ -1790,6 +1691,10 @@ function print_help()
     echo ""
     echo " -i --instance <instance>" 
     echo "      The type instance, such as editor1, web1 or search1"
+    echo ""
+    echo " -f --file <file>"
+    echo "      Specificies the file that the given comand shall act upon."
+    echo "      Right now, this only entails the 'deploy' command"
     echo ""
     echo " -p --publication <publication>" 
     echo "      Needed only for updating publication resources"

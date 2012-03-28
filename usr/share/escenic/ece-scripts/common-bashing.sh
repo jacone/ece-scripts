@@ -8,6 +8,8 @@
 #
 # by tkj@vizrt.com
 
+debug=0
+
 function common_bashing_is_loaded() {
   echo 1
 }
@@ -15,7 +17,7 @@ function common_bashing_is_loaded() {
 function get_seconds_since_start() {
   local seconds="n/a"
   
-  if [ -r $pid_file ]; then
+  if [ -n "$pid_file" -a -r "$pid"_file ]; then
     now=`date +%s`
     started=`stat -c %Y $pid_file`
     seconds=$(( now - started ))
@@ -25,6 +27,11 @@ function get_seconds_since_start() {
 }
 
 function get_id() {
+  if [ -n "$id" ]; then
+    echo $id
+    return
+  fi
+  
   local timestamp=$(get_seconds_since_start)
   echo "[$(basename $0)-${timestamp}]"
 }
@@ -36,6 +43,11 @@ function debug() {
 }
 
 function print() {
+  if [[ "$quiet" == 1 ]]; then
+    echo $@
+    return
+  fi
+  
   echo $(get_id) $@
 }
 

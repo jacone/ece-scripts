@@ -38,6 +38,7 @@ dir_list="
 /var/backups/escenic
 /var/crash/escenic
 /var/log/escenic
+/var/lib/escenic
 /var/run/escenic
 "
 
