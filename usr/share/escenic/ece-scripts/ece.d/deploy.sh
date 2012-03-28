@@ -10,7 +10,7 @@ function get_version_from_ear_file() {
 
   # if this is emtpy, it means it was called just engine.ear, in which
   # case we generate a nice version string.
-  if [ -z "$version" ]; then
+  if [[ -z "$version" || "$version" == "engine" ]]; then
     version=$(date +%Y%m%d.%H%M)
   fi
   
