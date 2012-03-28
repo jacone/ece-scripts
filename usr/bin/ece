@@ -1192,7 +1192,7 @@ function set_type_command_and_instance()
             continue
         fi
 
-        if [ "$el" == "-f" -o $el == "--file" ]; then
+        if [ "$el" == "-f" -o $el == "--file" -o $el == "--uri" ]; then
           next_is_file=1
           continue
         fi
@@ -1569,9 +1569,9 @@ function print_help()
     echo " -i --instance <instance>" 
     echo "      The type instance, such as editor1, web1 or search1"
     echo ""
-    echo " -f --file <file>"
+    echo " -f --file <file> } --uri <uri>"
     echo "      Specificies the file that the given comand shall act upon."
-    echo "      Right now, this only entails the 'deploy' command"
+    echo "      Right now, this only entails the 'deploy' command".
     echo ""
     echo " -p --publication <publication>" 
     echo "      Needed only for updating publication resources"

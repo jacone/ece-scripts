@@ -28,7 +28,10 @@ _ece_commands()
 
     case "$prev" in
         backup)
-            completions="--exclude-binaries"
+            completions="--exclude-binaries $commands"
+            ;;
+        deploy)
+            completions="--file --uri $commands"
             ;;
         -t|--type)
             completions=$types
