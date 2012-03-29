@@ -1,0 +1,76 @@
+#+TITLE: Welcome to the world of ece-install 
+#+AUTHOR: Torstein Krause Johansen 
+
+* What?
+
+Full automatic installation of:
+- Escenic Content Engine & all plugins
+- Escenic Analysis Engine
+- Standalone search instances (Solr + indexer)
+- Database
+- NFS
+
+and ...
+
+* What? - II
+
+Full automatic installation of:
+- Cache server
+- High availability (HA) services
+- Monitoring clients
+- Monitoring server
+- Host self reporting 
+- and yes, even the RMI Hub  
+
+* What? - III
+
+Does all the hard bits for you, like:
+- Cache server with cookie stripping, load balancing,
+  session binding, locked down security.
+- Master/slave database setup with HA services and virtual IPs.
+- Analysis Engine (stats) with production ready settings.
+
+and there's more ...
+
+* What? - IV
+
+- Separate search instances, 
+- Tweaked JVM parameters, GC strategies that's known to work
+- DB pool settings that's been tested for high load
+- Proper logging (yes, there are endless systems were this is not set
+  up correctly). 
+
+* What does it need?
+- The latest stable Ubuntu, Debian, CentOS or RedHat Linux
+  distribution installed.
+- A network connection
+
+Yes, that's it.
+
+* For whom?
+
+- Professional Services
+- QA
+- R & D
+- Escenic/Vizrt Online partners
+- Experienced customers
+
+* Let's take it for a spin
+
+- Install two presentation servers
+- Install a cache server with load balancing
+- Check out its new self reporting module
+
+
+* How to get it?
+
+- git clone https://github.com/escenic/ece-scripts/ (or zip download)
+- daily builds of DEB and RPM packages from http://hudson.dev.escenic.com
+
+* 問題?
+
+- Questions to tkj@vizrt.com
+- Or ask on the SaaS mailing list: saas@lists.escenic.com
+- Or pop by the SaaS chat room: saas@conference.ardendo.se
+
+* Xièxiè!
