@@ -103,24 +103,6 @@ function init() {
   fi
 }
 
-####################################################################
-# Will exit the ece execution if the last operation failed. While
-# failing, it will print the message passed to the function.
-####################################################################
-function exit_on_error()
-{
-    if [ $? -eq 1 ]; then
-        print $@ "FAILED, exiting :-("
-        exit 1
-    fi
-}
-
-function run()
-{
-    $@ 1>>$log 2>>$log
-    exit_on_error $@
-}
-
 function verify_that_directory_and_file_are_writeable()
 {
     dir=`dirname $1`
