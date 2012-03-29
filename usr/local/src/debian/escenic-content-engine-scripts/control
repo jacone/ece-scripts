@@ -1,5 +1,6 @@
 Package: escenic-content-engine-scripts
 Version: VERSION
+Depends: escenic-common-scripts (>= VERSION)
 Section: base
 Priority: optional
 Architecture: all
