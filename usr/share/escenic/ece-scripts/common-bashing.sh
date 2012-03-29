@@ -17,7 +17,7 @@ function common_bashing_is_loaded() {
 function get_seconds_since_start() {
   local seconds="n/a"
   
-  if [ -n "$pid_file" -a -r "$pid"_file ]; then
+  if [ -n "$pid_file" -a -r "$pid_file" ]; then
     now=`date +%s`
     started=`stat -c %Y $pid_file`
     seconds=$(( now - started ))
