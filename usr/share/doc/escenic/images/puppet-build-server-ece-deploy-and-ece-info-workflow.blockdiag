@@ -1,17 +1,17 @@
 blockdiag {
    A [label = "build-server"];
-   B [label = "pres1: /var/spool/escenic/deploy.pres1"];
+   B [label = "build-server: http://build/engine-1.2.3.ear"];
    C [label = "pres1: puppet-agent" ];
    D [label = "pres1: ece deploy", color = "orange" ];
    E [label = "pres1: app server" ];
-   F [label = "pres1: /var/lib/escenic/deploy-pres1.state"];
+   F [label = "pres1: /var/lib/escenic/pres1.state"];
    G [label = "pres1: ece info" ];
    
-   A -> B [label = "scp"];
+   A -> B [label = "builds"];
    C -> B [label = "reads"];
    C -> D [folded, label = "calls"];
 
-   D -> A [label = "gets EAR"];
+   D -> B [label = "gets"];
    D -> E [label = "deploys"];
    D -> F [label = "writes"];
 
