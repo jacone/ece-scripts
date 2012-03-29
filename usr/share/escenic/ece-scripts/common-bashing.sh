@@ -213,3 +213,22 @@ function ensure_variable_is_set() {
     remove_pid_and_exit_in_error
   fi
 }
+
+## $1 : the archive to check, must be a local file
+function is_archive_healthy() {
+  if [[ "$1" == *".ear" || "$1" == *".zip" ]]; then
+    unzip -t $1 2>/dev/null 1>/dev/null
+  elif [[ "$1" == *".tar.gz" ]]; then
+    tar tzf $1 2>&1 > /dev/null
+  else
+    echo 0
+    return
+  fi
+  
+  if [ $? -eq 0 ]; then
+    echo 1
+  else
+    echo 0
+  fi
+}
+

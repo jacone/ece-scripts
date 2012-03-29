@@ -71,6 +71,11 @@ function deploy() {
     print_and_log "Did you run '"`basename $0`" -i" $instance "assemble'?"
     exit 1
   fi
+
+  if [ $(is_archive_healthy $ear) -eq 0 ]; then
+    print_and_log "$ear is faulty, I cannot deploy it :-("
+    exit 1
+  fi
   
   # extract EAR to a temporary area
   local dir=$(mktemp -d)
@@ -91,11 +96,7 @@ function deploy() {
           rm $tomcat_base/escenic/lib/*.jar
           exit_on_error "removing previous deployed libraries"
         fi
-        cp $dir/lib/*.jar \
-          $tomcat_base/escenic/lib  \
-          1>>$log \
-          2>>$log
-        exit_on_error "deploying jar files to $tomcat_base/escenic/lib"
+        run cp $dir/lib/*.jar $tomcat_base/escenic/lib
       else
         print "Could not find $tomcat_base/escenic/lib. Exiting."
         print "Also make sure that you have defined this directory in"
