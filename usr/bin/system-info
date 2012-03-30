@@ -15,6 +15,7 @@ ece_user=""
 format=org
 generate_output_file_per_module=0
 output_dir=$(pwd)
+output_file=""
 
 function init() {
   # first, try to be nice
@@ -35,7 +36,7 @@ function run_system_info_modules() {
     if [ ! -d $ece_scripts_dir/system-info.d ]; then
       return
     fi
-    
+
     for el in $(\ls $ece_scripts_dir/system-info.d/*.sh 2>/dev/null); do
       if [ $generate_output_file_per_module -eq 1 ]; then
         source $el | tee ${output_dir}/$(basename $el).${format}
@@ -255,7 +256,7 @@ EOF
 }
 
 function get_user_options() {
-  while getopts ":d:i:f:u:m" opt; do
+  while getopts ":d:o:i:f:u:m" opt; do
     case $opt in
       i)
         instance=${OPTARG}
@@ -269,6 +270,9 @@ function get_user_options() {
         ;;
       f)
         format=${OPTARG}
+        ;;
+      o)
+        output_file=${OPTARG}
         ;;
       m)
         generate_output_file_per_module=1
