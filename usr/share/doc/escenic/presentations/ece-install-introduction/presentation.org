@@ -1,4 +1,4 @@
-#+TITLE: Welcome to the world of ece-install 
+#+TITLE: BASH all you want: ece-install 
 #+AUTHOR: Torstein Krause Johansen 
 #+EMAIL: tkj@vizrt.com
 #+DATE: 2012-03-30
@@ -13,10 +13,14 @@
 - How? (can I get started using ece-install)
 
 * The Challenge
+[[file:2012-03-30-times-online.png]]
+* The Challenge - II
 [[file:../../images/ece-architecture.png][../../images/ece-architecture.png]]
 
-* What? - I
-Full automatic installation of:
+* What?
+ece-install is a a shell command which gives you full automatic
+installation of:
+
 - Escenic Content Engine & all plugins
 - Escenic Analysis Engine
 - Standalone search instances (Solr + indexer)
@@ -66,7 +70,7 @@ and there's more ...
 - Reduces maintenance costs
 
 * Why? - III
-Not only for produciton environments, using ece-install, you'll also
+Not only for production environments, using ece-install, you'll also
 find it's:
 
 - Easy to set up proper staging environments
