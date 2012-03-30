@@ -16,7 +16,7 @@
 [[file:2012-03-30-times-online.png]]
 
 * The Challenge - II
-[[file:../../images/ece-architecture.png][../../images/ece-architecture.png]]
+[[file:ece-architecture.png][ece-architecture.png]]
 
 * What?
 ece-install is a a shell command which gives you full automatic
