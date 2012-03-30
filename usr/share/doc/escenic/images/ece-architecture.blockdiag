@@ -1,46 +1,42 @@
 # a typical ECE production environment
 blockdiag {
-    orientation = porttrait;
+    orientation = portrait;
 
-    A [label = "lb"];
-    B [label = "cache1"];
-    C [label = "cache2"];
-
-    D [label = "pres1"];
-    E [label = "pres2"];
-    F [label = "pres3"];
-
-    G [label = "editor1"];
-    H [label = "editor2"];
-
-    I [label = "db-vip"];
-    J [label = "db1", shape = flowchart.database];
-    K [label = "db2", shape = flowchart.database];
-
+    internet [ shape = "cloud" ];
+    cache1 [ color = "green" ];
+    cache2 [ color = "green" ];
+    pres1 [ color = "orange" ];
+    pres2 [ color = "orange" ];
+    pres3 [ color = "orange" ];
+    db1 [ shape = "flowchart.database" ];
+    db2 [ shape = "flowchart.database" ];
+    editor1 [ color = "orange" ];
+    editor2 [ color = "orange" ];
+    journalist [ shape = "actor" ];
     
-    L [label = "nfs-vip"];
-    M [label = "nfs1"];
-    N [label = "nfs2"];
+    group {
+        pres1;
+        pres2;
+        pres3;
+        color = "white";
+    };
+    # group {
+    #     cache1;
+    #     cache2;
+    #     color = "green";
+    # }
+    
+    internet -> lb -> cache1, cache2;
+    cache1 -> pres1, pres2, pres3;
+    cache2 -> pres1, pres2, pres3;
+    pres1 -> db-vip, nfs-vip, search1;
+    pres2 -> db-vip, nfs-vip, search1;
+    pres3 -> db-vip, nfs-vip, search1;
 
-    O [label = "search1"];
-    P [label = "search2"];
-
-    # lb -> cache & 2
-    A -> B, C;
-
-    # caches to the pres servers
-    B -> D, E, F;
-    C -> D, E, F;
-
-    # presentation servers to DB, NFS & search
-    D -> I, L, O;
-    E -> I, L, O;
-    F -> I, L, O;
-    G -> I, L, P;
-    H -> I, L, P;
-
-    # db-vip -> db1 & 2
-    I -> J, K;
-    # db1 & 2 master/slave
-    I <-> J;
+    journalist -> editor1 -> db-vip, nfs-vip, search2;
+    import -> editor2 -> db-vip, nfs-vip, search2;
+    
+    db-vip -> db1, db2;
+    db1 <-> db2;
+    nfs-vip -> nfs1, nfs2;
 }
