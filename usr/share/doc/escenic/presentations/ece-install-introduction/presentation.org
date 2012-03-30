@@ -13,7 +13,7 @@
 - How? (can I get started using ece-install)
 
 * The Challenge
-[[file:../../images/ece-architecture.png][../../images/ece-architecture.png]]
+[[file:ece-architecture.png][ece-architecture.png]]
 
 * What? - I
 Full automatic installation of:
