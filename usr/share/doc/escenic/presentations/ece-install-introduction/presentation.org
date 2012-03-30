@@ -4,15 +4,18 @@
 #+DATE: 2012-03-30
 
 * Agenda
-- What? (is it)
-- Why? (should anyone want to use it)
+- The Challenge
+- What? (is ece-install)
+- Why? (should anyone want to use ece-install)
 - What Does It Need? (to run)
-- For Whom? (is it intended for)
-- Show Me! (how)
-- How? (can I get started using this)
+- For Whom? (is ece-install intended for)
+- Show Me! (how to use ece-install)
+- How? (can I get started using ece-install)
 
-* What?
+* The Challenge
+[[file:../../images/ece-architecture.png][../../images/ece-architecture.png]]
 
+* What? - I
 Full automatic installation of:
 - Escenic Content Engine & all plugins
 - Escenic Analysis Engine
@@ -103,6 +106,14 @@ Yes, that's it.
 - Documentation:
   /usr/share/doc/escenic/ece-install-guide.org
 - Screencasts (instruction videos): http://www.screenr.com/user/skybert
+
+* To Sum It All Up
+- Full automatic install of all components of an ECE production
+  environment
+- Production ready settings out of the box
+- Up to date, generated documentation & monitoring included 
+- You only needs a Linux machine with a network connection
+- Daily DEB & RPM packages available
 
 * 問題?
 
