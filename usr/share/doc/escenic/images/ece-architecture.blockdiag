@@ -1,0 +1,46 @@
+# a typical ECE production environment
+blockdiag {
+    orientation = porttrait;
+
+    A [label = "lb"];
+    B [label = "cache1"];
+    C [label = "cache2"];
+
+    D [label = "pres1"];
+    E [label = "pres2"];
+    F [label = "pres3"];
+
+    G [label = "editor1"];
+    H [label = "editor2"];
+
+    I [label = "db-vip"];
+    J [label = "db1", shape = flowchart.database];
+    K [label = "db2", shape = flowchart.database];
+
+    
+    L [label = "nfs-vip"];
+    M [label = "nfs1"];
+    N [label = "nfs2"];
+
+    O [label = "search1"];
+    P [label = "search2"];
+
+    # lb -> cache & 2
+    A -> B, C;
+
+    # caches to the pres servers
+    B -> D, E, F;
+    C -> D, E, F;
+
+    # presentation servers to DB, NFS & search
+    D -> I, L, O;
+    E -> I, L, O;
+    F -> I, L, O;
+    G -> I, L, P;
+    H -> I, L, P;
+
+    # db-vip -> db1 & 2
+    I -> J, K;
+    # db1 & 2 master/slave
+    I <-> J;
+}
