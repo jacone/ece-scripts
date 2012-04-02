@@ -8,14 +8,22 @@
 target_dir=target
 package_name=escenic-content-engine-installer
 package_version=$(date +%Y-%m-%d.%H%M%S)
+default_maintainer_name="Torstein Krause Johansen"
+default_maintainer_email=tkj@vizrt.com
 
 function clean_up() {
   rm -rf $target_dir
 }
 
 function get_user_options() {
-  while getopts ":p:r:" opt; do
+  while getopts ":p:e:n:r:" opt; do
     case $opt in
+      e)
+        maintainer_email=${OPTARG}
+        ;;
+      n)
+        maintainer_name=${OPTARG}
+        ;;
       r)
         package_version=${OPTARG}
         ;;
@@ -89,12 +97,11 @@ function set_up_target_directory() {
 }
 
 function get_name() {
-  name=$(grep $USER /etc/passwd | cut -d':' -f5 | cut -d',' -f1)
-  echo "${name}"
+  echo ${maintainer_name-$default_maintainer_name}
 }
 
 function get_email() {
-  echo ${USER}@${HOSTNAME}
+  echo ${maintainer_email-$default_maintainer_email}
 }
 
 function create_packages() {
