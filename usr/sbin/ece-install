@@ -47,6 +47,7 @@ java_home=/usr/lib/jvm/java-6-sun
 #####################################################################
 
 pid_file=/var/run/$(basename $0).pid
+lock_file=/var/lock/$(basename $0).lock
 download_dir=/tmp/ece-downloads
 log=/var/log/$(basename $0).log
 conf_file=$HOME/ece-install.conf
@@ -560,10 +561,18 @@ function assert_correct_runtime_environment()
         echo "You must be root when running $(basename $0)"
         exit 1
     fi
+
+    if [ -e $lock_file ]; then
+      cat <<EOF
+The lock file is present: ${lock_file} and $(basename $0) will
+therefore refuse to run.
+EOF
+      exit 1
+    fi
     
     if [ -e $pid_file ]; then
         echo "There's already one $(basename $0) process running."
-        echo "If you blelieve this is wrong, e.g. if a previous run of" 
+        echo "If you believe this is wrong, e.g. if a previous run of" 
         echo "$(basename $0) was aborted before it completed, you"
         echo "may remove ${pid_file} and run $(basename $0) again."
         exit 1
