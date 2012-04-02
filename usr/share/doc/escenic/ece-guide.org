@@ -194,47 +194,40 @@ again will be reported by the "ece info" command.
 The "ece info" command will give you a lot of useful information about
 the current instance:
 #+BEGIN_SRC sh
-$ ece -i myinstance info
-[ece#engine-myinstance] Current instance: myinstance
-[ece#engine-myinstance] Instances available on myhost: myinstance
-[ece#engine-myinstance] Conf files parsed: /etc/escenic/ece-myinstance.conf
-/etc/escenic/ece.conf
-[ece#engine-myinstance] ECE location: /opt/escenic/engine
-[ece#engine-myinstance] Assembly Tool location: /opt/escenic/assemblytool
-[ece#engine-myinstance] Java location: /usr/lib/jvm/java-6-sun
-[ece#engine-myinstance] Log files:
-[ece#engine-myinstance] |-> System out log:
-/var/log/escenic/engine-myinstance.out
-[ece#engine-myinstance] |-> App server log:
-/opt/tomcat-myinstance/logs/localhost.2012-04-02.log
-[ece#engine-myinstance] |-> Log4j log: /var/log/escenic/ece-myinstance-messages
-[ece#engine-myinstance] |-> GC log: /var/log/escenic/engine-myinstance-gc.log
-[ece#engine-myinstance] Application server:
-[ece#engine-myinstance] |-> Status: DOWN
-[ece#engine-myinstance] |-> Port: 8080
-[ece#engine-myinstance] |-> Type: tomcat
-[ece#engine-myinstance] |-> Tomcat home: /opt/tomcat
-[ece#engine-myinstance] |-> Tomcat base: /opt/tomcat-myinstance
-[ece#engine-myinstance] Application server resources:
-[ece#engine-myinstance] |-> escenic/solr-base-uri:
-http://mysearch:8080/solr/
-[ece#engine-myinstance] Database:
-[ece#engine-myinstance] |-> name: jdbc/ECE_READ_DS
-[ece#engine-myinstance] |-> url:
-mysql://mydb:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8
-[ece#engine-myinstance] |-> username: ece5user
-[ece#engine-myinstance] |-> name: jdbc/ECE_UPDATE_DS
-[ece#engine-myinstance] |-> url:
-mysql://mydb:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8
-[ece#engine-myinstance] |-> username: ece5user
-[ece#engine-myinstance] Deployed web applications:
-[ece#engine-myinstance] |-> http://myhost:8080/escenic-admin
-[ece#engine-myinstance] Deployment state:
-[ece#engine-myinstance] |-> Version: mysite.com-1.2.3
-[ece#engine-myinstance] |-> EAR used:
-http://my.build.server.com/engine-mysite.com-1.2.3.ear
-[ece#engine-myinstance] |-> MD5 sum: 5881d1895c09c7b35a032806c6249433
-[ece#engine-myinstance] |-> Deployment date: Wed Mar 28 18:29:58 CST 2012  
+$ ece -i web1 info
+[ece#engine-web1] Current instance: web1
+[ece#engine-web1] Instances available on myhost: web1
+[ece#engine-web1] Conf files parsed: /etc/escenic/ece-web1.conf /etc/escenic/ece.conf
+[ece#engine-web1] ECE location: /opt/escenic/engine
+[ece#engine-web1] Assembly Tool location: /opt/escenic/assemblytool
+[ece#engine-web1] Java location: /usr/lib/jvm/java-6-sun
+[ece#engine-web1] Log files:
+[ece#engine-web1] |-> System out log: /var/log/escenic/engine-web1.out
+[ece#engine-web1] |-> App server log: /opt/tomcat-web1/logs/localhost.2012-04-02.log
+[ece#engine-web1] |-> Log4j log: /var/log/escenic/ece-web1-messages
+[ece#engine-web1] |-> GC log: /var/log/escenic/engine-web1-gc.log
+[ece#engine-web1] Application server:
+[ece#engine-web1] |-> Status: DOWN
+[ece#engine-web1] |-> Port: 8080
+[ece#engine-web1] |-> Type: tomcat
+[ece#engine-web1] |-> Tomcat home: /opt/tomcat
+[ece#engine-web1] |-> Tomcat base: /opt/tomcat-web1
+[ece#engine-web1] Application server resources:
+[ece#engine-web1] |-> escenic/solr-base-uri: http://mysearch:8080/solr/
+[ece#engine-web1] Database:
+[ece#engine-web1] |-> name: jdbc/ECE_READ_DS
+[ece#engine-web1] |-> url: mysql://mydb:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8
+[ece#engine-web1] |-> username: ece5user
+[ece#engine-web1] |-> name: jdbc/ECE_UPDATE_DS
+[ece#engine-web1] |-> url: mysql://mydb:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8
+[ece#engine-web1] |-> username: ece5user
+[ece#engine-web1] Deployed web applications:
+[ece#engine-web1] |-> http://myhost:8080/escenic-admin
+[ece#engine-web1] Deployment state:
+[ece#engine-web1] |-> Version: mysite.com-1.2.3
+[ece#engine-web1] |-> EAR used: http://my.build.server.com/engine-mysite.com-1.2.3.ear
+[ece#engine-web1] |-> MD5 sum: 5881d1895c09c7b35a032806c6249433
+[ece#engine-web1] |-> Deployment date: Wed Mar 28 18:29:58 CST 2012  
 #+END_SRC
 
 
