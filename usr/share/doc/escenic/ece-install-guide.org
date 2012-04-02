@@ -54,6 +54,7 @@ $ git clone https://github.com/skybert/ece-scripts.git
 #+END_SRC
 
 * Running the ece-install Script
+** Requires super user privileges
 You must run the script as the root user.  If you start the script as
 a regular user, it will complain:
 #+BEGIN_SRC conf
@@ -70,6 +71,7 @@ On all other Unix like system, do:
    $ su -
 #+END_SRC
 
+** Technet & WF credentials
 You will need access to http://technet.escenic.com and put these
 credentials in the root user's $HOME/ece-install.conf, normally this
 means /root/ece-install.conf, the script will also tell you this if
@@ -97,6 +99,7 @@ runn a fully automatic install without any user interaction, you'll
 need to specify some FAI specific parameters, see the FAI section
 below. 
 
+** Basic invocation & how to debug errors
 With the configuration file in place, you're now ready to run it:
 #+BEGIN_SRC conf
 # bash ece-install [-v|--verbose|<-f|--file> <conf-file>]
@@ -122,6 +125,23 @@ this is to run the BASH interpreter with the -x flag:
 Here you can see everything that BASH does when running the script,
 how the wildcard variables expand and so on. Normally, having a tail
 on /var/log/ece-install.log should be sufficient, though.
+
+** Preventing accidental execution of ece-install 
+
+ece-install has support for a lock file. This is useful for systems
+were you want to ensure that no one incidentally triggers ece-install
+without wanting to. The location of this lock file is:
+
+#+BEGIN_SRC sh
+/var/lock/ece-install.lock
+#+END_SRC
+    
+If this lock file is in place, ece-install will fail fast:
+
+#+BEGIN_SRC sh
+The lock file is present: /var/lock/ece-install.lock and ece-install
+will therefore refuse to run.
+#+END_SRC
 
 * Available Server Profiles
 When starting the script, it will ask you which server profile you
