@@ -74,6 +74,7 @@ function set_up_target_directory() {
   elif [[ $package_name == "escenic-common-scripts" ]]; then
     # both the installer and ece-scripts use the common scripts and
     # web resources.
+    mkdir -p $target_dir/usr/share/escenic/ece-scripts
     cp -r ../../share/escenic/ece-scripts/common* \
       $target_dir/usr/share/escenic/ece-scripts/
     cp -r ../../share/escenic/ece-scripts/*.css \
