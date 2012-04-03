@@ -17,6 +17,9 @@ generate_output_file_per_module=0
 output_dir=$(pwd)
 output_file=""
 
+current_indent_level=0
+INDENT="  "
+
 function init() {
   # first, try to be nice
   ece_scripts_dir=$(dirname $0)/../share/escenic/ece-scripts
@@ -45,6 +48,24 @@ function run_system_info_modules() {
       fi
     done
   fi
+}
+
+## $1 : indent level, optional, if not set, will use the
+## current_indent_level
+function get_indent() {
+  local result=""
+
+  if [[ "${1}x" != "x" ]]; then
+    local number_of_indents=$1
+  else
+    local number_of_indents=$current_indent_level
+  fi
+  
+  for (( i = 0; i < $number_of_indents; i++ )); do
+    result="${INDENT}$result"
+  done
+
+  echo "$result"
 }
 
 function create_header() {
@@ -144,6 +165,8 @@ function print_list_item() {
     echo "* $@"
   elif [ $format == "json" ]; then
     echo "      \"$@\", "
+  elif [ $format == "yaml" ]; then
+    echo "$(get_indent)- $@"
   fi
 }
 
@@ -175,6 +198,9 @@ EOF
     cat <<EOF
 "$(json_escape_string $(echo $@ | sed 's/$/\\n/'))",
 EOF
+
+  elif [ $format == "yaml" ]; then
+    echo "$@" | sed "s/^/$(get_indent)/g"
   fi
 }
 
@@ -194,6 +220,10 @@ function print_h3_header() {
     cat <<EOF
     "$(make_string_into_json_label $@)" :
 EOF
+  elif [ $format == "yaml" ]; then
+    echo ""
+    echo "$(get_indent 2)${@}:"
+    current_indent_level=2
   fi
 }
 
@@ -205,6 +235,10 @@ function print_h4_header() {
     echo "<h4>$@</h4>"
   elif [ $format == "confluence" ]; then
     echo "h4. $@"
+  elif [ $format == "yaml" ]; then
+    echo ""
+    echo "$(get_indent 3)${@}:"
+    current_indent_level=3
   fi
 }
 
@@ -220,6 +254,10 @@ function print_h2_header() {
     cat <<EOF
   "$(echo $@ | tr [A-Z] [a-z] | sed 's/ /-/g')" : {
 EOF
+  elif [ $format == "yaml" ]; then
+    echo ""
+    echo "$(get_indent 1)${@}:"
+    current_indent_level=2
   fi
 }
 
@@ -236,6 +274,9 @@ function print_h1_header() {
     echo "<h1>$@</h1>"
   elif [ $format == "confluence" ]; then
     echo "h1. $@"
+  elif [ $format == "yaml" ]; then
+    echo "${@}:"
+    current_indent_level=0
   fi
 }
 
@@ -252,6 +293,8 @@ EOF
     echo "$@"
   elif [ $format == "json" ]; then
     echo "    \"message\": \"$@\","
+  elif [ $format == "yaml" ]; then
+    echo "$(get_indent)$@"
   fi
 }
 
