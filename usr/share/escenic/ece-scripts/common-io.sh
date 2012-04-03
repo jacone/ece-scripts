@@ -106,3 +106,30 @@ function download_uri_target_to_dir() {
 
   echo $file
 }
+
+# verifies that the passed file(s) exist and are readable, depends on
+# set_archive_files_depending_on_profile
+function verify_that_files_exist_and_are_readable()
+{
+  debug "Verifying that the file(s) exist(s) and are readable: $@"
+  
+  for el in $@; do
+    if [[ $el == http* ]]; then
+      if [ $(curl -s -I $el | wc -l) -gt 0 ]; then
+        continue
+      else
+        print_and_log "The URI $el doesn't exist, I will exit now."
+        remove_pid_and_exit_in_error
+      fi  
+    fi
+    
+    if [ ! -e $el ]; then
+      print_and_log "The file" $el "doesn't exist. I will exit now."
+      remove_pid_and_exit_in_error
+    elif [ ! -r $el ]; then
+      print_and_log "The file" $el "isn't readable. I will exit now."
+      remove_pid_and_exit_in_error
+    fi
+  done
+}   
+
