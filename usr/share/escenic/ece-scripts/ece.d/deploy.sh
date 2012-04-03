@@ -46,20 +46,9 @@ function deploy() {
 
   if [ -n "$file" ]; then
     print_and_log "Deploying $file on $instance ..."
-    local downloaded_ear=$(basename $file)
-    if [[ $file == "http://"* || $file == "https://"* ]]; then
-      print_and_log "Downloading EAR $file ..."
-      run cd $cache_dir
-      run wget $wget_opts $file -O $(basename $file)
-      ear=$cache_dir/$(basename $file)
-    elif [[ $file == "file://"* ]]; then
-      # length of file:// is 7
-      ear=${file:7}
-    else
-      ear=$file
-    fi
+    ear=$(download_uri_target_to_dir $file $cache_dir)
     
-    if [ ! -e $ear ]; then
+    if [ ! -e "$ear" ]; then
         print_and_log "The EAR $ear_uri specified in $file could"
         print_and_log "not be retrieved. I will exit now. :-("
         exit 1

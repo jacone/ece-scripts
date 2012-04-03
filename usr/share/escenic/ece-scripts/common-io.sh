@@ -85,3 +85,24 @@ function make_ln() {
   fi
 }
 
+## $1 : the URI, can be file:///tmp/file, http://server/file  or https://file
+## $2 : the target dir
+## returns : the local, downloaded file with absolute path
+function download_uri_target_to_dir() {
+  local uri=$1
+  local target_dir=$2
+  local file=""
+  
+  if [[ $uri == "http://"* || $uri == "https://"* ]]; then
+    run cd $target_dir
+    run wget $wget_opts $uri -O $(basename $uri)
+    file=$target_dir/$(basename $uri)
+  elif [[ $uri == "file://"* ]]; then
+      # length of file:// is 7
+    file=${file:7}
+  else
+    file=$uri
+  fi
+
+  echo $file
+}

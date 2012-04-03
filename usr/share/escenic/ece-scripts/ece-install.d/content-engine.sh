@@ -234,14 +234,9 @@ EOF
     run cd $escenic_root_dir/assemblytool/publications
     
     for el in ${fai_publication_war_uri_list}; do
-      if [[ $el == http* ]]; then
-        run wget $wget_opts $el
-      elif [[ $el == file://* ]]; then
-        local file_with_path=$(echo $el | sed "s#file://##g")
-        run cp $file_with_path .
-      else
-        run cp ${el} .
-      fi
+      local download_file=$(
+        download_uri_target_to_dir $el $escenic_root_dir/assemblytool/publications
+      )
       
       if [ ! -e $(basename $el) ]; then
         print_and_log "Failed to get user publication $el."
@@ -557,8 +552,10 @@ function assemble_deploy_and_restart_type()
     # profiles in the same ece-install process.
   ece_command="ece -i $instance_name -t $type clean assemble deploy restart"
   if [ $(is_installing_from_ear) -eq 1 ]; then
-    run cp $ece_instance_ear_file $escenic_cache_dir/engine.ear
-    ece_command="ece -i $instance_name -t $type deploy restart"
+    ece_command="ece -i $instance_name
+      -t $type
+      deploy --uri $ece_instance_ear_file
+      restart"
     print_and_log "Deploying the supplied EAR on instance $instance_name"
     print_and_log "and restarting it ..."
   else
