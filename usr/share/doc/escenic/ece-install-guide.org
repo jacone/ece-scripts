@@ -575,7 +575,7 @@ $ tar czf /tmp/nursery-skeleton-solr-and-security.tar.gz \
   engine/security \
   engine/siteconfig/config-skeleton/ \
   engine/solr/conf \
-  engine/siteconfig/bootstrap-skeleton/`
+  engine/siteconfig/bootstrap-skeleton/
 #+END_SRC
 
 /tmp/nursery-skeleton-solr-and-security.tar.gz should now have everything
