@@ -27,7 +27,7 @@ http_user=""
 http_password=""
 wget_auth=""
 curl_auth=""
-log="/tmp/arne"
+log=""
 
 type_list="
 engine
@@ -94,7 +94,6 @@ function init() {
     
     # load ece-install modules
     for el in $dir/ece.d/*.sh; do
-      log "Loading $(basename $0) module:" $el
       source $el
     done
   else
