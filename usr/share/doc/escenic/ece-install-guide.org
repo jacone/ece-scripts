@@ -598,6 +598,14 @@ If you wish to provide Nursery configuration for the plugins, you
 simply put them in engine/siteconfig/config-skeleton inside your
 tarball, together with the other Nursery configuration files.
 
+The fai_presentation_conf_archive and fai_presentation_ear variables
+both accept the following types of value (here using the value of
+fai_presentation_ear as an example):
+- http://build.server/stable/engine-mysite.com-1.2.3.ear
+- https://build.server/stable/engine-mysite.com-1.2.3.ear
+- file:///var/lib/build/stable/engine-mysite.com-1.2.3.ear
+- /var/lib/build/stable/engine-mysite.com-1.2.3.ear
+
 ** Setting up virtual hosts
 Setting up virtual host definitions in the application server makes a
 some things easier, such as ECE plugins which set cookies based on
