@@ -232,3 +232,14 @@ function is_archive_healthy() {
   fi
 }
 
+## $1 : the archive
+function extract_archive() {
+  if [[ "$1" == *".tar.gz" || "$1" == *".tgz" ]]; then
+    run tar xzf $1
+  elif [[ "$1" == *".tar.bz2" ]]; then
+    run tar xjf $1
+  elif [[ "$1" == *".zip" ]]; then
+    run unzip -q $1
+  fi
+}
+
