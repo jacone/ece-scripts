@@ -85,7 +85,9 @@ function make_ln() {
   fi
 }
 
-## $1 : the URI, can be file:///tmp/file, http://server/file  or https://file
+## $1 : the URI, can be file:///tmp/file, http://server/file or
+##      https://file. If $1 is a local file reference, it's used as it
+##      is.
 ## $2 : the target dir
 ## returns : the local, downloaded file with absolute path
 function download_uri_target_to_dir() {
