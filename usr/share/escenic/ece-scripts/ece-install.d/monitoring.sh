@@ -422,27 +422,36 @@ function install_system_info() {
   if [ $(grep -v ^# /etc/crontab | grep "$command" | wc -l) -lt 1 ]; then
     echo '* *     * * *   root    '$command >> /etc/crontab
   fi
-
+  
+  # doing a first run of system-info since cron will take a minute to start
+  eval $command
+  
   # creating symlinks like:
   # /var/www/system-info/var/log/escenic -> /var/log/escenic
   # /var/www/system-info/etc/escenic -> /etc/escenic
   make_dir ${dir}/$(dirname $escenic_log_dir)
-  make_dir ${dir}/$(dirname $escenic_conf_dir)
-  
   local target=${dir}/$(dirname ${escenic_log_dir})/$(basename ${escenic_log_dir})
   if [ ! -h $target ]; then
     run ln -s ${escenic_log_dir} $target
   fi
 
+  make_dir ${dir}/$(dirname $escenic_conf_dir)
   target=${dir}/$(dirname $escenic_conf_dir)/$(basename $escenic_conf_dir)
   if [ ! -h $target ]; then
     run ln -s ${escenic_conf_dir} $target
+  fi
+  
+  make_dir ${dir}/$tomcat_base
+  target=${dir}/$tomcat_base/logs
+  if [ ! -h $target ]; then
+    run ln -s $tomcat_base/logs $target
   fi
   
   # thttpd doesn't serve files if they've got the execution bit set
   # (it then think it's a misnamed CGI script)
   find $escenic_log_dir -type f | egrep ".log$|.out$" | xargs chmod 644
   find $escenic_conf_dir -type f | egrep ".conf$|.properties$" | xargs chmod 644
+  find $tomcat_base/logs -type f | egrep ".log$" | xargs chmod 644
 
   add_next_step "Always up to date system info: http://$HOSTNAME:$port/"
   add_next_step "you can also see system-info in the shell, type: system-info"
