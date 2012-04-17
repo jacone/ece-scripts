@@ -3,6 +3,7 @@
 dir=$1
 log=/tmp/$(basename $0).log
 apt_repo_dir=/var/www/apt
+gpg_key=AD747D97
 
 if [[ ${dir}x == "x" || ! -d $dir ]]; then
   echo "You must pass a valid directory to $(basename $0)"
@@ -18,9 +19,8 @@ function get_package_name() {
 }
 
 for el in $dir/*.deb; do
-  echo -n "Signing and adding $(basename $el) to the APT repository ... "
-  dpkg-sig --sign builder $el >> $log 2>> $log
-  reprepro -Vb $apt_repo_dir remove stable $(get_package_name $el) >> $log 2>> $log
-  reprepro --ask-passphrase -Vb $apt_repo_dir includedeb stable $el >> $log 2>> $log
-  echo "done"
+  echo "Signing and adding $(basename $el) to the APT repository ... "
+  dpkg-sig --sign builder -k $gpg_key $el
+  reprepro -Vb $apt_repo_dir remove stable $(get_package_name $el)
+  reprepro --ask-passphrase -Vb $apt_repo_dir includedeb stable $el
 done
