@@ -13,14 +13,14 @@ fi
 
 echo "I'm logging to $log"
 
-function get_name() {
+function get_package_name() {
   dpkg --info $1 | sed 's/^[ ]//'g | grep ^Package | cut -d':' -f2
 }
 
 for el in $dir/*.deb; do
   echo -n "Signing and adding $(basename $el) to the APT repository ... "
   dpkg-sig --sign builder $el >> $log 2>> $log
-  reprepro -Vb $apt_repo_dir remove stable $(get_name $el) >> $log 2>> $log
+  reprepro -Vb $apt_repo_dir remove stable $(get_package_name $el) >> $log 2>> $log
   reprepro --ask-passphrase -Vb $apt_repo_dir includedeb stable $el >> $log 2>> $log
   echo "done"
 done
