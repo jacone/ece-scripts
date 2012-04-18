@@ -22,5 +22,12 @@ for el in $dir/*.deb; do
   echo "Signing and adding $(basename $el) to the APT repository ... "
   dpkg-sig --sign builder -k $gpg_key $el
   reprepro -Vb $apt_repo_dir remove stable $(get_package_name $el)
-  reprepro --ask-passphrase -Vb $apt_repo_dir includedeb stable $el
+
+  if [[ $(basename $(dirname $el)) == "non-free" ]]; then
+      component=non-free
+  else
+      component=main
+  fi
+  
+  reprepro --ask-passphrase -Vb $apt_repo_dir -C $component includedeb stable $el
 done
