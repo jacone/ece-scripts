@@ -13,7 +13,7 @@ Origin: Vizrt Online
 Label: Vizrt Online APT repository
 Codename: squeeze
 Architectures: i386 amd64 source
-Components: main
+Components: main non-free
 Description: Private APT repository for SAAS customer of Vizrt
 SignWith: yes
 ",
