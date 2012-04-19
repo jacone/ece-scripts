@@ -1,0 +1,38 @@
+###################################################################################################
+# Cache invalidation service for Squid.                                                           #
+# Tested with Squid 2.5 under Ubuntu Linux 6.06 (Dapper Drake)                                    #
+#                                                                                                 #
+# This properties file can also be used with Varnish, which was designed as a drop-in replacement #
+# for Squid.                                                                                      #
+#                                                                                                 #
+# NOTE: make sure your Squid configuration allows purging! It should contain something like this: #
+#                                                                                                 #                                                            
+#     acl purge method PURGE                                                                      #
+#     # Only allow purge requests from localhost                                                  #
+#     http_access allow purge localhost                                                           #
+#     # Deny for all others                                                                       #                                                            
+#     http_access deny purge                                                                      #
+#                                                                                                 #
+#                                                                                                 #
+###################################################################################################
+
+# Set this to true to enable the service at startup of ECE or false to disable it (default: false).
+# enabled=false
+
+# Wait this number of ms before updating (default: 5000).
+# waitMilliSecsBeforeUpdating=5000
+
+# Number of times to retry updating Squid if it fails (default: 3).
+# retryLimit=3
+
+# Interval to clear the retry list (default: 3600000 = 1 hour).
+# retryClearInterval=3600000
+
+# Socket timeout (in ms), 0=infinite (default: 0).
+# soTimeout=0
+
+# Force this port number in URLs sent to Squid (0=don't change) (default: 0).
+# Use this to change the port number in URLs returned by ECE.
+# Example: when ECE returns http://myserver.com/article123.ece or http://myserver.com:80/article123.ece 
+# using forcePort=3128 will send http://myserver.com:3128/article123.ece to Squid.
+# forcePort=0

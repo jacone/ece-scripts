@@ -1,0 +1,63 @@
+$class=com.escenic.syndication.xml.ImportReporter
+
+############################################################################
+# MailSender to use
+############################################################################
+# Specify the MailSender to use.
+# Example:
+#   emailSender=/neo/io/services/MailSender
+# Default:
+#   emailSender=/neo/io/services/MailSender
+############################################################################
+# emailSender=/neo/io/services/MailSender
+
+############################################################################
+# Report configurations
+############################################################################
+# Report configurations to use. See ExampleReportConfiguration.properties
+# for an example.
+# Allowed keys are:
+#   * SUCCESS
+#     - Indicates that an import was successful. and that no serious
+#       warnings were issued.
+#   * DEFERRED
+#     - Indicates that an import has been deferred because a temporary error
+#       stopped the import from completing. The import will be attempted
+#       during the next import cycle.
+#   * WARNING
+#     - Indicates that an import completed, but that a report of type
+#       warning was generated. The only difference between SUCCESS and
+#       WARNING is only the report generated. If a WARNING report is
+#       defined, and produces a report, then that report will be sent along
+#       with the SUCCESS report.
+#   * FAILURE
+#     - Indicates that an import failed.  Some elements may have been
+#       imported, but a portion of the source import file failed to be
+#       imported.
+# These keys must be in all uppercase.
+# Example:
+#   reportConfiguration.SUCCESS=./SuccessReportConfiguration
+#   reportConfiguration.DEFERRED=./DeferredReportConfiguration
+#   reportConfiguration.WARNING=./WarningReportConfiguration
+#   reportConfiguration.FAILURE=./FailureReportConfiguration
+# Default:
+#   None
+############################################################################
+# reportConfiguration.SUCCESS=./SuccessReportConfiguration
+# reportConfiguration.DEFERRED=./DeferredReportConfiguration
+# reportConfiguration.WARNING=./WarningReportConfiguration
+# reportConfiguration.FAILURE=./FailureReportConfiguration
+
+############################################################################
+# Enable/disable reporting
+############################################################################
+# Enable/disable reporting.
+#   true - set true to enable reporting.
+#   false - set false to disable reporting.
+# Example:
+#   enabled=true
+#   enabled=false
+# Default:
+#   enabled=true
+############################################################################
+# enabled=true

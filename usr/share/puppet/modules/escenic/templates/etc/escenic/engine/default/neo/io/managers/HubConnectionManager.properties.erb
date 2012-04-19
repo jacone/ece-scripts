@@ -1,0 +1,97 @@
+######################################################################
+# Hub Connection Manager
+######################################################################
+# Defines the connection to the RMI Hub, if the event system is set
+# up to use an RMI hub.
+#
+# The hub property specifies the URL of the hub itself.
+# The hostname property specifies the DNS or IP address of the server
+# The port property defines the port number of our exported RMI Objects
+# The serverName property specifies the unique name of _this_ server
+# 
+######################################################################
+
+
+######################################################################
+# Hub
+######################################################################
+# The RMI URL of the hub
+#
+# The Hub exports itself using its own RMI Registry. Typically, the
+# default RMI port is used, and the name "/hub/Hub"
+#
+# There is no default value here, and it must be specified in order
+# for the connection to the Hub to work properly.
+#
+# Example:
+#    hub=rmi://172.16.3.1:1099/hub/Hub
+#
+# Example:
+#    hub=rmi://publishing.mycompany.com:1099/hub/Hub
+#
+######################################################################
+# hub=
+
+
+
+######################################################################
+# Hostname
+######################################################################
+# For the Hub to be able to call back to the servers, the servers
+# must tell the Hub their preferred host names (or IP Address)
+#
+# There is no default value here, and it must be configured to the
+# host name or IP address that the Hub can use to talk to the server.
+#
+# Example:
+#    hostname=172.16.3.22
+#
+# Example:
+#    hostname=pub-01.mycompany.com
+#
+######################################################################
+# hostname=
+
+
+
+######################################################################
+# Port Number
+######################################################################
+# The port number that the Hub should use to connect to the server
+#
+# The default value is retrieved from the /RMI component, which is
+# used to export the registry.  The default value should suffice
+# in most installations.
+#
+# Example:
+#    port=8433
+#
+# Default:
+#    port=${/RMI.port}
+#
+######################################################################
+# port=${/RMI.port}
+
+
+
+######################################################################
+# Server Name
+######################################################################
+# The unique name of the server in the cluster.
+#
+# Each server in the cluster must hav its own unique name, which
+# will be used to distinguish the different servers from each other.
+#
+# By default, the value of the escenic.server system property is used.
+# Simply make sure that all the servers have unique escenic.server
+# names.
+#
+# Example:
+#    serverName=publishing-3
+#
+# Default:
+#    serverName=${escenic.server}
+#
+######################################################################
+# serverName=
+

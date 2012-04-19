@@ -1,0 +1,114 @@
+$class=com.escenic.syndication.xml.filter.ReportConfiguration
+
+############################################################################
+# Enable/disable statistics
+############################################################################
+# Specify whether to add statistics in the report.
+# Example:
+#   includeStatistics=true
+#   includeStatistics=false
+# Default:
+#   includeStatistics=false
+############################################################################
+# includeStatistics=true
+
+############################################################################
+# Boilerplate
+############################################################################
+# Used as the first line in the report.
+# Example:
+#   boilerplate=An automatic report from the XML import.
+# Default:
+#   boilerplate=An automatic report from the XML import.
+############################################################################
+# boilerplate=An automatic report from the XML import.
+
+############################################################################
+# Report file name
+############################################################################
+# Full path of the file to be used to write the report. If the file doesn't
+# exists, it will be created. The report will be appended to the file.
+# Example:
+#   filename=/home/user/import-report.txt
+# Default:
+#   None
+############################################################################
+# filename=/home/user/import-report.txt
+
+############################################################################
+# Email recipients
+############################################################################
+# Comma separated list of email address to be used to send the report .
+# Addresses must follow RFC822 syntax.
+# Example:
+#   recipients=user@domain.com
+#   recipients=User 1 <user1@domain.com>, User 2 <user2@domain.com>
+# Default:
+#   None
+############################################################################
+# recipients=user@domain.com
+
+############################################################################
+# Subject of the report email
+############################################################################
+# Subject of the report email
+# Example:
+#   subject=XML Import Report
+# Default:
+#   subject=XML Import Report
+############################################################################
+# subject=XML Import Report
+
+############################################################################
+# Enable/disable attachments
+############################################################################
+# Specify whether to attach the import file(s) with the report email.
+#   true - set true to attach file(s) with the report.
+#   false - set false to disable attachment.
+# Example:
+#   includeAttachment=true
+#   includeAttachment=false
+# Default:
+#   includeAttachment=false
+############################################################################
+# includeAttachment=true
+
+############################################################################
+# Maximum attachment size
+############################################################################
+# Maximum allowed size of attachment in KB. If the size the the import file
+# is more than this value, the file will not be attached with the report.
+# Set to -1 to attach file with any size.
+# Example:
+#   maxAttachmentSize=1024
+#   maxAttachmentSize=100
+# Default:
+#   maxAttachmentSize=1024
+############################################################################
+# maxAttachmentSize=1024
+
+############################################################################
+# Enable/disable stack trace
+############################################################################
+# Specify whether to print full stack trace of the exceptions in the report
+# Example:
+#   includeStackTrace=true
+#   includeStackTrace=false
+# Default:
+#   includeStackTrace=true
+############################################################################
+# includeStackTrace=false
+
+############################################################################
+# Enable/disable reporting
+############################################################################
+# Enable/disable reporting.
+#   true - set true to enable reporting.
+#   false - set false to disable reporting.
+# Example:
+#   enabled=true
+#   enabled=false
+# Default:
+#   enabled=true
+############################################################################
+# enabled=true

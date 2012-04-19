@@ -1,0 +1,36 @@
+# This component will delete articles from Escenic. The articles will
+# not be set to state "deleted", but removed physically. See
+# /neo/io/schedules/DeleteArticleSchedule to configure when this
+# component is run.
+
+# List of sections to delete articles from. The list is comma separated.
+# Required.
+# sectionIds=21, 19
+
+# The publication to delete articles from
+# Required.
+# publicationId=19
+
+# Articles older than this age will be deleted.  If neither this or
+# one of the date parameters is set, all articles in the sections will
+# be deleted. The date used is the article's publishDate. Age is in
+# days. If you need to delete articles newer than one day you can use
+# fractions of a day: 1 hour = 1/24 day = 0.0417 day.
+# age=2
+
+# Include sub sections, default is false.
+# includeSubSections=false
+
+# Delete articles newer than this. Ignored if age is set.
+# Format is decided by default Locale.
+# fromDate=Dec 11, 2002 5:55:58 PM
+
+# Delete articles older than this. Ignored if age is set.
+# Format is decided by default Locale.
+# toDate=Dec 11, 2002 5:55:58 PM
+
+# Set this to false to actually delete the articles. When this value
+# is set to true no articles will be deleted, there will only be info
+# messages in the log about which articles will be deleted. The
+# default value is true.
+# previewOnly=false

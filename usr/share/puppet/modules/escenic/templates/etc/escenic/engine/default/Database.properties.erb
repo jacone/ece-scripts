@@ -1,0 +1,92 @@
+##############################################################################
+# SIMPLE DATABASE POOL CONFIGURATION
+##############################################################################
+# A properties files that exists solely to
+# configure other components.
+# This is not a component, just a .properties-file that contains values
+# which will be expanded by other components.
+#
+# By default, SimpleDBPool is configured to use these values.
+##############################################################################
+
+
+
+
+
+##############################################################################
+# DATABASE URL
+##############################################################################
+# The JDBC URL of the database.
+# Example Oracle
+#   url=jdbc:oracle:thin:@1.2.3.4:1521:ece
+#     where 1.2.3.4 is the host name running Oracle
+#           1521    is the port number of the TNS listener
+#           ece     is the name of the database
+#
+# Example Sybase
+#   url=jdbc:sybase:Tds:1.2.3.4:4100/ece4
+#     where 1.2.3.4 is the host name running Sybase
+#           4100    is the port number where Sybase is listening
+#           ece4     is the name of the database
+#
+# Example MsSQL
+#   url=jdbc:microsoft:sqlserver://1.2.3.4:1433;databasename=ece4;SelectMethod=cursor
+#     where 1.2.3.4 is the host name running the database
+#           1433    is the port number where MsSql is listening
+#           ece4      is the name of the database
+#
+# Example MySQL
+#   url=  url=jdbc:mysql://1.2.3.4/ece4?autoReconnect=true&jdbcCompliantTruncation=false
+#           jdbcCompliantTruncation is required for BLOBs to function correctly.
+#
+##############################################################################
+# url=
+
+
+
+##############################################################################
+# DATABASE DRIVER
+##############################################################################
+# The JDBC DRIVER to use when talking to the database.
+# Example
+#   Oracle:
+#     driver=oracle.jdbc.driver.OracleDriver
+#   Sybase:
+#     driver=com.sybase.jdbc2.jdbc.SybDriver
+#   MsSQL:
+#     driver=com.microsoft.jdbc.sqlserver.SQLServerDriver
+#   MySQL:
+#     driver=com.mysql.jdbc.Driver
+#   driver=
+#           
+##############################################################################
+# driver=
+
+
+##############################################################################
+# DATABASE USER ID
+##############################################################################
+# The user ID to use when accessing the database
+#
+# Examples:
+#   userid=ece_dbo
+#   userid=scott
+#           
+##############################################################################
+# userid=ece_dbo
+
+
+
+##############################################################################
+# DATABASE PASSWORD
+##############################################################################
+# The password to use when accessing the database
+#
+# Examples
+#   password=lano3rjk
+#   password=tiger
+#
+##############################################################################
+# password=
+
+

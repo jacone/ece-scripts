@@ -1,0 +1,57 @@
+############################################################################
+# Initial Component loader
+# Loads components in alphabetical order based on the key.
+# To add a service, uncomment one of the lines.
+############################################################################
+
+### NOTE ###
+### service.0 is reserved for Escenic Content Engine system services.
+### Do not define any services as service.0.whatever...
+
+############################################################################
+# RESIN GLOBAL PROPERTIES
+############################################################################
+# This is a EXPERIMENTAL service to make Escenic Content Engine run on the
+# Resin 3.0.x family of application servers. USE AT OWN RISK.
+#
+# * Enable this service if you want to test Escenic Content Engine on a
+#   Resin 3.0.x server.
+# * This service is part of the Escenic Content Engine system services, thus
+#   disregards the note above...
+############################################################################
+# service.0.00-globalProperties=/neo/io/services/GlobalProperties
+
+############################################################################
+# REMOTE EXPIRE SERVICE
+############################################################################
+# Remote Expire service is used to keep caches in sync between Escenic
+# engines and clients.
+#
+# * Enable this service if you have a multi-server installation, and these
+#   servers need to talk to each other to expire caches.
+# * Enable this service if this server is to support Escenic Content Studio
+############################################################################
+service.1.1-remote-expire=/neo/io/services/RemoteExpireServiceBootstrap
+
+
+############################################################################
+# REMOTE API EVENT SUPPORT
+############################################################################
+#
+# * Enable this service if this is a multiserver environment. This will enable 
+# * events to be sent to remote servers. See also /io/api/EventManager to
+# * configure the reome servers.
+############################################################################
+service.1.2.5-api=/io/api/RMIBootstrap
+
+############################################################################
+# XML IMPORT SERVICE
+############################################################################
+# Uncomment this to enable the xml import service. The default import
+# service will look for xml files to import every minute. There is an
+# example configuration for the import in
+# "/com/escenic/service/xml/importer/XMLImportConfiguration". After
+# the import is configured, it has to be added to
+# "/com/escenic/service/xml/importer/XMLImportService.importConfigurations".
+############################################################################
+#service.9.9-xml-import-service=/com/escenic/syndication/xml/XMLImportSchedule

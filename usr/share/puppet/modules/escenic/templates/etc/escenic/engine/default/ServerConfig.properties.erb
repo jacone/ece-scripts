@@ -1,0 +1,175 @@
+############################################################################
+# Server configuration file.  This file has some mandatory configuration   #
+# entries, and a lot of optional configuration entries.                    #
+#                                                                          #
+# Normally, the optional configuration entries don't need to be touched    #
+# for a development server.                                                #
+#                                                                          #
+# Please note that many of these values are case sensitive!                #
+############################################################################
+
+
+### ------------------------------------------------------------------- ###
+### ----------------------------------------------------- Mandatory --- ###
+### ------------------------------------------------------------------- ###
+
+############################################################################
+# Information needed to identify database server  and i|o database version
+############################################################################
+# Escenic has to know what type of database it is talking to, to work
+# around quirks in the vendors' SQL semantics.  The four supported values
+# are:
+#   databaseProductName=Sybase
+#   databaseProductName=Oracle
+#   databaseProductName=MsSQL
+#   databaseProductName=MySQL
+#
+# Default:
+#   No default product name.
+############################################################################
+# databaseProductName=Oracle
+
+
+### ------------------------------------------------------------------- ###
+### ------------------------------------------------------ Optional --- ###
+### ------------------------------------------------------------------- ###
+
+
+############################################################################
+# PUBLICATION SPECIFIC FILES ON LOCAL FILE SYSTEM
+############################################################################
+# This directory is by default used to hold publication specific files
+# such as uploaded binary objects.
+#
+# By default, these are created in the /var/lib/escenic/engine/
+# directory.
+#
+# Normally, a common directory shared among all ECE instanses (using a
+# share network file system) is recommended
+# (e.g. /var/lib/escenic/engine/). However, when running multiple ECE
+# instances on one host (e.g. something you often want to do when
+# deploying test systems with multiple ECE stacks), you can give an
+# instance specific path for the uploaded files instead:
+#
+#   filePublicationRoot=/var/lib/escenic/engine/${escenic.server "default"}
+#
+# If the escenic.server system property is unspecified, a directory default
+# is used.
+#
+# It is recommended not to point this directory to the same directory where 
+# the webapps are deployed. That might cause problems in some application
+# servers like Tomcat.
+#
+# The directory is created on demand if it does not exist.
+#
+# Example:
+#   filePublicationRoot=/var/lib/escenic/engine/
+############################################################################
+# filePublicationRoot=/var/lib/escenic/engine/
+
+
+
+############################################################################
+# URL TO PUBLICATIONS
+############################################################################
+# This is the default-URL that publications will get when creating a new 
+# publication.
+#
+# This can be overridden by configure a component called 
+#    "/neo/publications/Pub-xxx"
+# where xxx is the name of the publication, or by configuring a component
+# called
+#    "/neo/publications/GenericPublication"
+# which defines the default behaviour of publications.
+# This file can override the publication URL for a specific site.
+#
+# By default, webpubliactionRoot + publicationName is used as URL for
+# a publication.
+#
+# This is the default value for ALL urls.  When upgrading from Dynamo, this
+# information must be set here, and NOT in the database.  If the database value
+# was different from what is configured here, the database value is
+# silently ignored.
+#
+# Exmaple:
+#   webPublicationRoot=http://my.test.site.com:8080/
+# 
+# --  Given that you have a publication called "live":
+#     * It would get the URL: 
+#         http://my.test.site.com:8080/live/
+#     * a component called /neo/publications/Pub-live couls override this
+#       URL and set it to "http://www.live.com", for example.  The application
+#       server must be configured to serve this web application at that URL.
+#
+# By default, the webPublicationRoot points to http://localhost:8080/
+############################################################################
+# webPublicationRoot=http://localhost:8080/
+
+
+
+
+############################################################################
+# ROOT TEMPLATE DIRECTORY
+############################################################################
+# Defines the directory where Escenic will find the WEB-INF directory to 
+# deploy to new web applications, and where to find the layoutDir specified
+# below.
+#
+# By default, the tempalte root points to the "template" directory
+# in the escenic installation directory.
+# Example:
+#   templateRoot=/etc/escenic/template/
+############################################################################
+# templateRoot=${escenic.root}template/
+
+
+############################################################################
+# TEMPORARY DIRECTORY
+############################################################################
+# Defines the directory where Escenic can create temporary files when it
+# needs to do so.  By default, the "tmp" directory in the escenic root
+# directory is used.
+#
+# If this directory does not exist, it will be created the first time
+# Escenic needs a temporary directory.  Escenic must be able to create this
+# directory, or have write access to the directory if it already exists.
+#
+# Default:
+#   tempDir=${java.io.tmpdir}
+#
+# Example:
+#   tempDir=/tmp/escenic
+#
+# Example:
+#   tempDir=/var/spool/escenic/
+############################################################################
+# tempDir=/tmp
+
+
+#Used to limit access to preview of not active content. trustedIP should be 
+#set to the IP of the server used for publishing
+#trustedIP=127.0.0.1
+
+
+############################################################################
+# Default layouts in this directory. All files in directory will be copied into
+# the "template" directory of the publication and registered with the system. 
+# May be edites by designers, etc.
+# This will override the above layouts.
+# This is relative to the "templateRoot" value configured for the
+#  "ServerConfig" component.
+#
+# By default, "jspdemo1", which is supplied, is used.
+############################################################################
+# layoutDir=jspdemo1
+
+
+#############################################################################
+#
+# Set this property to true to enable migration support.
+# Default is off.
+#  Default: 
+#  migrationEnabled=false
+#
+#############################################################################
+# migrationEnabled=true
