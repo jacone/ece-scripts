@@ -1178,7 +1178,6 @@ function set_type_command_and_instance()
           continue
         fi
 
-         
         if [ "$el" == "-q" -o $el == "--quiet" ]; then
             quiet=1
             continue
