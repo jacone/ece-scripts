@@ -1,0 +1,84 @@
+/* Varnish configuration for Escenic Content Engine              -*- java -*- */
+
+/* IPs that are allowed to access the administrative pages/webapps. */
+acl staff {
+  "localhost";
+}
+
+/* The IP of the Adactus/Mobilize server */
+acl adactus {
+  "203.33.232.216";
+}
+
+/* Our web server for serving static content */
+backend static {
+  .host = "localhost";
+  .port = "81";
+}
+
+backend quanah0 {
+  .host = "quanah";
+  .port = "8080";
+}
+
+/* The client director gives us session stickiness based on client
+ * IP. */
+director webdirector client {
+  {
+     .backend = quanah0;
+     .weight = 1;
+  }
+}
+
+sub vcl_recv {
+  if (!client.ip ~ staff &&
+      (req.url ~ "^/escenic" ||
+       req.url ~ "^/studio" ||
+       req.url ~ "^/munin" ||
+       req.url ~ "^/webservice" ||
+       req.url ~ "^/escenic-admin")) {
+     error 405 "Not allowed.";
+  }
+
+  /* Only Adactus/Mobilize is allowed to access the /binary context
+   * which contains all the full quality video files. */
+  if (!client.ip ~ adactus && req.url ~ "^/binary") {
+    error 405 "Not allowed.";
+  }
+
+  if (req.url ~ "^/munin") {
+    set req.url = regsub(req.url, "^/munin", "/");
+    set req.backend = static;
+  }
+  else {
+    set req.backend = webdirector;
+  }
+
+  if (req.url ~ "\.(png|gif|jpg|css|js)$" || req.url == "/favicon.ico") { 
+    remove req.http.Cookie;
+  }
+}
+
+ /* Called when content is fetched from the backend. */
+sub vcl_fetch {
+  /* Remove cookies from these resource types and cache them for a
+   * long time */
+  if (req.url ~ "\.(png|gif|jpg|css|js)$" || req.url == "/favicon.ico") { 
+    set beresp.ttl = 5h;
+    remove beresp.http.Set-Cookie;
+  }
+}
+
+sub vcl_deliver {
+  /* Adds debug header to the result so that we can easily see if a
+   * URL has been fetched from cache or not.
+   */
+  if (obj.hits > 0) {
+    set resp.http.X-Cache = "HIT #" + obj.hits;
+  }
+  else {
+    set resp.http.X-Cache = "MISS";
+  }
+
+  set resp.http.X-Cache-Backend = req.backend;
+}
