@@ -2,10 +2,21 @@ package { 'reprepro': }
 package { 'nginx': }
 package { 'dpkg-sig': }
 
-file { '/var/www': ensure=> directory, owner => www-data, group => www-data }
-file { '/var/www/apt': ensure=> directory, owner => www-data, group => www-data }
-file { '/var/www/apt/conf': ensure=> directory, owner => www-data, group => www-data }
-
+file { '/var/www':
+  ensure=> directory,
+  owner => www-data,
+  group => www-data
+}
+file { '/var/www/apt':
+  ensure=> directory,
+  owner => www-data,
+  group => www-data
+}
+file { '/var/www/apt/conf':
+  ensure=> directory,
+  owner => www-data,
+  group => www-data
+}
 file { '/var/www/apt/conf/distributions':
   ensure=> file,
   content=> "
@@ -18,7 +29,6 @@ Description: Private APT repository for SAAS customer of Vizrt
 SignWith: yes
 ",
 }
-
 file { '/var/www/apt/dists':
   ensure=> directory,
   owner =>
