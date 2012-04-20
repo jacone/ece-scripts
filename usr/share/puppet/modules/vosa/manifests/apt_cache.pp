@@ -32,6 +32,15 @@ user=www-data
 "
 }
 
+file { '/etc/default/apt-cacher':
+  ensure => file,
+  content => "
+# This file has been configured by Puppet
+AUTOSTART=1
+"
+}
+
+  
 service { apt-cacher:
   ensure => running,
   subscribe => File["/etc/apt-cacher/apt-cacher.conf"],
