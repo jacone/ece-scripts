@@ -41,7 +41,7 @@ AUTOSTART=1
 }
 
   
-service { apt-cacher:
+service { 'apt-cacher':
   ensure => running,
   subscribe => File["/etc/apt-cacher/apt-cacher.conf"],
 }
