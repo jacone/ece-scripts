@@ -1,6 +1,6 @@
-define util::templated_file($file_path = $title, $tmodule_name) {
+define util::templated_file($file_path = $title, $module_name) {
     file { $file_path:
         ensure => file,
-        content => template("${tmodule_name}${name}.erb"),
+        content => template("${module_name}${file_path}.erb"),
     }
 }
