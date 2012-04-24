@@ -41,8 +41,6 @@
 define util::templated_file_list($util_module_directory = "/etc/puppet/modules/util/", $template_module_name, $module_template_directory){
 
 	$template_directory = "${module_template_directory}${title}"
-	#notice($template_directory)
-	#notify{$template_directory:}
 
 	$template_subdirectory_list = split(generate("${util_module_directory}bin/list-templates-subdirectories.sh",$template_directory) , "\n")
 	file { $template_subdirectory_list:
