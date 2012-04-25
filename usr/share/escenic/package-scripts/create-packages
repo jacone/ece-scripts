@@ -51,10 +51,10 @@ function set_up_target_directory() {
     mkdir -p $target_dir/usr/share/doc/escenic
     mkdir -p $target_dir/usr/share/escenic/ece-scripts
     
-    cp -r ../../sbin/{ece-install,drop-and-create-ecedb} $target_dir/usr/sbin/
-    cp -r ../../share/escenic/ece-scripts/ece-install.d/ \
+    cp -r ../../../sbin/{ece-install,drop-and-create-ecedb} $target_dir/usr/sbin/
+    cp -r ../../escenic/ece-scripts/ece-install.d/ \
       $target_dir/usr/share/escenic/ece-scripts/
-    cp -r ../../share/doc/escenic/ece-install-guide.{org,html} \
+    cp -r ../../doc/escenic/ece-install-guide.{org,html} \
       $target_dir/usr/share/doc/escenic
     
   elif [[ $package_name == "escenic-content-engine-scripts" ]]; then
@@ -62,32 +62,32 @@ function set_up_target_directory() {
     mkdir -p $target_dir/usr/share/doc/escenic
     mkdir -p $target_dir/usr/share/escenic/ece-scripts
 
-    cp -r ../../bin/{ece,system-info} $target_dir/usr/bin/
+    cp -r ../../../bin/{ece,system-info} $target_dir/usr/bin/
 
-    cp -r ../../share/escenic/ece-scripts/system-info.d \
+    cp -r ../../escenic/ece-scripts/system-info.d \
       $target_dir/usr/share/escenic/ece-scripts/
     
-    cp -r ../../share/doc/escenic/{ece,system-info}-guide.{org,html} \
+    cp -r ../../doc/escenic/{ece,system-info}-guide.{org,html} \
       $target_dir/usr/share/doc/escenic
-    cp -r ../../../etc/escenic/ $target_dir/etc/
-    cp -r ../../../etc/default/ece $target_dir/etc/default/
-    cp -r ../../../etc/init.d/ece $target_dir/etc/init.d/
+    cp -r ../../../../etc/escenic/ $target_dir/etc/
+    cp -r ../../../../etc/default/ece $target_dir/etc/default/
+    cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
     
   elif [[ $package_name == "vosa" ]]; then
     mkdir -p $target_dir/usr/share/doc/vosa
     
-    cp -r ../../bin/vosa $target_dir/usr/bin/
-    cp -r ../../share/vizrt/ $target_dir/usr/share/
-    cp -r ../../share/doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
+    cp -r ../../../bin/vosa $target_dir/usr/bin/
+    cp -r ../../vizrt/ $target_dir/usr/share/
+    cp -r ../../doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
   elif [[ $package_name == "escenic-common-scripts" ]]; then
     # both the installer and ece-scripts use the common scripts and
     # web resources.
     mkdir -p $target_dir/usr/share/escenic/ece-scripts
-    cp -r ../../share/escenic/ece-scripts/common* \
+    cp -r ../../escenic/ece-scripts/common* \
       $target_dir/usr/share/escenic/ece-scripts/
-    cp -r ../../share/escenic/ece-scripts/*.css \
+    cp -r ../../escenic/ece-scripts/*.css \
       $target_dir/usr/share/escenic/ece-scripts/
-    cp -r ../../share/escenic/ece-scripts/*.html \
+    cp -r ../../escenic/ece-scripts/*.html \
       $target_dir/usr/share/escenic/ece-scripts/
   fi
 
