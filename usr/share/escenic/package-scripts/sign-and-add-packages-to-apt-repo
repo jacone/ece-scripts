@@ -1,6 +1,10 @@
-#! /usr/bin/env bash                                                                                            
+#! /usr/bin/env bash
 
 dir=$1
+
+# suite is either stable or unstable (testing hasn't been added yet),
+# default is stable.
+suite=${2-stable}
 log=/tmp/$(basename $0).log
 apt_repo_dir=/var/www/apt
 gpg_key=AD747D97
@@ -21,7 +25,7 @@ function get_package_name() {
 for el in $dir/*.deb; do
   echo "Signing and adding $(basename $el) to the APT repository ... "
   dpkg-sig --sign builder -k $gpg_key $el
-  reprepro -Vb $apt_repo_dir remove stable $(get_package_name $el)
+  reprepro -Vb $apt_repo_dir remove $suite $(get_package_name $el)
 
   if [[ $(basename $(dirname $el)) == "non-free" ]]; then
       component=non-free
@@ -29,5 +33,5 @@ for el in $dir/*.deb; do
       component=main
   fi
   
-  reprepro --ask-passphrase -Vb $apt_repo_dir -C $component includedeb stable $el
+  reprepro --ask-passphrase -Vb $apt_repo_dir -C $component includedeb $suite $el
 done
