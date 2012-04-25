@@ -21,11 +21,21 @@ file { '/var/www/apt/conf/distributions':
   ensure=> file,
   content=> "
 Origin: Vizrt Online
-Label: Vizrt Online APT repository
+Label: Vizrt SaaS customer APT repository
+Suite: stable
 Codename: squeeze
 Architectures: i386 amd64 source
 Components: main non-free
-Description: Private APT repository for SAAS customer of Vizrt
+Description: Vizrt SaaS customer APT repository
+SignWith: yes
+
+Origin: Vizrt Online
+Label: Vizrt SaaS customer APT repository
+Suite: unstable
+Codename: sid
+Architectures: i386 amd64 source
+Components: main non-free
+Description: Vizrt SaaS customer APT repository
 SignWith: yes
 ",
 }
