@@ -143,7 +143,7 @@ function create_overlay() {
   else 
     cat >> ${tempdir}/overlay/updates/var/lib/cloud/data/cache/nocloud/user-data <<EOF
 #cloud-config
-manage_etc_hosts: true
+manage_etc_hosts: false
 timezone: ${install_config_timezone}
 apt_update: true
 apt_upgrade: false
