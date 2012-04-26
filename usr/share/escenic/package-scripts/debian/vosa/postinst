@@ -1,0 +1,17 @@
+#! /usr/bin/env bash
+# set -e
+
+chmod +x /usr/bin/vosa
+
+cat <<EOF
+Thank you for installing the vosa package. This is currently
+un-supported software as it's undergoing heavy development. Report any
+issues to https://github.com/escenic/ece-scripts/issues
+
+Have fun!
+
+-Vizrt Online 
+EOF
+
+exit 0
+
