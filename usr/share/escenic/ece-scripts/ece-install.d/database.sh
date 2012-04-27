@@ -257,6 +257,9 @@ function configure_mysql_for_replication() {
   print_and_log "Configuring DB for replication ..."
   
   local file=/etc/mysql/my.cnf
+  if [ $on_redhat_or_derivative -eq 1 ]; then
+    file=/etc/my.cnf
+  fi
 
   # On old versions of MySQL/Percona, this file isn't there by
   # default, although it's read from /etc/init.d/mysql
