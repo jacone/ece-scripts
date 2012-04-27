@@ -11,6 +11,7 @@ install_config_gateway=
 install_config_timezone=
 install_config_user_data=
 install_config_mirror=mirror://mirrors.ubuntu.com/mirrors.txt
+install_config_proxy=
 
 
 function install_config_ip_address() {
@@ -51,6 +52,10 @@ function install_config_user_data() {
 
 function install_config_mirror() {
   install_config_mirror=$1
+}
+
+function install_config_proxy() {
+  install_config_proxy=$1
 }
 
 # Handle arrays

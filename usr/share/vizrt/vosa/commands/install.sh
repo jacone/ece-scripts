@@ -148,6 +148,7 @@ timezone: ${install_config_timezone}
 apt_update: true
 apt_upgrade: false
 apt_mirror: ${install_config_mirror}
+apt_proxy: ${install_config_proxy}
 EOF
   fi
 
