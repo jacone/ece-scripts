@@ -19,10 +19,10 @@ function get_nfs_configuration() {
 
 function install_nfs_server() {
   print_and_log "Installing an NFS server on $HOSTNAME ..."
-  local packages="portmap nfs-kernel-server nfs-common"
   
+  local packages="portmap nfs-kernel-server nfs-common"
   if [ $on_redhat_or_derivative -eq 1 ]; then
-    packages="nfs-utils"
+    packages="portmap nfs-utils"
   fi
   
   install_packages_if_missing "$packages"
@@ -48,10 +48,15 @@ EOF
 
   # nfs-kernel-server complains on Ubuntu if this directory doesn't exist
   make_dir /etc/exports.d
-  
-  run /etc/init.d/portmap restart
-  run /etc/init.d/nfs-kernel-server restart
 
+  if [ $on_debian_or_derivative -eq 1 ]; then
+    run /etc/init.d/portmap restart
+    run /etc/init.d/nfs-kernel-server restart
+  elif [ $on_redhat_or_derivative -eq 1 ]; then
+    service rpcbind start
+    service nfs start
+  fi
+  
   add_next_step "An NFS server has been installed on ${HOSTNAME},"
   add_next_step "NFS exports: $nfs_export_list"
 }
