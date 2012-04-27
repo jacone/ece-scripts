@@ -130,8 +130,9 @@ ip_address 172.24.201.202
 netmask 255.255.0.0
 gateway 172.24.1.1
 
-# address of mirror to use (defaults to mirror://mirrors.ubuntu.com/mirrors.txt)
+# address of mirror and/or proxy to use (defaults to mirror://mirrors.ubuntu.com/mirrors.txt)
 # mirror http://no.archive.ubuntu.com/
+# proxy http://my-local-proxy:3142/
 user_data /etc/vizrt/vosa/user-data/puppet-client.txt
 
 # Host name give to the machine. defaults to the name of the vm instance
