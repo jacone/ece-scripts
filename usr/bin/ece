@@ -1370,7 +1370,7 @@ function list_versions()
     url=$(get_escenic_admin_url)/$version_manager
         
     print "Installed on the ${instance} instance running on port ${port}:"
-    wget $wget_auth -O - $url  2>/dev/null | \
+    wget --timeout 30 $wget_auth -O - $url  2>/dev/null | \
         grep "\[\[" | \
         sed 's/\[//g' | \
         sed 's/\]//g' | \
