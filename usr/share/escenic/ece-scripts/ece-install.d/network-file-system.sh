@@ -53,8 +53,8 @@ EOF
     run /etc/init.d/portmap restart
     run /etc/init.d/nfs-kernel-server restart
   elif [ $on_redhat_or_derivative -eq 1 ]; then
-    service rpcbind start
-    service nfs start
+    run service rpcbind start
+    run service nfs start
   fi
   
   add_next_step "An NFS server has been installed on ${HOSTNAME},"
