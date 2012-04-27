@@ -66,6 +66,7 @@ appserver_port=8080
 on_debian_or_derivative=0
 on_redhat_or_derivative=0
 on_debian=0
+on_redhat=0
 on_ubuntu=0
 force_packages=0
 
@@ -641,6 +642,10 @@ function common_pre_install()
     if [ -e /etc/redhat-release ]; then
       on_redhat_or_derivative=1
       install_packages_if_missing "redhat-lsb"
+
+      if [ $(lsb_release -i | grep RedHat | wc -l) -gt 0 ]; then
+        on_redhat=1
+      fi
     fi
 
     assert_pre_requisite lsb_release
