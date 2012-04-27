@@ -19,7 +19,13 @@ function get_nfs_configuration() {
 
 function install_nfs_server() {
   print_and_log "Installing an NFS server on $HOSTNAME ..."
-  install_packages_if_missing "portmap nfs-kernel-server nfs-common"
+  local packages="portmap nfs-kernel-server nfs-common"
+  
+  if [ $on_redhat_or_derivative -eq 1 ]; then
+    packages="nfs-utils"
+  fi
+  
+  install_packages_if_missing "$packages"
   get_nfs_configuration
 
   local i=1
