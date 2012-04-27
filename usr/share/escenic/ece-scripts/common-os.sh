@@ -61,10 +61,18 @@ function create_user_and_group_if_not_present() {
   
   if [ $(grep $user /etc/passwd | wc -l) -lt 1 ]; then
     print_and_log "Creating UNIX user $user ..."
-        # TODO add support for useradd
-    run adduser $user \
-      --disabled-password \
-      --gecos "Escenic-user,Room,Work,Home,Other"
+
+    if [ $on_debian_or_derivative -eq 1 ]; then
+      run adduser $user \
+        --disabled-password \
+        --gecos "Escenic-user,Room,Work,Home,Other"
+    fi
+    
+    if [ $on_redhat_or_derivative -eq 1 ]; then
+      run useradd $user \
+        --comment "Escenic-user,Room,Work,Home,Other"
+    fi
+    
     add_next_step "I created a new UNIX user called $user"
     add_next_step "and you must set a password using: passwd $user"
   fi
