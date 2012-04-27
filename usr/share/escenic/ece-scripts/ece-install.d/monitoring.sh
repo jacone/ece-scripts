@@ -386,6 +386,11 @@ EOF
 ## Installs and sets up self-reporting of the current host
 function install_system_info() {
   print_and_log "Setting up self-reporting module on $HOSTNAME ..."
+
+  # we don't support RedHat right now
+  if [ $on_redhat_or_derivative -eq 1 ]; then
+    return
+  fi
   
   install_packages_if_missing thttpd
   assert_pre_requisite thttpd
