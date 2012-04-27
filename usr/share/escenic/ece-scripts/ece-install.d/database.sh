@@ -271,8 +271,8 @@ EOF
 
   # replication log configuration of the master
   if [ $db_master -eq 1 ]; then
-    local old="#server-id.*= 1"
-    local new="server-id = 1"
+    local old="#server-id.*=.*1"
+    local new="server-id=1"
     
     if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
       sed -i "s~^$old~$new~g" $file
