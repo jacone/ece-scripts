@@ -62,12 +62,9 @@ function set_up_target_directory() {
     mkdir -p $target_dir/usr/share/doc/escenic
     mkdir -p $target_dir/usr/share/escenic/ece-scripts
 
-    cp -r ../../../bin/{ece,system-info} $target_dir/usr/bin/
+    cp -r ../../../bin/ece $target_dir/usr/bin/
 
-    cp -r ../../escenic/ece-scripts/system-info.d \
-      $target_dir/usr/share/escenic/ece-scripts/
-    
-    cp -r ../../doc/escenic/{ece,system-info}-guide.{org,html} \
+    cp -r ../../doc/escenic/system-info-guide.{org,html} \
       $target_dir/usr/share/doc/escenic
     cp -r ../../../../etc/escenic/ $target_dir/etc/
     cp -r ../../../../etc/default/ece $target_dir/etc/default/
@@ -80,6 +77,17 @@ function set_up_target_directory() {
     cp -r ../../vizrt/ $target_dir/usr/share/
     cp -r ../../doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
   elif [[ $package_name == "escenic-common-scripts" ]]; then
+    mkdir -p $target_dir/usr/share/doc/escenic
+    mkdir -p $target_dir/usr/share/escenic/ece-scripts
+    
+    # system-info is useful for all packages, hence goes to
+    # escenic-common-scripts.
+    cp -r ../../../bin/system-info $target_dir/usr/bin/
+    cp -r ../../escenic/ece-scripts/system-info.d \
+      $target_dir/usr/share/escenic/ece-scripts/
+    cp -r ../../doc/escenic/system-info-guide.{org,html} \
+      $target_dir/usr/share/doc/escenic
+    
     # both the installer and ece-scripts use the common scripts and
     # web resources.
     mkdir -p $target_dir/usr/share/escenic/ece-scripts
