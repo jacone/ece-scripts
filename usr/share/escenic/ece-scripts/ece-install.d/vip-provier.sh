@@ -31,7 +31,31 @@ function get_vip_configuration() {
 
 function install_vip_provider() {
   print_and_log "Installing a VIP provider on $HOSTNAME"
-  install_packages_if_missing heartbeat
+  
+  if [ $on_redhat -eq 1 ]; then
+    run cd /etc/yum.repos.d/
+    # TODO support for other versions of REHL
+    if [ $(lsb_release -s  -r | sed 's/\.//') -ge 60 ]; then
+      # need the community EPEL repo
+      rpm -Uvh http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-5.noarch.rpm
+
+      # need the Scientific Linux repo
+      cat > /etc/yum.repos.d/scientific_linux.repo <<EOF
+[scientific-linux]
+name=Scientific Linux
+baseurl=http://ftp.scientificlinux.org/linux/scientific/6/x86_64/os/
+enabled=0
+EOF
+      # ...and SL doesn't provide a release RPM so we must manually
+      # import the key here.
+      rpm --import http://ftp.scientificlinux.org/linux/scientific/6/x86_64/os/RPM-GPG-KEY-sl
+      
+      run yum install -y --enablerepo=scientific-linux heartbeat
+    fi
+  else
+    install_packages_if_missing heartbeat
+  fi
+    
   get_vip_configuration
   assure_vip_hosts_are_resolvable
   set_kernel_vip_parameters
