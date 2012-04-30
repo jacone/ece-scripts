@@ -10,11 +10,13 @@ print_pre_text $(uname -a)
 print_h3_header "Distribution"
 print_pre_text "$(lsb_release  -a 2>/dev/null)"
 
-print_h3_header "Installed packages"
-if [ $(which dpkg)x != "x" ]; then
-  print_pre_text "$(dpkg -l 2>/dev/null)"
-elif [ $(which rpm)x != "x" ]; then
-  print_pre_text "$(rpm -qa | sort 2>/dev/null)"
+if [ $quiet -eq 0 ]; then
+  print_h3_header "Installed packages"
+  if [ $(which dpkg)x != "x" ]; then
+    print_pre_text "$(dpkg -l 2>/dev/null)"
+  elif [ $(which rpm)x != "x" ]; then
+    print_pre_text "$(rpm -qa | sort 2>/dev/null)"
+  fi
 fi
 
 # of the h2
