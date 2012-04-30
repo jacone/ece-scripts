@@ -74,7 +74,7 @@ function install_nfs_client() {
     local entry="${nfs_server_address}:$el ${nfs_client_mount_point_parent}/$(basename $0) nfs defaults 0 0"
     if [ $(grep "$entry" $file | wc -l) -lt 1 ]; then
       cat >> $file <<EOF
-# added by $(basename $el) @ $(date)
+# added by $(basename $0) @ $(date)
 ${nfs_server_address}:$el ${nfs_client_mount_point_parent}/$(basename $el) nfs defaults 0 0
 EOF
     fi
