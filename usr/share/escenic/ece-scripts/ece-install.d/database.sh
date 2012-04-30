@@ -319,7 +319,7 @@ EOF
     add_next_step $message
   else
     local old="#server-id.*= 1"
-    local new="server-id = 2"
+    local new="server-id=2"
     
     if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
       sed -i "s~^$old~$new~g" $file
