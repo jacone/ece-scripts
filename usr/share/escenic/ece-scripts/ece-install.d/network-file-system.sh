@@ -81,8 +81,26 @@ EOF
 
     local mount_point=${nfs_client_mount_point_parent}/$(basename $el)
     make_dir $mount_point
-    run mount $mount_point
+
+    # the spaces inside the grep test are intentional
+    if [ $(mount | grep " ${mount_point} " | wc -l) -eq 0 ]; then
+      run mount $mount_point
+    fi
+    
     mount_point_list="$mount_point $mount_point_list"
+
+    # creating symlinks from the mount point's mm archives to the data
+    # directory.
+    if [[ $(basename $el) == "multimedia" ]]; then
+      for ele in $(find $mount_point \
+        -maxdepth 1 \
+        -type d | \
+        sed "s#${mount_point}##"); do
+        if [ ! -e $escenic_data_dir/engine/$(basename $ele) ]; then
+          ln -s $mount_point/${ele} $escenic_data_dir/engine/$(basename $ele)
+        fi
+      done
+    fi
   done
 
   add_next_step "An NFS client has been added to $HOSTNAME"
