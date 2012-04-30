@@ -65,7 +65,3 @@ ssh -F $2/ssh.conf root@guest rm -f /usr/sbin/policy-rc.d || exit 2
 # Make it possible to start puppet
 ssh -F $2/ssh.conf root@guest perl -pi -e 's/^START=.*/START=yes/' /etc/default/puppet || exit 2
 
-# Finally start puppet!!!
-ssh -F $2/ssh.conf root@guest /etc/init.d/puppet start || exit 2
-
-

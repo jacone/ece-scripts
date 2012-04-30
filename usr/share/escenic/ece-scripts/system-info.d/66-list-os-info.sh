@@ -14,7 +14,7 @@ print_h3_header "Installed packages"
 if [ $(which dpkg)x != "x" ]; then
   print_pre_text "$(dpkg -l 2>/dev/null)"
 elif [ $(which rpm)x != "x" ]; then
-  print_pre_text "$(rpm -qla 2>/dev/null)"
+  print_pre_text "$(rpm -qa | sort 2>/dev/null)"
 fi
 
 # of the h2
