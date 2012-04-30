@@ -453,11 +453,22 @@ function install_system_info() {
   fi
   
   # thttpd doesn't serve files if they've got the execution bit set
-  # (it then think it's a misnamed CGI script)
-  find $escenic_log_dir -type f | egrep ".log$|.out$" | xargs chmod 644
-  find $escenic_conf_dir -type f | egrep ".conf$|.properties$" | xargs chmod 644
-  find $tomcat_base/logs -type f | egrep ".log$" | xargs chmod 644
-
+  # (it then think it's a misnamed CGI script). Hence, we must ensure
+  # the execute bit is set.
+  if [ -d $escenic_log_dir ]; then
+    find $escenic_log_dir -type f | egrep ".log$|.out$" | xargs chmod 644
+  fi
+  
+  if [ -d $escenic_conf_dir ]; then
+    find $escenic_conf_dir -type f | \
+      egrep ".conf$|.properties$" | \
+      xargs chmod 644
+  fi
+  
+  if [ -d  $tomcat_base/logs ]; then
+    find $tomcat_base/logs -type f | egrep ".log$" | xargs chmod 644
+  fi
+  
   add_next_step "Always up to date system info: http://$HOSTNAME:$port/"
   add_next_step "you can also see system-info in the shell, type: system-info"
 }
