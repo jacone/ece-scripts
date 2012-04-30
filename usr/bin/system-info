@@ -19,7 +19,7 @@ output_file=""
 
 current_indent_level=0
 INDENT="  "
-quiet=0
+verbose=0
 
 function init() {
   # first, try to be nice
@@ -300,13 +300,13 @@ EOF
 }
 
 function get_user_options() {
-  while getopts ":d:o:i:f:u:m:q" opt; do
+  while getopts ":d:o:i:f:u:m:v" opt; do
     case $opt in
       i)
         instance=${OPTARG}
         ;;
-      q)
-        quiet=1
+      v)
+        verbose=1
         ;;
       d)
         output_dir=${OPTARG}
