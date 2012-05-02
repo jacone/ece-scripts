@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-if [ $(which vosa | wc -l) -gt 0 ]; then
+if [ $(which vosa 2>/dev/null | wc -l) -gt 0 ]; then
   print_h2_header "VOSA status"
   print_un_ordered_list_start
   vosa status | while read line; do
