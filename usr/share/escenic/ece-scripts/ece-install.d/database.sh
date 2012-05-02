@@ -9,12 +9,10 @@ if [[ $(uname -m) != "x86_64" ]]; then
 fi
 
 function get_percona_supported_list() {
-  echo $(
-    curl -s http://repo.percona.com/apt/dists/ | \
-      grep ^"<li><a href" | \
-      cut -d'"' -f2 | \
-      cut -d'/' -f1
-  )
+  curl -s http://repo.percona.com/apt/dists/ | \
+    grep "DIR" | \
+    sed -e 's#.*href=\"\(.*\)\">.*</a>.*#\1#' -e 's#/##g' | \
+    grep -v apt
 }
 
 ## $1: optional parameter, binaries_only. If passed, $1=binaries_only,
