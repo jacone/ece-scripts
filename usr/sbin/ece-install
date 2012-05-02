@@ -132,13 +132,6 @@ function init() {
   fi
 }
 
-function set_up_engine_directories()
-{
-    for el in $engine_dir_list; do
-        make_dir $el
-    done
-}
-
 function download_escenic_components()
 {
     if [ $ece_software_setup_completed -eq 1 ]; then
@@ -604,12 +597,14 @@ function common_pre_install()
     # overridden in ece-install.conf
     common_nursery_dir=$escenic_conf_dir/engine/common
     
-    # Because of issue VF-3559, we also
-    # create the default family and host directories.
+    # Because of issue VF-3559, we also create the default family and
+    # host directories (fixed in 5.4.0.x).
     engine_dir_list="
       $common_nursery_dir
       $escenic_conf_dir/engine/family/default
+      $escenic_conf_dir/engine/environment
       $escenic_conf_dir/engine/host/localhost
+      $escenic_conf_dir/engine/instance
       $escenic_root_dir
       $escenic_cache_dir
       $escenic_crash_dir
