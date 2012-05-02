@@ -3,7 +3,8 @@
 # code for the ece-scripts themselves
 
 function install_ece_scripts_with_apt() {
-  curl -s http://apt.vizrt.com/archive.key 2>> $log | apt-key add -
+  curl -s http://apt.vizrt.com/archive.key 2>> $log | \
+    apt-key add - 1>> $log 2>> $log
   add_apt_source "deb http://apt.vizrt.com stable main"
   install_packages_if_missing escenic-content-engine-scripts
 }
