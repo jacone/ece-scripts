@@ -613,3 +613,8 @@ function assemble_deploy_and_restart_type()
   exit_on_error "su - $ece_user -c \"$ece_command\""
 }
 
+function set_up_engine_directories() {
+  for el in $engine_dir_list; do
+    make_dir $el
+  done
+}
