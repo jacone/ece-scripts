@@ -361,6 +361,10 @@ function set_instance_settings()
         ece_args=$ece_args" -Dcom.escenic.instance=$instance"
     fi
 
+    if [ -n "$ece_environment" ]; then
+        ece_args=$ece_args" -Dcom.escenic.environment=${ece_environment}"
+    fi
+
     if [ "$ece_server_hostname" ]; then
         ece_args=$ece_args" -Djava.rmi.server.hostname=$ece_server_hostname"
     fi
