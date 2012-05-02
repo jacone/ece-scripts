@@ -171,26 +171,62 @@ function set_up_assembly_tool() {
     run unzip -q -u $download_dir/assemblytool*zip
   fi
 
-    # adding an instance layer to the Nursery configuration
+  # adding an instance layer to the Nursery configuration
   run cp -r $escenic_root_dir/engine/siteconfig/bootstrap-skeleton \
     $escenic_root_dir/assemblytool/conf
   run cd $escenic_root_dir/assemblytool/conf/
+  run cp -r layers/host layers/environment
   run cp -r layers/host layers/instance
+  run cp -r layers/host layers/vosa
+  cat > layers/environment/Files.properties <<EOF
+\$class=neo.nursery.FileSystemDepot
+fileSystemRoot = $escenic_conf_dir/engine/environment/\${com.escenic.environment}/
+EOF
   cat > layers/instance/Files.properties <<EOF
 \$class=neo.nursery.FileSystemDepot
 fileSystemRoot = $escenic_conf_dir/engine/instance/\${com.escenic.instance}/
 EOF
-  echo "" >> Nursery.properties
-  echo "layer.06 = /layers/instance/Layer" >> Nursery.properties
+  cat > layers/vosa/Files.properties <<EOF
+\$class=neo.nursery.FileSystemDepot
+fileSystemRoot = $escenic_conf_dir/engine/vosa/
+EOF
 
-    # fixing the path to the Nursery configuration according to
-    # escenic_conf_dir which may have been overridden by the user.
+  cat > Nursery.properties <<EOF
+# Configuration layers set up by $(basename $0) @ $(date)
+
+# ECE :: default layer
+layer.01 = /layers/default/Layer
+
+# ECE :: plugins layer
+layer.02 = /layers/addon/Layer
+
+# VOSA :: common VOSA/SaaS layer
+layer.03 = /layers/vosa/Layer
+
+# Customer :: common layer
+layer.04 = /layers/common/Layer
+
+# Customer :: family/group layer (e.g. presentation, editorial)
+layer.05 = /layers/family/Layer
+
+# Customer :: environment layer (e.g. testing, staging, production)
+layer.06 = /layers/environment/Layer
+
+# Customer :: host specific layer 
+layer.07 = /layers/host/Layer
+
+# Customer :: instance specific layer
+layer.08 = /layers/instance/Layer
+EOF
+
+  # fixing the path to the Nursery configuration according to
+  # escenic_conf_dir which may have been overridden by the user.
   for el in $(find $escenic_root_dir/assemblytool/conf -name Files.properties)
   do
     sed -i "s#/etc/escenic#${escenic_conf_dir}#g" $el
   done
   
-    # set up which plugins to use
+  # set up which plugins to use
   cd $escenic_root_dir/assemblytool/
   make_dir plugins
   cd plugins
@@ -202,8 +238,8 @@ EOF
       continue
     fi
     
-        # nuisance to get the community engine and analysis engine,
-        # but not the engine
+    # nuisance to get the community engine and analysis engine, but
+    # not the engine
     if [ $(echo $directory | \
       grep engine | \
       grep -v community | \
@@ -259,8 +295,8 @@ EOF
 function set_up_basic_nursery_configuration() {
   print_and_log "Setting up basic Nursery configuration ..."
 
-    # we always copy the default plugin configuration (even if there
-    # is an archive)
+  # we always copy the default plugin configuration (even if there is
+  # an archive)
   for el in $escenic_root_dir/assemblytool/plugins/*; do
     if [ ! -d $el/misc/siteconfig/ ]; then
       continue
@@ -268,8 +304,8 @@ function set_up_basic_nursery_configuration() {
     run cp -r $el/misc/siteconfig/* $common_nursery_dir/
   done
 
-    # Then we see if we're using configuration archives, if yes, use
-    # the JAAS and Nursery configuraiton from here.
+  # Then we see if we're using configuration archives, if yes, use the
+  # JAAS and Nursery configuraiton from here.
   if [ $(is_using_conf_archive) -eq 1 ]; then
     print_and_log "Using the supplied Nursery & JAAS configuration from" 
     print_and_log "bundle: $ece_instance_conf_archive"
@@ -371,7 +407,7 @@ function set_up_instance_specific_nursery_configuration() {
   file=$escenic_conf_dir/engine/instance/$instance_name/$nursery_context
   make_dir $(dirname $file)
   
-    # we don't touch it if the file already exists.
+  # we don't touch it if the file already exists.
   if [ ! -e $file ]; then
     run echo "hostname=$HOSTNAME" >> $file
   fi
@@ -391,8 +427,8 @@ EOF
   make_ln $common_nursery_dir/trace.properties
   run ln -sf trace.properties log4j.properies
 
-    # since the solr webapp otherwise will pollute our logs, we ask
-    # Tomcat specifically to make it log to dedicated logger.
+  # since the solr webapp otherwise will pollute our logs, we ask
+  # Tomcat specifically to make it log to dedicated logger.
   if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
     $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
     cat > $tomcat_base/conf/logging.properties <<EOF
@@ -436,9 +472,9 @@ function install_ece_third_party_packages
   
   if [ $on_debian_or_derivative -eq 1 ]; then
     if [ $on_ubuntu -eq 1 ]; then
-            # Sun Java was removed in Ubuntu in 11.10 and later also
-            # from LTS 10.04, hence Hardy is the last one with these
-            # packges now (2012-02-20 11:22)
+      # Sun Java was removed in Ubuntu in 11.10 and later also from
+      # LTS 10.04, hence Hardy is the last one with these packges now
+      # (2012-02-20 11:22)
       local version_needs_local_java_deb=1004
       local version=$(lsb_release -s -r | sed "s#\.##g")
       
@@ -471,28 +507,30 @@ function install_ece_third_party_packages
     echo "sun-java6-jdk shared/accepted-sun-dlj-v1-1 boolean true" | \
       debconf-set-selections
 
-        # install sun-java6-jdk first so that ant doesn't pull down OpenJDK
+    # install sun-java6-jdk first so that ant doesn't pull down
+    # OpenJDK
     local packages="sun-java6-jdk"
     install_packages_if_missing $packages
 
     packages="
-          ant
-          ant-contrib
-          ant-optional
-          libapr1
-          libtcnative-1
-          libmysql-java
-          memcached
-          wget"
+      ant
+      ant-contrib
+      ant-optional
+      libapr1
+      libtcnative-1
+      libmysql-java
+      memcached
+      wget
+    "
   elif [ $on_redhat_or_derivative -eq 1 ]; then
     packages="
-        ant
-        ant-contrib
-        ant-nodeps
-        apr
-        memcached
-        mysql-connector-java
-        wget
+      ant
+      ant-contrib
+      ant-nodeps
+      apr
+      memcached
+      mysql-connector-java
+      wget
     "
 
     # TODO no tomcat APR wrappers in official repositories
@@ -557,8 +595,8 @@ function assemble_deploy_and_restart_type()
 {
   set_correct_permissions
 
-    # need to run clean here since we might be running multiple
-    # profiles in the same ece-install process.
+  # need to run clean here since we might be running multiple profiles
+  # in the same ece-install process.
   ece_command="ece -i $instance_name -t $type clean assemble deploy restart"
   if [ $(is_installing_from_ear) -eq 1 ]; then
     ece_command="ece -i $instance_name \
