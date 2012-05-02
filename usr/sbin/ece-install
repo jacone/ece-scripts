@@ -37,7 +37,7 @@ escenic_crash_dir=/var/crash/${dir_suffix}
 appserver_parent_dir=/opt
 
 # country code for selecting the correct (APT) mirror.
-mirror_country_suffix=jp
+mirror_country_suffix=no
 
 # The script will install the sun-java6-jdk package on Debian based
 # systems and this is the path of the JAVA home with this package. If
