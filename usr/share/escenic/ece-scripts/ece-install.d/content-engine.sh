@@ -180,7 +180,7 @@ function set_up_assembly_tool() {
   run cp -r layers/host layers/vosa
   cat > layers/environment/Files.properties <<EOF
 \$class=neo.nursery.FileSystemDepot
-fileSystemRoot = $escenic_conf_dir/engine/environment/\${com.escenic.environment}/
+fileSystemRoot = $escenic_conf_dir/engine/environment/\${com.escenic.environment "unknown"}/
 EOF
   cat > layers/instance/Files.properties <<EOF
 \$class=neo.nursery.FileSystemDepot
