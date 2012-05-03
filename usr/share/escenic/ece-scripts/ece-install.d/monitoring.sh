@@ -307,7 +307,13 @@ function create_monitoring_server_overview()
   local file=/var/www/index.html
   cat > $file <<EOF
 <html>
+  <head>
+    <style type="text/css">
+$(cat < ../vizrt.css)   
+    </style>
+  </head>
   <body>
+$(cat < ../vizrt-logo-svg.html)
     <h1>Welcome to the might monitoring server @ ${HOSTNAME}</h1>
     <ul>
 EOF
