@@ -184,7 +184,7 @@ fileSystemRoot = $escenic_conf_dir/engine/environment/\${com.escenic.environment
 EOF
   cat > layers/instance/Files.properties <<EOF
 \$class=neo.nursery.FileSystemDepot
-fileSystemRoot = $escenic_conf_dir/engine/instance/\${com.escenic.instance}/
+fileSystemRoot = $escenic_conf_dir/engine/instance/\${com.escenic.instance "default"}/
 EOF
   cat > layers/vosa/Files.properties <<EOF
 \$class=neo.nursery.FileSystemDepot
