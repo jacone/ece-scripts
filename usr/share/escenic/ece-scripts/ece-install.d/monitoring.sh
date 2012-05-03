@@ -274,12 +274,16 @@ function install_munin_gatherer()
   fi
 
   for el in $node_list; do
-    print_and_log "Adding ${el} to the Munin gatherer on ${HOSTNAME} ..."
     local file=/etc/munin/munin-conf.d/escenic.conf
+    if [ $(grep "\[${el}\]" $file | wc -l) -eq 0 ]; then
+      continue
+    fi
+    
+    print_and_log "Adding ${el} to the Munin gatherer on ${HOSTNAME} ..."
     cat >> $file <<EOF
-    [${el}]
-    address $(get_ip $el)
-    use_node_name yes
+[${el}]
+address $(get_ip $el)
+use_node_name yes
 EOF
   done
 
@@ -318,9 +322,10 @@ $(cat ../vizrt-logo-svg.html)
     <ul>
 EOF
   if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
-    echo '<li><a href="/nagios3">Nagios</a></li>' >> $file
+    echo '    <li><a href="/nagios3">Nagios</a></li>' >> $file
   else
-    echo '<li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' >> $file
+    echo '    <li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' \
+      >> $file
   fi
   cat >> $file <<EOF
       <li><a href="/munin">Munin</a></li>
