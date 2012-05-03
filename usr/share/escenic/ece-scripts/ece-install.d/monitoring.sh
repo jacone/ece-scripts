@@ -317,7 +317,7 @@ EOF
     echo '<li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' \
       >> $file
   fi
-  cat > $file <<EOF
+  cat >> $file <<EOF
       <li><a href="/munin">Munin</a></li>
     </ul>
   </body>
