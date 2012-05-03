@@ -243,3 +243,25 @@ function extract_archive() {
   fi
 }
 
+# the next steps printed when the user has installed his/her
+# components.
+next_steps=()
+
+## Parameters:
+## $1 : your added line
+function add_next_step() {
+  next_steps[${#next_steps[@]}]="$@"
+  return
+  
+  if [ -n "$next_steps" ]; then
+    next_steps=${next_steps}$'\n'"[$(basename $0)] "${1}
+  else
+    next_steps="[$(basename $0)] $@"
+  fi
+}
+
+function print_next_step_list() {
+  for (( i = 0; i < ${#next_steps[@]}; i++ )); do
+    print "  - " ${next_steps[$i]}
+  done
+}
