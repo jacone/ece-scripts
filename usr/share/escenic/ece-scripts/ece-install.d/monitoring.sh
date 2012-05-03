@@ -77,22 +77,22 @@ function install_nagios_monitoring_server()
 ## $2 <host name>:<ip>, e.g.: fire:192.168.1.100
 function set_up_monitoring_host_def()
 {
-  local file=/etc/icinga/objects/${host_name}_icinga.cfg
-  if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
-    file=/etc/nagios3/conf.d/${host_name}_nagios2.cfg
-  fi
-  
   local old_ifs=$IFS
   IFS='#'
   read host_name ip <<< "$2"
   IFS=$old_ifs
+  
+  local file=/etc/icinga/objects/${host_name}_icinga.cfg
+  if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
+    file=/etc/nagios3/conf.d/${host_name}_nagios2.cfg
+  fi
   
   if [ $(grep "host_name $host_name" $file 2>/dev/null | wc -l) -gt 0 ]; then
     print "$1 host" $host_name "already defined, skipping it."
     return
   fi
 
-    # TODO add more services based on what kind of host it is.
+  # TODO add more services based on what kind of host it is.
   cat >> $file <<EOF
 define host {
   use generic-host
