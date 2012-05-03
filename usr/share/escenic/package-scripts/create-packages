@@ -61,22 +61,34 @@ function set_up_target_directory() {
     mkdir -p $target_dir/etc/init.d
     mkdir -p $target_dir/usr/share/doc/escenic
     mkdir -p $target_dir/usr/share/escenic/ece-scripts
+    mkdir -p $target_dir/etc/bash_completion.d
 
+    # bin
     cp -r ../../../bin/ece $target_dir/usr/bin/
+    cp -r ../../escenic/ece-scripts/ece.d/ \
+      $target_dir/usr/share/escenic/ece-scripts/
 
-    cp -r ../../doc/escenic/system-info-guide.{org,html} \
-      $target_dir/usr/share/doc/escenic
+    # conf
     cp -r ../../../../etc/escenic/ $target_dir/etc/
-    cp -r ../../../../etc/bash_completion.d/ $target_dir/etc/
+    cp -r ../../../../etc/bash_completion.d/ece \
+      $target_dir/etc/bash_completion.d
     cp -r ../../../../etc/default/ece $target_dir/etc/default/
     cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
+
+    # doc
+    cp -r ../../doc/escenic/ece-guide.{org,html} \
+      $target_dir/usr/share/doc/escenic
     
   elif [[ $package_name == "vosa" ]]; then
     mkdir -p $target_dir/usr/share/doc/vosa
+    mkdir -p $target_dir/etc/bash_completion.d
     
     cp -r ../../../bin/vosa $target_dir/usr/bin/
     cp -r ../../vizrt/ $target_dir/usr/share/
     cp -r ../../doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
+    cp -r ../../../../etc/bash_completion.d/vosa \
+      $target_dir/etc/bash_completion.d/
+    
   elif [[ $package_name == "escenic-common-scripts" ]]; then
     mkdir -p $target_dir/usr/share/doc/escenic
     mkdir -p $target_dir/usr/share/escenic/ece-scripts
@@ -95,6 +107,8 @@ function set_up_target_directory() {
     cp -r ../../escenic/ece-scripts/common* \
       $target_dir/usr/share/escenic/ece-scripts/
     cp -r ../../escenic/ece-scripts/*.css \
+      $target_dir/usr/share/escenic/ece-scripts/
+    cp -r ../../escenic/ece-scripts/*.html \
       $target_dir/usr/share/escenic/ece-scripts/
   fi
 
