@@ -746,7 +746,7 @@ function get_conf_value()
         remove_pid_and_exit_in_error
     fi
 
-    if [ $(grep $1 $conf_file | grep -v ^# | wc -l) -gt 0 ]; then
+    if [ $(grep $1 $conf_file | grep -v ^# | sort | uniq | wc -l) -gt 0 ]; then
         echo $(grep $1 $conf_file | grep -v ^# | cut -d'=' -f2)
     fi
 }
