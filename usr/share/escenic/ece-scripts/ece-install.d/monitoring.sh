@@ -392,7 +392,7 @@ function install_system_info() {
   
   print_and_log "Setting up self-reporting module on $HOSTNAME ..."
   
-  install_packages_if_missing thttpd
+  install_packages_if_missing thttpd escenic-common-scripts
   assert_pre_requisite thttpd
 
   local port=${fai_reporting_port-5678}
