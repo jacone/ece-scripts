@@ -72,6 +72,7 @@ function set_up_ece_scripts()
     ${escenic_conf_dir}/engine/common/security \
     ${file}
 
-  run sed -i "s#/etc/escenic#${escenic_conf_dir}#g" /etc/bash_completion.d/ece
-  run sed -i "s#/opt/escenic#${escenic_root_dir}#g" /etc/bash_completion.d/ece
+  file=/etc/bash_completion.d/ece
+  run sed -i "s#/etc/escenic#${escenic_conf_dir}#g" $file
+  run sed -i "s#/opt/escenic#${escenic_root_dir}#g" $file
 }
