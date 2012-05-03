@@ -67,6 +67,12 @@ function make_dir() {
   fi
 }
 
+function remove_dir() {
+  if [ -d $1 ]; then
+    run rmdir $1
+  fi
+}
+
 function make_ln() {
   if [ $2 ]; then
     if [ -e $1 -a ! -h $2 ]; then
