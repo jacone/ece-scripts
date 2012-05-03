@@ -2,15 +2,6 @@
 
 # code for the ece-scripts themselves
 
-function install_ece_scripts_with_apt() {
-  curl -s http://apt.vizrt.com/archive.key 2>> $log | \
-    apt-key add - 1>> $log 2>> $log
-
-  local package_pool=${fai_apt_vizrt_pool-stable}
-  add_apt_source "deb http://apt.vizrt.com ${package_pool} main"
-  install_packages_if_missing escenic-content-engine-scripts
-}
-
 function install_ece_scripts_with_git() {
   run cd $download_dir
   if [ -d ece-scripts ]; then
@@ -50,7 +41,7 @@ function set_up_ece_scripts()
   print_and_log 'Setting up the ece UNIX scripts ...'
 
   if [ $on_debian_or_derivative -eq 1 ]; then
-    install_ece_scripts_with_apt
+    install_packages_if_missing escenic-content-engine-scripts
   else
     install_ece_scripts_with_git
   fi
