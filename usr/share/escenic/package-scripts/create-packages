@@ -67,6 +67,7 @@ function set_up_target_directory() {
     cp -r ../../doc/escenic/system-info-guide.{org,html} \
       $target_dir/usr/share/doc/escenic
     cp -r ../../../../etc/escenic/ $target_dir/etc/
+    cp -r ../../../../etc/bash_completion.d/ $target_dir/etc/
     cp -r ../../../../etc/default/ece $target_dir/etc/default/
     cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
     
