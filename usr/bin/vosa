@@ -558,7 +558,7 @@ function do_uninstall() {
     fi
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[3]}" == "alive" ] ; then
-      echo "$instance_name is alive. Stop it first. exiting"
+      echo "$instance_name is alive. Stop it first. Exiting."
       exit 1
     fi
     if [ "${status[3]}" == "dead" ] ; then
