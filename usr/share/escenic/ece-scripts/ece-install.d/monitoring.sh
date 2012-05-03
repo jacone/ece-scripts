@@ -312,10 +312,9 @@ function create_monitoring_server_overview()
     <ul>
 EOF
   if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
-    echo '<li><a href="/nagios3">Nagios</a></li>' \
-      else
-    echo '<li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' \
-      >> $file
+    echo '<li><a href="/nagios3">Nagios</a></li>' >> $file
+  else
+    echo '<li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' >> $file
   fi
   cat >> $file <<EOF
       <li><a href="/munin">Munin</a></li>
