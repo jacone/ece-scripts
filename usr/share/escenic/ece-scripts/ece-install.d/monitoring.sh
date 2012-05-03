@@ -309,11 +309,11 @@ function create_monitoring_server_overview()
 <html>
   <head>
     <style type="text/css">
-$(cat < ../vizrt.css)   
+$(cat ../vizrt.css)   
     </style>
   </head>
   <body>
-$(cat < ../vizrt-logo-svg.html)
+$(cat ../vizrt-logo-svg.html)
     <h1>Welcome to the might monitoring server @ ${HOSTNAME}</h1>
     <ul>
 EOF
