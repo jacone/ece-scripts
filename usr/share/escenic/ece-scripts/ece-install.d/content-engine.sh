@@ -507,10 +507,16 @@ function install_ece_third_party_packages
     echo "sun-java6-jdk shared/accepted-sun-dlj-v1-1 boolean true" | \
       debconf-set-selections
 
-    # install sun-java6-jdk first so that ant doesn't pull down
-    # OpenJDK
+    # Here, we install sun-java6-jdk first so that ant doesn't pull
+    # down OpenJDK.
+    #
+    # This if guard is in palce to not attempt to install the package
+    # if Sun Java already is installed (typically, manually
+    # installed).
     local packages="sun-java6-jdk"
-    install_packages_if_missing $packages
+    if [ $(has_sun_java_installed) -eq 0 ]; then
+      install_packages_if_missing $packages
+    fi
 
     packages="
       ant
