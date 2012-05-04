@@ -74,7 +74,7 @@ function install_nagios_monitoring_server()
 ## Sets up the definition file for a given monitoring host.
 ##
 ## $1 nagios flavour/vendor
-## $2 <host name>:<ip>, e.g.: fire:192.168.1.100
+## $2 <host name>#<ip>, e.g.: fire#192.168.1.100
 function set_up_monitoring_host_def()
 {
   local old_ifs=$IFS
