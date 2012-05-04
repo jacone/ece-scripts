@@ -319,18 +319,22 @@ EOF
 function create_monitoring_server_overview()
 {
   local file=/var/www/index.html
-  cat > $file <<EOF
+  local title="Welcome to the mighty monitoring server @ ${HOSTNAME}"
+  
+cat > $file <<EOF
 <html>
   <head>
+    <title>$title</title>
     <style type="text/css">
-$(cat ../vizrt.css)   
+$(cat $(dirname $BASH_SOURCE)/../vizrt.css)
     </style>
   </head>
   <body>
-$(cat ../vizrt-logo-svg.html)
-    <h1>Welcome to the might monitoring server @ ${HOSTNAME}</h1>
+$(cat $(dirname $BASH_SOURCE)/../vizrt-logo-svg.html)
+    <h1>$title</h1>
     <ul>
 EOF
+
   if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
     echo '      <li><a href="/nagios3">Nagios</a></li>' >> $file
   else
