@@ -26,7 +26,7 @@ function install_nagios_monitoring_server()
       ${fai_monitoring_admin_password-admin}
   fi
   
-    # enable remote commands
+  # enable remote commands
   if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
     local file=/etc/nagios3/nagios.cfg
   else
@@ -182,7 +182,22 @@ allow ${escaped_munin_gather_ip}
 EOF
   fi
   
-    # install the escenic_jstat munin plugin
+  # install the escenic_jstat munin plugin
+  install_escenic_munin_plugins
+  
+  if [ $on_debian_or_derivative -eq 1 ]; then
+    run service munin-node restart
+  fi
+
+  add_next_step "A Munin node has been installed on $HOSTNAME"
+}
+
+function install_escenic_munin_plugins() {
+  if [ $on_debian_or_derivative -eq 1 ]; then
+    install_packages_if_missing escenic-munin-plugins
+    return 
+  fi
+  
   local file=/usr/share/munin/plugins/escenic_jstat_
   run wget $wget_opts \
     https://github.com/mogsie/escenic-munin/raw/master/escenic_jstat_ \
@@ -209,15 +224,15 @@ EOF
 	    make_ln escenic_jstat_ escenic_jstat_${current_instance}${module}
     done
 
-        # we need to hack a bit since escenic_jstat_ looks for
-        # instance PIDs in $escenic_run_dir ece-<instance>.pid. It's
-        # now <type>-<instance>.pid
+    # we need to hack a bit since escenic_jstat_ looks for
+    # instance PIDs in $escenic_run_dir ece-<instance>.pid. It's
+    # now <type>-<instance>.pid
     file=$escenic_run_dir/$type-${instance_name}.pid
     if [ ! -e $file ]; then
       run touch $file
     fi
 
-        # enabling the instance specific munin entries:
+    # enabling the instance specific munin entries:
     for el in /usr/share/munin/plugins/escenic_jstat_[a-z]*; do
       run cd /etc/munin/plugins
       make_ln $el
@@ -235,13 +250,7 @@ user $ece_user
 EOF
   fi
   
-  if [ $on_debian_or_derivative -eq 1 ]; then
-    run service munin-node restart
-  fi
-
-  add_next_step "A Munin node has been installed on $HOSTNAME"
 }
-
 
 function install_munin_gatherer()
 {
