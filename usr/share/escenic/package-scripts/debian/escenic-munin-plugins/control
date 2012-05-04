@@ -1,9 +1,8 @@
 Package: escenic-munin-plugins
 Version: VERSION
+Depends: munin-node (>= 1.4)
 Section: base
 Priority: optional
 Architecture: all
 Maintainer: MAINTAINER_NAME <MAINTAINER_EMAIL>
 Description: Munin plugins for the Escenic Content Engine.
-
- 
