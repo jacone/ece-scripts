@@ -197,7 +197,7 @@ function create_packages() {
 
 function list_packages() {
   echo "Sir, the packages are now ready:"
-  ls $target_dir/*.{deb,rpm}
+  echo $target_dir/*.{deb,rpm}
 }
 
 clean_up
