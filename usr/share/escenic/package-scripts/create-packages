@@ -56,7 +56,7 @@ function create_target_directory() {
   if [[ $package_name == "escenic-content-engine-installer" ]]; then
     set_up_escenic-content-engine-installer
   elif [[ $package_name == "escenic-content-engine-scripts" ]]; then
-    set_up_escenic-content-engine-installer
+    set_up_escenic-content-engine-scripts
   elif [[ $package_name == "vosa" ]]; then
     set_up_vosa
   elif [[ $package_name == "escenic-common-scripts" ]]; then
@@ -83,7 +83,7 @@ function set_up_escenic-content-engine-installer() {
     $target_dir/usr/share/doc/escenic
 } 
 
-function set_up_escenic-content-engine-installer() {
+function set_up_escenic-content-engine-scripts() {
   mkdir -p $target_dir/{etc,usr,/etc/default}
   mkdir -p $target_dir/usr/{bin,sbin,share/doc}
   mkdir -p $target_dir/etc/init.d
