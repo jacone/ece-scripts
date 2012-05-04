@@ -284,7 +284,7 @@ function install_munin_gatherer()
 
   for el in $node_list; do
     local file=/etc/munin/munin-conf.d/escenic.conf
-    if [[ -e $file &&  $(grep '\['${el}'\]' $file | wc -l) -eq 0 ]]; then
+    if [[ -e $file &&  $(grep '\['${el}'\]' $file | wc -l) -gt 0 ]]; then
       print_and_log "${el} already exists on the ${HOSTNAME} Munin gatherer ..."
       continue
     fi
