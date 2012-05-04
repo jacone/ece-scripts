@@ -284,7 +284,7 @@ function install_munin_gatherer()
 
   for el in $node_list; do
     local file=/etc/munin/munin-conf.d/escenic.conf
-    if [ $(grep "\[${el}\]" $file | wc -l) -eq 0 ]; then
+    if [[ -e $file &&  $(grep "\[${el}\]" $file | wc -l) -eq 0 ]]; then
       continue
     fi
     
@@ -331,9 +331,9 @@ $(cat ../vizrt-logo-svg.html)
     <ul>
 EOF
   if [[ $1 == $MONITORING_VENDOR_NAGIOS ]]; then
-    echo '    <li><a href="/nagios3">Nagios</a></li>' >> $file
+    echo '      <li><a href="/nagios3">Nagios</a></li>' >> $file
   else
-    echo '    <li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' \
+    echo '      <li><a href="/icinga">Icinga</a> (an enhanced Nagios)</li>' \
       >> $file
   fi
   cat >> $file <<EOF
