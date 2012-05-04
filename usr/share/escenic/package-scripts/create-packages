@@ -154,7 +154,7 @@ function set_up_escenic-munin-plugins() {
   (
     cd $dir
     wget $wget_opts https://github.com/mogsie/escenic-munin/tarball/master
-    tar xvzf master
+    tar xzf master
     cp $dir/mogsie-escenic-munin*/*_ $target_dir/usr/share/munin/plugins
     cp $dir/mogsie-escenic-munin*/README.md $doc_dir
     cp $dir/mogsie-escenic-munin*/site/* $doc_dir
