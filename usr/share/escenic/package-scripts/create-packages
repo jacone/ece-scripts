@@ -10,14 +10,23 @@ package_name=escenic-content-engine-installer
 package_version=$(date +%Y-%m-%d.%H%M%S)
 default_maintainer_name="Torstein Krause Johansen"
 default_maintainer_email=tkj@vizrt.com
+wget_opts="--continue --inet4-only --quiet"
 
 function clean_up() {
   rm -rf $target_dir
 }
 
+function list_packages_that_can_be_built() {
+  declare -F | grep set_up | cut -d'_' -f3-
+}
+
 function get_user_options() {
-  while getopts ":p:e:n:r:" opt; do
+  while getopts ":p:e:n:r:l" opt; do
     case $opt in
+      l)
+        list_packages_that_can_be_built
+        exit 0
+        ;;
       e)
         maintainer_email=${OPTARG}
         ;;
@@ -43,78 +52,107 @@ function get_user_options() {
   
 }
 
-function set_up_target_directory() {
-  mkdir -p $target_dir/{etc,usr,/etc/default}
-  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
-  
+function create_target_directory() {
   if [[ $package_name == "escenic-content-engine-installer" ]]; then
-    mkdir -p $target_dir/usr/share/doc/escenic
-    mkdir -p $target_dir/usr/share/escenic/ece-scripts
-    
-    cp -r ../../../sbin/{ece-install,drop-and-create-ecedb} $target_dir/usr/sbin/
-    cp -r ../../escenic/ece-scripts/ece-install.d/ \
-      $target_dir/usr/share/escenic/ece-scripts/
-    cp -r ../../doc/escenic/ece-install-guide.{org,html} \
-      $target_dir/usr/share/doc/escenic
-    
+    set_up_escenic-content-engine-installer
   elif [[ $package_name == "escenic-content-engine-scripts" ]]; then
-    mkdir -p $target_dir/etc/init.d
-    mkdir -p $target_dir/usr/share/doc/escenic
-    mkdir -p $target_dir/usr/share/escenic/ece-scripts
-    mkdir -p $target_dir/etc/bash_completion.d
-
-    # bin
-    cp -r ../../../bin/ece $target_dir/usr/bin/
-    cp -r ../../escenic/ece-scripts/ece.d/ \
-      $target_dir/usr/share/escenic/ece-scripts/
-
-    # conf
-    cp -r ../../../../etc/escenic/ $target_dir/etc/
-    cp -r ../../../../etc/bash_completion.d/ece \
-      $target_dir/etc/bash_completion.d
-    cp -r ../../../../etc/default/ece $target_dir/etc/default/
-    cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
-
-    # doc
-    cp -r ../../doc/escenic/ece-guide.{org,html} \
-      $target_dir/usr/share/doc/escenic
-    
+    set_up_escenic-content-engine-installer
   elif [[ $package_name == "vosa" ]]; then
-    mkdir -p $target_dir/usr/share/doc/vosa
-    mkdir -p $target_dir/etc/bash_completion.d
-    
-    cp -r ../../../bin/vosa $target_dir/usr/bin/
-    cp -r ../../vizrt/ $target_dir/usr/share/
-    cp -r ../../doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
-    cp -r ../../../../etc/bash_completion.d/vosa \
-      $target_dir/etc/bash_completion.d/
-    
+    set_up_vosa
   elif [[ $package_name == "escenic-common-scripts" ]]; then
-    mkdir -p $target_dir/usr/share/doc/escenic
-    mkdir -p $target_dir/usr/share/escenic/ece-scripts
-    
-    # system-info is useful for all packages, hence goes to
-    # escenic-common-scripts.
-    cp -r ../../../bin/system-info $target_dir/usr/bin/
-    cp -r ../../escenic/ece-scripts/system-info.d \
-      $target_dir/usr/share/escenic/ece-scripts/
-    cp -r ../../doc/escenic/system-info-guide.{org,html} \
-      $target_dir/usr/share/doc/escenic
-    
-    # both the installer and ece-scripts use the common scripts and
-    # web resources.
-    mkdir -p $target_dir/usr/share/escenic/ece-scripts
-    cp -r ../../escenic/ece-scripts/common* \
-      $target_dir/usr/share/escenic/ece-scripts/
-    cp -r ../../escenic/ece-scripts/*.css \
-      $target_dir/usr/share/escenic/ece-scripts/
-    cp -r ../../escenic/ece-scripts/*.html \
-      $target_dir/usr/share/escenic/ece-scripts/
+    set_up_escenic-common-scripts
+  elif [[ $package_name == "escenic-munin-plugins" ]]; then
+    set_up_escenic-munin-plugins
   fi
 
   debian_dir=$target_dir/DEBIAN
   mkdir -p $debian_dir
   cp debian/${package_name}/* $debian_dir
+}
+
+function set_up_escenic-content-engine-installer() {
+  mkdir -p $target_dir/{etc,usr,/etc/default}
+  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
+  mkdir -p $target_dir/usr/share/doc/escenic
+  mkdir -p $target_dir/usr/share/escenic/ece-scripts
+  
+  cp -r ../../../sbin/{ece-install,drop-and-create-ecedb} $target_dir/usr/sbin/
+  cp -r ../../escenic/ece-scripts/ece-install.d/ \
+    $target_dir/usr/share/escenic/ece-scripts/
+  cp -r ../../doc/escenic/ece-install-guide.{org,html} \
+    $target_dir/usr/share/doc/escenic
+} 
+
+function set_up_escenic-content-engine-installer() {
+  mkdir -p $target_dir/{etc,usr,/etc/default}
+  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
+  mkdir -p $target_dir/etc/init.d
+  mkdir -p $target_dir/usr/share/doc/escenic
+  mkdir -p $target_dir/usr/share/escenic/ece-scripts
+  mkdir -p $target_dir/etc/bash_completion.d
+
+  # bin
+  cp -r ../../../bin/ece $target_dir/usr/bin/
+  cp -r ../../escenic/ece-scripts/ece.d/ \
+    $target_dir/usr/share/escenic/ece-scripts/
+
+  # conf
+  cp -r ../../../../etc/escenic/ $target_dir/etc/
+  cp -r ../../../../etc/bash_completion.d/ece \
+    $target_dir/etc/bash_completion.d
+  cp -r ../../../../etc/default/ece $target_dir/etc/default/
+  cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
+
+  # doc
+  cp -r ../../doc/escenic/ece-guide.{org,html} \
+    $target_dir/usr/share/doc/escenic
+}
+
+function set_up_vosa() {
+  mkdir -p $target_dir/{etc,usr,/etc/default}
+  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
+  mkdir -p $target_dir/usr/share/doc/vosa
+  mkdir -p $target_dir/etc/bash_completion.d
+  
+  cp -r ../../../bin/vosa $target_dir/usr/bin/
+  cp -r ../../vizrt/ $target_dir/usr/share/
+  cp -r ../../doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
+  cp -r ../../../../etc/bash_completion.d/vosa \
+    $target_dir/etc/bash_completion.d/
+}
+
+function set_up_escenic-common-scripts() {
+  mkdir -p $target_dir/{etc,usr,/etc/default}
+  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
+  mkdir -p $target_dir/usr/share/doc/escenic
+  mkdir -p $target_dir/usr/share/escenic/ece-scripts
+  
+  # system-info is useful for all packages, hence goes to
+  # escenic-common-scripts.
+  cp -r ../../../bin/system-info $target_dir/usr/bin/
+  cp -r ../../escenic/ece-scripts/system-info.d \
+    $target_dir/usr/share/escenic/ece-scripts/
+  cp -r ../../doc/escenic/system-info-guide.{org,html} \
+    $target_dir/usr/share/doc/escenic
+  
+  # both the installer and ece-scripts use the common scripts and
+  # web resources.
+  cp -r ../../escenic/ece-scripts/common* \
+    $target_dir/usr/share/escenic/ece-scripts/
+  cp -r ../../escenic/ece-scripts/*.css \
+    $target_dir/usr/share/escenic/ece-scripts/
+  cp -r ../../escenic/ece-scripts/*.html \
+    $target_dir/usr/share/escenic/ece-scripts/
+}
+
+function set_up_escenic-munin-plugins() {
+  mkdir -p $target_dir/usr/share/munin/plugins
+  
+  local file=$target_dir/usr/share/munin/plugins/escenic_jstat_
+  wget $wget_opts \
+    -O $file \
+    https://github.com/mogsie/escenic-munin/raw/master/escenic_jstat_ \
+  chmod 755 $file
 }
 
 function get_name() {
@@ -164,6 +202,6 @@ function list_packages() {
 
 clean_up
 get_user_options $@
-set_up_target_directory
+create_target_directory
 create_packages
 list_packages
