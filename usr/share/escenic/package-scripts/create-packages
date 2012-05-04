@@ -5,7 +5,7 @@
 
 # by tkj@vizrt.com
 
-target_dir=target
+target_dir=${PWD}/target
 package_name=escenic-content-engine-installer
 package_version=$(date +%Y-%m-%d.%H%M%S)
 default_maintainer_name="Torstein Krause Johansen"
@@ -147,12 +147,15 @@ function set_up_escenic-common-scripts() {
 
 function set_up_escenic-munin-plugins() {
   mkdir -p $target_dir/usr/share/munin/plugins
-  
-  local file=$target_dir/usr/share/munin/plugins/escenic_jstat_
-  wget $wget_opts \
-    -O $file \
-    https://github.com/mogsie/escenic-munin/raw/master/escenic_jstat_ \
-  chmod 755 $file
+
+  local dir=$(mktemp -d)
+  (
+    cd $dir
+    git clone http://github.com/mogsie/escenic-munin.git
+    cp escenic-munin/*_ $target_dir/usr/share/munin/plugins
+    chmod 755 $file $target_dir/usr/share/munin/plugins
+  )
+  rm -rf $dir
 }
 
 function get_name() {
