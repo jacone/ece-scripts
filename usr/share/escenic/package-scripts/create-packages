@@ -147,12 +147,18 @@ function set_up_escenic-common-scripts() {
 
 function set_up_escenic-munin-plugins() {
   mkdir -p $target_dir/usr/share/munin/plugins
+  local doc_dir=$target_dir/usr/share/doc/escenic/escenic-munin-plugin
+  mkdir -p $doc_dir
 
   local dir=$(mktemp -d)
   (
     cd $dir
-    git clone http://github.com/mogsie/escenic-munin.git
-    cp escenic-munin/*_ $target_dir/usr/share/munin/plugins
+    wget $wget_opts https://github.com/mogsie/escenic-munin/zipball/master
+    unzip master
+    cp $dir/mogsie-escenic-munin*/*_ $target_dir/usr/share/munin/plugins
+    cp $dir/mogsie-escenic-munin*/README.md $doc_dir
+    cp $dir/mogsie-escenic-munin*/site/* $doc_dir
+    
     chmod 755 $file $target_dir/usr/share/munin/plugins
   )
   rm -rf $dir
