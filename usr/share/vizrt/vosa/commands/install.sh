@@ -198,24 +198,6 @@ function delete_overlay() {
   rm -f ${image}/updates.iso 
 }
 
-function postinstall() {
-  for o in "${install_config_postinstall[@]}" ; do
-    echo "Executing postinstall $o"
-    if [ "${o:0:1}" == "/" ] ; then
-      local cmd=$o
-    else
-      local cmd="$(dirname $0)/../post-install-hooks/$o"
-    fi
-    if [ ! -x "$cmd" ] ; then
-      echo "Unable to execute non-executable post-install hook: $cmd"
-      delete_overlay
-      exit 1
-    fi
-    cmd=$(readlink -f "$cmd")
-    $cmd "$config" "$image" || exitonerror $? "Postinstall script $cmd exited nonzero return code."
-  done
-}
-
 copy_original_image
 resize_original_image
 generate_ssh_key
@@ -228,6 +210,5 @@ create_overlay
 # chain to boot.sh to actually start the image.
 $(dirname $0)/boot.sh $1 $2
 
-postinstall
 delete_overlay
 
