@@ -607,7 +607,11 @@ function do_install() {
       echo "$instance_name is not enabled, enable it on this host first"
       exit 1
     fi
-    ${commands}/install.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
+    ${commands}/install.sh \
+      "$instance_dir" \
+      "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+       2>&1 |
+       tee /var/log/vosa-install-$instance_name.log
   }
 }
 

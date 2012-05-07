@@ -22,20 +22,36 @@ if [ -z "$ece_install_conf_files" ] ; then
 fi
 
 # ensure we have an ece-install image, download one.
-if [ ! -r $2/ece-install ] ; then
-  if [ -r $1/ece-install ] ; then
-    cp $1/ece-install $2
-  else
-    wget "https://github.com/skybert/ece-scripts/tarball/master" -O $2/ece-install.tar.gz
+ssh -F $2/ssh.conf root@guest test -x /usr/sbin/ece-install
+rc=$?
+
+if [ $rc == 0 ] ; then
+  ECE_INSTALLER=/usr/sbin/ece-install
+fi
+
+if [ -z "$ECE_INSTALLER" ] ; then
+  ssh -F $2/ssh.conf root@guest apt-cache show escenic-content-engine-installer > /dev/null &&
+  echo "Attempting to install escenic-content-engine-installer packge" &&
+  ssh -F $2/ssh.conf root@guest apt-get install -y -o DPkg::Options::=--force-confold \
+      escenic-content-engine-installer
+  if [ $? == 0 ] ; then
+    ECE_INSTALLER=/usr/sbin/ece-install
   fi
 fi
 
-scp -F $2/ssh.conf $2/ece-install.tar.gz $1/ece-install*.conf root@guest:
+if [ -z "$ECE_INSTALLER" ] ; then
+  wget "https://github.com/skybert/ece-scripts/tarball/master" -O $2/ece-install.tar.gz
+  scp -F $2/ssh.conf $2/ece-install.tar.gz root@guest:
+  ssh -F $2/ssh.conf root@guest tar xfz ece-install.tar.gz
+  ECE_INSTALLER="bash *-ece-scripts-*/usr/sbin/ece-install"
+fi
 
-ssh -F $2/ssh.conf root@guest tar xfz ece-install.tar.gz
+scp -F $2/ssh.conf $1/ece-install*.conf root@guest:
+
 for conf in $ece_install_conf_files ; do
-  echo "Performing ece-install with -f $conf"
-  ssh -F $2/ssh.conf root@guest bash *-ece-scripts-*/usr/sbin/ece-install -f "$conf" || exit $? 
+  echo "Performing $ECE_INSTALLER with -f $conf"
+  ssh -F $2/ssh.conf root@guest $ECE_INSTALLER -f "$conf" || exit $? 
   echo "---------8<-------------------------"
 done
+
 
