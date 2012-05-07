@@ -1419,6 +1419,9 @@ function update_publication_resources()
         image-version)
             url=${url}/${publication}/escenic/image-version
             ;;
+        teaser-type)
+            url=${url}/${publication}/escenic/teaser-type
+            ;;
         menu)
             url=${url}/${publication}/escenic/plugin/menu
             ;;
