@@ -159,10 +159,13 @@ EOF
   chmod 700 ${tempdir}/overlay/updates/root/.ssh
   mkdir -p ${tempdir}/overlay/updates/home/ubuntu/.ssh
   chmod 700 ${tempdir}/overlay/updates/home/ubuntu/.ssh
-  cp "${image}/id_dsa.pub" "${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys"; exitonerror $? "Unable to install id_dsa.pub" 
-  cp "${image}/id_dsa.pub" "${tempdir}/overlay/updates/root/.ssh/authorized_keys"; exitonerror $? "Unable to install id_dsa.pub for root" 
+  if [ -r "${image}/id_dsa.pub" ] ; then
+    cp "${image}/id_dsa.pub" "${tempdir}/overlay/updates/root/.ssh/authorized_keys"; exitonerror $? "Unable to install id_dsa.pub for root" 
+    cp "${image}/id_dsa.pub" "${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys"; exitonerror $? "Unable to install id_dsa.pub" 
+  fi
   for o in "${install_config_ssh_keys[@]}" ; do
-    cat $o >> ${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys; exitonerror $? "Unable to add authorized key $o" 
+    cat $o >> ${tempdir}/overlay/updates/root/.ssh/authorized_keys; exitonerror $? "Unable to add authorized key $o to root" 
+    cat $o >> ${tempdir}/overlay/updates/home/ubuntu/.ssh/authorized_keys; exitonerror $? "Unable to add authorized key $o to ubuntu" 
   done
 
   chmod 600 ${tempdir}/overlay/updates/root/.ssh/authorized_keys; exitonerror $? "Unable to chmod 600 authorized_keys" 
