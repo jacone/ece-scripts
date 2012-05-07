@@ -58,8 +58,8 @@ conf_file_location_list="
 function read_conf_file()
 {
     for el in $conf_file_location_list; do
-        if [ -r $el/`basename $0` ]; then
-            source $el/`basename $0`
+        if [ -r $el/ece ]; then
+            source $el/ece
             found_conf=1
             break
         fi
