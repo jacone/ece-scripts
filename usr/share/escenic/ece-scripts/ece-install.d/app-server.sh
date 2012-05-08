@@ -356,7 +356,7 @@ EOF
     cat >> $tomcat_base/conf/context.xml <<EOF
   <Environment
       name="escenic/indexer-webservice"
-      value="http://${indexer_ws_uri}"
+      value="${indexer_ws_uri}"
       type="java.lang.String"
       override="false"
   />
