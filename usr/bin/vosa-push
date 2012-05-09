@@ -1,0 +1,43 @@
+#! /usr/bin/env bash
+
+# wrapper around the vosa::push module. Can be removed once vosa -i
+# <instance> push has been implemented.
+
+source ../share/vizrt/vosa/commands/push.sh
+outgoing=0
+instance=""
+
+function get_user_options() {
+  while getopts ":i:o" opt; do
+    case $opt in
+      i)
+        instance=${OPTARG}
+        ;;
+      o)
+        outgoing=1
+        ;;
+      \?)
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+      :)
+        echo "Option -$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+      *)
+        echo command is $OPTARG
+        exit 0
+    esac
+  done
+}
+
+get_user_options $@
+
+if [ -z "${instance}" ]; then
+  echo "You must specify instance with $(basename $0) -i <instance>"
+  exit 1
+fi
+
+pre_push_changes
+push_changes
+post_push_changes
