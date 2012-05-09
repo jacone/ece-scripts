@@ -26,7 +26,7 @@ function get_info_for_type() {
     print "|-> Status:" $(get_status)
     print "|-> Port:" $port
 
-    if [ $(get_status | cut -d' ' -f1) == "UP" ]; then
+    if [ $(get_status | grep UP | wc -l) -gt 0 ]; then
       print "|-> PID:" $type_pid
     fi
     
