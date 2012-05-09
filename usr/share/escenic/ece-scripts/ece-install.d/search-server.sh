@@ -35,14 +35,19 @@ function set_up_solr()
 {
   run_hook set_up_solr.preinst
   
-  print_and_log "Setting up solr ..."
+  print_and_log "Setting up Solr ..."
   if [ ! -d $escenic_conf_dir/solr ]; then
     if [ $(is_using_conf_archive) -eq 1 ]; then
       print_and_log "Using the supplied Solr configuration from" 
       print_and_log "bundle: $ece_instance_conf_archive"
       local a_tmp_dir=$(mktemp -d)
+      local file=$(
+        download_uri_target_to_dir \
+          $ece_instance_conf_archive \
+          $a_tmp_dir
+      )
       run cd $a_tmp_dir
-      run tar xzf $ece_instance_conf_archive engine/solr/conf
+      run tar xzf $(basename $ece_instance_conf_archive) engine/solr/conf
       run cp -r engine/solr/conf $escenic_conf_dir/solr
       run rm -r $a_tmp_dir
     else
