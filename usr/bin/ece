@@ -923,14 +923,21 @@ function assemble()
     
     cd $assemblytool_home/dist/.work/ear/lib
     for el in *.jar; do
-        jar=$(basename $(echo $el | sed  -e  's/[0-9]//g') .jar | sed 's/\.//g')
-        if [ $(echo $known_unharmful_duplicates | grep $jar | wc -l) -gt 0 ]; then
-            continue
-        fi
-        if [ $(\ls *.jar | grep "^${jar}[0-9]" | wc -l) -gt 1 ]; then
-            duplicates_found=1
-            debug "More than one version of $jar"
-        fi
+      jar=$(basename $(echo $el | sed  -e  's/[0-9]//g') .jar | sed 's/\.//g')
+      if [ $(echo $known_unharmful_duplicates | grep $jar | wc -l) -gt 0 ]; then
+        continue
+      fi
+
+      # we check for duplicate JARs like plugin-1.2.3.jar and
+      # plugin-1.2.4.jar. We remove plugin-1.2.3-tests.jar out the
+      # equations (if it happens to be there).
+      if [ $(\ls *.jar | \
+        sed -e 's/\.//g' -e 's/.jar$//g' -e 's/-test$//g' | \
+        grep "^${jar}[0-9]" | \
+        wc -l) -gt 1 ]; then
+        duplicates_found=1
+        debug "More than one version of $(echo $jar | sed 's/-$//g')"
+      fi
     done
 
     if [ "$duplicates_found" -eq 1 ]; then
