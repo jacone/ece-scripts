@@ -932,8 +932,10 @@ function assemble()
       # plugin-1.2.4.jar. We remove plugin-1.2.3-tests.jar out the
       # equations (if it happens to be there).
       if [ $(\ls *.jar | \
-        sed -e 's/\.//g' -e 's/.jar$//g' -e 's/-test$//g' | \
+        sed -e 's/\.jar//' -e 's/-tests$//g' | \
         grep "^${jar}[0-9]" | \
+        sort | \
+        uniq | \
         wc -l) -gt 1 ]; then
         duplicates_found=1
         debug "More than one version of $(echo $jar | sed 's/-$//g')"
