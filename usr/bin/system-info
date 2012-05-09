@@ -11,8 +11,8 @@
 
 ece_user=""
 
-## possible values: html, org, confluence, json (not coplete)
-format=org
+## possible values: html, org, confluence, yaml, json (not complete)
+format=yaml
 generate_output_file_per_module=0
 output_dir=$(pwd)
 output_file=""
