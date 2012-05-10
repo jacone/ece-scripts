@@ -18,6 +18,9 @@ rsync_opts="
 --owner
 --compress
 --itemize-changes
+--ignore-times
+--checksum
+--exclude '*~'
 "
 rsync_additional_outgoing_opts="
 --dry-run
