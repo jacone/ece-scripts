@@ -562,7 +562,7 @@ function common_pre_install()
       $escenic_data_dir/solr/data
       $escenic_log_dir
       $escenic_run_dir
-      $escenic_spool_dir/migration
+      $escenic_spool_dir/import
     "
     ece_install_env=${escenic_run_dir}/$(basename $0).env
 
