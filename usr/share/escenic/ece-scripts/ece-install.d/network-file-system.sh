@@ -63,8 +63,13 @@ EOF
 
 function install_nfs_client() {
   print_and_log "Installing an NFS client on $HOSTNAME ..."
+
+  local packages="nfs-common"
+  if [ $on_redhat_or_derivative -eq 1 ]; then
+    packages="nfs-utils"
+  fi
   
-  install_packages_if_missing "nfs-common"
+  install_packages_if_missing $packages
   get_nfs_configuration
 
   local mount_point_list=""
@@ -97,6 +102,7 @@ EOF
         -type d | \
         sed "s#${mount_point}##"); do
         if [ ! -e $escenic_data_dir/engine/$(basename $ele) ]; then
+          make_dir $escenic_data_dir/engine
           ln -s $mount_point/${ele} $escenic_data_dir/engine/$(basename $ele)
         fi
       done
