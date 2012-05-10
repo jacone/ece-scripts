@@ -4,8 +4,11 @@ print_pre_text "$(df -hT)"
 print_section_end
 
 print_h2_header "Memory on $HOSTNAME"
-print_pre_text "Total memory: " `grep MemTotal /proc/meminfo | cut -d':' -f2`
-print_pre_text "Free memory: " `grep MemFree /proc/meminfo | cut -d':' -f2`
+print_pre_text "$( cat <<EOF
+Total memory: `grep MemTotal /proc/meminfo | cut -d':' -f2`
+Free memory: `grep MemFree /proc/meminfo | cut -d':' -f2`
+EOF
+)"
 print_section_end
 
 print_h2_header "CPU(s) on $HOSTNAME"

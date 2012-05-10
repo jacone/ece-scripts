@@ -91,6 +91,13 @@ EOF
   "title": "$title",
   "generated-date": "$(date)",
 EOF
+  elif [ $format == "yaml" ]; then
+    cat <<EOF
+---
+title: $title
+generated-date: $(date)
+report:
+EOF
   else
     print_h1_header $title
     print_p_text "Generated @ $(date)"
@@ -167,7 +174,7 @@ function print_list_item() {
   elif [ $format == "json" ]; then
     echo "      \"$@\", "
   elif [ $format == "yaml" ]; then
-    echo "$(get_indent)- $@"
+    echo "$(get_indent) - $@"
   fi
 }
 
@@ -201,7 +208,8 @@ EOF
 EOF
 
   elif [ $format == "yaml" ]; then
-    echo "$@" | sed "s/^/$(get_indent)/g"
+    echo "|" | sed "s/^/$(get_indent) /g"
+    echo "$@" | sed "s/^/$(get_indent)  /g"
   fi
 }
 
@@ -295,7 +303,7 @@ EOF
   elif [ $format == "json" ]; then
     echo "    \"message\": \"$@\","
   elif [ $format == "yaml" ]; then
-    echo "$(get_indent)$@"
+    echo "$(get_indent)message: $@"
   fi
 }
 
