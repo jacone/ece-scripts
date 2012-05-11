@@ -20,6 +20,7 @@ output_file=""
 current_indent_level=0
 INDENT="  "
 verbose=0
+temporaries=1
 
 function init() {
   # first, try to be nice
@@ -95,7 +96,13 @@ EOF
     cat <<EOF
 ---
 title: $title
+EOF
+    if [ $temporaries -eq 1 ] ; then
+      cat <<EOF
 generated-date: $(date)
+EOF
+    fi
+    cat <<EOF
 report:
 EOF
   else
@@ -308,13 +315,16 @@ EOF
 }
 
 function get_user_options() {
-  while getopts ":d:o:i:f:u:m:v" opt; do
+  while getopts ":d:o:i:f:u:mvs" opt; do
     case $opt in
       i)
         instance=${OPTARG}
         ;;
       v)
         verbose=1
+        ;;
+      s)
+        temporaries=0
         ;;
       d)
         output_dir=${OPTARG}
