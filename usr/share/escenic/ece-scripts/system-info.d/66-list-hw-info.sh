@@ -1,5 +1,5 @@
 
-if [ "$skip_temporaries" != "1" ] ; then
+if [ $temporaries -eq 1 ] ; then
   print_h2_header "Disks used on $HOSTNAME"
   print_pre_text "$(df -hT)"
   print_section_end
