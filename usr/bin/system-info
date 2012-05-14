@@ -20,6 +20,7 @@ output_file=""
 current_indent_level=0
 INDENT="  "
 verbose=0
+temporaries=1
 
 function init() {
   # first, try to be nice
@@ -90,6 +91,19 @@ EOF
 {
   "title": "$title",
   "generated-date": "$(date)",
+EOF
+  elif [ $format == "yaml" ]; then
+    cat <<EOF
+---
+title: $title
+EOF
+    if [ $temporaries -eq 1 ] ; then
+      cat <<EOF
+generated-date: $(date)
+EOF
+    fi
+    cat <<EOF
+report:
 EOF
   else
     print_h1_header $title
@@ -167,7 +181,7 @@ function print_list_item() {
   elif [ $format == "json" ]; then
     echo "      \"$@\", "
   elif [ $format == "yaml" ]; then
-    echo "$(get_indent)- $@"
+    echo "$(get_indent) - $@"
   fi
 }
 
@@ -201,7 +215,8 @@ EOF
 EOF
 
   elif [ $format == "yaml" ]; then
-    echo "$@" | sed "s/^/$(get_indent)/g"
+    echo "|" | sed "s/^/$(get_indent) /g"
+    echo "$@" | sed "s/^/$(get_indent)  /g"
   fi
 }
 
@@ -295,18 +310,21 @@ EOF
   elif [ $format == "json" ]; then
     echo "    \"message\": \"$@\","
   elif [ $format == "yaml" ]; then
-    echo "$(get_indent)$@"
+    echo "$(get_indent)message: $@"
   fi
 }
 
 function get_user_options() {
-  while getopts ":d:o:i:f:u:m:v" opt; do
+  while getopts ":d:o:i:f:u:mvs" opt; do
     case $opt in
       i)
         instance=${OPTARG}
         ;;
       v)
         verbose=1
+        ;;
+      s)
+        temporaries=0
         ;;
       d)
         output_dir=${OPTARG}
