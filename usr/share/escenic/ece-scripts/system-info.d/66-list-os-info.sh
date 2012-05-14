@@ -19,5 +19,14 @@ if [ $verbose -eq 1 ]; then
   fi
 fi
 
+print_h3_header "Timezone"
+print_un_ordered_list_start
+print_list_item "$(cat /etc/timezone) (from /etc/timezone)"
+if [ -n "$TZ" ]; then
+  print_list_item "$(echo $TZ) (from ${USER}'s environment variable)"
+fi
+print_un_ordered_list_end
+
 # of the h2
 print_section_end
+
