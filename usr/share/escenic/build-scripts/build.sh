@@ -125,7 +125,7 @@ function home_preparation
 function add_vosa_libs
 {
   
-  ln -s /opt/escenic/assemblytool/lib/java_memcached-release_2.0.1.jar ~/assemblytool/lib/
+  ln -s /opt/escenic/assemblytool/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
 }
 
 
@@ -229,6 +229,8 @@ function release
   run unzip vosa-assembly.zip
 
   symlink_target
+
+  add_vosa_libs
 
   run cd $assemblytool_root_dir
   run ant -q clean ear -DskipRedundancyCheck=true
