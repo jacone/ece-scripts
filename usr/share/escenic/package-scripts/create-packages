@@ -59,6 +59,8 @@ function create_target_directory() {
     set_up_escenic-content-engine-scripts
   elif [[ $package_name == "vosa" ]]; then
     set_up_vosa
+  elif [[ $package_name == "escenic-build-scripts" ]]; then
+    set_up_escenic-build-scripts
   elif [[ $package_name == "escenic-common-scripts" ]]; then
     set_up_escenic-common-scripts
   elif [[ $package_name == "escenic-munin-plugins" ]]; then
@@ -81,7 +83,12 @@ function set_up_escenic-content-engine-installer() {
     $target_dir/usr/share/escenic/ece-scripts/
   cp -r ../../doc/escenic/ece-install-guide.{org,html} \
     $target_dir/usr/share/doc/escenic
-} 
+}
+
+function set_up_escenic-build-scripts() {
+  mkdir -p $target_dir/usr/share/escenic/build-scripts
+  cp ../build-scripts/build.sh $target_dir/usr/share/escenic/build-scripts/
+}
 
 function set_up_escenic-content-engine-scripts() {
   mkdir -p $target_dir/{etc,usr,/etc/default}
