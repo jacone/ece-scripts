@@ -5,7 +5,7 @@
 ################################################################################
 
 # customer
-CUSTOMER=myproject
+CUSTOMER=test
 
 # date used for .ear naming 
 DATE=`date +%F_%H%M`
