@@ -205,7 +205,7 @@ function install_common_os_packages()
     fi
   fi
   
-  local packages="curl $git_package wget unzip"
+  local packages="curl $git_package wget unzip bc"
   install_packages_if_missing $packages
   
   for el in lsb_release curl wget git unzip; do
