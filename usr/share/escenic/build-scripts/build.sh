@@ -1,73 +1,156 @@
+#! /usr/bin/env bash
+
 ################################################################################
 #
 # VOSA - build server script - customer x
 #
 ################################################################################
 
-# customer
-CUSTOMER=test
+# Common variables
+log=~/build.log
+pid_file=~/build.pid
+build_date=`date +%F_%H%M`
+vosa_root_dir=/opt/vosa
+assemblytool_root_dir=~/assemblytool
+assemblytool_pub_dir=$assemblytool_root_dir/publications
+assemblytool_lib_dir=$assemblytool_root_dir/lib
+svn_src_dir=~/src
+release_dir=~/releases
+plugin_dir=~/plugins
+engine_root_dir=~/engine
 
-# date used for .ear naming 
-DATE=`date +%F_%H%M`
+##
+function fetch_configuration
+{
+  conf_file=~/build.conf
+  source $conf_file
+}
 
-# svn information
-SVN_BASE=https://mysvnserver.com/svn/MYPROJECT/
-SVN_PATH=
+##
+function init
+{
+  source $ece_scripts_home/common-bashing.sh
+  source $ece_scripts_home/common-io.sh
+}
 
-SVN_USER=myproject-build-user
-SVN_PASSWORD=yesyouwouuldlikethatwouldntyou
+## TODO - doc
+function set_pid {
+  if [ -e $pid_file ]; then
+    print "Instance of $(basename $0) already running!"
+    exit 1
+  else
+    echo $BASHPID > $pid_file
+  fi
+}
 
-# release label for .ear naming - default: trunk
-RELEASE_LABEL=trunk
+function common_post_build {
+  run rm $pid_file
+}
 
-# clean up customer home
-function home_preparation {
-
-  rm ~/plugins/*
-  rm ~/engine
-  rm ~/assemblytool/publications/*
-  rm ~/assemblytool/lib/*
-  rm -rf src
-  mkdir src
-  #TODO: make a place where everything common to all ears go.
-  ln -s /opt/escenic/assemblytool/lib/java_memcached-release_2.0.1.jar assemblytool/lib/
+##
+function get_user_options
+{
+  while getopts ":b:t:" opt; do
+    case $opt in
+      b)
+        svn_path=branches/${OPTARG}
+        release_label=branch-${OPTARG}
+        ;;
+      t)
+        svn_path=tags/${OPTARG}
+        release_label=tag-${OPTARG}
+        ;;
+      \?)
+        print "Invalid option: -$OPTARG" >&2
+        remove_pid_and_exit_in_error
+        ;;
+      :)
+        print "Option -$OPTARG requires an argument." >&2
+        remove_pid_and_exit_in_error
+        ;;
+    esac
+  done
 
 }
 
-# checkout customer project
+##
+function verify_configuration {
+  ensure_variable_is_set customer
+  ensure_variable_is_set svn_base
+  ensure_variable_is_set svn_user
+  ensure_variable_is_set svn_password
+}
+
+##
+function verify_vosa {
+  if [ ! -d $assemblytool_root_dir ]; then
+    print_and_log "$assemblytool_root_dir is required, but it doesn't exist!"
+    remove_pid_and_exit_in_error
+  fi
+  if [ ! -d $release_dir ]; then
+    print_and_log "$release_dir did not exist so it has been created."
+    make_dir $release_dir
+  fi
+}
+
+# clean up customer home
+function home_preparation
+{
+  if [ -e "$plugin_dir" ]; then
+    run rm -rf $plugin_dir
+    make_dir $plugin_dir
+  fi
+
+  if [ -e "$engine_root_dir" ]; then
+    run rm $engine_root_dir
+  fi
+
+  if [ -e "$assemblytool_pub_dir" ]; then
+    run rm -rf $assemblytool_pub_dir
+    make_dir $assemblytool_pub_dir
+  fi
+
+  if [ -e "$assemblytool_lib_dir" ]; then
+    run rm -rf $assemblytool_lib_dir
+    make_dir $assemblytool_lib_dir
+  fi
+
+  if [ -e "$svn_src_dir" ]; then
+    run rm -rf $svn_src_dir
+    make_dir $svn_src_dir
+  fi
+}
+
+## TODO: make a place where everything common to all ears go.
+function add_vosa_libs
+{
+  
+  ln -s /opt/escenic/assemblytool/lib/java_memcached-release_2.0.1.jar ~/assemblytool/lib/
+}
+
+
+## Checkout customer project
 function svn_checkout {
 
-  type=$1
-
-  if [ "$type" = "trunk" ]; then
-    SVN_PATH=trunk
-    RELEASE_LABEL=$type
-  elif [ "$type" = "branch" ]; then
-    SVN_PATH=branches/$2
-    RELEASE_LABEL=$type-$2
-  elif [ "$type" = "tag" ]; then
-    SVN_PATH=tags/$2
-    RELEASE_LABEL=$type-$2
+  if [ -z "$svn_path" ]; then
+    svn_path=trunk
+    release_label=$svn_path
+    print_and_log "No svn path chosen! Will use 'trunk'!"
   fi
-
-  if [ "$SVN_PATH" = "" ]; then
-    echo "No svn path chosen! Will use 'trunk'."
-    SVN_PATH=trunk
-  fi
-
-  echo "Initiating svn checkout of $SVN_PATH"
-  svn checkout --username=$SVN_USER --password=$SVN_PASSWORD $SVN_BASE$SVN_PATH src/.
+  print_and_log "Initiating svn checkout of $svn_path ..."
+  #TODO run?
+  svn checkout --username=$svn_user --password=$svn_password $svn_base$svn_path $svn_src_dir/.
 
 }
 
 # parse version based on property from src/pom.xml
 function parse_version {
-  export $1=`sed "/<$2>/!d;s/ *<\/\?$2> *//g" ~/src/pom.xml | tr -d $'\r' `
+  run export $1=`sed "/<$2>/!d;s/ *<\/\?$2> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
 }
 
 # symlink component from /opt/vosa/.
 function symlink_distribution {
-  ln -s /opt/vosa/$1 ~/$2
+  run ln -s $vosa_root_dir/$1 ~/$2
 }
 
 function symlink_ece_components {
@@ -110,56 +193,70 @@ function symlink_ece_components {
 function symlink_target {
 
   # global classpath
-  for f in $(ls -d ~/src/vosa-assembly/target/lib/*);
-    do ln -s $f ~/assemblytool/lib;
+  for f in $(ls -d $svn_src_dir/vosa-assembly/target/lib/*);
+    do run ln -s $f $assemblytool_lib_dir;
   done
 
   # publications
-  for f in $(ls -d ~/src/vosa-assembly/target/wars/*);
-    do ln -s $f ~/assemblytool/publications;
+  for f in $(ls -d $svn_src_dir/vosa-assembly/target/wars/*);
+    do ln -s $f $assemblytool_pub_dir;
   done
 
 }
 
-function release {
+##
+function release 
+{
 
   home_preparation
 
-  svn_checkout $1 $2
-  revision=`svn info src | grep -i Revision | awk '{print $2}'`
+  run svn_checkout
+
+  revision=`svn info $svn_src_dir | grep -i Revision | awk '{print $2}'`
+  
+  if [ -z "$revision" ]; then
+    print_and_log "Failed to fetch current revision number, exiting! :-("
+    remove_pid_and_exit_in_error
+  fi
+
 
   symlink_ece_components
 
-  cd src
-  mvn clean package
+  run cd $svn_src_dir
+  run mvn clean package
 
-  cd vosa-assembly/target
-  unzip vosa-assembly.zip
+  run cd $svn_src_dir/vosa-assembly/target
+  run unzip vosa-assembly.zip
 
   symlink_target
 
-  cd ~/assemblytool
-  ant -q ear -DskipRedundancyCheck=true
+  run cd $assemblytool_root_dir
+  run ant -q clean ear -DskipRedundancyCheck=true
 
-  cp dist/engine.ear ~/releases/$CUSTOMER-$RELEASE_LABEL-rev$revision-$DATE.ear
+  resulting_ear=$customer-$release_label-rev$revision-$build_date.ear
+  run cp $assemblytool_root_dir/dist/engine.ear $release_dir/$resulting_ear
+  
+  if [ ! -e "$release_dir/$resulting_ear" ]; then
+    print_and_log "I'm done, but the .ear is still missing, exiting! :-("
+    remove_pid_and_exit_in_error
+  fi
 
 }
 
-################################################
-# VOSA - Build Server Script
-################################################
+##
+function print_result
+{
+  print_and_log "BUILD SUCCESSFUL!"
+  print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
+}
 
-case "$1" in
-
-release)
-
-  release $2 $3
-  ;;
-
-*)
-  echo $"Usage: $0 {release}"
-  exit 2
-esac
-
-exit $?
-
+set_pid
+fetch_configuration
+init
+get_user_options $@
+verify_configuration
+home_preparation
+verify_vosa
+release
+print_result
+common_post_build
