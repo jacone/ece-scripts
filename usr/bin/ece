@@ -453,16 +453,16 @@ function sanity_check()
         exit 1
     fi
     
+    if [ "$(echo $command)" == "list-instances" ]; then
+      return
+    fi
+
     verify_that_directory_and_file_are_writeable $log
     verify_that_directory_and_file_are_writeable $pid_file
 
     if [ -z "$command" ]; then
         print "You must specificy a command, see 'ece help'."
         exit 1
-    fi
-
-    if [ "$(echo $command)" == "list-instances" ]; then
-      return
     fi
 
     local instance_list=$(get_instance_list)
