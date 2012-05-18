@@ -126,6 +126,7 @@ function add_vosa_libs
 {
   
   ln -s /opt/escenic/assemblytool/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
+  ln -s $vosa_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
 }
 
 
