@@ -27,6 +27,10 @@ if [ -n "$TZ" ]; then
 fi
 print_un_ordered_list_end
 
+
+print_h3_header "Last Boot"
+print_pre_text "$(who -b)"
+
 # of the h2
 print_section_end
 
