@@ -28,6 +28,7 @@ function get_info_for_type() {
 
     if [ $(get_status | grep UP | wc -l) -gt 0 ]; then
       print "|-> PID:" $type_pid
+      print "|-> Memory usage:" $(get_memory_summary_of_pid $type_pid)
     fi
     
     print "|-> Type: " $appserver
