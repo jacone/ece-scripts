@@ -20,7 +20,7 @@ rsync_opts="
 --itemize-changes
 --ignore-times
 --checksum
---exclude '*~'
+--cvs-exclude
 "
 rsync_additional_outgoing_opts="
 --dry-run
