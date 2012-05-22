@@ -106,6 +106,16 @@ EOF
           ln -s $mount_point/${ele} $escenic_data_dir/engine/$(basename $ele)
         fi
       done
+
+      # Normally, the file shre will already have a binary folder,
+      # which the above loop would then set up a link to on the NFS
+      # client. However, in case the shared binary endpoint doesn't
+      # already exist, create it on the shared system and symlink to
+      # it.
+      if [ ! -e $escenic_data_dir/engine/binary ]; then
+        make_dir $mount_point/binary
+        ln -s $mount_point/binary $escenic_data_dir/engine/binary
+      fi
     fi
   done
 
