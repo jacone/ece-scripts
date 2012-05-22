@@ -139,5 +139,33 @@ function verify_that_files_exist_and_are_readable()
       remove_pid_and_exit_in_error
     fi
   done
-}   
+}
+
+function get_memory_usage_of_pid() {
+  local file=/proc/$1/status
+  if [ ! -e $file ]; then
+    return
+  fi
+
+  grep VmSize $file | cut -d ":" -f2 | sed 's/^[ \t]*//g'
+}
+
+function get_memory_summary_of_pid() {
+  local file=/proc/$1/status
+  if [ ! -e $file ]; then
+    return
+  fi
+
+  local size=$(
+    grep VmSize $file | cut -d ":" -f2 | sed 's/^[ \t]*//g'
+  )
+  local peak=$(
+    grep VmPeak $file | cut -d ":" -f2 | sed 's/^[ \t]*//g'
+  )
+
+  echo "${size} (peaked at: $peak)"
+}
+
+
+
 
