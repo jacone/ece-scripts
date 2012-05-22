@@ -176,3 +176,32 @@ function add_apt_source() {
     run apt-get update
   fi
 }
+
+function get_memory_usage_of_pid() {
+  local file=/proc/$1/status
+  if [ ! -e $file ]; then
+    # TODO add support for non-Linux systems
+    return
+  fi
+
+  grep VmSize $file | cut -d ":" -f2 | sed 's/^[ \t]*//g'
+}
+
+function get_memory_summary_of_pid() {
+  local file=/proc/$1/status
+  if [ ! -e $file ]; then
+    # TODO add support for non-Linux systems
+    return
+  fi
+
+  local size=$(
+    grep VmSize $file | cut -d ":" -f2 | sed 's/^[ \t]*//g'
+  )
+  local peak=$(
+    grep VmPeak $file | cut -d ":" -f2 | sed 's/^[ \t]*//g'
+  )
+
+  echo "${size} (peaked at: $peak)"
+}
+
+
