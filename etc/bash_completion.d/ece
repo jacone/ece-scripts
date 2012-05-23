@@ -5,7 +5,7 @@ _ece_commands()
     local cur=${COMP_WORDS[COMP_CWORD]}
     local prev=${COMP_WORDS[COMP_CWORD-1]}
 
-    commands="applog assemble backup clean deploy edit help info kill log loglist
+    commands="applog assemble backup clean deploy edit help info kill log list-logs
               flush outlog package restart start status stop threaddump update versions
               list-instances
     "
