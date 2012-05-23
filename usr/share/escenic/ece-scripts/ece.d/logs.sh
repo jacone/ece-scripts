@@ -13,15 +13,13 @@ function get_log4j_log() {
   echo ""
 }
 
-function tail_messages_log()
-{
+function tail_messages_log() {
   log4j_log=$(get_log4j_log)
   print "tailing $log4j_log"
   tail -f $log4j_log
 }
 
-function tail_out_log()
-{
+function tail_out_log() {
   tail_list=$log
 
     # if needs be, we can add more system out logs here. For now,
@@ -31,8 +29,7 @@ function tail_out_log()
   tail -f $tail_list
 }
 
-function get_app_log()
-{
+function get_app_log() {
   local app_log=""
   if [ "$appserver" == "tomcat" ]; then
     app_log=$tomcat_base/logs/localhost.`date +%F`.log
@@ -49,8 +46,7 @@ function get_app_log()
 }
 
 
-function tail_app_log()
-{
+function tail_app_log() {
   if [ "$type" == "rmi-hub" ]; then
     print "There is no application server log for $type"
     exit 1
@@ -60,8 +56,7 @@ function tail_app_log()
   tail -f $(get_app_log)
 }
 
-function show_all_log_paths()
-{
+function show_all_log_paths() {
   if [ "$quiet" -eq 0 ]; then
     print "System out log: "$log
     print "App server log: "$(get_app_log)
