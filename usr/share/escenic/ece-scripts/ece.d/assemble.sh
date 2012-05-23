@@ -1,7 +1,6 @@
 assemble_attempts=0
 
-function assemble()
-{
+function assemble() {
   if [ "$assemble_attempts" -gt 1 ]; then
     print "I've tried to assemble twice now and FAILED :-("
     print "You probably have multiple versions of one or more plugins"
