@@ -58,21 +58,21 @@ function tail_app_log() {
 
 function show_all_log_paths() {
   if [ "$quiet" -eq 0 ]; then
-    print "System out log: "$log
     print "App server log: "$(get_app_log)
-    print "log4j log:  "$(get_log4j_log)
-    print "GC log:  "$(get_gc_log)
     if [[ $appserver == "tomcat" ]]; then
-      print "Tomcat system out log:" $(get_catalina_out_file)
+      print "App server out log:" $(get_catalina_out_file)
     fi
+    print "Log4j log:  "$(get_log4j_log)
+    print "GC log:  "$(get_gc_log)
+    print "$(basename $0) script log: "$log
   else
-    echo $log
     echo $(get_app_log)
-    echo $(get_log4j_log)
-    echo $(get_gc_log)
     if [[ $appserver == "tomcat" ]]; then
       echo $(get_catalina_out_file)
     fi
+    echo $(get_log4j_log)
+    echo $(get_gc_log)
+    echo $log
   fi
 }
 
