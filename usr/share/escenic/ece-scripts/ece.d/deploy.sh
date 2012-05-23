@@ -1,7 +1,7 @@
 wget_opts="--continue --inet4-only --quiet"
 
 function get_state_file() {
-   echo $data_dir/${instance}.state
+  echo $data_dir/${instance}.state
 }
 
 ## $1 : local EAR file
@@ -49,9 +49,9 @@ function deploy() {
     ear=$(download_uri_target_to_dir $file $cache_dir)
     
     if [ ! -e "$ear" ]; then
-        print_and_log "The EAR $ear_uri specified in $file could"
-        print_and_log "not be retrieved. I will exit now. :-("
-        exit 1
+      print_and_log "The EAR $ear_uri specified in $file could"
+      print_and_log "not be retrieved. I will exit now. :-("
+      exit 1
     fi
   fi
   
@@ -175,4 +175,40 @@ function deploy() {
 
   run rm -rf ${dir}
   update_deployment_state_file $ear
+}
+
+## $1 : dir of the webapp 
+function add_memcached_support() {
+  if [[ "$do_not_add_memcached_support" == "1" ]]; then
+    return
+  fi
+
+  if [ ! -d "$1" ]; then
+    log $1 "doesn't exist"
+    return
+  fi
+
+  local exempt_from_memcached_list="
+      escenic escenic-admin indexer-webservice indexer-webapp studio
+      inpage-ws dashboard
+    "
+
+  for el in $exempt_from_memcached_list; do
+    if [[ $(basename $1) == "$el" ]]; then
+      return
+    fi
+  done
+
+  log "Adding memcached support in $1 ..."
+  local dir=$1/WEB-INF/localconfig/neo/xredsys/presentation/cache
+  run mkdir -p $dir
+  local file=$dir/PresentationArticleCache.properties
+
+  if [[ -e $file && $(grep "\$class" $file | wc -l) -gt 0 ]]; then
+    sed -i "s#\$class=.*#\$class=neo.util.cache.Memcached#g" $file
+  else
+    echo "\$class=neo.util.cache.Memcached" >> $file
+  fi
+
+  exit_on_error "sed on $file"
 }

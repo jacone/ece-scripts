@@ -478,42 +478,6 @@ function run() {
   exit_on_error "$@"
 }
 
-## $1 : dir of the webapp 
-function add_memcached_support() {
-    if [[ "$do_not_add_memcached_support" == "1" ]]; then
-        return
-    fi
-
-    if [ ! -d "$1" ]; then
-        log $1 "doesn't exist"
-        return
-    fi
-
-    local exempt_from_memcached_list="
-      escenic escenic-admin indexer-webservice indexer-webapp studio
-      inpage-ws dashboard
-    "
-
-    for el in $exempt_from_memcached_list; do
-        if [[ $(basename $1) == "$el" ]]; then
-          return
-        fi
-    done
-
-    log "Adding memcached support in $1 ..."
-    local dir=$1/WEB-INF/localconfig/neo/xredsys/presentation/cache
-    run mkdir -p $dir
-    local file=$dir/PresentationArticleCache.properties
-
-    if [[ -e $file && $(grep "\$class" $file | wc -l) -gt 0 ]]; then
-        sed -i "s#\$class=.*#\$class=neo.util.cache.Memcached#g" $file
-    else
-        echo "\$class=neo.util.cache.Memcached" >> $file
-    fi
-
-    exit_on_error "sed on $file"
-}
-
 # Returns the file (can be a directory) passed to the function only
 # if it's the actual file/directory and not a link to it. If the
 # passed file is a link, the link target is returned instead.
@@ -732,126 +696,6 @@ function get_status() {
     echo "UP" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 }
 
-function list_versions() {
-    if [ -z "$type_pid" ]; then
-        print "$instance instance of $type on $HOSTNAME is NOT running"
-        exit 1
-    fi
-    
-    set_type_port
-    
-    version_manager=browser/Global/neo/io/managers/VersionManager
-    url=$(get_escenic_admin_url)/$version_manager
-        
-    print "Installed on the ${instance} instance running on port ${port}:"
-    wget --timeout 30 $wget_auth -O - $url  2>/dev/null | \
-        grep "\[\[" | \
-        sed 's/\[//g' | \
-        sed 's/\]//g' | \
-        sed 's/Name\=io/Name\=content-engine/g' | \
-        sed 's/Name\=//g' | \
-        sed 's/\;\ Version\=/\ /g' | \
-        awk -F',' '{for (i = 1; i <= NF; i++) print "   * " $i;}' | \
-        # This is a hack since that for some reason, cannot get
-        # sub(/^[ \t]+/, "") to work inside the loop for $i, it seems
-        # to always operate on the incoming line.
-        sed 's/\*\ \ \ /\*/g' | \
-        sort
-}
-
-function update_publication_resources() {
-    if [[ ! -r $resource && -z "$1" ]]; then
-        print $resource "doesn't exist. I will exit :-("
-        exit 1
-    fi
-
-    if [ -z $publication ]; then
-        print "You must specify which publication to update (-p <publication>)"
-        exit 1
-    fi
-    
-    local url=$(get_escenic_admin_url)/publication-resources
-
-    case "$(basename $resource)" in
-        content-type)
-            url=${url}/${publication}/escenic/content-type
-            ;;
-        feature)
-            url=${url}/${publication}/escenic/feature
-            ;;
-        layout)
-            url=${url}/${publication}/escenic/layout
-            ;;
-        layout-group)
-            url=${url}/${publication}/escenic/layout-group
-            ;;
-        image-version)
-            url=${url}/${publication}/escenic/image-version
-            ;;
-        teaser-type)
-            url=${url}/${publication}/escenic/teaser-type
-            ;;
-        menu)
-            url=${url}/${publication}/escenic/plugin/menu
-            ;;
-        security)
-            url=${url}/${publication}/escenic/plugin/community/security
-            ;;
-        root-section-parameters)
-            do_put=true
-            url=$(get_escenic_admin_url)
-            url=${url}/section-parameters-declared/${publication}
-            ;;
-        *)
-            print "Invalid resource: $(basename $resource) :-("
-            exit 1
-    esac        
-
-    local tmp_dir=$(mktemp -d)
-    
-    if [ $1 ]; then
-        if [[ -z "$EDITOR" || ! -x $(which $EDITOR) ]]; then
-            print "You must have a valid editor defined in your EDITOR variable"
-            exit 1
-        fi
-        
-        run cd $tmp_dir;
-        run wget $wget_auth $url -O ${resource}
-        md5sum ${resource} > ${resource}.md5sum
-        exit_on_error "md5sum ${resource}"
-
-        $EDITOR ${resource}
-        md5sum -c ${resource}.md5sum \
-            1>>$log \
-            2>>$log
-        if [ $? -eq 0 ]; then
-            print "You didn't make any changes to ${resource}, I will exit."
-            exit 1
-        fi
-    fi
-    
-    print "Updating the $(basename $resource) resource for the $publication" \
-        "publication ..."
-    
-    debug POSTing $resource to $url
-    if [[ -n "$do_put" && "$do_put" == "true" ]]; then
-        curl -T ${resource} \
-          ${curl_auth} \
-            ${url} \
-            1>>$log 2>>$log
-    else
-        wget $wget_auth \
-            -O - \
-            --post-file ${resource} \
-            $url \
-            1>>$log 2>>$log
-    fi
-
-    if [ -d $tmp_dir ]; then
-        run rm -rf $tmp_dir
-    fi
-}
-
 function read_rc_file_if_present() {
     local rc_file=$HOME/.ecerc
     if [ -r $rc_file ]; then
@@ -863,21 +707,6 @@ function get_escenic_admin_url() {
     set_type_port
     local url=http://${host}:${port}/escenic-admin
     echo ${url}
-}
-
-function flush_caches() {
-    if [ "${type}" != "engine" ]; then
-        print "You cannot flush the caches of a ${type} instance"
-        return
-    fi
-    
-    print "Flushing all of ${instance}'s caches on $HOSTNAME"
-    local url=$(get_escenic_admin_url)/do/publication/clearallcaches
-    wget $wget_auth \
-        -O - \
-        --post-data='confirm=Confirm' \
-        $url \
-        1>>$log 2>>$log
 }
 
 init
