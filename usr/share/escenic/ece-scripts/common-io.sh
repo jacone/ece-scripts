@@ -141,3 +141,22 @@ function verify_that_files_exist_and_are_readable()
   done
 }
 
+function verify_that_directory_and_file_are_writeable() {
+  local dir=`dirname $1`
+  if [ ! -e $dir ]; then
+    print $1: $dir " doesn't exist"
+    exit 1
+  fi
+  if [ ! -w $dir ]; then
+    print $1: $dir " isn't writable for user $USER"
+    exit 1
+  fi
+
+  if [ -e $1 ]; then
+    if [ ! -w $1 ]; then
+      print $1 "exists, "
+      print "but isn't write-able for user $USER"
+      exit 1
+    fi
+  fi
+}
