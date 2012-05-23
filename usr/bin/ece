@@ -907,67 +907,6 @@ set_type_settings
 set_instance_settings
 sanity_check
 
-
-function print_help()
-{
-    echo "Usage: $0 [-t <type>] [-i <instance>] <command>"
-    echo ""
-    echo "DESCRIPTION"
-    echo " -t --type <type>"
-    echo "      The following types are available:"
-    echo "      engine  -  The Escenic Content Engine, this is the default"
-    echo "                 and is the assumed type if none is specified."
-    echo "      search  -  A standalone search indexer and solr instance"
-    echo "      rmi-hub -  The RMI hub responsible for the internal "
-    echo "                 communication between the ECE instances."
-    echo "      analysis - The Escenic Analysis Engine also knows as 'Stats'"
-    echo ""
-    echo " -i --instance <instance>" 
-    echo "      The type instance, such as editor1, web1 or search1"
-    echo ""
-    echo " -f --file <file> } --uri <uri>"
-    echo "      Specificies the file that the given comand shall act upon."
-    echo "      Right now, this only entails the 'deploy' command".
-    echo ""
-    echo " -p --publication <publication>" 
-    echo "      Needed only for updating publication resources"
-    echo ""
-    echo " -r --resource <resource>" 
-    echo "      Used for updating publication resources."
-    echo "      Must be one of: content-type, feature, layout, layout-group"
-    echo "                      image-version, menu"
-    echo " -q --quiet"
-    echo "      Makes $(basename $0) as quiet as possible."
-    echo ""
-    echo " -v --verbose"
-    echo "      Prints out debug statements, useful for debugging."
-    echo ""
-    echo "The following commands are available:"
-    echo "   applog     the type's app server log"
-    echo "   assemble   runs the Assembly Tool *)"
-    echo "   backup     backs up an entire instance (takes time)"
-    echo "   clean      removes temporary files created by $0 *)"
-    echo "   deploy     deploys the assembled EAR *)"
-    echo "   edit       lets you edit a publication resource"
-    echo "   flush      flushes all ECE caches ('Clear all caches') *)"
-    echo "   help       prints this help screen"
-    echo "   info       prints various info about the selected ECE instance"
-    echo "   kill       uses force to stop the type"
-    echo "   log        the type's log4j log **)"
-    echo "   loglist    list all the log paths"
-    echo "   outlog     the $id script log (system out log)"
-    echo "   restart    restarts the type"
-    echo "   start      starts the type"
-    echo "   status     checks if the type is running"
-    echo "   stop       stops the type"
-    echo "   threaddump write a thread dump to standard out (system out log)"
-    echo "   update     update publication resources"
-    echo "   versions   lists the ECE component versions"
-    echo ""
-    echo "*) only applicable if type is 'engine'"
-    echo "**) not applicable if type is 'rmi-hub'"
-}    
-
 for el in $command; do
     case "$el" in
         start)
