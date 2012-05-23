@@ -59,3 +59,28 @@ function tail_app_log()
   print "Tailing the application server log $(get_app_log)"
   tail -f $(get_app_log)
 }
+
+function show_all_log_paths()
+{
+  if [ "$quiet" -eq 0 ]; then
+    print "System out log: "$log
+    print "App server log: "$(get_app_log)
+    print "log4j log:  "$(get_log4j_log)
+    print "GC log:  "$(get_gc_log)
+    if [[ $appserver == "tomcat" ]]; then
+      print "Tomcat system out log:" $(get_catalina_out_file)
+    fi
+  else
+    echo $log
+    echo $(get_app_log)
+    echo $(get_log4j_log)
+    echo $(get_gc_log)
+    if [[ $appserver == "tomcat" ]]; then
+      echo $(get_catalina_out_file)
+    fi
+  fi
+}
+
+function get_catalina_out_file() {
+  echo $log_dir/${instance}-catalina.out
+}
