@@ -106,8 +106,7 @@ function init() {
 # Ensures that all required fields are set. Will report all missing
 # required fields before failing.
 ####################################################################
-function ensure_that_required_fields_are_set()
-{
+function ensure_that_required_fields_are_set() {
     requirements_failed=0
     
     for el in $@; do
@@ -126,8 +125,7 @@ function ensure_that_required_fields_are_set()
 
 ece_conf_files_read=()
 
-function read_conf_file()
-{
+function read_conf_file() {
     for el in $conf_file_location_list; do
         if [ -r $el/$1 ]; then
             debug "found $1 in $el, reading it"
@@ -141,8 +139,7 @@ function read_conf_file()
 ## If the system is installed using the recommended paths, the method
 ## will return a list of the instances configured in
 ## ${escenic_conf_dir}/ece-*.conf
-function get_instance_list()
-{
+function get_instance_list() {
     local allowed_types="engine analysis changelogd search rmi-hub"
     instance_list=""
     for el in $(\ls /etc/escenic/ece-*.conf 2>/dev/null); do
@@ -165,8 +162,7 @@ function get_instance_list()
     echo $instance_list
 }
 
-function set_common_settings()
-{
+function set_common_settings() {
     # This behaviour can be overridden by specifying a list of
     # locations in the environment variable ECE_CONF_LOCATIONS
     if [ -n "$ECE_CONF_LOCATIONS" ] ; then
@@ -209,15 +205,13 @@ function set_common_settings()
     fi
 }
 
-function set_type_settings()
-{
+function set_type_settings() {
     # optional: possible to have type specific conf file,
     # will take precedences over the common one.
     read_conf_file `basename $0`-$type.conf
 }
 
-function set_type_pid()
-{
+function set_type_pid() {
     if [ "$(uname)" == "Linux" ]; then
         ps_options="auxww"
     else
@@ -241,8 +235,7 @@ function set_type_pid()
     debug "type_pid is now=$type_pid"
 }
 
-function set_type_port()
-{
+function set_type_port() {
     host=localhost
     # port set in ece[-instance].conf takes precedence
     if [ -n "${appserver_port}" ]; then
@@ -272,8 +265,7 @@ function set_type_port()
     debug "set_type_port=$port"
 }
 
-function set_instance_settings()
-{
+function set_instance_settings() {
     # optional: possible to have instance specific conf files,
     # these will take precedence over the other two
     read_conf_file `basename $0`-$instance.conf
@@ -422,8 +414,7 @@ function set_instance_settings()
     debug JAVA_OPTS=$JAVA_OPTS
 }
 
-function sanity_check()
-{
+function sanity_check() {
     if [ "$(whoami)" == "root" ]; then
         print "Sorry, you cannot be root when running $(basename $0)"
         print "The root user can only use /etc/init.d/ece"
@@ -528,8 +519,7 @@ function add_memcached_support() {
 # passed file is a link, the link target is returned instead.
 #
 # $1 - the file (which could be a link)
-function get_actual_file()
-{
+function get_actual_file() {
     if [ -h ${1} ]; then
         dir=$(dirname $1)
         real_file=$(ls -l ${1} | awk '{print $11}')
@@ -556,8 +546,7 @@ function get_actual_file()
 
 <<<<<<< HEAD
 =======
-function backup_type()
-{
+function backup_type() {
    message="Backing up the $instance instance of $type on $HOSTNAME ..."
    print $message
    log $message
@@ -667,8 +656,7 @@ ${escenic_conf_dir}
  }
 
 
-function start_type()
-{
+function start_type() {
     unset CLASSPATH
     export HOSTNAME
     message="Starting the $instance instance of $type on $HOSTNAME ..."
@@ -783,8 +771,7 @@ function start_type()
     exit_on_error $message
 }
 
-function stop_type()
-{
+function stop_type() {
     message="Stopping the $instance instance of $type on $HOSTNAME ..."
 
     if [ -n "$type_pid" ]; then
@@ -835,8 +822,7 @@ function stop_type()
     exit_on_error $message
 }
 
-function kill_type()
-{
+function kill_type() {
     if [ -n "$type_pid" ]; then
         message="Using force to stop the $instance instance of $type on $HOSTNAME ..."
         log $message
@@ -852,8 +838,7 @@ function kill_type()
     exit_on_error "kill_type"
 }
 
-function restart_type()
-{
+function restart_type() {
     stop_type
 
     # sometimes the JVM refuses to shut down when doing a graceful
@@ -871,8 +856,7 @@ function restart_type()
 
 # creates DEB and RPM packages suitable for deploying any kind of ECE
 # instance that was previously assembled.
-function create_packages()
-{
+function create_packages() {
     local ear=$cache_dir/engine.ear
     if [ ! -e $ear ]; then
         print_and_log "$ear does not exist. "
@@ -993,8 +977,7 @@ EOF
     run rm -rf ${dir}
 }
 
-function make_thread_dump()
-{
+function make_thread_dump() {
 
     if [ -n "$type_pid" ]; then
         print "Thread dump (PID" $type_pid") written to system out log."
@@ -1012,8 +995,7 @@ function make_thread_dump()
 }
 
 >>>>>>> 25c55248a7e1598a874b78df363d3f9ad57803d6
-function set_type_command_and_instance()
-{
+function set_type_command_and_instance() {
     local next_is_type=0
     local next_is_instance=0
     local next_is_publication=0
@@ -1158,8 +1140,7 @@ function set_type_command_and_instance()
     fi
 }
 
-function set_id()
-{
+function set_id() {
     if [ "$instance" == "default" ]; then
         id="["`basename $0`"#${type}]"
     else
@@ -1171,8 +1152,7 @@ function set_id()
         and instance is $instance
 }
 
-function get_status()
-{
+function get_status() {
     if [ -z "$type_pid" ]; then
         echo "DOWN"
         exit 0
@@ -1203,8 +1183,7 @@ function get_status()
     echo "UP" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 }
 
-function list_versions()
-{
+function list_versions() {
     if [ -z "$type_pid" ]; then
         print "$instance instance of $type on $HOSTNAME is NOT running"
         exit 1
@@ -1231,8 +1210,7 @@ function list_versions()
         sort
 }
 
-function update_publication_resources()
-{
+function update_publication_resources() {
     if [[ ! -r $resource && -z "$1" ]]; then
         print $resource "doesn't exist. I will exit :-("
         exit 1
@@ -1325,23 +1303,20 @@ function update_publication_resources()
     fi
 }
 
-function read_rc_file_if_present()
-{
+function read_rc_file_if_present() {
     local rc_file=$HOME/.ecerc
     if [ -r $rc_file ]; then
         source $rc_file
     fi
 }
 
-function get_escenic_admin_url()
-{
+function get_escenic_admin_url() {
     set_type_port
     local url=http://${host}:${port}/escenic-admin
     echo ${url}
 }
 
-function flush_caches()
-{
+function flush_caches() {
     if [ "${type}" != "engine" ]; then
         print "You cannot flush the caches of a ${type} instance"
         return
