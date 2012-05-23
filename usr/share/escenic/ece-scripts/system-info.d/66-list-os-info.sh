@@ -29,7 +29,7 @@ print_un_ordered_list_end
 
 
 print_h3_header "Last Boot"
-print_pre_text "$(who -b) | sed 's/^[ ]*//g"
+print_pre_text "$(who -b | sed 's/^[ ]*//g)"
 
 # of the h2
 print_section_end
