@@ -190,6 +190,22 @@ ece will understand this as version: mysite.com-2.314 and write this
 to its deployment state file: /var/lib/escenic/<instance>.state, which
 again will be reported by the "ece info" command.
 
+* Updating the Publication Resources
+It's easy to update the publication resources using the ece script. If
+you have all these publication resources in your current directory,
+you can update them just by:
+#+BEGIN_SRC sh
+$ for el in layout* feature teaser-type content-type ; do 
+  ece -i myinstance -p mypub -r $el update; 
+done  
+#+END_SRC
+
+In this connection, it might be of your interest to also flush all the
+ECE caches on all the instances, this you can easily do with:
+#+BEGIN_SRC sh
+$ ece -i myinstance flush
+#+END_SRC
+
 * Getting information about the ECE instance
 The "ece info" command will give you a lot of useful information about
 the current instance:
@@ -229,7 +245,6 @@ $ ece -i web1 info
 [ece#engine-web1] |-> MD5 sum: 5881d1895c09c7b35a032806c6249433
 [ece#engine-web1] |-> Deployment date: Wed Mar 28 18:29:58 CST 2012  
 #+END_SRC
-
 
 * Installation
 The ece script and ece.conf may be used on any Unix like system that

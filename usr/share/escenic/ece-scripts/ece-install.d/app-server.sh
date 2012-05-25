@@ -306,7 +306,7 @@ EOF
       <Host name="${domain}" appBase="webapps" autoDeploy="false">
         <Context displayName="${domain}"
                  docBase="${publication}"
-                 path="/"
+                 path=""
         />
       </Host>
 EOF
