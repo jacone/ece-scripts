@@ -629,7 +629,7 @@ This will produce the following stanzas in server.xml:
 <Host name="fire.escenic.com" appBase="webapps" autoDeploy="false">
   <Context displayName="fire.escenic.com"
            docBase="firepub"
-           path="/"
+           path=""
   />
 </Host>
 <Host name="ild.escenic.com" appBase="webapps" autoDeploy="false">
