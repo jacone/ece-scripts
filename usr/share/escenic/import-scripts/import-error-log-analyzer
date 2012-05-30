@@ -11,6 +11,18 @@
 function check_picture_file() {
   local dir=$(dirname "$1")
   local file_name=$(basename "$1")
+
+  if [ ! -d $dir ]; then
+    cat <<EOF 
+Directory doesn't exist: $dir
+doesn't exist. It's referenced via the image:
+$1
+====
+EOF
+    return 
+  fi
+  
+  
   local alternative=$(find $dir -maxdepth 1 | grep -i "$file_name")
 
   # first check if the image is size=0
@@ -23,6 +35,19 @@ EOF
   fi
 
   if [[ -n "$alternative" && $(echo $alternative | wc -l) -gt 0 ]]; then
+    if [[ "$1" == "$alternative" ]]; then
+      cat <<EOF
+The XML refered to ${1}
+which exists. This means either that the file wasn't there before when
+the import failed or that the file itself is unusable.
+====
+$(ls -lh "$1")
+$(file -i "$1")
+====
+EOF
+      return
+    fi
+
     cat <<EOF
 The file $1
 was missing from your import data set It was referred to from one of
@@ -37,6 +62,12 @@ EOF
   fi
 }
 
+function list_sax_errors() {
+  echo "There are illegal elements, attributes and/or contents in the XML:"
+  grep ^"Caused by: org.xml.sax.SAXParseException:" "$1" | sort | uniq
+  echo "===="
+}  
+
 function analyse_this() {
   if [ ! -e $1 ]; then
     echo $1 "doesn't exist :-("
@@ -47,12 +78,29 @@ function analyse_this() {
     grep ^java.io.IOException | \
     cut -d' ' -f5 | \
     sed 's/\.$//g' | \
+    sort | \
+    uniq | \
     while read picture_path; do
     check_picture_file "$picture_path"
   done
+  
+  list_sax_errors "$1"
+}
 
+function verify_log_file() {
+  if [ -z "$log_file" ]; then
+    echo "Usage: $(basename $0): <log file>"
+    exit 1
+  elif [ ! -e "$log_file" ]; then
+    echo "$log_file doesn't exist :-("
+    exit 1
+  elif [ ! -r "$log_file" ]; then
+    echo "$log_file isn't readable :-("
+    exit 1
+  fi
 }
 
 log_file=$1
+verify_log_file
 analyse_this $log_file
 
