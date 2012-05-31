@@ -75,11 +75,10 @@ function deploy() {
   
   case $appserver in
     tomcat)
-            # We do not want the Escenic jars to share the same
-            # classloader folder as tomcat does We thereby want
-            # clients to use a separate escenic classloader to avoid
-            # strange upgrade problems i.e wrong versions of certain
-            # libraries.
+      # We do not want the Escenic jars to share the same classloader
+      # folder as tomcat does We thereby want clients to use a
+      # separate escenic classloader to avoid strange upgrade problems
+      # i.e wrong versions of certain libraries.
       if [ -d $tomcat_base/escenic/lib ]; then
         if [ `ls $tomcat_base/escenic/lib | grep .jar | wc -l` -gt 0 ]; then
           rm $tomcat_base/escenic/lib/*.jar

@@ -201,9 +201,10 @@ function boot_kvm() {
   -balloon "virtio"
   -drive "file=${img},if=virtio,cache=none"
   -kernel ${kernel}
-  -net "nic,model=virtio,macaddr=${install_config_macaddr}"
-  -net "tap,ifname=$tapinterface,script=no,downscript=no")
+  -device "virtio-net-pci,mac=${install_config_macaddr},netdev=net0"
+  -netdev "tap,id=net0,ifname=$tapinterface,script=no,downscript=no,vhost=on")
   
+#  -net "nic,model=virtio,macaddr=${install_config_macaddr}"
 # http://dwdwwebcache.googleusercontent.com/search?q=cache:mEAjcA2zHosJ:kerneltrap.org/mailarchive/linux-kvm/2010/1/26/6257297/thread+qemu-kvm+acpi+shutdown&cd=1&hl=no&ct=clnk&gl=no
 # http://kerneltrap.org/mailarchive/linux-kvm/2010/1/26/6257297/thread
 # provide a monitor socket to talk to kvm.   /var/run?
@@ -214,7 +215,7 @@ function boot_kvm() {
     xupdate="xupdate=vdb:mnt"
   fi
 
-  startupcmd=("${startupcmd[@]}" -append "root=/dev/vda ro init=/usr/lib/cloud-init/uncloud-init ds=${cloud_param} ubuntu-pass=random $xupdate" )
+  startupcmd=("${startupcmd[@]}" -append "root=/dev/vda noapic ro init=/usr/lib/cloud-init/uncloud-init ds=${cloud_param} ubuntu-pass=random $xupdate" )
 
   ps > /dev/null -fC "kvm/${hostname}" && {
     echo "This instance of KVM is already running.  Just see here:"
