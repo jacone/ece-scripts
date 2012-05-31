@@ -32,22 +32,22 @@ debug=0
 
 function debug()
 {
-    if [ $debug -eq 1 ]; then
-        echo $my_id $1
-    fi
-    
+  if [ $debug -eq 1 ]; then
+    echo $my_id $1
+  fi
+  
 }
 
 function exit_on_the_first_error()
 {
-    if [ $? -eq 1 ]; then
-        echo $my_id $@ "FAILED, exiting :-("
-        exit 1
-    fi
+  if [ $? -eq 1 ]; then
+    echo $my_id $@ "FAILED, exiting :-("
+    exit 1
+  fi
 }
 
 function create_oracle_ece_user() {
-    sqlplus /nolog << EOF
+  sqlplus /nolog << EOF
       connect /as sysdba;
       create user $db_user
         identified by $db_password
@@ -60,57 +60,60 @@ function create_oracle_ece_user() {
 EOF
 }
 
-function run_db_scripts()
-{
-    for el in $db_fn_list; do
-        file=$1/$el.sql
-        debug "running $file ..."
-        if [ -e $1/$el.sql ]; then
-            if [ $db_product = "oracle" ]; then
-                sqlplus $db_user/$db_password @$file
-            else
-                mysql -u $db_user -p$db_password -h $db_host $db_schema < $file
-            fi
-        fi
-        exit_on_the_first_error "running $el"
-    done
+function run_db_script_file() {
+  if [ $db_product = "oracle" ]; then
+    sqlplus $db_user/$db_password @$file
+  else
+    mysql -u $db_user -p$db_password -h $db_host $db_schema < $file
+  fi
+}
+
+function run_db_scripts() {
+  for el in $db_fn_list; do
+    file=$1/$el.sql
+    if [ -e $1/$el.sql ]; then
+      debug "running $file ..."
+      run_db_script_file $file
+    fi
+    exit_on_the_first_error "running $el"
+  done
 }
 
 function pre_install_new_ecedb()
 {
-    if [ $create_oracle_user -eq 1 ]; then
-        create_oracle_ece_user
-    fi
+  if [ $create_oracle_user -eq 1 ]; then
+    create_oracle_ece_user
+  fi
 
-    if [ $drop_db_first -eq 1 ]; then
-        debug "dropping and re-creating $db_schema on $db_host ..."
-        if [ $db_product = "mysql" ]; then
-            mysql -h $db_host << EOF
+  if [ $drop_db_first -eq 1 ]; then
+    debug "dropping and re-creating $db_schema on $db_host ..."
+    if [ $db_product = "mysql" ]; then
+      mysql -h $db_host << EOF
 drop database $db_schema;
 EOF
-        else
-            sqlplus /nolog << EOF
+    else
+      sqlplus /nolog << EOF
 connect /as sysdba;
 drop tablespace $tablespace_data including contents;
 drop tablespace $tablespace_index including contents;
 EOF
-        fi
     fi
+  fi
 }
-    
+
 function create_schema()
 {
     # we first create the DB (or, if drop_db_first is 1, we've just
     # dropped it above) before running the SQL scripts.
-    if [ $db_product = "mysql" ]; then
-        mysql -h $db_host << EOF
+  if [ $db_product = "mysql" ]; then
+    mysql -h $db_host << EOF
 create database $db_schema character set utf8 collate utf8_general_ci;
 grant all on $db_schema.* to $db_user@'%' identified by '$db_password';
 grant all on $db_schema.* to $db_user@'localhost' identified by '$db_password';
 EOF
-        exit_on_the_first_error "create db"
-    else
-        sqlplus /nolog << EOF
+    exit_on_the_first_error "create db"
+  else
+    sqlplus /nolog << EOF
 connect /as sysdba;
   
 create tablespace $tablespace_data 
@@ -125,7 +128,7 @@ size 100M reuse
 autoextend on next 50M maxsize 2047M
 extent management local autoallocate;          
 EOF
-    fi
+  fi
 }
 
 db_fn_list="
@@ -141,16 +144,24 @@ history
 
 function create_ecedb()
 {
-    create_schema
-    run_db_scripts $ece_home/database/$db_product
+  create_schema
+  run_db_scripts $ece_home/database/$db_product
 
-    if [ -e $ece_home/plugins ]; then
-        for el in `find -L $ece_home/plugins -name $db_product`; do
-            run_db_scripts $el
-        done
-    fi
+  if [ -e $ece_home/plugins ]; then
+    for el in `find -L $ece_home/plugins -name $db_product`; do
+      run_db_scripts $el
+    done
+    # EAE, if there's more than one version of EAE plugin, the latest
+    # one will be used.
+    for el in $(find -L $ece_home/plugins -name eae-${db_product}.sql | \
+      grep -v upgrade | \
+      sort -r | \
+      head -1); do
+      run_db_script_file $el
+    done
+  fi
 
-    debug "${id} ${db_product}://${db_host}/${db_schema} is now ready for ${db_user}/${db_password}"
+  debug "${id} ${db_product}://${db_host}/${db_schema} is now ready for ${db_user}/${db_password}"
 }
 
 # pre_install_new_ecedb
