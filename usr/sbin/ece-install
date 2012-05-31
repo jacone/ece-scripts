@@ -385,7 +385,11 @@ function set_up_user_environment()
   
   if [ $(grep bash_completion.d/ece ${bashrc} 2>/dev/null | \
     wc -l) -lt 1 ]; then
-    echo ". /etc/bash_completion.d/ece" >> ${bashrc}
+    cat >> ${bashrc} <<EOF
+if [ -e /etc/bash_completion.d/ece ]; then
+  . /etc/bash_completion.d/ece
+fi
+EOF
   fi
   
   if [ $(grep ECE_CONF_LOCATIONS ${bashrc} | wc -l) -eq 0 ]; then
