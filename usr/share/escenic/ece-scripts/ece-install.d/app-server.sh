@@ -317,8 +317,8 @@ EOF
     </Engine>
   </Service>
 </Server>
-
 EOF
+
   cat > $tomcat_base/conf/context.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
 <Context>
