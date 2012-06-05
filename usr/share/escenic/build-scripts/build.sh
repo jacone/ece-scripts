@@ -184,6 +184,14 @@ function symlink_ece_components {
   parse_version FORUM_VERSION vosa.forum.version
   symlink_distribution plugins/forum-$FORUM_VERSION plugins/forum
 
+  # Version - Dashboard
+  parse_version DASHBOARD_VERSION vosa.dashboard.version
+  symlink_distribution plugins/dashboard-$DASHBOARD_VERSION plugins/dashboard
+
+  # Version - Lucy
+  parse_version LUCY_VERSION vosa.lucy.version
+  symlink_distribution plugins/lucy-$LUCY_VERSION plugins/lucy
+  
   # Version - Widget Framework Common
   parse_version WIDGET_FRAMEWORK_COMMON_VERSION vosa.widget-framework-common.version
   symlink_distribution plugins/widget-framework-common-$WIDGET_FRAMEWORK_COMMON_VERSION plugins/widget-framework-common
