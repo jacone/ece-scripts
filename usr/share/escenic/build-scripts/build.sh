@@ -215,7 +215,8 @@ function symlink_target {
 ##
 function release 
 {
-
+  print_and_log "Starting build @ $(date) ..."
+  
   home_preparation
 
   run svn_checkout
@@ -256,7 +257,7 @@ function release
 ##
 function print_result
 {
-  print_and_log "BUILD SUCCESSFUL!"
+  print_and_log "Build SUCCESSFUL!"
   print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
 }
 
