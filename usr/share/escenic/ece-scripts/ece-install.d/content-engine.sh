@@ -178,6 +178,8 @@ function set_up_assembly_tool() {
   run cp -r layers/host layers/environment
   run cp -r layers/host layers/instance
   run cp -r layers/host layers/vosa
+  run cp -r layers/host layers/server
+  
   cat > layers/environment/Files.properties <<EOF
 \$class=neo.nursery.FileSystemDepot
 fileSystemRoot = $escenic_conf_dir/engine/environment/\${com.escenic.environment "unknown"}/
@@ -189,6 +191,10 @@ EOF
   cat > layers/vosa/Files.properties <<EOF
 \$class=neo.nursery.FileSystemDepot
 fileSystemRoot = $escenic_conf_dir/engine/vosa/
+EOF
+  cat > layers/server/Files.properties <<EOF
+\$class=neo.nursery.FileSystemDepot
+fileSystemRoot = $escenic_conf_dir/engine/server/\${escenic.server "default"}/
 EOF
 
   cat > Nursery.properties <<EOF
@@ -219,6 +225,10 @@ layer.07 = /layers/host/Layer
 
 # Customer :: instance specific layer
 layer.08 = /layers/instance/Layer
+
+# Customer :: "escenic.server" specific layer, this layer is a
+# combination of the host and the instance.
+layer.09 = /layers/server/Layer
 EOF
 
   # fixing the path to the Nursery configuration according to
@@ -229,9 +239,9 @@ EOF
   done
   
   # set up which plugins to use
-  cd $escenic_root_dir/assemblytool/
+  run cd $escenic_root_dir/assemblytool/
   make_dir plugins
-  cd plugins
+  run cd plugins
   find ../../ -maxdepth 1 -type d | \
     grep -v assemblytool | \
     while read directory; do
