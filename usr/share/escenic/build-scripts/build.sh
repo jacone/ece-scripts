@@ -241,6 +241,8 @@ function release
 
   add_vosa_libs
 
+  add_dashboard_descriptor
+
   run cd $assemblytool_root_dir
   run ant -q clean ear -DskipRedundancyCheck=true
 
@@ -254,16 +256,29 @@ function release
 
 }
 
+function add_dashboard_descriptor() {
+  if [ -d ${plugins/dashboard} ]; then
+    print_and_log "Adding an assembly descriptor for Dashboard ..." 
+    cat >> $assemblytool_root_dir/publications/dashboard.properties <<EOF
+source-war: ../../plugins/dashboard/wars/dashboard-webapp.war
+context-root: /dashboard
+EOF
+  else
+    print_and_log "The Dashboard plugin is not available, not making descriptor for it."
+  fi
+}
+
 ##
 function print_result
 {
-  print_and_log "Build SUCCESSFUL!"
+  print_and_log "Build SUCCESSFUL! @ $(date)"
   print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
 }
 
 set_pid
 fetch_configuration
 init
+print_and_log "Starting building @ $(date)"
 get_user_options $@
 verify_configuration
 home_preparation
