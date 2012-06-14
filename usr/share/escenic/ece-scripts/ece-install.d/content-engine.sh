@@ -200,7 +200,7 @@ EOF
   cat > Nursery.properties <<EOF
 # Configuration layers set up by $(basename $0) @ $(date)
 
-$class=neo.nursery.Bootstrapper
+\$class=neo.nursery.Bootstrapper
 
 # ECE :: default layer
 layer.01 = /layers/default/Layer
