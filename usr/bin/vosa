@@ -421,9 +421,10 @@ function verify_installation() {
 ##      The first column is the instance name itself.
 ##      An instance may be enabled (see "vosa enable")
 ##  - enabled
-##      Only enabled instances are "supposed" to run on this
-##      physical machine.
-##      An enabled instance *is* supposed to run on this machine.
+##      Only enabled instances are "supposed" to be managed by this
+##      machine.
+##      An enabled instance *is* supposed to be managed by this
+##      machine.
 ##      An enabled instance may later be be installed. (see
 ##      "vosa install")
 ##  - installed
@@ -438,11 +439,10 @@ function verify_installation() {
 ##      An instance that has been started will probably be alive, but
 ##      if the instance is killed or dies for whatever reason other
 ##      than the "vosa stop" command, it will be labeled as "dead".
-##  - pid (of an alive instance)
-##  - uptime (of an alive instance)
+##  - pid (of the kvm instance) or instance-id (of an amazon VM)
+##  - uptime (of any alive instance)
 ##      Only shown for instances that are "alive".
-##      For informational purposes, the pid and the uptime of the pid
-##      are shown in dd-hh:mm:ss format.
+##      uptime is shown in dd-hh:mm:ss format.
 function do_status() {
   verify_installation
   if [ -z "$instance_dir" ] ; then
