@@ -460,6 +460,7 @@ function do_status() {
 function really_do_status () {
     local output
     local done=0
+    local aws=0
     local avdir="${available_dir}/$(basename $1)"
     local endir="${enabled_dir}/$(basename $1)"
     output=( $(basename $1) )
@@ -483,20 +484,62 @@ function really_do_status () {
     fi
 
     if [ $done -eq 0 ] ; then
-      output=( ${output[@]} installed );
-      local pidfile=$(echo_rundir_of $(basename $1))/$(basename $1).pid
-      if [ ! -r "$pidfile" ] ; then
-        done=1
+      if [ -r $avdir/amazon.conf ] ; then
+        aws=1
+      fi
+
+      if [ $aws -eq 0 ] ; then
+        output=( ${output[@]} installed );
+        local pidfile=$(echo_rundir_of $(basename $1))/$(basename $1).pid
+        if [ ! -r "$pidfile" ] ; then
+          done=1
+        fi
+      else
+        local statefile=$vmdir/amazon.state
+        if [ ! -r $statefile ] ; then
+          output=( ${output[@]} unknown );
+          # MUST have state to know the instance ID in amazon...
+          done=1
+        fi
+
+        local aws_instance=
+        if [ $done -eq 0 ] ; then
+          # Parse the statefile and find its instance ID
+          if [ -r $statefile ] ; then
+            aws_instance=$(awk < "$statefile" '/^INSTANCE/ { print $2 }')
+          fi
+
+          if [ -z "$aws_instance" ] ; then
+            output=( ${output[@]} invalid );
+            done=1
+          fi
+        fi
       fi
     fi
 
     if [ $done -eq 0 ] ; then
-      if ! ps > /dev/null $(<$pidfile) ; then
-        output=( ${output[@]} dead );
+      if [ $aws -eq 0 ] ; then
+        if ! ps > /dev/null $(<$pidfile) ; then
+          output=( ${output[@]} dead );
+        else
+          output=( ${output[@]} alive )
+          output=( ${output[@]} $(<$pidfile) );
+          output=( ${output[@]} "$( ps -p "$(<$pidfile)" -o "etime=" )" );
+        fi
       else
-        output=( ${output[@]} alive )
-        output=( ${output[@]} $(<$pidfile) );
-        output=( ${output[@]} "$( ps -p "$(<$pidfile)" -o "etime=" )" );
+        # Update the aws statefile
+        if [ -w $statefile ] ; then
+          ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance > $statefile
+        fi
+        aws_state=$(awk < "$statefile" '/^INSTANCE/ { print $6 }')
+        aws_zone=$(awk < "$statefile" '/^INSTANCE/ { print $11 }')
+        aws_start=$(awk < "$statefile" '/^INSTANCE/ { print $10 }')
+        if [ -z "$aws_state" ] ; then
+          output=( ${output[@]} unknown $aws_instance )
+        else
+          output=( ${output[@]} ${aws_state} ${aws_zone}/${aws_instance} )
+          output=( ${output[@]} ${aws_start} )
+        fi
       fi
     fi
     echo ${output[@]}
