@@ -86,7 +86,9 @@ function read_amazon_config() {
 
 function get_aws_instance() {
   bootstatefile=$image/amazon.initialstate
-  aws_instance=$(awk < "$bootstatefile" -F '\t' '/^INSTANCE/ { print $2 }')
+  if [ -r $bootstatefile ] ; then
+    aws_instance=$(awk < "$bootstatefile" -F '\t' '/^INSTANCE/ { print $2 }')
+  fi
 }
 
 
@@ -100,7 +102,10 @@ function invoke_ec2() {
   )
   echo "Command to run on ec2:"
   echo "${cmdline[@]}"
-  "${cmdline[@]}"
+  "${cmdline[@]}" | tee $image/amazon.laststate
+  if [ $cmd == "run-instances" -a ! -e $bootstatefile ] ; then
+    cp $image/amazon.laststate $bootstatefile
+  fi
   local rc
   rc=$?
   if [ $rc != 0 ] ; then
