@@ -457,6 +457,22 @@ function do_status() {
   fi
 }
 
+
+have_read_amazon_config=0
+function read_amazon_config() {
+  [[ $have_read_amazon_config -eq 1 ]] && return
+  source $commands/functions
+  source $commands/amazon_config_parser
+  # Parse all amazon config items
+  parse_config_file $1 amazon_config_
+
+  unset AWS_COMMON_OPTIONS
+  AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --private-key $amazon_config_key "
+  AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --cert $amazon_config_certificate "
+  AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --region $amazon_config_region "
+  have_read_amazon_config=1
+}
+
 function really_do_status () {
     local output
     local done=0
@@ -486,6 +502,7 @@ function really_do_status () {
     if [ $done -eq 0 ] ; then
       if [ -r $avdir/amazon.conf ] ; then
         aws=1
+        read_amazon_config $avdir/amazon.conf
       fi
 
       if [ $aws -eq 0 ] ; then
@@ -495,8 +512,9 @@ function really_do_status () {
           done=1
         fi
       else
+        local bootstatefile=$vmdir/amazon.bootstate
         local statefile=$vmdir/amazon.state
-        if [ ! -r $statefile ] ; then
+        if [ ! -r $bootstatefile ] ; then
           output=( ${output[@]} unknown );
           # MUST have state to know the instance ID in amazon...
           done=1
@@ -505,8 +523,8 @@ function really_do_status () {
         local aws_instance=
         if [ $done -eq 0 ] ; then
           # Parse the statefile and find its instance ID
-          if [ -r $statefile ] ; then
-            aws_instance=$(awk < "$statefile" '/^INSTANCE/ { print $2 }')
+          if [ -r $bootstatefile ] ; then
+            aws_instance=$(awk < "$bootstatefile" -F '\t' '/^INSTANCE/ { print $2 }')
           fi
 
           if [ -z "$aws_instance" ] ; then
@@ -527,18 +545,28 @@ function really_do_status () {
           output=( ${output[@]} "$( ps -p "$(<$pidfile)" -o "etime=" )" );
         fi
       else
+        local rc=0
         # Update the aws statefile
         if [ -w $statefile ] ; then
           ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance > $statefile
+          echo ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance
+          local rc=$?
         fi
-        aws_state=$(awk < "$statefile" '/^INSTANCE/ { print $6 }')
-        aws_zone=$(awk < "$statefile" '/^INSTANCE/ { print $11 }')
-        aws_start=$(awk < "$statefile" '/^INSTANCE/ { print $10 }')
+        if [ ! -r $statefile ] ; then
+          statefile=$bootstatefile
+          local stale=1
+        fi
+        aws_state=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $6 }')
+        aws_zone=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $12 }')
+        aws_start=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $11 }')
         if [ -z "$aws_state" ] ; then
           output=( ${output[@]} unknown $aws_instance )
         else
           output=( ${output[@]} ${aws_state} ${aws_zone}/${aws_instance} )
           output=( ${output[@]} ${aws_start} )
+        fi
+        if [ "$stale" == "1" ] ; then
+          output=( ${output[@]} STALE)
         fi
       fi
     fi

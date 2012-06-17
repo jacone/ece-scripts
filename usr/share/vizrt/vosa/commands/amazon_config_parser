@@ -1,0 +1,40 @@
+# bash functions common to the vosa commands
+# e.g. parsing a config file
+
+
+amazon_config_key=
+amazon_config_certificate=
+amazon_config_user_data=
+amazon_config_region=
+amazon_config_availability_zone=
+
+
+function amazon_config_key() {
+  amazon_config_key=$1
+}
+
+function amazon_config_certificate() {
+  amazon_config_certificate=$1
+}
+
+function amazon_config_user_data() {
+  amazon_config_user_data=$1
+}
+
+function amazon_config_region() {
+  amazon_config_region=$1
+}
+
+function amazon_config_availability_zone() {
+  amazon_config_availability_zone=$1
+}
+
+# Handle arrays
+
+declare -a amazon_config_ssh_keys
+declare -a amazon_config_overlay
+declare -a amazon_config_postinstall
+
+function amazon_config_postinstall() {
+  amazon_config_postinstall=( "${amazon_config_postinstall[@]}" "$1" )
+}
