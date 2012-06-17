@@ -64,6 +64,9 @@ function requires_instance_dir() {
     usage=1
     return 1
   fi
+
+  aws=0
+  [ -r $instance_dir/amazon.conf ] && aws=1
 }
 function prohibits_instance_dir() {
   if [ ! -z "$instance_dir" -o ! -z "${instance_name}" ] ; then
@@ -512,7 +515,7 @@ function really_do_status () {
           done=1
         fi
       else
-        local bootstatefile=$vmdir/amazon.bootstate
+        local bootstatefile=$vmdir/amazon.initialstate
         local statefile=$vmdir/amazon.state
         if [ ! -r $bootstatefile ] ; then
           output=( ${output[@]} unknown );
@@ -531,6 +534,9 @@ function really_do_status () {
             output=( ${output[@]} invalid );
             done=1
           fi
+        fi
+        if [ $done -eq 0 ] ; then
+          output=( ${output[@]} installed );
         fi
       fi
     fi
@@ -745,15 +751,19 @@ function do_start() {
   # TODO: let's make this command wait for SSH access before returning?
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
-    if [ "${status[3]}" == "alive" ] ; then
-      echo "$instance_name is alive. No need to start it."
+    if [ "${status[3]}" == "alive" -o "${status[3]}" == "running" ] ; then
+      echo "$instance_name is ${status[3]}. No need to start it."
       exit 1
     fi
     if [ "${status[2]}" != "installed" ] ; then
-      echo "$instance_name is not installed. I can't start it."
+      echo "$instance_name is not installed, it's ${status[2]}. I can't start it."
       exit 1
     fi
-    ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
+    if [ $aws -eq 1 ] ; then
+      ${commands}/ec2-start.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
+    else
+      ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
+    fi
   }
 }
 
