@@ -555,7 +555,7 @@ function really_do_status () {
         # Update the aws statefile
         if [ -w $statefile ] ; then
           ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance > $statefile
-          echo ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance
+          #echo ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance
           local rc=$?
         fi
         if [ ! -r $statefile ] ; then
@@ -780,25 +780,25 @@ function do_stop() {
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[2]}" != "installed" ] ; then
-      echo "$instance_name is not installed. I can't stop it."
+      echo "$instance_name is not installed, it's ${status[2]}. I can't stop it."
       exit 1
     fi
-    if [ "${status[3]}" == "alive" ] ; then
+    if [ "${status[3]}" == "running" ] ; then
       shutdown "${status[0]}"
       # should now be "dead" if we asked it.
     fi
-    # regardless of this, we _want_ it to die. remove pidfile.
-    # TODO: continue trying to kill it more forcibly, and
-    # remove the pidfile when it's done.
-    local pidfile=$(echo_rundir_of ${status[0]})/${status[0]}.pid
-    rm -f $pidfile
+    if [ $aws -eq 0 ] ; then
+      # regardless of this, we _want_ it to die. remove pidfile.
+      # TODO: continue trying to kill it more forcibly, and
+      # remove the pidfile when it's done.
+      local pidfile=$(echo_rundir_of ${status[0]})/${status[0]}.pid
+      rm -f $pidfile
+    fi
   }
 }
 
-
-
 # Performs a graceful shutdown of the guest
-function shutdown() {
+function shutdown_kvm() {
   local pid=$(<$(echo_rundir_of $1)/$1.pid)
   if [ -z "$pid" ] ; then
     return 0
@@ -849,6 +849,19 @@ function shutdown() {
     echo "guest did not respond to kill.  Killing with -9."
     kill -9 "${status[4]}"
   }
+}
+
+function shutdown_aws() {
+  ${commands}/ec2-cmd.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" "stop-instances" INSTANCE
+}
+
+# Shuts
+function shutdown() {
+  if [ $aws -eq 1 ] ; then
+    shutdown_aws "${@}"
+  else
+    shutdown_kvm "${@}"
+  fi
 }
 
 
