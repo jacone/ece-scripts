@@ -783,8 +783,8 @@ function do_postinst() {
       echo "$instance_name is not installed. Install before running any postinst."
       exit 1
     fi
-    if [ "${status[3]}" != "alive" ] ; then
-      echo "$instance_name is not alive, start it first."
+    if [ "${status[3]}" != "alive" -a "${status[3]}" != "running" ] ; then
+      echo "$instance_name is not alive/running, start it first."
       exit 1
     fi
     ${commands}/postinst.sh \
