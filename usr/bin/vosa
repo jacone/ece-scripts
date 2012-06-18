@@ -748,9 +748,9 @@ function do_install() {
         ${amazon_config_type/#/--instance-type }  \
         ${amazon_config_ssh_keypair/#/--key }  \
         ${amazon_config_group[@]/#/--group } \
+        ${amazon_config_user_data/#/--user-data-file } \
         ${amazon_config_subnet/#/--subnet }
 
-        #${amazon_config_user_data/#/--user-data-file } \
 
       ${commands}/ec2-determine-ip.sh \
         "$instance_dir" \
