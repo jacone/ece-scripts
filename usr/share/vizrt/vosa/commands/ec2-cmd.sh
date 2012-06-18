@@ -34,7 +34,7 @@ function exitonerror() {
   rc=$1
   if [ "$rc" != "0" ] ; then
     echo "$2 (rc=$rc)"
-    exit 2
+    exit $rc
   fi
 }
 
@@ -100,14 +100,17 @@ function invoke_ec2() {
   $AWS_COMMON_OPTIONS
   "${@}"
   )
+  local rc
   echo "Command to run on ec2:"
   echo "${cmdline[@]}"
-  "${cmdline[@]}" | tee $image/amazon.laststate
+  echo "# date $(date --iso)" >> /var/log/vosa-$(basename "$1")-ec2.log
+  echo "${cmdline[@]}" >> /var/log/vosa-$(basename "$1")-ec2.log
+  local laststate="$("${cmdline[@]}")"
+  rc=$?
+  echo "${laststate}" | tee $image/amazon.laststate
   if [ $cmd == "run-instances" -a ! -e $bootstatefile ] ; then
     cp $image/amazon.laststate $bootstatefile
   fi
-  local rc
-  rc=$?
   if [ $rc != 0 ] ; then
     exitonerror $rc "Unable to run command $EC2_BINARY."
   fi
