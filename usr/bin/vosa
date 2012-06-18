@@ -812,7 +812,14 @@ function do_start() {
       exit 1
     fi
     if [ $aws -eq 1 ] ; then
-      ${commands}/ec2-start.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
+      ${commands}/ec2-cmd.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+        "start-instances" INSTANCE
+      # The word INSTANCE is replaced with the instance.
+      ${commands}/ec2-determine-ip.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
     else
       ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
     fi
