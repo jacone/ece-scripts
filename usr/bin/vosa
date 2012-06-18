@@ -657,6 +657,7 @@ function do_disable() {
 ##
 ## This deletes the contents of the directory
 ## /var/lib/vizrt/vosa/images/<instance>/ if it exists.
+## An amazon backed instance is terminated and cannot be recovered.
 ##
 ## Removing the installed image of an instance makes it impossible to
 ## start the instance unless it is (re)installed later.  Uninstalling
@@ -665,6 +666,12 @@ function do_disable() {
 ## exists then ONE generation of backups will be kept in that directory,
 ## and it will be possible to restore an old backup by manually moving
 ## the backup directory back into /var/lib/vizrt/vosa/images/
+##
+## Amazon EC2 instances will be completely lost, as the instances are
+## terminated, meaning they go away and cannot be revived.
+## If an instance has "termination protection" turned on, then uninstalling
+## this way will not work.  Enable termination protection to make it
+## impossible to accidentally uninstall a valuable image.
 ##
 ## It is not possible to uninstall an instance that is running, or
 ## that _should_ be running (i.e. if a .pid file exists).
@@ -685,7 +692,7 @@ function do_uninstall() {
       exit 1
     fi
     local status=( $(really_do_status $instance_dir) )
-    if [ "${status[3]}" == "alive" ] ; then
+    if [ "${status[3]}" == "alive" -a "${status[3]}" != "running" ] ; then
       echo "$instance_name is alive. Stop it first. Exiting."
       exit 1
     fi
@@ -696,6 +703,14 @@ function do_uninstall() {
     local imgdir=$(readlink -f ${instance_dir}/../../../../../var/lib/vizrt/vosa/images/$instance_name/)
     local backupdir="/var/backup/vizrt/vosa/$instance_name"
     local backupparent="/var/backup/vizrt/vosa"
+    if [ $aws -eq 1 ] ; then
+      ${commands}/ec2-cmd.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+        "terminate-instances" "INSTANCE" || exit $?
+      # If the terminate-instances command fails, don't remove the instance directory
+      # But what if it's terminated twice?
+    fi
     if [ ! -z "$imgdir" -a -d "$imgdir" ] ; then
       if [ -w "$backupparent" ] ; then
         # todo: rotate a few times?
