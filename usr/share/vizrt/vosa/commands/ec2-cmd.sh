@@ -12,12 +12,19 @@
 
 cmd=$3
 
+if [ -z "$cmd" ] ; then
+  echo "Three parameters are required, of which the third one is the"
+  echo "name of the ec2-prefixed command to run, minus the ec2-prefix"
+  echo "for example 'run-instances' or 'describe-instances'."
+  exit 3
+fi
+
 if [ -z "$EC2_BINARY" ] ; then
   EC2_BINARY=$(which 2>/dev/null ec2-$cmd)
 fi
 
-if [ -z "$EC2_BINARY" -o ! -x $EC2_BINARY ] ; then
-  echo "Unable to figure out where ec2-run-instances is installed."
+if [ -z "$EC2_BINARY" -o ! -x "$EC2_BINARY" ] ; then
+  echo "Unable to figure out where ec2-$cmd is installed."
   echo "export EC2_BINARY to make it work."
   exit 2
 fi
@@ -100,19 +107,20 @@ function invoke_ec2() {
   $AWS_COMMON_OPTIONS
   "${@}"
   )
-  local rc
+  rc=1
   echo "Command to run on ec2:"
   echo "${cmdline[@]}"
-  echo "# date $(date --iso)" >> /var/log/vosa-$(basename "$1")-ec2.log
-  echo "${cmdline[@]}" >> /var/log/vosa-$(basename "$1")-ec2.log
-  local laststate="$("${cmdline[@]}")"
+  echo "# date $(date --iso)" >> /var/log/vosa-$(basename "$image")-ec2.log
+  echo "${cmdline[@]}" >> /var/log/vosa-$(basename "$image")-ec2.log
+  laststate="$("${cmdline[@]}" 2>> /var/log/vosa-$(basename "$image")-ec2.log)" 
   rc=$?
+  echo "# return code $rc, $(echo -n "$laststate" | wc -c) bytes output" >> /var/log/vosa-$(basename "$image")-ec2.log
   echo "${laststate}" | tee $image/amazon.laststate
   if [ $cmd == "run-instances" -a ! -e $bootstatefile ] ; then
     cp $image/amazon.laststate $bootstatefile
   fi
   if [ $rc != 0 ] ; then
-    exitonerror $rc "Unable to run command $EC2_BINARY."
+    exitonerror $rc "$EC2_BINARY returned with error."
   fi
 }
 
@@ -123,3 +131,4 @@ shift
 shift
 shift
 invoke_ec2 "${@/INSTANCE/$aws_instance}"
+
