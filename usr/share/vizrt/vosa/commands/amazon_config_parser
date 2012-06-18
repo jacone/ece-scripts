@@ -2,15 +2,17 @@
 # e.g. parsing a config file
 
 
-amazon_config_key=
-amazon_config_certificate=
-amazon_config_user_data=
-amazon_config_region=
-amazon_config_availability_zone=
-amazon_config_ssh_keypair=
-amazon_config_image=
-amazon_config_type=
-amazon_config_subnet=
+unset amazon_config_key
+unset amazon_config_certificate
+unset amazon_config_user_data
+unset amazon_config_region
+unset amazon_config_availability_zone
+unset amazon_config_ssh_keypair
+unset amazon_config_ssh_access
+unset amazon_config_ssh_private_key
+unset amazon_config_image
+unset amazon_config_type
+unset amazon_config_subnet
 
 
 function amazon_config_key() {
@@ -35,6 +37,14 @@ function amazon_config_availability_zone() {
 
 function amazon_config_ssh_keypair() {
   amazon_config_ssh_keypair=$1
+}
+
+function amazon_config_ssh_access() {
+  amazon_config_ssh_access=$1
+}
+
+function amazon_config_ssh_private_key() {
+  amazon_config_ssh_private_key=$1
 }
 
 function amazon_config_image() {

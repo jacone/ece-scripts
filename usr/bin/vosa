@@ -744,12 +744,18 @@ function do_install() {
         "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
         run-instances \
         ${amazon_config_image} \
+        ${amazon_config_availability_zone/#/--availability-zone }  \
         ${amazon_config_type/#/--instance-type }  \
         ${amazon_config_ssh_keypair/#/--key }  \
         ${amazon_config_group[@]/#/--group } \
         ${amazon_config_subnet/#/--subnet }
 
         #${amazon_config_user_data/#/--user-data-file } \
+
+      ${commands}/ec2-determine-ip.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+
     else 
       ${commands}/install.sh \
         "$instance_dir" \

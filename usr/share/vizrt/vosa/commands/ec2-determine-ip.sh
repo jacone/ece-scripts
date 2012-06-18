@@ -34,8 +34,13 @@ read_amazon_config $config/amazon.conf
 
 statefile="${image}/amazon.state"
 
-if [ ! -w  "${statefile}" ] ; then
+if [ ! -w  "${image}" ] ; then
   echo "Unable to write to ${statefile}... aborting"
+  exit 2
+fi
+
+if [ -r ${statefile} -a ! -w  "${statefile}" ] ; then
+  echo "${statefile} exists but is not writable. aborting"
   exit 2
 fi
 
