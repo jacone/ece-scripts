@@ -19,10 +19,14 @@ usage=0
 ### To add an option, add it to the optstring, as defined in getopts, in alphabetical order.
 ### Also add a function "option-x" where x is the option. $1 will be the option value, if any.
 ### set any variables needed to default values as globals first.
-OPTSTRING=":i:v:h"
+OPTSTRING=":i:v:hd"
 
 function option-h() {
   usage=1
+}
+
+function option-d() {
+  debug=$((debug + 1))
 }
 
 function option-i() {
@@ -58,7 +62,6 @@ enabled_dir=$(readlink -f ${enabled_dir})
 
 
 function requires_instance_dir() {
-  
   if [ -z "$instance_dir" -o -z "${instance_name}" ] ; then
     echo "Instance is required"
     usage=1
@@ -67,6 +70,7 @@ function requires_instance_dir() {
 
   aws=0
   [ -r $instance_dir/amazon.conf ] && aws=1
+  return 0
 }
 function prohibits_instance_dir() {
   if [ ! -z "$instance_dir" -o ! -z "${instance_name}" ] ; then
@@ -344,7 +348,7 @@ function do_download() {
 ## Provides even more help.
 function do_longhelp() {
   cat <<EOF
-$0 is a command to manage virtual machines running under
+$(basename "$0") is a command to manage virtual machines running under
 the regime of Vizrt Online System Administration.
 
 "$0 status" gives you a quick overview of the VMs known
@@ -443,9 +447,13 @@ function verify_installation() {
 ##      if the instance is killed or dies for whatever reason other
 ##      than the "vosa stop" command, it will be labeled as "dead".
 ##  - pid (of the kvm instance) or instance-id (of an amazon VM)
+##      For kvm instances, the pid is printed.
+##      For ec2 instances, the instance-id and availability zone is
+##      printed, separated by a slash.
 ##  - uptime (of any alive instance)
 ##      Only shown for instances that are "alive".
 ##      uptime is shown in dd-hh:mm:ss format.
+##      AWS instances print the start date (TODO: fix this discrepancy)
 function do_status() {
   verify_installation
   if [ -z "$instance_dir" ] ; then
@@ -613,6 +621,33 @@ function do_enable() {
       exit 1
     fi
     ln -v -s "../available.d/$instance_name" "$enabled_dir" || exit 1
+  }
+}
+
+
+## Tells vosa that it should ignore an instance definition
+##
+## vosa -i <instance> disable
+##     Disables <instance> on this host.
+##
+## vosa will remove the symlink in /etc/vizrt/vosa/enabled.d/
+## pointing to "../available.d/<instance>".  This is all that is
+## required to disable an instance.
+##
+## An disabled instance can not be installed, but may be enabled
+## later.
+function do_disable() {
+  requires_instance_dir && {
+    if [ ! -d ${available_dir}/$instance_name ] ; then
+      echo "$instance_name is not an available instance"
+      exit 1
+    fi
+    if [ ! -L ${enabled_dir}/$instance_name ] ; then
+      echo "$instance_name is not enabled"
+      exit 1
+    fi
+    rm "${enabled_dir}/$instance_name" || exit 1
+    echo "$instance_name has been disabled"
   }
 }
 
