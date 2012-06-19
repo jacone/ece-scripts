@@ -101,9 +101,9 @@ EOF
 function do_init() {
   mkdir -p /etc/vizrt/vosa/available.d || exit 2
   mkdir -p /etc/vizrt/vosa/enabled.d || exit 2
-  mkdir -p /etc/vizrt/vosa/skeleton || exit 2
-  if [ ! -r /etc/vizrt/vosa/skeleton/install.conf ] ; then
-    cat > /etc/vizrt/vosa/skeleton/install.conf <<EOF
+  mkdir -p /etc/vizrt/vosa/skeleton-kvm || exit 2
+  if [ ! -r /etc/vizrt/vosa/skeleton-kvm/install.conf ] ; then
+    cat > /etc/vizrt/vosa/skeleton-kvm/install.conf <<EOF
 # Installation time configuration
 
 # The lines in this files are parsed in-order.  The bottom most
@@ -199,8 +199,8 @@ postinstall make-a-motd.sh
 EOF
   fi
 
-  if [ ! -r /etc/vizrt/vosa/skeleton/boot.conf ] ; then
-    cat > /etc/vizrt/vosa/skeleton/boot.conf <<EOF
+  if [ ! -r /etc/vizrt/vosa/skeleton-kvm/boot.conf ] ; then
+    cat > /etc/vizrt/vosa/skeleton-kvm/boot.conf <<EOF
 #-----------------------------------------------------------------------#
 # Run-time configuration options
 #-----------------------------------------------------------------------#
@@ -237,6 +237,126 @@ EOF
   #include /etc/vizrt/vosa/common.conf
 
 
+  mkdir -p /etc/vizrt/vosa/skeleton-amazon || exit 2
+  if [ ! -r /etc/vizrt/vosa/skeleton-amazon/amazon.conf ] ; then
+    cat > /etc/vizrt/vosa/skeleton-amazon/amazon.conf <<EOF
+# This file defines an EC2 amazon instance.
+
+# The lines in this files are parsed in-order.  The bottom most
+# values override top ones of the same name, unless the stanza has
+# been defined as having multiple values, in which case the values
+# will be appended in the order they appear in the file.
+
+
+# EC2 SIGNING KEYS --------------------------------------------
+# Private key.  The file should only be readable by the user
+# designated to run the vosa commands.
+#
+# To create a private key, use the following command:
+#   openssl genrsa -out private-key.pem 1024
+#
+key /var/lib/vizrt/vosa/credentials/private-key.pem
+
+# Public certificate.  The certificate must be uploaded to amazon. All
+# interactions with the server will be signed with the private key; and
+# Amazon will use the certificate to verify that the request is legitimate.
+#
+# To create the certificate, use the following commands:
+#   openssl req -new -key private-key.pem -out certificate-request.pem
+#   openssl x509 -req -in signing-request.pem -signkey private-key.pem
+#            -out certificate.pem
+#
+certificate /var/lib/vizrt/vosa/credentials/certificate.pem
+
+
+# REGION ------------------------------------------------------
+# The amazon region to connect to, and the availability zone to deploy
+# this instance to.
+#
+region eu-west-1
+
+# If you don't specify the availability zone, a random one will be chosen by
+# Amazon.  For high availability, it is important to control the availability
+# zones of the different machines.
+#
+availability_zone eu-west-1b
+
+
+# INSTANCE PARAMETERS -----------------------------------------
+# the AMI ID of the machine to use.  vosa works with uec images.
+# See http://uec-images.ubuntu.com/releases/ for a list of the AMIs
+# Use an AMI ID corresponding to the region in question.
+#
+image ami-81c5fdf5
+
+# Machine type.  e.g. t1.micro, m1.small, m1.medium, m1.large, m1.xlarge,
+# c1.medium, c1.xlarge, m2.xlarge, m2.2xlarge, m2.4xlarge, cc1.4xlarge,
+# cg1.4xlarge, cc2.8xlarge.  See http://aws.amazon.com/ec2/instance-types/
+# Amazon defaults to m1.small.  Certain types might not work in certain
+# regions, or in a VPC subnet (e.g. t1.micro doesn't work in a VPC).
+#
+# type m1.small
+
+# Security groups. To add newly created instances to a specific security
+# group other than the "default" group, specify it here.
+#
+# This option may be specified many times, in order to add it to many
+# groups.
+#
+# group internet
+
+# VPC Subnet ID. If you're using a VPC, you need to specify the subnet
+# ID of the subnet you wish this instance to be deployed into.  If you
+# don't supply a subnet, the instance will be deployed "on the internet"
+# and be given one of your precious internet addresses.
+#
+# subnet subnet-43890
+
+
+# USER DATA ---------------------------------------------------
+# Specify a user data file that will be specified on installation.
+# The file should be in the form of a user-data file supported by
+# the AMI chosen
+#
+# user_data /etc/vizrt/vosa/user-data/puppet-client.txt
+# user_data /usr/share/vizrt/vosa/user-data/so-something.txt
+
+
+# SSH ACCESS --------------------------------------------------
+# SSH Keypair
+# The name of the SSH key to use to seed the "ubuntu" user.  The key
+# pair must already be uploaded to the Amazon account to the region
+# in question
+#
+ssh_keypair control-key
+
+# Use public or private IP to access the machine using SSH? The machine
+# running vosa uses ssh to access the newly created instance, and needs
+# to be told if it should use the public or private IP when attempting
+# to access it using SSH.
+#
+# If the machine running vosa is co-located with the newly created instance
+# (e.g. they are in the same subnet, or in the same VPC with a functioning
+# routing table) then use "private".  If the machine running vosa is _not_
+# able to use an instance's private IP to access it, then its public IP must
+# be used.  If a machine doesn't get a public IP then setting this to public
+# will not work.
+#
+# Defaults to private IP
+#
+# ssh_access public
+
+# SSH identity.  An SSH private key that should be used by postinstall hooks
+# in order to gain access to the "ubuntu" or "root" user.  Typically, this
+# is the private key which corresponds to the "ssh_keypair" specified above.
+# This allows vosa to ssh directly into the guest and install software.
+#
+# This file should be in a form suitable for the "-i" option to ssh(1).
+#
+ssh_private_key /var/lib/vizrt/vosa/credentials/ssh-private-key.pem
+
+EOF
+  fi
   mkdir -p /etc/vizrt/vosa/user-data || exit 2
   if [ ! -r /etc/vizrt/vosa/user-data/puppetmaster.pp ] ; then
     cat > /etc/vizrt/vosa/user-data/puppetmaster.pp <<EOF

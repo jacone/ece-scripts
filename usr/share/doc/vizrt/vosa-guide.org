@@ -48,19 +48,32 @@ The Vosa scripts do just that.
 
 A short definition file tells vosa what base image to start with;
 this is an Ubuntu Enterprise Cloud image, but in theory other image
-types could be supported.  The file also provides it an IP address
-and the machine's time zone, and so on.  Most importantly, these
-files also tell vosa what to do with the virtual machine once it
-has booted, so-called "post install hooks".  Each of these are
-executed when the "first boot" has completed.  These hooks run
-only the first time the virtual machine has booted, and should be
-written in such a way that they end up with a production ready
-system that can go straight into production.
+types could be supported.  The file also provides networking
+parameters and so on.  Most importantly, these files also tell vosa
+what to do with the virtual machine once it has booted, so-called
+"post install hooks".  Each of these are executed when the "first
+boot" has completed.  These hooks run only the first time the
+virtual machine has booted, and should be written in such a way that
+they end up with a production ready system that can go straight into
+production.
 
-The machines can be stopped, started, and so on, and since vosa
-relies on simple kvm, you can access the kvm monitor or vnc if you
-want to.  Vosa also sets up throw-away ssh keys that the host uses
-to interact with the guest during the first boot.
+** Amazon or Physical?
+
+Vosa supports two flavours of virtualization, namely one based on
+Amazon's excellent Elastic Compute Cloud (EC2), and one based on the
+excellent Open Source Kernel-based Virtual Machine (KVM).  Vosa aims
+to blur the boundaries of these two types of virtualization, making
+it possible to use the same technologies for installing software.
+The possibility of using local hardware makes it possible to run a
+cheap stack of virtual machines using the same method of installing
+software as the production environment.  Developers can also have a
+local "stack" of virtual machines, and not have to rely on AWS for
+virtualization.
+
+In the absence of EC2 metadata service that's available to real
+cloud instances, the kvm flavour of virtualization allows some
+additional perks, like vnc support, and it generates "throw-away"
+SSH keys which are used for a single kvm instance.
 
 ** What can I do with this?
 
@@ -81,8 +94,9 @@ vosa.
 
 ** Requirements:
 
-In order to benefit from vosa, you need the following:
+In order to benefit from running vosa with kvm, you need the following
 
+- A physical machine that supports virtualization
 - kvm or qemu-kvm
 - genisoimage
 - nc
@@ -93,7 +107,45 @@ In order to benefit from vosa, you need the following:
 In theory, it should be possible to script this too, or to get e.g.
 puppet to do this for us.  Watch this space!
 
-** Setup
+In order to benefit from running vosa with ec2, you need the following
+
+- Amazon account
+- ec2-api-tools
+- A named SSH keypair
+- Signing key
+
+** Setting up vosa on EC2
+
+Commonly, setting up vosa in the cloud entails first making an EC2
+instance that will act as "the control server".  vosa will typically
+be installed there.
+
+   : apt-get install vosa
+
+The vosa command should now work (to a certain extent)
+
+   : vosa help
+   : vosa commands
+   : vosa longhelp | less
+
+To make vosa usable, you need to initialize it:
+
+   : sudo vosa init
+
+This will create the /etc/vizrt/vosa directory structure, and a
+skeleton of a virtual machine definition.
+
+   : sudo cp -r /etc/vizrt/vosa/skeleton-amazon /etc/vizrt/vosa/available.d/my-first-vosa
+
+Configure the my-first-vosa/amazon.conf file as you see fit.  This would include:
+
+- Generate (or re-use) an SSH private key, and uploading the public key to Amazon
+- Generate (or re-use) an EC2 API signing key, and uploading the certificate to Amazon
+- Create a VPC and subnet (if you want to deploy the instances to a VPC subnet)
+
+Details on these steps are outlined in the sample amazon.conf file.
+
+** Setting up vosa on bare metal (kvm)
 
 Setting up vosa entails a few manual installation steps.  Among other
 things it will
@@ -108,8 +160,7 @@ things it will
 So without further ado, let's get started.  First of all, we need to
 onstall the vosa command itself and its required libraries:
 
-   : ln -s $PWD/usr/bin/vosa /usr/bin/vosa
-   : ln -s $PWD/usr/share/vizrt/ /usr/share/vizrt
+   : apt-get install vosa
 
 The vosa command should now work (to a certain extent)
 
@@ -171,7 +222,7 @@ install.conf) in a directory.  "vosa init" has already created a
 documented skeleton which you can customize as you see fit.
 
    : mkdir /etc/vizrt/vosa/available.d/my-first-vm &&
-   : cp /etc/vizrt/vosa/skeleton/* /etc/vizrt/vosa/available.d/my-first-vm/
+   : cp /etc/vizrt/vosa/skeleton-kvm/* /etc/vizrt/vosa/available.d/my-first-vm/
    : vi /etc/vizrt/vosa/available.d/my-first-vm/*
 
 Note that the name you choose ("my-first-vm") must be a valid
@@ -210,7 +261,7 @@ the name of the virtual machine; in this case "my-first-vm"
 
 When it's done you can SSH into the system:
 
-   : ssh -F /var/lib/vizrt/vosa/my-first-vm/ssh.conf root@guest
+   : ssh -F /var/lib/vizrt/vosa/my-first-vm/ssh.conf guest
 
 Not that you should need to do that, of course.
 
@@ -224,8 +275,8 @@ To make this possible, vosa supplies a post-install hook. This hook:
 - configures the puppet master to use hostnames instead of its DNS
   name for certificates
 - configures a self signed certificate for all guests (mainly to avoid
-  having to sign or auto-sign the puppets, since that would be
-  problematic when a puppet happens to be re-installed)
+  having to sign or auto-sign the puppets, since that is problematic
+  when a machine is re-installed)
 - creates vosa post-installation hook to set up a pre-authenticated
   puppet in /etc/vizrt/vosa/puppet/<puppetmaster-name>-client.sh
 
