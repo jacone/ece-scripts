@@ -897,6 +897,10 @@ function do_install() {
         "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
          2>&1 |
          tee /var/log/vosa-install-$instance_name.log
+      local rc=${PIPESTATUS[0]}
+      if [ "$rc" != "0" ] ; then
+        exit $rc
+      fi
     fi
   }
 }
@@ -927,6 +931,10 @@ function do_postinst() {
       "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
        2>&1 |
        tee -a /var/log/vosa-postinst-$instance_name.log
+    local rc=${PIPESTATUS[0]}
+    if [ "$rc" != "0" ] ; then
+      exit $rc
+    fi
   }
 }
 
@@ -962,7 +970,7 @@ function do_start() {
         "$instance_dir" \
         "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
     else
-      ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
+      ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" || exit $?
     fi
   }
 }
