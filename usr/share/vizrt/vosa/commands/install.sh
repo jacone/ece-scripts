@@ -213,5 +213,7 @@ create_overlay
 # chain to boot.sh to actually start the image.
 $(dirname $0)/boot.sh $1 $2
 
+rc=$?
 delete_overlay
 
+exit $rc
