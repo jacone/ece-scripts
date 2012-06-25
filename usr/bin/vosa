@@ -970,7 +970,7 @@ function do_start() {
         "$instance_dir" \
         "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
     else
-      ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" || exit $?
+      ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" || exit $?
     fi
   }
 }
