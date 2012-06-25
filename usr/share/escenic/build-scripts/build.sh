@@ -184,10 +184,17 @@ function symlink_ece_components {
   parse_version FORUM_VERSION vosa.forum.version
   symlink_distribution plugins/forum-$FORUM_VERSION plugins/forum
 
+  # Version - Dashboard
+  parse_version DASHBOARD_VERSION vosa.dashboard.version
+  symlink_distribution plugins/dashboard-$DASHBOARD_VERSION plugins/dashboard
+
+  # Version - Lucy
+  parse_version LUCY_VERSION vosa.lucy.version
+  symlink_distribution plugins/lucy-$LUCY_VERSION plugins/lucy
+  
   # Version - Widget Framework Common
   parse_version WIDGET_FRAMEWORK_COMMON_VERSION vosa.widget-framework-common.version
   symlink_distribution plugins/widget-framework-common-$WIDGET_FRAMEWORK_COMMON_VERSION plugins/widget-framework-common
-
 }
 
 # symlink .war files from target/
@@ -208,7 +215,8 @@ function symlink_target {
 ##
 function release 
 {
-
+  print_and_log "Starting build @ $(date) ..."
+  
   home_preparation
 
   run svn_checkout
@@ -233,6 +241,8 @@ function release
 
   add_vosa_libs
 
+  add_dashboard_descriptor
+
   run cd $assemblytool_root_dir
   run ant -q clean ear -DskipRedundancyCheck=true
 
@@ -246,16 +256,29 @@ function release
 
 }
 
+function add_dashboard_descriptor() {
+  if [ -d ${plugins/dashboard} ]; then
+    print_and_log "Adding an assembly descriptor for Dashboard ..." 
+    cat >> $assemblytool_root_dir/publications/dashboard.properties <<EOF
+source-war: ../../plugins/dashboard/wars/dashboard-webapp.war
+context-root: /dashboard
+EOF
+  else
+    print_and_log "The Dashboard plugin is not available, not making descriptor for it."
+  fi
+}
+
 ##
 function print_result
 {
-  print_and_log "BUILD SUCCESSFUL!"
+  print_and_log "Build SUCCESSFUL! @ $(date)"
   print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
 }
 
 set_pid
 fetch_configuration
 init
+print_and_log "Starting building @ $(date)"
 get_user_options $@
 verify_configuration
 home_preparation

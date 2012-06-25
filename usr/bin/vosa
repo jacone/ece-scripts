@@ -19,10 +19,14 @@ usage=0
 ### To add an option, add it to the optstring, as defined in getopts, in alphabetical order.
 ### Also add a function "option-x" where x is the option. $1 will be the option value, if any.
 ### set any variables needed to default values as globals first.
-OPTSTRING=":i:v:h"
+OPTSTRING=":i:v:hd"
 
 function option-h() {
   usage=1
+}
+
+function option-d() {
+  debug=$((debug + 1))
 }
 
 function option-i() {
@@ -58,12 +62,15 @@ enabled_dir=$(readlink -f ${enabled_dir})
 
 
 function requires_instance_dir() {
-  
   if [ -z "$instance_dir" -o -z "${instance_name}" ] ; then
     echo "Instance is required"
     usage=1
     return 1
   fi
+
+  aws=0
+  [ -r $instance_dir/amazon.conf ] && aws=1
+  return 0
 }
 function prohibits_instance_dir() {
   if [ ! -z "$instance_dir" -o ! -z "${instance_name}" ] ; then
@@ -94,9 +101,9 @@ EOF
 function do_init() {
   mkdir -p /etc/vizrt/vosa/available.d || exit 2
   mkdir -p /etc/vizrt/vosa/enabled.d || exit 2
-  mkdir -p /etc/vizrt/vosa/skeleton || exit 2
-  if [ ! -r /etc/vizrt/vosa/skeleton/install.conf ] ; then
-    cat > /etc/vizrt/vosa/skeleton/install.conf <<EOF
+  mkdir -p /etc/vizrt/vosa/skeleton-kvm || exit 2
+  if [ ! -r /etc/vizrt/vosa/skeleton-kvm/install.conf ] ; then
+    cat > /etc/vizrt/vosa/skeleton-kvm/install.conf <<EOF
 # Installation time configuration
 
 # The lines in this files are parsed in-order.  The bottom most
@@ -192,8 +199,8 @@ postinstall make-a-motd.sh
 EOF
   fi
 
-  if [ ! -r /etc/vizrt/vosa/skeleton/boot.conf ] ; then
-    cat > /etc/vizrt/vosa/skeleton/boot.conf <<EOF
+  if [ ! -r /etc/vizrt/vosa/skeleton-kvm/boot.conf ] ; then
+    cat > /etc/vizrt/vosa/skeleton-kvm/boot.conf <<EOF
 #-----------------------------------------------------------------------#
 # Run-time configuration options
 #-----------------------------------------------------------------------#
@@ -230,6 +237,126 @@ EOF
   #include /etc/vizrt/vosa/common.conf
 
 
+  mkdir -p /etc/vizrt/vosa/skeleton-amazon || exit 2
+  if [ ! -r /etc/vizrt/vosa/skeleton-amazon/amazon.conf ] ; then
+    cat > /etc/vizrt/vosa/skeleton-amazon/amazon.conf <<EOF
+# This file defines an EC2 amazon instance.
+
+# The lines in this files are parsed in-order.  The bottom most
+# values override top ones of the same name, unless the stanza has
+# been defined as having multiple values, in which case the values
+# will be appended in the order they appear in the file.
+
+
+# EC2 SIGNING KEYS --------------------------------------------
+# Private key.  The file should only be readable by the user
+# designated to run the vosa commands.
+#
+# To create a private key, use the following command:
+#   openssl genrsa -out private-key.pem 1024
+#
+key /var/lib/vizrt/vosa/credentials/private-key.pem
+
+# Public certificate.  The certificate must be uploaded to amazon. All
+# interactions with the server will be signed with the private key; and
+# Amazon will use the certificate to verify that the request is legitimate.
+#
+# To create the certificate, use the following commands:
+#   openssl req -new -key private-key.pem -out certificate-request.pem
+#   openssl x509 -req -in signing-request.pem -signkey private-key.pem
+#            -out certificate.pem
+#
+certificate /var/lib/vizrt/vosa/credentials/certificate.pem
+
+
+# REGION ------------------------------------------------------
+# The amazon region to connect to, and the availability zone to deploy
+# this instance to.
+#
+region eu-west-1
+
+# If you don't specify the availability zone, a random one will be chosen by
+# Amazon.  For high availability, it is important to control the availability
+# zones of the different machines.
+#
+availability_zone eu-west-1b
+
+
+# INSTANCE PARAMETERS -----------------------------------------
+# the AMI ID of the machine to use.  vosa works with uec images.
+# See http://uec-images.ubuntu.com/releases/ for a list of the AMIs
+# Use an AMI ID corresponding to the region in question.
+#
+image ami-81c5fdf5
+
+# Machine type.  e.g. t1.micro, m1.small, m1.medium, m1.large, m1.xlarge,
+# c1.medium, c1.xlarge, m2.xlarge, m2.2xlarge, m2.4xlarge, cc1.4xlarge,
+# cg1.4xlarge, cc2.8xlarge.  See http://aws.amazon.com/ec2/instance-types/
+# Amazon defaults to m1.small.  Certain types might not work in certain
+# regions, or in a VPC subnet (e.g. t1.micro doesn't work in a VPC).
+#
+# type m1.small
+
+# Security groups. To add newly created instances to a specific security
+# group other than the "default" group, specify it here.
+#
+# This option may be specified many times, in order to add it to many
+# groups.
+#
+# group internet
+
+# VPC Subnet ID. If you're using a VPC, you need to specify the subnet
+# ID of the subnet you wish this instance to be deployed into.  If you
+# don't supply a subnet, the instance will be deployed "on the internet"
+# and be given one of your precious internet addresses.
+#
+# subnet subnet-43890
+
+
+# USER DATA ---------------------------------------------------
+# Specify a user data file that will be specified on installation.
+# The file should be in the form of a user-data file supported by
+# the AMI chosen
+#
+# user_data /etc/vizrt/vosa/user-data/puppet-client.txt
+# user_data /usr/share/vizrt/vosa/user-data/so-something.txt
+
+
+# SSH ACCESS --------------------------------------------------
+# SSH Keypair
+# The name of the SSH key to use to seed the "ubuntu" user.  The key
+# pair must already be uploaded to the Amazon account to the region
+# in question
+#
+ssh_keypair control-key
+
+# Use public or private IP to access the machine using SSH? The machine
+# running vosa uses ssh to access the newly created instance, and needs
+# to be told if it should use the public or private IP when attempting
+# to access it using SSH.
+#
+# If the machine running vosa is co-located with the newly created instance
+# (e.g. they are in the same subnet, or in the same VPC with a functioning
+# routing table) then use "private".  If the machine running vosa is _not_
+# able to use an instance's private IP to access it, then its public IP must
+# be used.  If a machine doesn't get a public IP then setting this to public
+# will not work.
+#
+# Defaults to private IP
+#
+# ssh_access public
+
+# SSH identity.  An SSH private key that should be used by postinstall hooks
+# in order to gain access to the "ubuntu" or "root" user.  Typically, this
+# is the private key which corresponds to the "ssh_keypair" specified above.
+# This allows vosa to ssh directly into the guest and install software.
+#
+# This file should be in a form suitable for the "-i" option to ssh(1).
+#
+ssh_private_key /var/lib/vizrt/vosa/credentials/ssh-private-key.pem
+
+EOF
+  fi
   mkdir -p /etc/vizrt/vosa/user-data || exit 2
   if [ ! -r /etc/vizrt/vosa/user-data/puppetmaster.pp ] ; then
     cat > /etc/vizrt/vosa/user-data/puppetmaster.pp <<EOF
@@ -341,7 +468,7 @@ function do_download() {
 ## Provides even more help.
 function do_longhelp() {
   cat <<EOF
-$0 is a command to manage virtual machines running under
+$(basename "$0") is a command to manage virtual machines running under
 the regime of Vizrt Online System Administration.
 
 "$0 status" gives you a quick overview of the VMs known
@@ -421,9 +548,10 @@ function verify_installation() {
 ##      The first column is the instance name itself.
 ##      An instance may be enabled (see "vosa enable")
 ##  - enabled
-##      Only enabled instances are "supposed" to run on this
-##      physical machine.
-##      An enabled instance *is* supposed to run on this machine.
+##      Only enabled instances are "supposed" to be managed by this
+##      machine.
+##      An enabled instance *is* supposed to be managed by this
+##      machine.
 ##      An enabled instance may later be be installed. (see
 ##      "vosa install")
 ##  - installed
@@ -438,11 +566,14 @@ function verify_installation() {
 ##      An instance that has been started will probably be alive, but
 ##      if the instance is killed or dies for whatever reason other
 ##      than the "vosa stop" command, it will be labeled as "dead".
-##  - pid (of an alive instance)
-##  - uptime (of an alive instance)
+##  - pid (of the kvm instance) or instance-id (of an amazon VM)
+##      For kvm instances, the pid is printed.
+##      For ec2 instances, the instance-id and availability zone is
+##      printed, separated by a slash.
+##  - uptime (of any alive instance)
 ##      Only shown for instances that are "alive".
-##      For informational purposes, the pid and the uptime of the pid
-##      are shown in dd-hh:mm:ss format.
+##      uptime is shown in dd-hh:mm:ss format.
+##      AWS instances print the start date (TODO: fix this discrepancy)
 function do_status() {
   verify_installation
   if [ -z "$instance_dir" ] ; then
@@ -457,29 +588,119 @@ function do_status() {
   fi
 }
 
+
+have_read_amazon_config=0
+function read_amazon_config() {
+  [[ $have_read_amazon_config -eq 1 ]] && return
+  source $commands/functions
+  source $commands/amazon_config_parser
+  # Parse all amazon config items
+  parse_config_file $1 amazon_config_
+
+  unset AWS_COMMON_OPTIONS
+  AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --private-key $amazon_config_key "
+  AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --cert $amazon_config_certificate "
+  AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --region $amazon_config_region "
+  have_read_amazon_config=1
+}
+
 function really_do_status () {
     local output
+    local done=0
+    local aws=0
     local avdir="${available_dir}/$(basename $1)"
     local endir="${enabled_dir}/$(basename $1)"
     output=( $(basename $1) )
-    if [ -d "$avdir" ] ; then
+    if [ ! -d "$avdir" ] ; then
+      done=1
+    fi
+
+    if [ $done -eq 0 ] ; then
       if [ ! -L "$endir" ] ; then
         output=( ${output[@]} disabled );
+        done=1
+      fi
+    fi
+
+    if [ $done -eq 0 ] ; then
+      output=( ${output[@]} enabled );
+      local vmdir=$(readlink -f ${avdir}/../../../../../var/lib/vizrt/vosa/images/$(basename $1))
+      if [ ! -d "$vmdir" ] ; then
+        done=1
+      fi
+    fi
+
+    if [ $done -eq 0 ] ; then
+      if [ -r $avdir/amazon.conf ] ; then
+        aws=1
+        read_amazon_config $avdir/amazon.conf
+      fi
+
+      if [ $aws -eq 0 ] ; then
+        output=( ${output[@]} installed );
+        local pidfile=$(echo_rundir_of $(basename $1))/$(basename $1).pid
+        if [ ! -r "$pidfile" ] ; then
+          done=1
+        fi
       else
-        output=( ${output[@]} enabled );
-        local vmdir=$(readlink -f ${avdir}/../../../../../var/lib/vizrt/vosa/images/$(basename $1))
-        if [ -d "$vmdir" ] ; then
-          output=( ${output[@]} installed );
-          local pidfile=$(echo_rundir_of $(basename $1))/$(basename $1).pid
-          if [ -r "$pidfile" ] ; then
-            if ! ps > /dev/null $(<$pidfile) ; then
-              output=( ${output[@]} dead );
-            else
-              output=( ${output[@]} alive )
-              output=( ${output[@]} $(<$pidfile) );
-              output=( ${output[@]} "$( ps -p "$(<$pidfile)" -o "etime=" )" );
-            fi
+        local bootstatefile=$vmdir/amazon.initialstate
+        local statefile=$vmdir/amazon.state
+        if [ ! -r $bootstatefile ] ; then
+          output=( ${output[@]} unknown );
+          # MUST have state to know the instance ID in amazon...
+          done=1
+        fi
+
+        local aws_instance=
+        if [ $done -eq 0 ] ; then
+          # Parse the statefile and find its instance ID
+          if [ -r $bootstatefile ] ; then
+            aws_instance=$(awk < "$bootstatefile" -F '\t' '/^INSTANCE/ { print $2 }')
           fi
+
+          if [ -z "$aws_instance" ] ; then
+            output=( ${output[@]} invalid );
+            done=1
+          fi
+        fi
+        if [ $done -eq 0 ] ; then
+          output=( ${output[@]} installed );
+        fi
+      fi
+    fi
+
+    if [ $done -eq 0 ] ; then
+      if [ $aws -eq 0 ] ; then
+        if ! ps > /dev/null $(<$pidfile) ; then
+          output=( ${output[@]} dead );
+        else
+          output=( ${output[@]} alive )
+          output=( ${output[@]} $(<$pidfile) );
+          output=( ${output[@]} "$( ps -p "$(<$pidfile)" -o "etime=" )" );
+        fi
+      else
+        local rc=0
+        # Update the aws statefile
+        if [ -w $statefile ] ; then
+          ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance > $statefile
+          #echo ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance
+          local rc=$?
+        fi
+        if [ ! -r $statefile ] ; then
+          statefile=$bootstatefile
+          local stale=1
+        fi
+        aws_state=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $6 }')
+        aws_zone=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $12 }')
+        aws_start=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $11 }')
+        if [ -z "$aws_state" ] ; then
+          output=( ${output[@]} unknown $aws_instance )
+        else
+          output=( ${output[@]} ${aws_state} ${aws_zone}/${aws_instance} )
+          output=( ${output[@]} ${aws_start} )
+        fi
+        if [ "$stale" == "1" ] ; then
+          output=( ${output[@]} STALE)
         fi
       fi
     fi
@@ -524,11 +745,39 @@ function do_enable() {
 }
 
 
+## Tells vosa that it should ignore an instance definition
+##
+## vosa -i <instance> disable
+##     Disables <instance> on this host.
+##
+## vosa will remove the symlink in /etc/vizrt/vosa/enabled.d/
+## pointing to "../available.d/<instance>".  This is all that is
+## required to disable an instance.
+##
+## An disabled instance can not be installed, but may be enabled
+## later.
+function do_disable() {
+  requires_instance_dir && {
+    if [ ! -d ${available_dir}/$instance_name ] ; then
+      echo "$instance_name is not an available instance"
+      exit 1
+    fi
+    if [ ! -L ${enabled_dir}/$instance_name ] ; then
+      echo "$instance_name is not enabled"
+      exit 1
+    fi
+    rm "${enabled_dir}/$instance_name" || exit 1
+    echo "$instance_name has been disabled"
+  }
+}
+
+
 
 ## Removes the installed image of an instance
 ##
 ## This deletes the contents of the directory
 ## /var/lib/vizrt/vosa/images/<instance>/ if it exists.
+## An amazon backed instance is terminated and cannot be recovered.
 ##
 ## Removing the installed image of an instance makes it impossible to
 ## start the instance unless it is (re)installed later.  Uninstalling
@@ -537,6 +786,12 @@ function do_enable() {
 ## exists then ONE generation of backups will be kept in that directory,
 ## and it will be possible to restore an old backup by manually moving
 ## the backup directory back into /var/lib/vizrt/vosa/images/
+##
+## Amazon EC2 instances will be completely lost, as the instances are
+## terminated, meaning they go away and cannot be revived.
+## If an instance has "termination protection" turned on, then uninstalling
+## this way will not work.  Enable termination protection to make it
+## impossible to accidentally uninstall a valuable image.
 ##
 ## It is not possible to uninstall an instance that is running, or
 ## that _should_ be running (i.e. if a .pid file exists).
@@ -557,7 +812,7 @@ function do_uninstall() {
       exit 1
     fi
     local status=( $(really_do_status $instance_dir) )
-    if [ "${status[3]}" == "alive" ] ; then
+    if [ "${status[3]}" == "alive" -o "${status[3]}" == "running" ] ; then
       echo "$instance_name is alive. Stop it first. Exiting."
       exit 1
     fi
@@ -568,6 +823,14 @@ function do_uninstall() {
     local imgdir=$(readlink -f ${instance_dir}/../../../../../var/lib/vizrt/vosa/images/$instance_name/)
     local backupdir="/var/backup/vizrt/vosa/$instance_name"
     local backupparent="/var/backup/vizrt/vosa"
+    if [ $aws -eq 1 ] ; then
+      ${commands}/ec2-cmd.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+        "terminate-instances" "INSTANCE" || exit $?
+      # If the terminate-instances command fails, don't remove the instance directory
+      # But what if it's terminated twice?
+    fi
     if [ ! -z "$imgdir" -a -d "$imgdir" ] ; then
       if [ -w "$backupparent" ] ; then
         # todo: rotate a few times?
@@ -607,11 +870,38 @@ function do_install() {
       echo "$instance_name is not enabled, enable it on this host first"
       exit 1
     fi
-    ${commands}/install.sh \
-      "$instance_dir" \
-      "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
-       2>&1 |
-       tee /var/log/vosa-install-$instance_name.log
+    if [ $aws -eq 1 ] ; then
+      mkdir "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" || exit 2
+      read_amazon_config $instance_dir/amazon.conf
+      # TODO: sanitize "required" variables
+      ${commands}/ec2-cmd.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+        run-instances \
+        ${amazon_config_image} \
+        ${amazon_config_availability_zone/#/--availability-zone }  \
+        ${amazon_config_type/#/--instance-type }  \
+        ${amazon_config_ssh_keypair/#/--key }  \
+        ${amazon_config_group[@]/#/--group } \
+        ${amazon_config_user_data/#/--user-data-file } \
+        ${amazon_config_subnet/#/--subnet }
+
+
+      ${commands}/ec2-determine-ip.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+
+    else 
+      ${commands}/install.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+         2>&1 |
+         tee /var/log/vosa-install-$instance_name.log
+      local rc=${PIPESTATUS[0]}
+      if [ "$rc" != "0" ] ; then
+        exit $rc
+      fi
+    fi
   }
 }
 
@@ -632,8 +922,8 @@ function do_postinst() {
       echo "$instance_name is not installed. Install before running any postinst."
       exit 1
     fi
-    if [ "${status[3]}" != "alive" ] ; then
-      echo "$instance_name is not alive, start it first."
+    if [ "${status[3]}" != "alive" -a "${status[3]}" != "running" ] ; then
+      echo "$instance_name is not alive/running, start it first."
       exit 1
     fi
     ${commands}/postinst.sh \
@@ -641,6 +931,10 @@ function do_postinst() {
       "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
        2>&1 |
        tee -a /var/log/vosa-postinst-$instance_name.log
+    local rc=${PIPESTATUS[0]}
+    if [ "$rc" != "0" ] ; then
+      exit $rc
+    fi
   }
 }
 
@@ -658,15 +952,26 @@ function do_start() {
   # TODO: let's make this command wait for SSH access before returning?
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
-    if [ "${status[3]}" == "alive" ] ; then
-      echo "$instance_name is alive. No need to start it."
+    if [ "${status[3]}" == "alive" -o "${status[3]}" == "running" ] ; then
+      echo "$instance_name is ${status[3]}. No need to start it."
       exit 1
     fi
     if [ "${status[2]}" != "installed" ] ; then
-      echo "$instance_name is not installed. I can't start it."
+      echo "$instance_name is not installed, it's ${status[2]}. I can't start it."
       exit 1
     fi
-    ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name"
+    if [ $aws -eq 1 ] ; then
+      ${commands}/ec2-cmd.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+        "start-instances" INSTANCE
+      # The word INSTANCE is replaced with the instance.
+      ${commands}/ec2-determine-ip.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+    else
+      ${commands}/boot.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" || exit $?
+    fi
   }
 }
 
@@ -683,25 +988,25 @@ function do_stop() {
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[2]}" != "installed" ] ; then
-      echo "$instance_name is not installed. I can't stop it."
+      echo "$instance_name is not installed, it's ${status[2]}. I can't stop it."
       exit 1
     fi
-    if [ "${status[3]}" == "alive" ] ; then
+    if [ "${status[3]}" == "running" ] ; then
       shutdown "${status[0]}"
       # should now be "dead" if we asked it.
     fi
-    # regardless of this, we _want_ it to die. remove pidfile.
-    # TODO: continue trying to kill it more forcibly, and
-    # remove the pidfile when it's done.
-    local pidfile=$(echo_rundir_of ${status[0]})/${status[0]}.pid
-    rm -f $pidfile
+    if [ $aws -eq 0 ] ; then
+      # regardless of this, we _want_ it to die. remove pidfile.
+      # TODO: continue trying to kill it more forcibly, and
+      # remove the pidfile when it's done.
+      local pidfile=$(echo_rundir_of ${status[0]})/${status[0]}.pid
+      rm -f $pidfile
+    fi
   }
 }
 
-
-
 # Performs a graceful shutdown of the guest
-function shutdown() {
+function shutdown_kvm() {
   local pid=$(<$(echo_rundir_of $1)/$1.pid)
   if [ -z "$pid" ] ; then
     return 0
@@ -752,6 +1057,19 @@ function shutdown() {
     echo "guest did not respond to kill.  Killing with -9."
     kill -9 "${status[4]}"
   }
+}
+
+function shutdown_aws() {
+  ${commands}/ec2-cmd.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" "stop-instances" INSTANCE
+}
+
+# Shuts
+function shutdown() {
+  if [ $aws -eq 1 ] ; then
+    shutdown_aws "${@}"
+  else
+    shutdown_kvm "${@}"
+  fi
 }
 
 

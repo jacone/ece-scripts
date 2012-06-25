@@ -3,7 +3,7 @@
 echo -n "Waiting for ssh access..."
 for a in $(seq 1 90) ; do
   echo -n .
-  ssh -q -F $2/ssh.conf root@guest id > /dev/null
+  ssh -q -F $2/ssh.conf guest id > /dev/null
   if [ $? == 0 ] ; then
     pid=1
     echo
@@ -13,7 +13,7 @@ for a in $(seq 1 90) ; do
     while [ "$pid" != 0 ] ;
     do
       echo -n .
-      ssh -q -F $2/ssh.conf root@guest ls /var/lib/cloud/instances/nocloud/boot-finished > /dev/null 2>&1
+      ssh -q -F $2/ssh.conf guest ls /var/lib/cloud/instances/\*/boot-finished > /dev/null 2>&1
       pid=$?
       sleep 1;
     done

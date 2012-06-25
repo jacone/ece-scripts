@@ -2,6 +2,7 @@
 
 function start_type() {
   unset CLASSPATH
+  export HOSTNAME
   message="Starting the $instance instance of $type on $HOSTNAME ..."
   print_and_log $message
   
