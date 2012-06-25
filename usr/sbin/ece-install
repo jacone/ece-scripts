@@ -219,7 +219,7 @@ function install_common_os_packages()
   if [ $on_debian_or_derivative -eq 1 ]; then
     curl -s http://apt.vizrt.com/archive.key 2>> $log | \
       apt-key add - 1>> $log 2>> $log
-    local package_pool=${fai_apt_vizrt_pool-stable}
+    local package_pool=${fai_apt_vizrt_pool-unstable}
     add_apt_source "deb http://apt.vizrt.com ${package_pool} main"
 
     install_packages_if_missing escenic-common-scripts
