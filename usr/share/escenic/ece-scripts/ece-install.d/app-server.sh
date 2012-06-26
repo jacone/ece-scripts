@@ -352,7 +352,8 @@ EOF
 EOF
   fi
 
-  if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+  if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
+    $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
     cat >> $tomcat_base/conf/context.xml <<EOF
   <Environment
       name="escenic/indexer-webservice"
