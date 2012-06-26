@@ -145,6 +145,12 @@ history
 function create_ecedb()
 {
   create_schema
+
+  if [ ${fai_db_schema_only-0} -eq 1 ]; then
+    print_and_log "fai_db_schema_only=1, not running the ECE & plugin SQL files"
+    return
+  fi
+  
   run_db_scripts $ece_home/database/$db_product
 
   if [ -e $ece_home/plugins ]; then
@@ -153,7 +159,7 @@ function create_ecedb()
     done
     # EAE, if there's more than one version of EAE plugin, the latest
     # one will be used.
-    for el in $(find -L $ece_home/plugins -name eae-${db_product}.sql | \
+    for el in $(find $escenic_root_dir -name eae-${db_product}.sql | \
       grep -v upgrade | \
       sort -r | \
       head -1); do
