@@ -1,4 +1,3 @@
-
 function backup_type() {
   local message="Backing up the $instance instance of $type on $HOSTNAME ..."
   print_and_log $message
@@ -24,13 +23,107 @@ function backup_type() {
     exit 1
   fi
 
+  actual_backup=""
+
+  if [ ${backup_exclude_db-0} -eq 0 ]; then
+    backup_db
+  else
+    print "Skipping DB, not including the database dump"
+  fi
+  
+  archive_file=$backup_dir/${type}-${instance}-backup-$(date --iso).tar
+  possible_backup="
+${data_dir}
+${data_dir}/engine
+${ece_home} 
+${escenic_conf_dir} 
+${solr_home}
+/etc/default/ece
+/etc/init.d/ece
+/etc/inti.d/rmi-hub
+"
+  for el in $possible_backup; do
+    if [ "$el" == "${ece_home}" -a $backup_exclude_binaries -eq 1 ]; then
+      print "Skpping software binaries, not including $ece_home"
+      continue
+    elif [ "$el" == "${escenic_conf_dir}" -a $backup_exclude_conf -eq 1 ]; then
+      print "Skpping configuration, not including $escenic_conf_dir"
+      continue
+    elif [ "$el" == "/etc/default/ece" -a $backup_exclude_conf -eq 1 ]; then
+      print "Skpping configuration, not including /etc/default/ece"
+      continue
+    elif [ $appserver == "tomcat" -a \
+      "$el" == "$tomcat_base/conf" -a \
+      $backup_exclude_conf -eq 1 ]; then
+      print "Skpping configuration, not including $tomcat_base/conf"
+      continue
+    elif [ "$el" == "${data_dir}" ]; then
+      # special handling of the data dir itself (it has a lot of data,
+      # we handle engine and solr data seperately)
+      actual_backup="$(ls $data_dir/*.state 2>/dev/null) $actual_backup"
+    elif [ "$el" == "${solr_home}" -a $backup_exclude_solr -eq 1 ]; then
+      print "Skipping Solr data files, not including $solr_home"
+      continue
+    elif [ "$el" == "${data_dir}/engine" \
+      -a $backup_exclude_multimedia -eq 1 ]; then
+      print "Skipping the multimedia archive, not including $data_dir/engine"
+      continue
+    elif [ -r "$el" ]; then
+      actual_backup="$el $actual_backup"
+    fi
+  done
+
+  if [ "$appserver" == "tomcat" -a "$backup_exclude_binaries" -eq 0 ]; then
+    for el in $(get_actual_file $tomcat_home) $tomcat_base; do
+      if [ -d $el ]; then
+        actual_backup="$el $actual_backup"
+      fi
+    done
+  fi
+
+  print "Creating snapshot ... (this may take a while)"
+  run tar cf $archive_file \
+    $actual_backup
+
+  local size=$(du -h $archive_file | cut -d'/' -f1)
+  message="Backup ready: $archive_file size: $size"
+  print $message
+  log $message
+  print "The backup arhcive includes:"
+  
+  if [ ${backup_exclude_db-0} -eq 0 ]; then
+    print "- Database snapshot"
+  fi
+
+  if [ ${backup_exclude_solr-0} -eq 0 ]; then
+    print "- All Solr in $solr_home"
+  fi
+  
+  if [ ${backup_exclude_multimedia-0} -eq 0 ]; then
+    print "- All Escenic data files in $data_dir/engine"
+  fi
+  
+  if [ "${backup_exclude_binaries-0}" -eq 0 ]; then
+    print "- All app servers in /opt"
+    print "- All Escenic software binaries in $ece_home"
+  fi
+  
+  if [ "${backup_exclude_conf-0}" -eq 0 ]; then
+    print "- All configuration in ${escenic_conf_dir} and /etc/default/ece"
+  fi
+  
+  print "- All bootstrap scripts from /etc/init.d"
+  print "Enjoy!"
+}
+
+function backup_db() {
   if [ "$appserver" == "tomcat" ]; then
     if [ ! -d $tomcat_base/conf ]; then
       print $tomcat_base/conf "doesn't exist :-("
       print "check your ece.conf the $instance instance of type $type"
       exit 1
     fi
-    
+
     connect_string=$(find $tomcat_base/conf | xargs \
       grep jdbc | \
       grep url | \
@@ -61,48 +154,7 @@ function backup_type() {
       > $db_backup_file
 
     print "Database dumped: $db_backup_file"
+
+    actual_backup="$db_backup_file $actual_backup"
   fi
-  
-  archive_file=$backup_dir/${type}-${instance}-backup-$(date --iso).tar
-  possible_backup="
-${escenic_conf_dir} 
-/opt/escenic 
-/etc/init.d/ece
-/etc/default/ece
-/etc/inti.d/rmi-hub
-/var/lib/escenic
-"
-  actual_backup=""
-  for el in $possible_backup; do
-    if [ "$el" == "/opt/escenic" -a $backup_exclude_binaries -eq 1 ]; then
-      continue
-    elif [ -r "$el" ]; then
-      actual_backup="$el $actual_backup"
-    fi
-  done
-
-  if [ "$appserver" == "tomcat" -a "$backup_exclude_binaries" -eq 0 ]; then
-    actual_backup="$(get_actual_file $tomcat_home) $tomcat_base $actual_backup"
-  fi
-
-  print "Creating snapshot ... (this will take a while)"
-  run tar cf $archive_file \
-    $actual_backup \
-    $db_backup_file
-
-  message="Backup ready: $archive_file"
-  print $message
-  log $message
-  print "The backup arhcive includes:"
-  print "- Database snapshot"
-  print "- All Solr & Escenic data files from /var/lib/escenic"
-
-  if [ "$backup_exclude_binaries" -eq 0 ]; then
-    print "- All app servers in /opt"
-    print "- All Escenic binaries & publication templates in /opt/escenic"
-  fi
-  
-  print "- All configuration in ${escenic_conf_dir} and /etc/default/ece"
-  print "- All bootstrap scripts from /etc/init.d"
-  print "Enjoy!"
 }
