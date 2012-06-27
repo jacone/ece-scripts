@@ -307,9 +307,16 @@ function set_correct_permissions()
 
         run chown -R ${ece_user}:${ece_group} $el
     done
-    
+
     if [ -d "$tomcat_base" ]; then
         run chown -R ${ece_user}:${ece_group} $tomcat_base
+    fi
+
+    # it's important that the ECE user has access to read the
+    # tomcat_home files, e.g. when creating a backup of it.
+    if [ -d "$tomcat_home" ]; then
+        run chgrp -R ${ece_group} $tomcat_home
+        run chmod -R g+rx $tomcat_home
     fi
 }
 
