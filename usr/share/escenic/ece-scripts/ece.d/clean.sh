@@ -1,5 +1,5 @@
 function clean_up() {
-  if [ "$type" == "engine" ]; then
+  if [[ "$type" == "engine" && -d $assemblytool_home ]]; then
     print "Cleaning up generated files in $assemblytool_home ..." 
     run cd $assemblytool_home
     run ant clean
