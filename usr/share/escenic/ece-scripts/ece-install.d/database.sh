@@ -109,7 +109,7 @@ function install_database_server()
     set_up_ecedb
   fi
 
-  if [ $db_replication -eq 1 ]; then
+  if [ ${db_replication-0} -eq 1 ]; then
     if [ $db_master -eq 1 ]; then
       create_replication_user
     fi
@@ -119,6 +119,15 @@ function install_database_server()
       set_slave_to_replicate_master
     fi
   fi
+}
+
+function set_ecedb_conf() {
+  # the user may override standard DB settings in ece-install.conf
+  set_db_settings_from_fai_conf
+  set_db_defaults_if_not_set
+
+  # the methods in drop-and-create-ecedb needs ece_home to be set
+  ece_home=${escenic_root_dir}/engine
 }
 
 function set_up_ecedb()
@@ -147,12 +156,7 @@ function set_up_ecedb()
     fi
   done
 
-  # the user may override standard DB settings in ece-install.conf
-  set_db_settings_from_fai_conf
-  set_db_defaults_if_not_set
-
-  # the methods in drop-and-create-ecedb needs ece_home to be set
-  ece_home=${escenic_root_dir}/engine
+  set_ecedb_conf
   pre_install_new_ecedb
   create_ecedb
   
