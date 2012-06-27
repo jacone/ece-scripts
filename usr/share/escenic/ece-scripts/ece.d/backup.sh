@@ -38,6 +38,7 @@ ${data_dir}/engine
 ${ece_home} 
 ${escenic_conf_dir} 
 ${solr_home}
+${tomcat_base}/conf
 /etc/default/ece
 /etc/init.d/ece
 /etc/init.d/rmi-hub
@@ -60,7 +61,10 @@ ${solr_home}
     elif [ "$el" == "${data_dir}" ]; then
       # special handling of the data dir itself (it has a lot of data,
       # we handle engine and solr data seperately)
-      actual_backup="$(ls $data_dir/*.state 2>/dev/null) $actual_backup"
+
+      if [ ${backup_exclude_state-0} -eq 0 ]; then
+        actual_backup="$(ls $data_dir/*.state 2>/dev/null) $actual_backup"
+      fi
     elif [ "$el" == "${solr_home}" -a $backup_exclude_solr -eq 1 ]; then
       print "Skipping Solr data files, not including $solr_home"
       continue
@@ -68,14 +72,15 @@ ${solr_home}
       -a $backup_exclude_multimedia -eq 1 ]; then
       print "Skipping the multimedia archive, not including $data_dir/engine"
       continue
-    elif [ "$el" == "/etc/init.d/*" -a $backup_exclude_init -eq 1 ]; then
-      print "Skipping the init.d scripts in /etc/init.d"
+    elif [[ "$el" == "/etc/init.d/"* && $backup_exclude_init -eq 1 ]]; then
+      print "Skipping the init.d scripts, not including $el"
       continue
     elif [ -r "$el" ]; then
       actual_backup="$el $actual_backup"
     fi
   done
 
+  # tomcat binaries, both home and base.
   if [ "$appserver" == "tomcat" -a "$backup_exclude_binaries" -eq 0 ]; then
     for el in $(get_actual_file $tomcat_home) $tomcat_base; do
       if [ -d $el ]; then
@@ -84,6 +89,11 @@ ${solr_home}
     done
   fi
 
+  if [ -z "$actual_backup" ]; then
+    print "You have excluded everything, $(red nothing to backup) :-("
+    exit 0
+  fi
+  
   print "Creating snapshot ... (this may take a while)"
   run tar cf $archive_file \
     $actual_backup
@@ -117,6 +127,10 @@ ${solr_home}
   
   if [ "${backup_exclude_init-0}" -eq 0 ]; then
     print "- All bootstrap scripts from /etc/init.d"
+  fi
+  
+  if [ "${backup_exclude_state-0}" -eq 0 ]; then
+    print "- All state files in $data_dir"
   fi
   
   print "Enjoy!"

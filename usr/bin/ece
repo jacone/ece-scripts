@@ -24,10 +24,11 @@ instance=default
 command=""
 backup_exclude_binaries=0
 backup_exclude_conf=0
-backup_exclude_solr=0
-backup_exclude_multimedia=0
 backup_exclude_db=0
 backup_exclude_init=0
+backup_exclude_multimedia=0
+backup_exclude_solr=0
+backup_exclude_state=0
 http_user=""
 http_password=""
 wget_auth=""
@@ -649,6 +650,9 @@ function set_type_command_and_instance() {
             continue
         elif [ "$el" == "--exclude-init" ]; then
             backup_exclude_init=1
+            continue
+        elif [ "$el" == "--exclude-state" ]; then
+            backup_exclude_state=1
             continue
         fi
         
