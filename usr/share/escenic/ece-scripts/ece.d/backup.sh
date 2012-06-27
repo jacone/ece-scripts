@@ -40,7 +40,7 @@ ${escenic_conf_dir}
 ${solr_home}
 /etc/default/ece
 /etc/init.d/ece
-/etc/inti.d/rmi-hub
+/etc/init.d/rmi-hub
 "
   for el in $possible_backup; do
     if [ "$el" == "${ece_home}" -a $backup_exclude_binaries -eq 1 ]; then
@@ -67,6 +67,9 @@ ${solr_home}
     elif [ "$el" == "${data_dir}/engine" \
       -a $backup_exclude_multimedia -eq 1 ]; then
       print "Skipping the multimedia archive, not including $data_dir/engine"
+      continue
+    elif [ "$el" == "/etc/init.d/*" -a $backup_exclude_init -eq 1 ]; then
+      print "Skipping the init.d scripts in /etc/init.d"
       continue
     elif [ -r "$el" ]; then
       actual_backup="$el $actual_backup"
@@ -112,7 +115,10 @@ ${solr_home}
     print "- All configuration in ${escenic_conf_dir} and /etc/default/ece"
   fi
   
-  print "- All bootstrap scripts from /etc/init.d"
+  if [ "${backup_exclude_init-0}" -eq 0 ]; then
+    print "- All bootstrap scripts from /etc/init.d"
+  fi
+  
   print "Enjoy!"
 }
 

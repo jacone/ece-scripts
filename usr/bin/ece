@@ -27,6 +27,7 @@ backup_exclude_conf=0
 backup_exclude_solr=0
 backup_exclude_multimedia=0
 backup_exclude_db=0
+backup_exclude_init=0
 http_user=""
 http_password=""
 wget_auth=""
@@ -645,6 +646,9 @@ function set_type_command_and_instance() {
             continue
         elif [ "$el" == "--exclude-db" ]; then
             backup_exclude_db=1
+            continue
+        elif [ "$el" == "--exclude-init" ]; then
+            backup_exclude_init=1
             continue
         fi
         
