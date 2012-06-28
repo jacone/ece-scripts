@@ -1,6 +1,29 @@
+function clear_generated_files() {
+  if [ -d ${assemblytool_home} ]; then
+    print "Cleaning up generated files in $assemblytool_home ..." 
+    run cd $assemblytool_home
+    run ant clean
+  fi
+
+  if [[ $appserver == "tomcat" ]]; then
+    local dir_list="
+    $tomcat_base/work
+    $tomcat_base/temp
+    "
+    for el in $dir_list; do
+      if [ -d $el ]; then
+        print "Cleaning up ${instance}'s $(basename $el) directory in $el ..."
+        run rm -rf $el/*
+      fi
+    done
+  fi
+}
+
 function backup_type() {
   local message="Backing up the $instance instance of $type on $HOSTNAME ..."
   print_and_log $message
+
+  clear_generated_files
 
   if [ "$type" == "rmi-hub" ]; then
     ensure_that_required_fields_are_set $hub_required_fields
