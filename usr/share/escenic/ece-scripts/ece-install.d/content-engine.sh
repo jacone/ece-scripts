@@ -446,7 +446,7 @@ EOF
     cat > $tomcat_base/conf/logging.properties <<EOF
 handlers = 1catalina.org.apache.juli.FileHandler, 2localhost.org.apache.juli.FileHandler, java.util.logging.ConsoleHandler, 6localhost.org.apache.juli.FileHandler
 
-.handlers = 1catalina.org.apache.juli.FileHandler, java.util.logging.ConsoleHandler
+.handlers = 1catalina.org.apache.juli.FileHandler
 
 1catalina.org.apache.juli.FileHandler.level = FINE
 1catalina.org.apache.juli.FileHandler.directory = \$\{catalina.base\}/logs
