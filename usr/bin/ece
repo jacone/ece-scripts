@@ -802,7 +802,6 @@ for el in $command; do
             update_publication_resources "edit_first"
             ;;
         backup)
-            clean_up
             backup_type
             ;;
         flush)
