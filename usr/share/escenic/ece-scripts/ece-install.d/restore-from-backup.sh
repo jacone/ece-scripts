@@ -1,3 +1,35 @@
+function remove_directory_contents_if_exists() {
+  if [ -z $1 ]; then
+    return
+  elif [ ! -d $1 ]; then
+    return
+  fi
+
+  print_and_log "Restore preparations: removing all files in $1 ..."
+  run rm -rf ${1}/*
+}
+
+## remove generated files of various sorts, to make the slate as clean
+## as possible before restoring a backup
+function wipe_the_slate_clean() {
+  if [ ${fai_restore_pre_wipe_solr-0} -eq 1 \
+    -o ${fai_restore_pre_wipe_all-0} -eq 1 ]; then
+    remove_directory_contents_if_exists ${escenic_data_dir}/solr/data
+  fi
+  if [ ${fai_restore_pre_wipe_logs-0} -eq 1 \
+    -o ${fai_restore_pre_wipe_all-0} -eq 1 ]; then
+    remove_directory_contents_if_exists ${escenic_log_dir}
+  fi
+  if [ ${fai_restore_pre_wipe_cache-0} -eq 1 \
+    -o ${fai_restore_pre_wipe_all-0} -eq 1 ]; then
+    remove_directory_contents_if_exists ${escenic_cache_dir}
+  fi
+  if [ ${fai_restore_pre_wipe_crash-0} -eq 1 \
+    -o ${fai_restore_pre_wipe_all-0} -eq 1 ]; then
+    remove_directory_contents_if_exists ${escenic_crash_dir}
+  fi
+}
+
 function restore_from_backup()
 {
   local restore_all=0
@@ -7,6 +39,8 @@ function restore_from_backup()
   local restore_conf=0
   local backup_file=""
   local backup_dir=$escenic_backups_dir
+
+  wipe_the_slate_clean
   
   if [ $(get_boolean_conf_value fai_enabled) -eq 1 -a \
     $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
@@ -172,7 +206,12 @@ function restore_from_backup()
         print_and_log $s
         s="and $escenic_conf_dir/ece*.conf"
         print_and_log $s
-        run chown -R ${ece_user}:${ece_group} ${directories}
+        for el in ${directories}; do
+          if [ ! -d $el ]; then
+            continue
+          fi
+          run chown -R ${ece_user}:${ece_group} ${el}
+        done  
       fi
     fi
   fi
