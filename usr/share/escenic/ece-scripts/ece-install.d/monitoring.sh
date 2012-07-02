@@ -414,37 +414,32 @@ function install_system_info() {
     return
   fi
   
-  print_and_log "Setting up self-reporting module on $HOSTNAME ..."
+  print_and_log "Setting up a self-reporting module on $HOSTNAME ..."
   
-  install_packages_if_missing thttpd escenic-common-scripts
-  assert_pre_requisite thttpd
+  install_packages_if_missing lighttpd escenic-common-scripts
+  assert_pre_requisite lighttpd
 
   local port=${fai_reporting_port-5678}
   local dir=${fai_reporting_dir-/var/www/system-info}
   make_dir $dir
   
-  # configure dhttpd
-  local file=/etc/thttpd/thttpd.conf
+  # configure the web server
+  local file=/etc/lighttpd/lighttpd.conf
 
   # set the port
-  sed -i "s~^port=80~port=$port~g" $file
+  local property=server.port
+  if [ $(grep ^server.port $file | wc -l) -eq 0 ]; then
+    echo "${property} = \"${port}\"" >> $file
+  else
+    run sed -i "s~^${property}.*=.*$~${property}=\"${port}\"~g" $file
+  fi
   
   # set the document root
-  sed -i "s~^dir=/var/www$~dir=$dir~g" $file
+  property=server.document-root
+  run sed -i "s~^${property}.*=.*\"/var/www\"$~${property}=\"$dir\"~g" $file
   
-  # set a non-chroot environment to make the symlinking outside the
-  # document root work
-  sed -i "s~^#nochroot~nochroot~g" $file
-  sed -i "s~^chroot~#chroot~g" $file
-
-  # prevent symlink checking
-  sed -i "s~^symlinks~#symlinks~g" $file
-  sed -i "s~^#nosymlinks~nosymlinks~g" $file
-  
-  # make thttpd start
-  file=/etc/default/thttpd
-  sed -i "s~^ENABLED=no~ENABLED=yes~g" $file
-  run /etc/init.d/thttpd restart
+  # make the web server start
+  run /etc/init.d/lighttpd restart
   
   # set system-info to be run every minute on the host
   local command="system-info -f html -u $ece_user > $dir/index.html"
