@@ -13,7 +13,7 @@ function create_java_deb_packages_and_repo() {
   run cd $tmp_dir
   run git clone https://github.com/flexiondotorg/oab-java6.git
   run cd oab-java6
-  run bash oab-java6.sh
+  run bash oab-java.sh
   run rm -rf $tmp_dir
     
   add_next_step "Local APT repository with Sun/Oracle Java packages"
