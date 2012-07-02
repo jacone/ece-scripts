@@ -201,15 +201,18 @@ function symlink_ece_components {
 function symlink_target {
 
   # global classpath
-  for f in $(ls -d $svn_src_dir/vosa-assembly/target/lib/*);
-    do run ln -s $f $assemblytool_lib_dir;
-  done
+  if [ -e "$svn_src_dir/vosa-assembly/target/lib" ]; then
+    for f in $(ls -d $svn_src_dir/vosa-assembly/target/lib/*);
+      do run ln -s $f $assemblytool_lib_dir;
+    done
+  fi
 
   # publications
-  for f in $(ls -d $svn_src_dir/vosa-assembly/target/wars/*);
-    do ln -s $f $assemblytool_pub_dir;
-  done
-
+  if [ -e "$svn_src_dir/vosa-assembly/target/wars" ]; then
+    for f in $(ls -d $svn_src_dir/vosa-assembly/target/wars/*);
+      do ln -s $f $assemblytool_pub_dir;
+    done
+  fi
 }
 
 ##
