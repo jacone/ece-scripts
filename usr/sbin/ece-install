@@ -464,7 +464,11 @@ function get_privileged_hosts() {
       sort | \
       uniq
   ); do
-    privileged_hosts=${privileged_hosts}" "${ip}
+    # ensure that all privileged_hosts are resolvable, or else
+    # services which uses them, like Varnish, may fail to start.
+    if [ $(host ${ip} | grep "not found" | wc -l) -eq 0 ]; then
+      privileged_hosts=${privileged_hosts}" "${ip}
+    fi
   done
 
   echo ${privileged_hosts}
