@@ -101,7 +101,7 @@ function home_preparation
     make_dir $plugin_dir
   fi
 
-  if [ -e "$engine_root_dir" ]; then
+  if [ -h "$engine_root_dir" ]; then
     run rm $engine_root_dir
   fi
 
