@@ -73,13 +73,22 @@ function create_diagram_if_possible() {
   fi
 }
 
-print_h2_header "List of ${HOSTNAME}'s outgoing connections"
-print_un_ordered_list_start
 outbound_connections="$(get_outbound_connections)"
-echo "$outbound_connections"  | while read f; do
-  read count program target <<< "$f"
-  print_list_item "$program $count conns -> $target"
-done
-print_un_ordered_list_end
 
+function list_outgoing_connections() {
+  if [ ${temporaries-1} -eq 0 ]; then
+    return
+  fi
+  
+  print_h2_header "List of ${HOSTNAME}'s outgoing connections"
+  print_un_ordered_list_start
+  echo "$outbound_connections"  | while read f; do
+    read count program target <<< "$f"
+    print_list_item "$program $count conns -> $target"
+  done
+  print_un_ordered_list_end
+
+}
+
+list_outgoing_connections
 create_diagram_if_possible
