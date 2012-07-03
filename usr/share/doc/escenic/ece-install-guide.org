@@ -57,7 +57,7 @@ you later easily can get the latest changes (for instance after we fix
 one of your reported issues), by doing "git pull" inside the
 ece-scripts directory.
 
-If you have problems installing git, you can also download as a ZIP
+If you have problems installing git, you can also download a ZIP
 archive here: https://github.com/skybert/ece-scripts/zipball/master
 
 * Running the ece-install Script
