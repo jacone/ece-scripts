@@ -46,14 +46,26 @@ sure that GNU's tools take precedence in the command PATH offered to
 ece-install.
 
 * Downloading the ece-install Script
-The ece-install script can be downloaded from:
-https://raw.github.com/skybert/ece-scripts/master/usr/sbin/ece-install
-or be downloaded together with the other ece-scripts using git:
+The easiest way of getting ece-install is to use git. Type this in
+your shell:
 #+BEGIN_SRC conf
 $ git clone https://github.com/skybert/ece-scripts.git
 #+END_SRC
 
+The reason why we want you to use git to download ece-install, is that
+you later easily can get the latest changes (for instance after we fix
+one of your reported issues), by doing "git pull" inside the
+ece-scripts directory.
+
+(If you have problems installing git, you can also download as a ZIP
+archive here: https://github.com/skybert/ece-scripts/zipball/master)
+
 * Running the ece-install Script
+After getting the latest version of ece-scripts, you run it with:
+#+BEGIN_SRC sh
+# bash ece-scripts/usr/sbin/ece-install  
+#+END_SRC
+
 ** Requires super user privileges
 You must run the script as the root user.  If you start the script as
 a regular user, it will complain:
@@ -972,4 +984,46 @@ the host that runs the install script.
 
 The following output is produced from ece-install:
 #+INCLUDE: "~/tmp/ece-install.out" src text
+
+
+* Exceptions
+** Easily 500
+{~} what now... while true; do curl -s  -I
+"http://newindianexpress.com//cities/chennai/article555367.ece%C2%^C";
+done
+
+
+** 2012-07-02 16:24
+2012-07-02 17:30:15,589 ERROR [http-8080-34]
+(com.escenic.framework.search.solr.SolrSearchEngine) solr search
+failed
+org.apache.solr.client.solrj.SolrServerException: Error executing
+query
+
+␐[..]
+
+Caused by: org.apache.solr.common.SolrException: Bad Request
+
+Bad Request
+
+request: http://localhost:8081/solr/select?sort=score
+desc&fl=*&start=0&q=(smoking OR scenes:censor OR board OR damages OR
+people`s OR health)+section:(3)+contenttype:
+(news)+publication:(nie)+(state:(published)+expiredate:[2012-07-02T12:00:15Z
+TO *]+activatedate:[* TO
+2012-07-02T12:00:15Z])+publishdate:[1970-01-01T00:00:00Z TO
+2012-07-02T12:00:15Z]&rows=15&wt=javabin&version=1
+        at
+        org.apache.solr.client.solrj.impl.CommonsHttpSolrServer.request(CommonsHttpSolrServer.java:424)
+        at
+        org.apache.solr.client.solrj.impl.CommonsHttpSolrServer.request(CommonsHttpSolrServer.java:243)
+        at
+        org.apache.solr.client.solrj.request.QueryRequest.process(QueryRequest.java:89)
+        ... 108 more
+2012-07-02 17:30:15,593 ERROR [http-8080-34]
+(com.escenic.framework.search.solr.action.SearchAction) Error while
+executing search
+java.lang.NullPointerException
+        at
+        com.escenic.framework.search.solr.action.SearchAction.execute(SearchAction.java:56)
 
