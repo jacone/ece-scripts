@@ -23,7 +23,7 @@ function install_database_server()
 
   source $(dirname $0)/drop-and-create-ecedb
 
-  if [ $on_debian_or_derivative -eq 1 ]; then
+  if [ $on_debian_or_derivative -eq 1 -a ${fai_db_sql_only-0} -eq 0 ]; then
 
     code_name=$(lsb_release -s -c)
     
@@ -91,17 +91,24 @@ function install_database_server()
       Percona-Server-server-55
       Percona-Server-client-55"
   fi
-  
-  install_packages_if_missing $packages
-  force_packages=0
 
-  if [ $on_redhat_or_derivative -eq 1 ]; then
-    run chkconfig --level 35 mysql on
-    run /etc/init.d/mysql restart
+  if [ ${fai_db_sql_only-0} -eq 0 ]; then
+    install_packages_if_missing $packages
+    force_packages=0
+
+    if [ $on_redhat_or_derivative -eq 1 ]; then
+      run chkconfig --level 35 mysql on
+      run /etc/init.d/mysql restart
+    fi
+
+    assert_pre_requisite mysqld
+  else
+    # when only running the SQL scripts, typically when using Amazon
+    # RDS, we need the mysql-client.
+    install_packages_if_missing "mysql-client"
   fi
-
+  
   assert_pre_requisite mysql
-  assert_pre_requisite mysqld
 
   if [ -z "$1" ]; then
     download_escenic_components

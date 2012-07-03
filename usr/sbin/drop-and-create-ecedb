@@ -146,7 +146,9 @@ history
 
 function create_ecedb()
 {
-  create_schema
+  if [ ${fai_db_sql_only-0} -eq 0 ]; then
+    create_schema
+  fi
 
   if [ ${fai_db_schema_only-0} -eq 1 ]; then
     print_and_log "Not running the ECE & plugin SQL files as you requested."
