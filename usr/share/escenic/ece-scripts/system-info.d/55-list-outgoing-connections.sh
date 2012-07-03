@@ -11,7 +11,7 @@ local_ip_list=$(/sbin/ifconfig | \
 egrep="arne"
 
 for el in $local_ip_list; do
-  egrep="127.0.⎈|$el"
+  egrep="127.0.|$el"
 done
 
 print_un_ordered_list_start
