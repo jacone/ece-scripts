@@ -235,7 +235,7 @@ function release
   symlink_ece_components
 
   run cd $svn_src_dir
-  run mvn clean package
+  run mvn clean install
 
   run cd $svn_src_dir/vosa-assembly/target
   run unzip vosa-assembly.zip
