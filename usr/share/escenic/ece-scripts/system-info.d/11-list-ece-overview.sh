@@ -38,6 +38,26 @@ function create_ece_overview() {
   done
   
   print_un_ordered_list_end
+
+  if [ ${temporaries-1} -eq 1 ]; then
+    list_error_overview_for_instance $1
+  fi
+}
+
+## $1 :: the instance name
+function list_error_overview_for_instance() {
+  local file=/var/log/escenic/${HOSTNAME}-${1}-messages
+  if [ ! -r $file ]; then
+    return
+  fi
+
+  print_h4_header "Overview of ${1}'s errors"
+  local errors="$(grep ERROR ${file} | cut -d' ' -f6- | sort | uniq -c | sort -n -r | sed 's/^[ ]*//g')"
+  if [ $(echo "$errors" | wc -c) -lt 5 ]; then
+      print_pre_text "There are no errors in today's log ($file)"
+  else
+      print_pre_text "$errors"
+  fi
 }
 
 function get_overview_of_all_instances() {
