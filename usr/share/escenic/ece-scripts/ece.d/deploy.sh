@@ -22,7 +22,7 @@ function update_deployment_state_file() {
   local state_file=$(get_state_file)
 
   if [ ! -w $(dirname $state_file) ]; then
-    print_and_log "I cannot write to $state_file, I will exit :-("
+    print_and_log "I cannot write to $(dirname state_file), I will exit :-("
     exit 1
   fi
 
