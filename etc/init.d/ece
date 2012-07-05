@@ -77,7 +77,12 @@ function ensure_dirs_are_ok()
         if [ ! -d $el ]; then
             mkdir -p $el
         fi
-        chown --changes -R $ece_unix_user:$ece_unix_group $el
+        
+        # TODO make this configurable through /etc/default/ece For
+        # now, leave it out as it becomes real performance killer when
+        # run in production.
+        #
+        # chown --changes -R $ece_unix_user:$ece_unix_group $el
     done
 }
 
