@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-# script fro creating DEB and RPM packages of the vosa, ece-install
+# script for creating DEB and RPM packages of the vosa, ece-install
 # and ece scripts.
 
 # by tkj@vizrt.com
@@ -139,6 +139,7 @@ function set_up_escenic-common-scripts() {
   cp -r ../../../bin/system-info $target_dir/usr/bin/
   cp -r ../../escenic/ece-scripts/system-info.d \
     $target_dir/usr/share/escenic/ece-scripts/
+  cp ../../../../etc/default/system-info $target_dir/etc/default/
   cp -r ../../doc/escenic/system-info-guide.{org,html} \
     $target_dir/usr/share/doc/escenic
   
