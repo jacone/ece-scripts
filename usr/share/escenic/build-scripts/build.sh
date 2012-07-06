@@ -198,7 +198,7 @@ function symlink_ece_components {
 
   # Version - Widget Framework
   parse_version WIDGET_FRAMEWORK_VERSION vosa.widget-framework.version
-  symlink_distribution plugins/widget-framework-$WIDGET_FRAMEWORK_VERSION plugins/widget-framework
+  symlink_distribution plugins/widget-framework-core-$WIDGET_FRAMEWORK_VERSION plugins/widget-framework
 
 }
 
