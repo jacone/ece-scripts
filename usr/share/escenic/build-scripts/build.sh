@@ -195,6 +195,11 @@ function symlink_ece_components {
   # Version - Widget Framework Common
   parse_version WIDGET_FRAMEWORK_COMMON_VERSION vosa.widget-framework-common.version
   symlink_distribution plugins/widget-framework-common-$WIDGET_FRAMEWORK_COMMON_VERSION plugins/widget-framework-common
+
+  # Version - Widget Framework
+  parse_version WIDGET_FRAMEWORK_VERSION vosa.widget-framework.version
+  symlink_distribution plugins/widget-framework-$WIDGET_FRAMEWORK_VERSION plugins/widget-framework
+
 }
 
 # symlink .war files from target/
