@@ -157,7 +157,7 @@ function create_block_diag_for_instance() {
 blockdiag {
   ${instance} [ color = "red" ];
 EOF
-  netstat -nap 2>/dev/null | \
+  netstat -nap --tcp 2>/dev/null | \
     grep ${type_pid} | \
     grep -v LISTEN | \
     awk '{print $5}' | \
