@@ -152,8 +152,11 @@ function deploy() {
           jar xf $war \
             1>>$log \
             2>>$log)
-        add_memcached_support $tomcat_base/webapps/$name
         exit_on_error "extracting $war to $tomcat_base/webapps/"
+        
+        if [ ${enable_memcached_support-1} -eq 1 ]; then
+          add_memcached_support $tomcat_base/webapps/$name
+        fi
       done
       ;;
     
