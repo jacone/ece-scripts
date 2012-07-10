@@ -52,6 +52,7 @@ function get_info_for_type() {
   fi
 
   print_deployment_state
+  create_block_diag_for_instance
 }
 
 print_deployment_state() {
@@ -134,4 +135,42 @@ function print_tomcat_resources() {
   else
     print "|-> user $USER cannot read $file"
   fi
+}
+
+## doesn't use /etc/services on purpose
+function visualise_known_ports() {
+  local the_host=$(echo $1 | cut -d':' -f1)
+  local the_port=$(echo $1 | cut -d':' -f2)
+
+  echo ${the_host}:${the_port} | \
+    sed \
+    -e 's/8080/ece/g' \
+    -e 's/8081/eae/g' \
+    -e 's/3306/mysql/g' \
+    -e 's/22/ssh/g' \
+    -e 's/11211/memcached/g'
+}
+
+function create_block_diag_for_instance() {
+  local file=/var/cache/escenic/${instance}.blockdiag
+  cat > ${file} <<EOF
+blockdiag {
+  ${instance} [ color = "red" ];
+EOF
+  netstat -nap --tcp 2>/dev/null | \
+    grep ${type_pid} | \
+    grep -v LISTEN | \
+    awk '{print $5}' | \
+    uniq -c | while read f; do
+    read count to <<< $f
+    cat >> $file <<EOF
+  "$(visualise_known_ports $to)";
+  ${instance} -> "$(visualise_known_ports $to)" [ label = "${count} conns" ];
+EOF
+  done
+
+  echo "}" >> $file
+  
+  print "Architecture diagram:"
+  print "|-> $file"
 }
