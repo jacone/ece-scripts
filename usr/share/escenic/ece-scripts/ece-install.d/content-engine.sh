@@ -510,8 +510,12 @@ function install_ece_third_party_packages
       local version_needs_local_java_deb=610
       local version=$(lsb_release -s -r | sed "s#\.##g")
     fi
-    
-    if [ $version -ge $version_needs_local_java_deb -a \
+
+    # Debian testing has started to report just testing instead of a
+    # relase number. Assessed 2012-07-05 10:34
+    if [[ $version == "testing" ]]; then
+      create_java_deb_packages_and_repo
+    elif [ $version -ge $version_needs_local_java_deb -a \
       $(has_sun_java_installed) -eq 0 ]; then
       create_java_deb_packages_and_repo
     fi
