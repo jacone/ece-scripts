@@ -78,12 +78,9 @@ function ensure_dirs_are_ok()
             mkdir -p $el
         fi
         
-        # TODO make this configurable through /etc/default/ece For
-        # now, leave it out as it becomes real performance killer when
-        # run in production.
-        #
-        # chown --changes -R $ece_unix_user:$ece_unix_group $el
+        chown --changes $ece_unix_user:$ece_unix_group $el
     done
+
 }
 
 function ensure_ece_script_is_ok()
