@@ -254,7 +254,7 @@ plugins = ../plugins" >> $assemblytool_home/assemble.properties
 
   if [ ! -d "$subversion_dir" ]; then
     mkdir $subversion_dir
-    echo="[groups]
+    echo "[groups]
 
 [global]
 # Password / passphrase caching parameters:
