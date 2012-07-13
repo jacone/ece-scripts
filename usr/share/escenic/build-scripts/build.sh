@@ -77,6 +77,8 @@ function get_user_options
 function verify_configuration {
   ensure_variable_is_set customer
   ensure_variable_is_set svn_base
+  # append a / if not present
+  [[ $svn_base != */ ]] && $svn_base="$svn_base"/
   ensure_variable_is_set svn_user
   ensure_variable_is_set svn_password
 }
