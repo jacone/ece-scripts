@@ -89,6 +89,14 @@ function verify_vosa {
     print_and_log "$assemblytool_root_dir is required, but it doesn't exist!"
     remove_pid_and_exit_in_error
   fi
+  if [ ! -d $assemblytool_pub_dir ]; then
+    print_and_log "$assemblytool_pub_dir did not exist so it has been created."
+    make_dir $assemblytool_pub_dir
+  fi
+  if [ ! -d $assemblytool_lib_dir ]; then
+    print_and_log "$assemblytool_lib_dir did not exist so it has been created."
+    make_dir $assemblytool_lib_dir
+  fi
   if [ ! -d $release_dir ]; then
     print_and_log "$release_dir did not exist so it has been created."
     make_dir $release_dir
