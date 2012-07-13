@@ -225,20 +225,17 @@ function symlink_target {
 ##
 function release 
 {
-  print_and_log "Starting build @ $(date) ..."
-  
   home_preparation
-
+  
   run svn_checkout
-
+  
   revision=`svn info $svn_src_dir | grep -i Revision | awk '{print $2}'`
   
   if [ -z "$revision" ]; then
     print_and_log "Failed to fetch current revision number, exiting! :-("
     remove_pid_and_exit_in_error
   fi
-
-
+  
   symlink_ece_components
 
   run cd $svn_src_dir
