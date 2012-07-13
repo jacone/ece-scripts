@@ -15,16 +15,26 @@ root_dir=~/
 add_user=0
 add_artifact=0
 add_artifact_list=0
+setup_builder=0
 
-# Command variables
+# Add artifact variables
 list_path=
 artifact_path=
+
+# Add user variables
 user_name=
 user_svn_path=
 user_svn_username=
 user_maven_username=
 user_svn_password="CHANGE_ME"
 user_maven_password="CHANGE_ME"
+
+# Initialize builder variables
+builder_user_name=builder
+skel_dir=/home/$builder_user_name/skel
+subversion_dir=$skel_dir/.subversion
+assemblytool_home=$skel_dir/assemblytool
+m2_home=$skel_dir/.m2
 
 ##
 function init
@@ -103,7 +113,7 @@ function common_post_action {
 ##
 function get_user_options
 {
-  while getopts ":a:l:u:c:s:m:p:" opt; do
+  while getopts ":a:l:u:c:s:m:p:i" opt; do
     case $opt in
       a)
         print_and_log "Adding artifact ${OPTARG}..."
@@ -141,6 +151,10 @@ function get_user_options
           remove_pid_and_exit_in_error
         fi
         ;;
+      i)
+        print_and_log "Setting up a new builder under /home/$builder_user_name"
+        setup_builder=1
+        ;;
       \?)
         print_and_log "Invalid option: -$OPTARG" >&2
         remove_pid_and_exit_in_error
@@ -157,7 +171,9 @@ function get_user_options
 ##
 function execute
 {
-  if [ $add_user -eq 1 ]; then
+  if [ $setup_builder -eq 1 ]; then
+    setup_builder
+  elif [ $add_user -eq 1 ]; then
     verify_add_user
     add_user
   elif [ $add_artifact -eq 1 ]; then
@@ -170,6 +186,91 @@ function execute
     print_and_log "No valid action chosen, exiting!" >&2
     remove_pid_and_exit_in_error
   fi
+}
+
+function setup_builder
+{
+  if [ ! -z "$(getent passwd $builder_user_name)" ]; then
+    print_and_log "The user $builder_user_name already exist!"
+    remove_pid_and_exit_in_error
+  fi
+  if [ -d /home/$builder_user_name ]; then
+    print_and_log "The user $builder_user_name does not exist, but has a home folder!"
+    remove_pid_and_exit_in_error
+  fi
+  run useradd -m -s /bin/bash $builder_user_name
+  run ln -s /usr/share/escenic/build-scripts/builder.sh /home/$builder_user_name/builder.sh
+
+  if [ ! -d "$skel_dir" ]; then
+    mkdir $skel_dir
+  fi
+
+  if [ ! -d "$assemblytool_home" ]; then
+    mkdir $assemblytool_home
+    run wget --http-user=download --http-password=download http://technet.escenic.com/downloads/assemblytool-2.0.2.zip -O $assemblytool_home/assemblytool.zip
+    run cd $assemblytool_home
+    run unzip assemblytool.zip
+    run rm -f assemblytool.zip
+    run ant -q initialize
+    echo "engine.root = ../engine/
+plugins = ../plugins" >> $assemblytool_home/assemble.properties
+  fi
+
+  if [ ! -d "$m2_home" ]; then
+    mkdir $m2_home
+    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<settings xmlns=\"http://maven.apache.org/settings/1.0.0\"
+          xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+          xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0
+                              http://maven.apache.org/xsd/settings-1.0.0.xsd\">
+  <servers>
+    <server>
+      <id>vizrt-repo</id>
+      <username>maven.username</username>
+      <password>maven.password</password>
+    </server>
+  </servers>
+
+  <profiles>
+    <profile>
+      <id>escenic-profile</id>
+      <repositories>
+        <repository>
+          <id>vizrt-repo</id>
+          <name>Vizrt Maven Repository</name>
+          <url>http://maven.vizrt.com</url>
+          <layout>default</layout>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+
+  <activeProfiles>
+    <activeProfile>escenic-profile</activeProfile>
+    <activeProfile>vosa</activeProfile>
+  </activeProfiles>
+</settings>" > $m2_home/settings.xml
+  fi
+
+  if [ ! -d "$subversion_dir" ]; then
+    mkdir $subversion_dir
+    echo="[groups]
+
+[global]
+# Password / passphrase caching parameters:
+store-passwords = yes
+store-plaintext-passwords = yes" > $subversion_dir/servers
+  fi
+
+  if [ ! -e "$skel_dir/.vimrc" ]; then
+    echo "set background=dark
+syntax on
+set nocompatible
+set backspace=2" > $skel_dir/.vimrc
+  fi
+
+  run chown -R $builder_user_name:$builder_user_name /home/$builder_user_name
+
 }
 
 ##
@@ -325,5 +426,5 @@ print_and_log "Starting process @ $(date)"
 print_and_log "Additional output can be found in $log_file"
 get_user_options $@
 execute
-common_post_action
 print_and_log "Done! @ $(date)"
+common_post_action
