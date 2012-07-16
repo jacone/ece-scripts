@@ -447,6 +447,8 @@ function add_artifact
           print_and_log "Directory contains numbers and \"engine\" so it is most likely valid!"
           if [ ! -d "$root_dir/engine/$filename" ]; then
             run mv $f $root_dir/engine/.
+            # workaround for assemblytool writing into the engine directory
+            run mkdir $root_dir/engine/patches
           else
             print_and_log "$root_dir/engine/$filename already exists and will be ignored!"
           fi 
