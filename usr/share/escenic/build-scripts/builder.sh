@@ -31,6 +31,8 @@ user_maven_password="CHANGE_ME"
 # Initialize builder variables
 builder_user_name=builder
 root_dir=/home/$builder_user_name
+builder_conf_dir=$root_dir/.builder
+builder_conf_file=$builder_conf_dir/builder.conf
 skel_dir=$root_dir/skel
 subversion_dir=$skel_dir/.subversion
 assemblytool_home=$skel_dir/assemblytool
@@ -122,7 +124,7 @@ function common_post_action {
 ##
 function get_user_options
 {
-  while getopts ":a:l:u:c:s:m:p:i" opt; do
+  while getopts ":a:l:u:c:s:m:p:i:" opt; do
     case $opt in
       a)
         print_and_log "Adding artifact ${OPTARG}..."
@@ -163,6 +165,7 @@ function get_user_options
       i)
         print_and_log "Setting up a new builder under /home/$builder_user_name"
         setup_builder=1
+        provided_conf_file=${OPTARG}
         ;;
       \?)
         print_and_log "Invalid option: -$OPTARG" >&2
@@ -184,22 +187,38 @@ function execute
     setup_builder
   elif [ $add_user -eq 1 ]; then
     verify_builder_exist
+    read_builder_configuration
     verify_add_user
     add_user
   elif [ $add_artifact -eq 1 ]; then
     verify_builder_exist
+    read_builder_configuration
     verify_add_artifact
     add_artifact
   elif [ $add_artifact_list -eq 1 ]; then
     verify_builder_exist
+    read_builder_configuration
     verify_add_artifact_list
     add_artifact_list
   else
+    verify_builder_exist
     print_and_log "No valid action chosen, exiting!" >&2
     remove_pid_and_exit_in_error
   fi
 }
 
+##
+function read_builder_configuration
+{
+  if [ -e $builder_conf_file ]; then
+    run source $builder_conf_file
+  else
+    print_and_log "The configuration file $builder_conf_file has been removed, exiting!" >&2
+    remove_pid_and_exit_in_error
+  fi
+}
+
+##
 function setup_builder
 {
   if [ ! -z "$(getent passwd $builder_user_name)" ]; then
@@ -210,8 +229,14 @@ function setup_builder
     print_and_log "The user $builder_user_name does not exist, but has a home folder!"
     remove_pid_and_exit_in_error
   fi
+  if [ ! -e $provided_conf_file ]; then
+    print_and_log "The provided configuration file does not exist, exiting!" >&2
+    remove_pid_and_exit_in_error
+  else
+    run source $provided_conf_file
+  fi
+
   run useradd -m -s /bin/bash $builder_user_name
-  run ln -s /usr/share/escenic/build-scripts/builder.sh /home/$builder_user_name/builder.sh
 
   if [ ! -d "$skel_dir" ]; then
     mkdir $skel_dir
@@ -219,7 +244,7 @@ function setup_builder
 
   if [ ! -d "$assemblytool_home" ]; then
     mkdir $assemblytool_home
-    run wget --http-user=download --http-password=download http://technet.escenic.com/downloads/assemblytool-2.0.2.zip -O $assemblytool_home/assemblytool.zip
+    run wget --http-user=$technet_user --http-password=$technet_password http://technet.escenic.com/downloads/assemblytool-2.0.2.zip -O $assemblytool_home/assemblytool.zip
     run cd $assemblytool_home
     run unzip assemblytool.zip
     run rm -f assemblytool.zip
@@ -265,7 +290,7 @@ plugins = ../plugins" >> $assemblytool_home/assemble.properties
   fi
 
   if [ ! -d "$subversion_dir" ]; then
-    mkdir $subversion_dir
+    run mkdir $subversion_dir
     echo "[groups]
 
 [global]
@@ -280,6 +305,11 @@ syntax on
 set nocompatible
 set backspace=2" > $skel_dir/.vimrc
   fi
+
+  if [ ! -d $builder_conf_dir ]; then
+    run mkdir $builder_conf_dir
+  fi
+  cat $provided_conf_file > $builder_conf_file
 
   run chown -R $builder_user_name:$builder_user_name /home/$builder_user_name
 
@@ -340,30 +370,72 @@ function verify_add_artifact
 }
 
 ##
+function detect_duplicate_artifact
+{
+  if [ $engine_found -eq 1 ]; then
+    if [ -d $root_dir/engine/engine-$resource_version ]; then
+      duplicate_resource=1
+    fi
+  elif [ $plugin_found -eq 1 ]; then
+    if [ -d $root_dir/plugins/$plugin_pattern-$resource_version ]; then
+      duplicate_resource=1
+    fi
+  fi
+}
+
+##
 function add_artifact 
 {
   engine_found=0
   plugin_found=0
+  unsupported_plugin_found=0
   plugin_pattern=""
-  if [ -e "$root_dir/downloads" ]; then
+  resource_version=`echo $artifact_path | sed "s/.*-\(.*\)\.[a-zA-Z0-9]\{3\}$/\1/"`
+  duplicate_resource=0  
+
+  if [ ! -d $root_dir/engine ]; then
+    run mkdir $root_dir/engine
+    print_and_log "The directory $root_dir/engine did not exist so it has been created."
+  fi
+
+  if [ ! -d $root_dir/plugins ]; then
+    run mkdir $root_dir/plugins
+    print_and_log "The directory $root_dir/plugins did not exist so it has been created."
+  fi
+
+  if [ -d "$root_dir/downloads" ]; then
     run rm -rf $root_dir/downloads
+  fi
+
+  if [ ! -d $root_dir/downloads ]; then
     make_dir $root_dir/downloads
     make_dir $root_dir/downloads/unpack
   fi
+
   if [[ "$artifact_path" == *\/engine-* ]]; then
     engine_found=1
-    print ""
   fi
+
   for f in $escenic_plugin_indentifiers; do
     if [[ "$artifact_path" == *$f* ]]; then
       plugin_found=1
       plugin_pattern=$f
     fi
+  done
+
+  for f in $unsupported_plugin_indentifiers; do
+    if [[ "$artifact_path" == *$f* ]]; then
+      unsupported_plugin_found=1
+      plugin_pattern=$f
+    fi
   done  
+
+  detect_duplicate_artifact
+
   if [ $engine_found -eq 1 ] && [ $plugin_found -eq 1 ]; then
     print_and_log "The requested resource $artifact_path has been identified as both an engine and a plugin. Exiting!" >&2
     remove_pid_and_exit_in_error
-  elif [ $engine_found -eq 1 ]; then
+  elif [ $engine_found -eq 1 ] && [ $duplicate_resource -eq 0 ]; then
     run wget --http-user=$technet_user --http-password=$technet_password $artifact_path -O $root_dir/downloads/unpack/resource.zip
     run cd $root_dir/downloads/unpack
     run unzip $root_dir/downloads/unpack/resource.zip
@@ -372,7 +444,7 @@ function add_artifact
         filename=$(basename "$f")
         echo "$filename" | grep '[0-9]' | grep -q 'engine'
         if [ $? = 0 ]; then
-          echo "Directory contains numbers and \"engine\" so it is most likely valid!"
+          print_and_log "Directory contains numbers and \"engine\" so it is most likely valid!"
           if [ ! -d "$root_dir/engine/$filename" ]; then
             run mv $f $root_dir/engine/.
           else
@@ -380,7 +452,7 @@ function add_artifact
           fi 
         fi
     done
-  elif [ $plugin_found -eq 1 ]; then
+  elif [ $plugin_found -eq 1 ] && [ $duplicate_resource -eq 0 ]; then
     run wget --http-user=$technet_user --http-password=$technet_password $artifact_path -O $root_dir/downloads/unpack/resource.zip
     run cd $root_dir/downloads/unpack
     run unzip $root_dir/downloads/unpack/resource.zip
@@ -390,7 +462,7 @@ function add_artifact
         filename=$(basename "$f")
         echo "$filename" | grep '[0-9]' | grep -q "$plugin_pattern"
         if [ $? = 0 ]; then
-          echo "Directory contains numbers and \"$plugin_pattern\" so it is most likely valid!"
+          print_and_log "Directory contains numbers and \"$plugin_pattern\" so it is most likely valid!"
           if [ ! -d "$root_dir/plugins/$filename" ]; then
             run mv $f $root_dir/plugins/.
           else
@@ -405,6 +477,10 @@ function add_artifact
           fi
         fi
     done
+  elif [ $duplicate_resource -eq 1 ]; then
+    print_and_log "The requested resource $artifact_path already exists and will be ignored."
+  elif [ $unsupported_plugin_found -eq 1 ]; then
+    print_and_log "The requested resource $artifact_path is a plugin, but currently unsupported by the plattform."
   else
     print_and_log "No valid resource identified using $artifact_path, exiting!"
   fi
@@ -425,7 +501,9 @@ function add_artifact_list
 {
   for f in $(cat $list_path);
   do
-    add_artifact $f
+    artifact_path=$f
+    add_artifact
+    artifact_path=
   done
 }
 
