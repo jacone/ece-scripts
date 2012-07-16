@@ -7,9 +7,8 @@
 
 # Common variables
 ece_scripts_home=/usr/share/escenic/ece-scripts
-log=~/builder.log
-pid_file=~/builder.pid
-root_dir=~/
+log=/var/log/builder.log
+pid_file=/var/run/ece-builder.pid
 
 # Commands
 add_user=0
@@ -31,7 +30,8 @@ user_maven_password="CHANGE_ME"
 
 # Initialize builder variables
 builder_user_name=builder
-skel_dir=/home/$builder_user_name/skel
+root_dir=/home/$builder_user_name
+skel_dir=$root_dir/skel
 subversion_dir=$skel_dir/.subversion
 assemblytool_home=$skel_dir/assemblytool
 m2_home=$skel_dir/.m2
@@ -106,6 +106,15 @@ function ensure_no_user_conflict
 }
 
 ##
+function verify_builder_exist 
+{
+  if [ ! -d $root_dir ]; then
+    print_and_log "Builder has not been initialized, please run this script with the -i flag!"
+    remove_pid_and_exit_in_error
+  fi
+}
+
+##
 function common_post_action {
   run rm $pid_file
 }
@@ -174,12 +183,15 @@ function execute
   if [ $setup_builder -eq 1 ]; then
     setup_builder
   elif [ $add_user -eq 1 ]; then
+    verify_builder_exist
     verify_add_user
     add_user
   elif [ $add_artifact -eq 1 ]; then
+    verify_builder_exist
     verify_add_artifact
     add_artifact
   elif [ $add_artifact_list -eq 1 ]; then
+    verify_builder_exist
     verify_add_artifact_list
     add_artifact_list
   else
@@ -276,6 +288,7 @@ set backspace=2" > $skel_dir/.vimrc
 ##
 function verify_add_user 
 {
+  
   enforce_variable user_name "You need to provide your username using the -u flag."
   ensure_no_user_conflict
   enforce_variable user_svn_path "You need to provide your svn path using the -c flag."
@@ -423,7 +436,7 @@ init
 set_pid
 verify_root_privilege
 print_and_log "Starting process @ $(date)"
-print_and_log "Additional output can be found in $log_file"
+print_and_log "Additional output can be found in $log"
 get_user_options $@
 execute
 print_and_log "Done! @ $(date)"
