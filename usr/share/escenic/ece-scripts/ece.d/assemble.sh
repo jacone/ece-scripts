@@ -46,7 +46,7 @@ function assemble() {
       uniq | \
       wc -l) -gt 1 ]; then
       duplicates_found=1
-      debug "More than one version of $(echo $jar | sed 's/-$//g')"
+      print_and_log "More than one version of $(echo $jar | sed 's/-$//g')"
     fi
   done
 
