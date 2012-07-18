@@ -448,7 +448,7 @@ function add_artifact
           if [ ! -d "$root_dir/engine/$filename" ]; then
             run mv $f $root_dir/engine/.
             # workaround for assemblytool writing into the engine directory
-            run mkdir $root_dir/engine/patches
+            run mkdir $root_dir/engine/$f/patches
           else
             print_and_log "$root_dir/engine/$filename already exists and will be ignored!"
           fi 
