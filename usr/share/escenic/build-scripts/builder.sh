@@ -336,8 +336,8 @@ function verify_add_user
 ##
 function add_user
 {
-  run mkdir /home/$user_name/.build
   run useradd -m -s /bin/bash $user_name
+  run mkdir /home/$user_name/.build
   echo "customer=$user_name
 svn_base=$user_svn_path
 svn_user=$user_svn_username
