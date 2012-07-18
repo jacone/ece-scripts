@@ -284,7 +284,7 @@ plugins = ../plugins" >> $assemblytool_home/assemble.properties
 
   <activeProfiles>
     <activeProfile>escenic-profile</activeProfile>
-    <activeProfile>vosa</activeProfile>
+    <activeProfile>builder</activeProfile>
   </activeProfiles>
 </settings>" > $m2_home/settings.xml
   fi
@@ -344,7 +344,7 @@ svn_user=$user_svn_username
 svn_password=$user_svn_password
 ece_scripts_home=/usr/share/escenic/ece-scripts" > /home/$user_name/build.conf
   run chown $user_name:$user_name /home/$user_name/build.conf
-  run rsync -av /home/vosa/skel/ /home/$user_name
+  run rsync -av $skel_dir/ /home/$user_name
   run sed -i "s/maven.username/$user_maven_username/" /home/$user_name/.m2/settings.xml
   run sed -i "s/maven.password/$user_maven_password/" /home/$user_name/.m2/settings.xml
   run chown -R $user_name:$user_name /home/$user_name
