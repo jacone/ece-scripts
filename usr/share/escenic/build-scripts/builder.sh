@@ -337,7 +337,6 @@ function verify_add_user
 function add_user
 {
   run useradd -m -s /bin/bash $user_name
-  run ln -s /usr/share/escenic/build-scripts/build.sh /home/$user_name/build.sh
   echo "customer=$user_name
 svn_base=$user_svn_path
 svn_user=$user_svn_username
