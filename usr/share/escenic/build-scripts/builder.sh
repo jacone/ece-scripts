@@ -482,7 +482,7 @@ function add_artifact
   elif [ $duplicate_resource -eq 1 ]; then
     print_and_log "The requested resource $artifact_path already exists and will be ignored."
   elif [ $unsupported_plugin_found -eq 1 ]; then
-    print_and_log "The requested resource $artifact_path is a plugin, but currently unsupported by the plattform."
+    print_and_log "The requested resource $artifact_path is a plugin, but currently unsupported by the platform."
   else
     print_and_log "No valid resource identified using $artifact_path, exiting!"
   fi
