@@ -107,9 +107,12 @@ function verify_builder {
 # clean up customer home
 function home_preparation
 {
-  if [ -e "$plugin_dir" ]; then
+  if [ -d "$plugin_dir" ]; then
     run rm -rf $plugin_dir
-    make_dir $plugin_dir
+  fi
+
+  if [ ! -d $plugin_dir ]; then
+    run mkdir $plugin_dir
   fi
 
   if [ -h "$engine_root_dir" ]; then
