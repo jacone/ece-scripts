@@ -341,8 +341,7 @@ function add_user
   echo "customer=$user_name
 svn_base=$user_svn_path
 svn_user=$user_svn_username
-svn_password=$user_svn_password
-ece_scripts_home=/usr/share/escenic/ece-scripts" > /home/$user_name/build.conf
+svn_password=$user_svn_password" > /home/$user_name/build.conf
   run chown $user_name:$user_name /home/$user_name/build.conf
   run rsync -av $skel_dir/ /home/$user_name
   run sed -i "s/maven.username/$user_maven_username/" /home/$user_name/.m2/settings.xml
