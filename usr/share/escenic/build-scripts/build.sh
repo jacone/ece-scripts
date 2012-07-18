@@ -18,6 +18,7 @@ svn_src_dir=~/src
 release_dir=~/releases
 plugin_dir=~/plugins
 engine_root_dir=~/engine
+ece_scripts_home=/usr/share/escenic/ece-scripts
 
 ##
 function fetch_configuration
