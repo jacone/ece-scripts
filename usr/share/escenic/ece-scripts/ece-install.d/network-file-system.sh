@@ -55,6 +55,7 @@ EOF
   elif [ $on_redhat_or_derivative -eq 1 ]; then
     run service rpcbind start
     run service nfs start
+    run chkconfig --level 35 nfs on
   fi
   
   add_next_step "An NFS server has been installed on ${HOSTNAME},"
