@@ -23,7 +23,7 @@ ece_scripts_home=/usr/share/escenic/ece-scripts
 ##
 function fetch_configuration
 {
-  conf_file=~/build.conf
+  conf_file=~/.build/build.conf
   source $conf_file
 }
 
