@@ -88,7 +88,7 @@ function set_up_escenic-content-engine-installer() {
 function set_up_escenic-build-scripts() {
   mkdir -p $target_dir/usr/share/escenic/build-scripts
   cp ../build-scripts/build.sh $target_dir/usr/share/escenic/build-scripts/
-  cp ../build-scripts/builder.sh $target_dir/usr/share/escenic/build-scripts/
+  cp ../build-scripts/builder.sh $target_dir/usr/bin/ece-builder
 }
 
 function set_up_escenic-content-engine-scripts() {
