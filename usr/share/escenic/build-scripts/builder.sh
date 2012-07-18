@@ -496,12 +496,14 @@ function verify_add_artifact_list
     print_and_log "The file $list_path does not exist!, exiting!" >&2
     remove_pid_and_exit_in_error
   fi
+  run source $list_path
+  enforce_variable escenic_releases "You need to specify your releases with full URLs in a escenic_release variable!"
 }
 
 ##
 function add_artifact_list
 {
-  for f in $(cat $list_path);
+  for f in $escenic_releases;
   do
     artifact_path=$f
     add_artifact
