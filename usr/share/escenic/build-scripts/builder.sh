@@ -31,8 +31,11 @@ user_maven_password="CHANGE_ME"
 # Initialize builder variables
 builder_user_name=builder
 root_dir=/home/$builder_user_name
+download_dir=$root_dir/.downloads
 builder_conf_dir=$root_dir/.builder
 builder_conf_file=$builder_conf_dir/builder.conf
+artifact_conf_dir=.builder
+artifact_conf_file=artifact.conf
 skel_dir=$root_dir/skel
 subversion_dir=$skel_dir/.subversion
 assemblytool_home=$skel_dir/assemblytool
@@ -402,13 +405,12 @@ function add_artifact
     print_and_log "The directory $root_dir/plugins did not exist so it has been created."
   fi
 
-  if [ -d "$root_dir/downloads" ]; then
-    run rm -rf $root_dir/downloads
+  if [ -d $download_dir ]; then
+    run rm -rf $download_dir
   fi
 
-  if [ ! -d $root_dir/downloads ]; then
-    make_dir $root_dir/downloads
-    make_dir $root_dir/downloads/unpack
+  if [ ! -d $download_dir ]; then
+    run mkdir -p $download_dir/unpack
   fi
 
   if [[ "$artifact_path" == *\/engine-* ]]; then
@@ -435,10 +437,10 @@ function add_artifact
     print_and_log "The requested resource $artifact_path has been identified as both an engine and a plugin. Exiting!" >&2
     remove_pid_and_exit_in_error
   elif [ $engine_found -eq 1 ] && [ $duplicate_resource -eq 0 ]; then
-    run wget --http-user=$technet_user --http-password=$technet_password $artifact_path -O $root_dir/downloads/unpack/resource.zip
-    run cd $root_dir/downloads/unpack
-    run unzip $root_dir/downloads/unpack/resource.zip
-    for f in $(ls -d $root_dir/downloads/unpack/*);
+    run wget --http-user=$technet_user --http-password=$technet_password $artifact_path -O $download_dir/unpack/resource.zip
+    run cd $download_dir/unpack
+    run unzip $download_dir/unpack/resource.zip
+    for f in $(ls -d $download_dir/unpack/*);
       do
         filename=$(basename "$f")
         echo "$filename" | grep '[0-9]' | grep -q 'engine'
@@ -446,6 +448,10 @@ function add_artifact
           print_and_log "Directory contains numbers and \"engine\" so it is most likely valid."
           if [ ! -d "$root_dir/engine/$filename" ]; then
             run mv $f $root_dir/engine/.
+            if [ ! -d $root_dir/engine/$filename/$artifact_conf_dir ]; then
+              run mkdir $root_dir/engine/$filename/$artifact_conf_dir
+            fi
+            echo "artifact_uri=$artifact_path" > $root_dir/engine/$filename/$artifact_conf_dir/$artifact_conf_file
             # workaround for assemblytool writing into the engine directory
             run mkdir $root_dir/engine/$filename/patches
           else
@@ -454,11 +460,11 @@ function add_artifact
         fi
     done
   elif [ $plugin_found -eq 1 ] && [ $duplicate_resource -eq 0 ]; then
-    run wget --http-user=$technet_user --http-password=$technet_password $artifact_path -O $root_dir/downloads/unpack/resource.zip
-    run cd $root_dir/downloads/unpack
-    run unzip $root_dir/downloads/unpack/resource.zip
-    run rm -f $root_dir/downloads/unpack/resource.zip
-    for f in $(ls -d $root_dir/downloads/unpack/*);
+    run wget --http-user=$technet_user --http-password=$technet_password $artifact_path -O $download_dir/unpack/resource.zip
+    run cd $download_dir/unpack
+    run unzip $download_dir/unpack/resource.zip
+    run rm -f $download_dir/unpack/resource.zip
+    for f in $(ls -d $download_dir/unpack/*);
       do
         filename=$(basename "$f")
         echo "$filename" | grep '[0-9]' | grep -q "$plugin_pattern"
@@ -466,6 +472,10 @@ function add_artifact
           print_and_log "Directory contains numbers and \"$plugin_pattern\" so it is most likely valid."
           if [ ! -d "$root_dir/plugins/$filename" ]; then
             run mv $f $root_dir/plugins/.
+            if [ ! -d $root_dir/plugins/$filename/$artifact_conf_dir ]; then
+              run mkdir $root_dir/plugins/$filename/$artifact_conf_dir
+            fi 
+            echo "artifact_uri=$artifact_path" > $root_dir/plugins/$filename/$artifact_conf_dir/$artifact_conf_file
           else
             print_and_log "$root_dir/plugins/$filename already exists and will be ignored!"
           fi
@@ -475,6 +485,10 @@ function add_artifact
           print_and_log "Resource $artifact_path identified as a $plugin_pattern plugin, but failed the naming convention test after being unpacked, trying to recover..."
           if [ ! -d $root_dir/plugins/$plugin_pattern-$test ]; then
             run mv $f $root_dir/plugins/$plugin_pattern-$test
+            if [ ! -d $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir ]; then
+              run mkdir $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir
+            fi
+            echo "artifact_uri=$artifact_path" > $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir/$artifact_conf_file
           fi
         fi
     done
