@@ -480,15 +480,18 @@ function add_artifact
             print_and_log "$root_dir/plugins/$filename already exists and will be ignored!"
           fi
         else
-          test=`echo $artifact_path | sed "s/.*-\(.*\)\.[a-zA-Z0-9]\{3\}$/\1/"`     
-          echo "$plugin_pattern-$test"
-          print_and_log "Resource $artifact_path identified as a $plugin_pattern plugin, but failed the naming convention test after being unpacked, trying to recover..."
-          if [ ! -d $root_dir/plugins/$plugin_pattern-$test ]; then
-            run mv $f $root_dir/plugins/$plugin_pattern-$test
-            if [ ! -d $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir ]; then
-              run mkdir $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir
+          echo "$filename" | grep -q "$plugin_pattern"
+          if [ $? = 0 ]; then
+            test=`echo $artifact_path | sed "s/.*-\(.*\)\.[a-zA-Z0-9]\{3\}$/\1/"`     
+            print_and_log "Resource $artifact_path was identified as a $plugin_pattern plugin, but failed the naming convention test after being unpacked, trying to recover..."
+            if [ ! -d $root_dir/plugins/$plugin_pattern-$test ]; then
+              run mv $f $root_dir/plugins/$plugin_pattern-$test
+              if [ ! -d $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir ]; then
+                run mkdir $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir
+              fi
+              echo "artifact_uri=$artifact_path" > $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir/$artifact_conf_file
+              print_and_log "Resource $artifact_path was recovered as a $plugin_pattern and added as $plugin_pattern-$test"
             fi
-            echo "artifact_uri=$artifact_path" > $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir/$artifact_conf_file
           fi
         fi
     done
