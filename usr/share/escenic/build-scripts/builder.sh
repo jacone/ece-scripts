@@ -36,7 +36,7 @@ builder_conf_dir=$root_dir/.builder
 builder_conf_file=$builder_conf_dir/builder.conf
 artifact_conf_dir=.builder
 artifact_conf_file=artifact.conf
-skel_dir=$root_dir/skel
+skel_dir=$root_dir/.skel
 subversion_dir=$skel_dir/.subversion
 assemblytool_home=$skel_dir/assemblytool
 m2_home=$skel_dir/.m2
@@ -510,7 +510,7 @@ function verify_add_artifact_list
     remove_pid_and_exit_in_error
   fi
   run source $list_path
-  enforce_variable escenic_releases "You need to specify your releases with full URLs in a escenic_release variable!"
+  enforce_variable escenic_releases "You need to specify your releases with full URLs in a escenic_releases variable!"
 }
 
 ##
