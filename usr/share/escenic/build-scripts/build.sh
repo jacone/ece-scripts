@@ -216,8 +216,9 @@ function symlink_ece_components {
 
   # Version - Widget Framework
   parse_version WIDGET_FRAMEWORK_VERSION escenic.widget-framework.version
-  symlink_distribution plugins/widget-framework-core-$WIDGET_FRAMEWORK_VERSION plugins/widget-framework
-
+  if [ ! -z $WIDGET_FRAMEWORK_VERSION ]; then
+    symlink_distribution plugins/widget-framework-core-$WIDGET_FRAMEWORK_VERSION plugins/widget-framework
+  fi
 }
 
 ##
