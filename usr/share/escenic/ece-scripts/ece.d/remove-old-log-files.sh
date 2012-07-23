@@ -25,7 +25,9 @@ function remove_old_logs_if_exist() {
     return
   fi
 
-  print "Deleting" $(echo "$old_log_files" | wc -l) "old log files in $1 ..."
+  print "Deleting" $(echo "$old_log_files" | wc -l) \
+    "log files in $1" \
+    "older than ${max_days_old} days"
   run rm $old_log_files
 }
 
