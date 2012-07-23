@@ -20,3 +20,5 @@ ece_script=/usr/bin/ece
 ece_unix_group=escenic
 ece_unix_user=escenic
 
+# Set this to 1 for automatic removal of old log files.
+remove_old_escenic_log_files=0
