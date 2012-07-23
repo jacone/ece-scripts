@@ -799,6 +799,9 @@ for el in $command; do
         list-instances)
             print $(get_instance_list)
             ;;
+        remove-old-log-files)
+            remove_old_log_files
+            ;;
         update)
             update_publication_resources
             ;;
