@@ -142,13 +142,14 @@ function visualise_known_ports() {
   local the_host=$(echo $1 | cut -d':' -f1)
   local the_port=$(echo $1 | cut -d':' -f2)
 
-  echo ${the_host}:${the_port} | \
+  local nice_port=$(echo ${the_port} | \
     sed \
     -e 's/8080/ece/g' \
     -e 's/8081/eae/g' \
     -e 's/3306/mysql/g' \
     -e 's/22/ssh/g' \
-    -e 's/11211/memcached/g'
+    -e 's/11211/memcached/g')
+  echo ${the_host}:${nice_port}
 }
 
 function create_block_diag_for_instance() {
