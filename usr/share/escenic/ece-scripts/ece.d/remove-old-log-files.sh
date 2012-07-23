@@ -21,7 +21,7 @@ function remove_old_logs_if_exist() {
     find -L $1 -mtime +${max_days_old} -type f
   )"
 
-  if [ -z $old_log_files ]; then
+  if [ -z "${old_log_files}" ]; then
     return
   fi
 
