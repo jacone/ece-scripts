@@ -31,9 +31,12 @@ user_maven_password="CHANGE_ME"
 # Initialize builder variables
 builder_user_name=builder
 root_dir=/home/$builder_user_name
+download_dir=$root_dir/.downloads
 builder_conf_dir=$root_dir/.builder
 builder_conf_file=$builder_conf_dir/builder.conf
-skel_dir=$root_dir/skel
+artifact_conf_dir=.builder
+artifact_conf_file=artifact.conf
+skel_dir=$root_dir/.skel
 subversion_dir=$skel_dir/.subversion
 assemblytool_home=$skel_dir/assemblytool
 m2_home=$skel_dir/.m2
@@ -77,7 +80,7 @@ function set_pid
 function verify_root_privilege
 {
   if [ "$(id -u)" != "0" ]; then
-    print_and_log "This script must be run as root"
+    print_and_log "This script must be run as root!"
     remove_pid_and_exit_in_error
   fi
 }
@@ -102,7 +105,7 @@ function ensure_no_user_conflict
     remove_pid_and_exit_in_error
   fi
   if [ -d /var/www/$user_name ]; then
-    print_and_log "User $user_name does not exist, but has a web root under /var/www/$user_name !"
+    print_and_log "User $user_name does not exist, but has a web root under /var/www/$user_name"
     remove_pid_and_exit_in_error
   fi
 }
@@ -143,19 +146,19 @@ function get_user_options
 	ensure_no_user_conflict
         ;;
       c)
-        print_and_log "Using svn path: ${OPTARG}."
+        print_and_log "Using svn path: ${OPTARG}"
         user_svn_path=${OPTARG}
         ;;
       s)
-        print_and_log "Using svn username: ${OPTARG}!"
+        print_and_log "Using svn username: ${OPTARG}"
         user_svn_username=${OPTARG}
         ;;
       m)
-        print_and_log "Using maven username: ${OPTARG}!"
+        print_and_log "Using maven username: ${OPTARG}"
         user_maven_username=${OPTARG}
         ;;
       p)
-        print_and_log "Using password file: ${OPTARG}!"
+        print_and_log "Using password file: ${OPTARG}"
         user_password_file=${OPTARG}
         if [ ! -e $user_password_file ]; then
           print_and_log "Provided password file does not exist, exiting!" >&2
@@ -284,7 +287,7 @@ plugins = ../plugins" >> $assemblytool_home/assemble.properties
 
   <activeProfiles>
     <activeProfile>escenic-profile</activeProfile>
-    <activeProfile>vosa</activeProfile>
+    <activeProfile>builder</activeProfile>
   </activeProfiles>
 </settings>" > $m2_home/settings.xml
   fi
@@ -337,14 +340,13 @@ function verify_add_user
 function add_user
 {
   run useradd -m -s /bin/bash $user_name
-  run ln -s /usr/share/escenic/build-scripts/build.sh /home/$user_name/build.sh
+  run mkdir /home/$user_name/.build
   echo "customer=$user_name
 svn_base=$user_svn_path
 svn_user=$user_svn_username
-svn_password=$user_svn_password
-ece_scripts_home=/usr/share/escenic/ece-scripts" > /home/$user_name/build.conf
-  run chown $user_name:$user_name /home/$user_name/build.conf
-  run rsync -av /home/vosa/skel/ /home/$user_name
+svn_password=$user_svn_password" > /home/$user_name/.build/build.conf
+  run chown $user_name:$user_name /home/$user_name/.build/build.conf
+  run rsync -av $skel_dir/ /home/$user_name
   run sed -i "s/maven.username/$user_maven_username/" /home/$user_name/.m2/settings.xml
   run sed -i "s/maven.password/$user_maven_password/" /home/$user_name/.m2/settings.xml
   run chown -R $user_name:$user_name /home/$user_name
@@ -352,13 +354,13 @@ ece_scripts_home=/usr/share/escenic/ece-scripts" > /home/$user_name/build.conf
     make_dir /var/www/$user_name
     run chown www-data:www-data /var/www/$user_name  
   else
-    print_and_log "Failed to add web root /var/www/$user_name !"
+    print_and_log "Failed to add web root /var/www/$user_name"
     remove_pid_and_exit_in_error
   fi
   if [ ! -h /var/www/$user_name/releases ]; then
     run ln -s /home/$user_name/releases /var/www/$user_name/releases
   else
-    print_and_log "Failed to add symlink for /var/www/$user_name/releases !"
+    print_and_log "Failed to add symlink for /var/www/$user_name/releases"
     remove_pid_and_exit_in_error
   fi
 }
@@ -403,13 +405,12 @@ function add_artifact
     print_and_log "The directory $root_dir/plugins did not exist so it has been created."
   fi
 
-  if [ -d "$root_dir/downloads" ]; then
-    run rm -rf $root_dir/downloads
+  if [ -d $download_dir ]; then
+    run rm -rf $download_dir
   fi
 
-  if [ ! -d $root_dir/downloads ]; then
-    make_dir $root_dir/downloads
-    make_dir $root_dir/downloads/unpack
+  if [ ! -d $download_dir ]; then
+    run mkdir -p $download_dir/unpack
   fi
 
   if [[ "$artifact_path" == *\/engine-* ]]; then
@@ -436,17 +437,21 @@ function add_artifact
     print_and_log "The requested resource $artifact_path has been identified as both an engine and a plugin. Exiting!" >&2
     remove_pid_and_exit_in_error
   elif [ $engine_found -eq 1 ] && [ $duplicate_resource -eq 0 ]; then
-    run wget --http-user=$technet_user --http-password=$technet_password $artifact_path -O $root_dir/downloads/unpack/resource.zip
-    run cd $root_dir/downloads/unpack
-    run unzip $root_dir/downloads/unpack/resource.zip
-    for f in $(ls -d $root_dir/downloads/unpack/*);
+    run wget --http-user=$technet_user --http-password=$technet_password $artifact_path -O $download_dir/unpack/resource.zip
+    run cd $download_dir/unpack
+    run unzip $download_dir/unpack/resource.zip
+    for f in $(ls -d $download_dir/unpack/*);
       do
         filename=$(basename "$f")
         echo "$filename" | grep '[0-9]' | grep -q 'engine'
         if [ $? = 0 ]; then
-          print_and_log "Directory contains numbers and \"engine\" so it is most likely valid!"
+          print_and_log "Directory contains numbers and \"engine\" so it is most likely valid."
           if [ ! -d "$root_dir/engine/$filename" ]; then
             run mv $f $root_dir/engine/.
+            if [ ! -d $root_dir/engine/$filename/$artifact_conf_dir ]; then
+              run mkdir $root_dir/engine/$filename/$artifact_conf_dir
+            fi
+            echo "artifact_uri=$artifact_path" > $root_dir/engine/$filename/$artifact_conf_dir/$artifact_conf_file
             # workaround for assemblytool writing into the engine directory
             run mkdir $root_dir/engine/$filename/patches
           else
@@ -455,27 +460,38 @@ function add_artifact
         fi
     done
   elif [ $plugin_found -eq 1 ] && [ $duplicate_resource -eq 0 ]; then
-    run wget --http-user=$technet_user --http-password=$technet_password $artifact_path -O $root_dir/downloads/unpack/resource.zip
-    run cd $root_dir/downloads/unpack
-    run unzip $root_dir/downloads/unpack/resource.zip
-    run rm -f $root_dir/downloads/unpack/resource.zip
-    for f in $(ls -d $root_dir/downloads/unpack/*);
+    run wget --http-user=$technet_user --http-password=$technet_password $artifact_path -O $download_dir/unpack/resource.zip
+    run cd $download_dir/unpack
+    run unzip $download_dir/unpack/resource.zip
+    run rm -f $download_dir/unpack/resource.zip
+    for f in $(ls -d $download_dir/unpack/*);
       do
         filename=$(basename "$f")
         echo "$filename" | grep '[0-9]' | grep -q "$plugin_pattern"
         if [ $? = 0 ]; then
-          print_and_log "Directory contains numbers and \"$plugin_pattern\" so it is most likely valid!"
+          print_and_log "Directory contains numbers and \"$plugin_pattern\" so it is most likely valid."
           if [ ! -d "$root_dir/plugins/$filename" ]; then
             run mv $f $root_dir/plugins/.
+            if [ ! -d $root_dir/plugins/$filename/$artifact_conf_dir ]; then
+              run mkdir $root_dir/plugins/$filename/$artifact_conf_dir
+            fi 
+            echo "artifact_uri=$artifact_path" > $root_dir/plugins/$filename/$artifact_conf_dir/$artifact_conf_file
           else
             print_and_log "$root_dir/plugins/$filename already exists and will be ignored!"
           fi
         else
-          test=`echo $artifact_path | sed "s/.*-\(.*\)\.[a-zA-Z0-9]\{3\}$/\1/"`     
-          echo "$plugin_pattern-$test"
-          print_and_log "Resource $artifact_path identified as a $plugin_pattern plugin, but failed the naming convention test after being unpacked, trying to recover..."
-          if [ ! -d $root_dir/plugins/$plugin_pattern-$test ]; then
-            run mv $f $root_dir/plugins/$plugin_pattern-$test
+          echo "$filename" | grep -q "$plugin_pattern"
+          if [ $? = 0 ]; then
+            test=`echo $artifact_path | sed "s/.*-\(.*\)\.[a-zA-Z0-9]\{3\}$/\1/"`     
+            print_and_log "Resource $artifact_path was identified as a $plugin_pattern plugin, but failed the naming convention test after being unpacked, trying to recover..."
+            if [ ! -d $root_dir/plugins/$plugin_pattern-$test ]; then
+              run mv $f $root_dir/plugins/$plugin_pattern-$test
+              if [ ! -d $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir ]; then
+                run mkdir $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir
+              fi
+              echo "artifact_uri=$artifact_path" > $root_dir/plugins/$plugin_pattern-$test/$artifact_conf_dir/$artifact_conf_file
+              print_and_log "Resource $artifact_path was recovered as a $plugin_pattern and added as $plugin_pattern-$test"
+            fi
           fi
         fi
     done
@@ -484,7 +500,7 @@ function add_artifact
   elif [ $unsupported_plugin_found -eq 1 ]; then
     print_and_log "The requested resource $artifact_path is a plugin, but currently unsupported by the platform."
   else
-    print_and_log "No valid resource identified using $artifact_path, exiting!"
+    print_and_log "No valid resource identified using $artifact_path!"
   fi
 }
 
@@ -497,7 +513,7 @@ function verify_add_artifact_list
     remove_pid_and_exit_in_error
   fi
   run source $list_path
-  enforce_variable escenic_releases "You need to specify your releases with full URLs in a escenic_release variable!"
+  enforce_variable escenic_releases "You need to specify your releases with full URLs in a escenic_releases variable!"
 }
 
 ##

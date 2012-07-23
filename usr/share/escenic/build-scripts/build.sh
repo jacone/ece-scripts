@@ -2,7 +2,7 @@
 
 ################################################################################
 #
-# VOSA - build server script - customer x
+# BUILDER - build server script
 #
 ################################################################################
 
@@ -10,7 +10,7 @@
 log=~/build.log
 pid_file=~/build.pid
 build_date=`date +%F_%H%M`
-vosa_root_dir=/opt/vosa
+builder_root_dir=/home/builder
 assemblytool_root_dir=~/assemblytool
 assemblytool_pub_dir=$assemblytool_root_dir/publications
 assemblytool_lib_dir=$assemblytool_root_dir/lib
@@ -18,11 +18,12 @@ svn_src_dir=~/src
 release_dir=~/releases
 plugin_dir=~/plugins
 engine_root_dir=~/engine
+ece_scripts_home=/usr/share/escenic/ece-scripts
 
 ##
 function fetch_configuration
 {
-  conf_file=~/build.conf
+  conf_file=~/.build/build.conf
   source $conf_file
 }
 
@@ -84,7 +85,7 @@ function verify_configuration {
 }
 
 ##
-function verify_vosa {
+function verify_builder {
   if [ ! -d $assemblytool_root_dir ]; then
     print_and_log "$assemblytool_root_dir is required, but it doesn't exist!"
     remove_pid_and_exit_in_error
@@ -106,9 +107,12 @@ function verify_vosa {
 # clean up customer home
 function home_preparation
 {
-  if [ -e "$plugin_dir" ]; then
+  if [ -d "$plugin_dir" ]; then
     run rm -rf $plugin_dir
-    make_dir $plugin_dir
+  fi
+
+  if [ ! -d $plugin_dir ]; then
+    run mkdir $plugin_dir
   fi
 
   if [ -h "$engine_root_dir" ]; then
@@ -132,11 +136,11 @@ function home_preparation
 }
 
 ## TODO: make a place where everything common to all ears go.
-function add_vosa_libs
+function add_global_libs
 {
   
   ln -s /opt/escenic/assemblytool/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
-  ln -s $vosa_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
+  ln -s $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
 }
 
 
@@ -159,72 +163,104 @@ function parse_version {
   run export $1=`sed "/<$2>/!d;s/ *<\/\?$2> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
 }
 
-# symlink component from /opt/vosa/.
+# symlink component from $builder_root_dir/.
 function symlink_distribution {
-  run ln -s $vosa_root_dir/$1 ~/$2
+  run ln -s $builder_root_dir/$1 ~/$2
 }
 
 function symlink_ece_components {
 
   # Version - Escenic Content Engine
-  parse_version ENGINE_VERSION vosa.engine.version
-  symlink_distribution engine/engine-$ENGINE_VERSION engine
+  parse_version ENGINE_VERSION escenic.engine.version
+  if [ ! -z $ENGINE_VERSION ]; then
+    symlink_distribution engine/engine-$ENGINE_VERSION engine
+  fi
 
   # Version - Geo Code
-  parse_version GEOCODE_VERSION vosa.geocode.version
+  parse_version GEOCODE_VERSION escenic.geocode.version
   symlink_distribution plugins/geocode-$GEOCODE_VERSION plugins/geocode
 
   # Version - Poll
-  parse_version POLL_VERSION vosa.poll.version
+  parse_version POLL_VERSION escenic.poll.version
   symlink_distribution plugins/poll-$POLL_VERSION plugins/poll
 
   # Version - Menu Editor
-  parse_version MENU_EDITOR_VERSION vosa.menu-editor.version
+  parse_version MENU_EDITOR_VERSION escenic.menu-editor.version
   symlink_distribution plugins/menu-editor-$MENU_EDITOR_VERSION plugins/menu-editor
 
   # Version - XML Editor
-  parse_version XML_EDITOR_VERSION vosa.xml-editor.version
+  parse_version XML_EDITOR_VERSION escenic.xml-editor.version
   symlink_distribution plugins/xml-editor-$XML_EDITOR_VERSION plugins/xml-editor
 
   # Version - Analysis Engine
-  parse_version ANALYSIS_ENGINE_VERSION vosa.analysis-engine.version
+  parse_version ANALYSIS_ENGINE_VERSION escenic.analysis-engine.version
   symlink_distribution plugins/analysis-engine-$ANALYSIS_ENGINE_VERSION plugins/analysis-engine
 
   # Version - Forum
-  parse_version FORUM_VERSION vosa.forum.version
+  parse_version FORUM_VERSION escenic.forum.version
   symlink_distribution plugins/forum-$FORUM_VERSION plugins/forum
 
   # Version - Dashboard
-  parse_version DASHBOARD_VERSION vosa.dashboard.version
+  parse_version DASHBOARD_VERSION escenic.dashboard.version
   symlink_distribution plugins/dashboard-$DASHBOARD_VERSION plugins/dashboard
 
   # Version - Lucy
-  parse_version LUCY_VERSION vosa.lucy.version
+  parse_version LUCY_VERSION escenic.lucy.version
   symlink_distribution plugins/lucy-$LUCY_VERSION plugins/lucy
   
   # Version - Widget Framework Common
-  parse_version WIDGET_FRAMEWORK_COMMON_VERSION vosa.widget-framework-common.version
-  symlink_distribution plugins/widget-framework-common-$WIDGET_FRAMEWORK_COMMON_VERSION plugins/widget-framework-common
+  parse_version WIDGET_FRAMEWORK_COMMON_VERSION escenic.widget-framework-common.version
+  if [ ! -z $WIDGET_FRAMEWORK_COMMON_VERSION ]; then
+    symlink_distribution plugins/widget-framework-common-$WIDGET_FRAMEWORK_COMMON_VERSION plugins/widget-framework-common
+  fi
 
   # Version - Widget Framework
-  parse_version WIDGET_FRAMEWORK_VERSION vosa.widget-framework.version
-  symlink_distribution plugins/widget-framework-core-$WIDGET_FRAMEWORK_VERSION plugins/widget-framework
+  parse_version WIDGET_FRAMEWORK_VERSION escenic.widget-framework.version
+  if [ ! -z $WIDGET_FRAMEWORK_VERSION ]; then
+    symlink_distribution plugins/widget-framework-core-$WIDGET_FRAMEWORK_VERSION plugins/widget-framework
+  fi
+}
 
+##
+function verify_requested_versions 
+{
+  verification_failed=0
+  
+  if [ ! -d $engine_root_dir ]; then
+    broken_link=`readlink $engine_root_dir` 
+    print_and_log "The requested engine $broken_link does not exist on the plattform and must be added!"
+    verification_failed=1
+  fi
+  
+  for f in $(ls -d $plugin_dir/*);
+  do
+    if [ ! -d $f ]; then
+      broken_link=`readlink $f`
+      print_and_log "The requested plugin $broken_link does not exist on the plattform and must be added!"
+      verification_failed=1
+    fi
+  done
+  
+  if [ $verification_failed -eq 1 ]; then
+    print_and_log "You have broken symlinks indicating that some requested version(s) of engine and/or plugins are missing!"
+    print_and_log "Build failed!"
+    remove_pid_and_exit_in_error    
+  fi
 }
 
 # symlink .war files from target/
 function symlink_target {
 
   # global classpath
-  if [ -e "$svn_src_dir/vosa-assembly/target/lib" ]; then
-    for f in $(ls -d $svn_src_dir/vosa-assembly/target/lib/*);
+  if [ -e "$svn_src_dir/project-assembly/target/lib" ]; then
+    for f in $(ls -d $svn_src_dir/project-assembly/target/lib/*);
       do run ln -s $f $assemblytool_lib_dir;
     done
   fi
 
   # publications
-  if [ -e "$svn_src_dir/vosa-assembly/target/wars" ]; then
-    for f in $(ls -d $svn_src_dir/vosa-assembly/target/wars/*);
+  if [ -e "$svn_src_dir/project-assembly/target/wars" ]; then
+    for f in $(ls -d $svn_src_dir/project-assembly/target/wars/*);
       do ln -s $f $assemblytool_pub_dir;
     done
   fi
@@ -246,15 +282,17 @@ function release
   
   symlink_ece_components
 
+  verify_requested_versions
+
   run cd $svn_src_dir
   run mvn clean install
 
-  run cd $svn_src_dir/vosa-assembly/target
-  run unzip vosa-assembly.zip
+  run cd $svn_src_dir/project-assembly/target
+  run unzip project-assembly.zip
 
   symlink_target
 
-  add_vosa_libs
+  add_global_libs
 
   add_dashboard_descriptor
 
@@ -297,7 +335,7 @@ print_and_log "Starting building @ $(date)"
 get_user_options $@
 verify_configuration
 home_preparation
-verify_vosa
+verify_builder
 release
 print_result
 common_post_build
