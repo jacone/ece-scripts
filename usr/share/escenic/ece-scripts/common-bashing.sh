@@ -265,3 +265,15 @@ function print_next_step_list() {
     print "  - " ${next_steps[$i]}
   done
 }
+
+## Method will return 1 if the user/pass is unauthorized to access the
+## URL in question. Hence, a 0 means that the user CAN access the URL.
+## $1 user
+## $2 pass
+## $3 URL
+function is_unauthorized_to_access_url() {
+  curl -s  -I  -u ${1}:${2} ${3} | \
+    head -1 | \
+    grep "401 Unauthorized" | \
+    wc -l
+}
