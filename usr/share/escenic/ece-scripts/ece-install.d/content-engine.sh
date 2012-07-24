@@ -576,6 +576,9 @@ function set_archive_files_depending_on_profile()
   elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
     ece_instance_ear_file=$fai_search_ear
     ece_instance_conf_archive=$fai_search_conf_archive
+  elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+    ece_instance_ear_file=$fai_all_ear
+    ece_instance_conf_archive=$fai_all_conf_archive
   fi
 }
 
