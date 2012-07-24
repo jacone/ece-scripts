@@ -7,12 +7,6 @@ function install_widget_framework()
   local wf_user=$(get_conf_value wf_user)
   local wf_password=$(get_conf_value wf_password)
 
-  if [ -z "$wf_user" -o -z "$wf_password" ]; then
-    print_and_log "Missing wf_user and wf_password in ${conf_file}. If you"
-    print_and_log "don't have these, please contact support@escenic.com"
-    remove_pid_and_exit_in_error
-  fi
-
   print_and_log "Creating a Maven settings file: $HOME/.m2/settings.xml ..."
   make_dir $HOME/.m2
   cat > $HOME/.m2/settings.xml <<EOF

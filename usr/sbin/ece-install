@@ -558,7 +558,8 @@ EOF
 function check_software_credentials() {
   install_packages_if_missing curl
 
-  print_and_log "Verifying that Technet credentials are OK ..." 
+  print_and_log "Verifying that Technet credentials are OK ..."
+  
   local url=http://technet.escenic.com
   local notok=$(
     is_unauthorized_to_access_url \
@@ -576,6 +577,8 @@ function check_software_credentials() {
   # installation profile is being used. Hence, we just test for if the
   # wf_user & password has been set and are able to access the Escenic
   # Maven repository.
+
+  # if the WF credentials are set, we check to see if they're OK
   if [ -n "${wf_user}" -a -n "${wf_password}" ]; then
     print_and_log "Verifying that Widget Framework credentials are OK ..." 
     local url=http://repo.escenic.com
@@ -588,6 +591,13 @@ function check_software_credentials() {
     if [ $notok -eq 1 ]; then
       print_and_log "The wf_user & wf_password in $conf_file"
       print_and_log "are insufficient to access ${url} :-("
+      remove_pid_and_exit_in_error
+    fi
+  elif [ ${fai_enabled-0} -eq 1 ]; then
+    if [[ ${fai_wf_install-0} -eq 1 || ${fai_all_install-0} -eq 1 ]]; then
+      print_and_log "You must have a valid wf_user & wf_password"
+      print_and_log "in your ${conf_file}. If you don't have these,"
+      print_and_log "please contact support@escenic.com"
       remove_pid_and_exit_in_error
     fi
   fi
@@ -628,7 +638,6 @@ function common_pre_install()
         remove_pid_and_exit_in_error
     fi
 
-    # TODO enable when the function is implemented
     check_software_credentials
 
     if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
