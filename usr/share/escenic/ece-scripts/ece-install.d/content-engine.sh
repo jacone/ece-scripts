@@ -371,10 +371,6 @@ function set_up_basic_nursery_configuration() {
 databaseProductName=MySQL
 filePublicationRoot=$escenic_data_dir/engine/
 webPublicationRoot=http://${public_host_name}/
-
-# These two LDAP settings can be ignored on systems with ECE >= 5.3
-ldapProductName=OpenLdap
-ldapProductVersion=2.2.26
 EOF
   cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
 readConnector=/connector/ReadConnector
