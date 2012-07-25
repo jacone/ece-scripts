@@ -1,0 +1,12 @@
+#! /usr/bin/env bash
+
+file=/etc/default/ece
+if [ ! -r $file ]; then
+  return
+else
+  source $file
+fi
+
+if [ ${remove_old_escenic_log_files-0} -eq 1 ]; then
+  /etc/init.d/ece remove-old-log-files
+fi

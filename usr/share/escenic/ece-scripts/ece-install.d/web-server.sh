@@ -50,7 +50,7 @@ server {
   }
 }
 EOF
-  elif [ $1 -eq 3 ]; then
+  elif [ $1 -eq 2 ]; then
     port=81
     cat > $file <<EOF
 server {

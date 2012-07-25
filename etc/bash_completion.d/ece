@@ -5,10 +5,31 @@ _ece_commands()
     local cur=${COMP_WORDS[COMP_CWORD]}
     local prev=${COMP_WORDS[COMP_CWORD-1]}
 
-    commands="applog assemble backup clean deploy edit help info kill log list-logs
-              flush outlog package restart start status stop threaddump update versions
-              list-instances
+    commands="
+      applog
+      assemble
+      backup
+      clean
+      deploy
+      edit
+      flush
+      help
+      info
+      kill
+      list-instances
+      list-logs
+      log
+      outlog
+      package
+      remove-old-log-files
+      restart start
+      status
+      stop
+      threaddump
+      update
+      versions
     "
+    
     options="-i --instance -p --publication -r --publication-resource
              -t --type -u --user -w --password"
     resources="content-type feature layout layout-group image-version menu
