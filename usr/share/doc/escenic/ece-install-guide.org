@@ -648,7 +648,7 @@ This will produce the following stanzas in server.xml:
 <Host name="ild.escenic.com" appBase="webapps" autoDeploy="false">
   <Context displayName="ild.escenic.com"
            docBase="ildpub"
-           path="/"
+           path=""
   />
 </Host>
 #+END_SRC
