@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 # removes log files older than <numbber> days
-max_days_old=5
+old_log_file_max_age_in_days=5
 
 function get_log_file_dir_list() {
   local dir_list="${log_dir}"
@@ -18,7 +18,7 @@ function remove_old_logs_if_exist() {
   debug "Looking for old log files in $1 ..."
   
   local old_log_files="$(
-    find -L $1 -mtime +${max_days_old} -type f
+    find -L $1 -mtime +${old_log_file_max_age_in_days} -type f
   )"
 
   if [ -z "${old_log_files}" ]; then
@@ -27,7 +27,7 @@ function remove_old_logs_if_exist() {
 
   print_and_log "Deleting" $(echo "$old_log_files" | wc -l) \
     "log files in $1" \
-    "older than ${max_days_old} days"
+    "older than ${old_log_file_max_age_in_days} days"
   run rm $old_log_files
 }
 
