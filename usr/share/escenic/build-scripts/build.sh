@@ -36,7 +36,9 @@ plugin_dir=~/plugins
 engine_root_dir=~/engine
 ece_scripts_home=/usr/share/escenic/ece-scripts
 conf_file=~/.build/build.conf
-dependencies="ant
+dependencies="tar
+sed
+ant
 svn
 mvn
 unzip
@@ -254,7 +256,6 @@ function symlink_ece_components
   for f in $escenic_indentifiers
   do
     version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
-    echo "Version:$version:"
     if [[ ! $version = "" ]]; then
       if [[ "$f" = "engine" ]]; then
         run ln -s $builder_engine_dir/$f-$version $engine_root_dir 
@@ -292,20 +293,24 @@ function verify_requested_versions
 ##
 function verify_maven_proxy
 {
-  if [ -e $maven_conf_file ];
+  if [ -e $maven_conf_file ]; then
     maven_user=`sed "/<username>/!d;s/ *<\/\?username> *//g" $maven_conf_file | tr -d $'\r' `
     maven_password=`sed "/<password>/!d;s/ *<\/\?password> *//g" $maven_conf_file | tr -d $'\r' `
     if [[ $maven_user = "" ]] || [[ $maven_password = "" ]]; then
       print_and_log "Your $maven_conf_file is missing the username and/or the password for the maven proxy, exiting!"
       remove_pid_and_exit_in_error
     else
-      run wget --http-user $maven_user --http-password $maven_password http://maven.vizrt.com -O /dev/null
+      wget --http-user $maven_user --http-password $maven_password http://maven.vizrt.com -qO /dev/null
+      RETVAL=$?
+      if [ $RETVAL -ne 0 ]; then
+        print_and_log "Your user can't reach http://maven.vizrt.com, exiting!"
+        remove_pid_and_exit_in_error
+      fi
     fi
   else
     print_and_log "Your user does not have a ~/.m2/settings.xml, exiting!"
     remove_pid_and_exit_in_error
   fi
- run wget 
 }
 
 ## 
@@ -446,7 +451,7 @@ function phase_release
 ##
 function phase_shutdown
 {
-  phase_clean_up
+  common_post_build
 }
 
 ## ece-build execution
