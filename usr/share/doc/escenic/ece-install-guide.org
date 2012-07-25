@@ -956,7 +956,7 @@ A common error by users, is to run ece-install in a (virtual) machine
 that has e.g. only 1GB RAM. For happy running, we recommend having a
 machine with at least 3GB when installing a full ECE stack on it.
 
-* Uninstalling Everything That the ece-install Set Up
+* Uninstalling Everything that the ece-install Set Up
 WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
 host. However, this may be useful if you're installing a clean
@@ -966,20 +966,20 @@ different profile.
 ** Uninstall (most of) the packages installed by ece-install
 #+BEGIN_SRC sh
 # apt-get --yes --purge remove \
-        ant \
-        ant-contrib \
-        ant-optional \
-        curl \
-        escenic-* \
-        libmysql-java \
-        maven2 \
-        memcached \
-        munin* \
-        nginx \
-        percona* \
-        sun-java6-jdk \
-        varnish \
-        wget 
+    ant \
+    ant-contrib \
+    ant-optional \
+    curl \
+    escenic-* \
+    libmysql-java \
+    maven2 \
+    memcached \
+    munin* \
+    nginx \
+    percona* \
+    sun-java6-jdk \
+    varnish \
+    wget 
 #+END_SRC
 
 
@@ -990,6 +990,7 @@ different profile.
     /{etc,opt}/escenic \
     /opt/*tomcat*
 #+END_SRC
+
 
 ** Remove the GPG keys added by ece-install
 #+BEGIN_SRC sh
