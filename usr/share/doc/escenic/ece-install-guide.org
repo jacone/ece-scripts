@@ -1,4 +1,5 @@
-Welcome to the /usr/sbin/ece-install Guide
+#+TITLE: Welcome to the /usr/sbin/ece-install Guide
+#+AUTHOR: Torstein Krause Johansen
 
 * Supported Operating Systems
 For the best experience, run this script on Debian Squeeze (or newer),
