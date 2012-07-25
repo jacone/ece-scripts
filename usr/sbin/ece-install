@@ -197,18 +197,18 @@ function install_packages_if_missing() {
 function install_common_os_packages()
 {
   print_and_log "Installing common OS packages ..."
-  local packages="curl $git_package wget unzip bc ca-certificates"
-  git_package=git
+  local packages="curl wget unzip bc ca-certificates"
+  local git_package=git
   
   if [ $on_debian_or_derivative -eq 1 ]; then
-        # Ubuntu doesn't have git (!) but only git-core.
+    # Ubuntu doesn't have git (!) but only git-core.
     if [ $on_ubuntu -eq 1 ]; then
       git_package=git-core
     fi
     packages="${packages} bind9-host"
   fi
   
-  install_packages_if_missing $packages
+  install_packages_if_missing $packages $git_package
   
   for el in lsb_release curl host wget git unzip; do
     assert_pre_requisite $el
