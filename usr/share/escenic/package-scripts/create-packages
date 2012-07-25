@@ -92,12 +92,13 @@ function set_up_escenic-build-scripts() {
 }
 
 function set_up_escenic-content-engine-scripts() {
-  mkdir -p $target_dir/{etc,usr,/etc/default}
-  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
+  mkdir -p $target_dir/etc/bash_completion.d
+  mkdir -p $target_dir/etc/cron.daily/
   mkdir -p $target_dir/etc/init.d
   mkdir -p $target_dir/usr/share/doc/escenic
   mkdir -p $target_dir/usr/share/escenic/ece-scripts
-  mkdir -p $target_dir/etc/bash_completion.d
+  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
+  mkdir -p $target_dir/{etc,usr,/etc/default}
 
   # bin
   cp -r ../../../bin/ece $target_dir/usr/bin/
@@ -114,6 +115,10 @@ function set_up_escenic-content-engine-scripts() {
   # doc
   cp -r ../../doc/escenic/ece-guide.{org,html} \
     $target_dir/usr/share/doc/escenic
+
+  # cron
+  cp -r ../../../../etc/cron.daily/remove-old-escenic-log-files \
+    $target_dir/etc/cron.daily/
 }
 
 function set_up_vosa() {
