@@ -514,6 +514,7 @@ EOF
 ## checks the Technet and WF credentials.
 function check_software_credentials() {
   install_packages_if_missing curl
+  assert_pre_requisite curl
 
   print_and_log "Verifying that Technet credentials are OK ..."
   
@@ -595,8 +596,6 @@ function common_pre_install()
         remove_pid_and_exit_in_error
     fi
 
-    check_software_credentials
-
     if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
         on_debian_or_derivative=1
         export DEBIAN_FRONTEND=noninteractive
@@ -618,6 +617,7 @@ function common_pre_install()
       fi
     fi
 
+    check_software_credentials
     assert_pre_requisite lsb_release
     
     if [ $(lsb_release -i | grep Ubuntu | wc -l) -gt 0 ]; then
