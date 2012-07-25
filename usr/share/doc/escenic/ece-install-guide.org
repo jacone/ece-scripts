@@ -962,9 +962,40 @@ host. However, this may be useful if you're installing a clean
 environment and want to e.g. undo your previous install to install a
 different profile.
 
-Open the ece-install script and look for the "un_install_ece"
-function, it has copy and pastable commands for undoing most/all
-things set up by the script.
+** Uninstall (most of) the packages installed by ece-install
+#+BEGIN_SRC sh
+# apt-get --yes --purge remove \
+        ant \
+        ant-contrib \
+        ant-optional \
+        curl \
+        escenic-* \
+        libmysql-java \
+        maven2 \
+        memcached \
+        munin* \
+        nginx \
+        percona* \
+        sun-java6-jdk \
+        varnish \
+        wget 
+#+END_SRC
+
+
+** Remove the directories created by ece-install
+#+BEGIN_SRC sh
+# rm -rf \
+    /var/{lib,cache,crash,log,run}/escenic \
+    /{etc,opt}/escenic \
+    /opt/*tomcat*
+#+END_SRC
+
+** Remove the GPG keys added by ece-install
+#+BEGIN_SRC sh
+# apt-key remove C4DEFFEB
+# apt-key remove CD2EFD2A
+#+END_SRC
+   
 
 
 * Example Output FAI

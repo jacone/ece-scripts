@@ -407,49 +407,6 @@ EOF
   fi
 }
 
-# So far, I've used this method for copy/past-ing it into the shell
-# before running ece-insatll anew. It might be useful for its own
-# command later, though.
-function un_install_ece()
-{
-    print_and_log "Uninstalling ECE ..."
-     # TODO safety, warnings++
-    rm -rf $escenic_conf_dir/ \
-        ${appserver_parent_dir}/*tomcat* \
-        $escenic_root_dir \
-        $escenic_data_dir \
-        $escenic_run_dir/ \
-        $escenic_conf_dir/ \
-        /usr/bin/ece \
-        $escenic_log_dir/ \
-        /etc/apt/sources.list.d/escenic.list \
-        /var/run/ece-install.pid
-#        $HOME/.m2 \
-
-    # remove the Varnish key
-    apt-key remove C4DEFFEB
-    # remove the Percona key
-    apt-key remove CD2EFD2A
-
-    for el in \
-        ant \
-        ant-contrib \
-        ant-optional \
-        libmysql-java \
-        maven2 \
-        memcached \
-        munin* \
-        nginx \
-        percona* \
-        varnish \
-        sun-java6-jdk \
-        ; do
-        apt-get --yes --purge remove $el
-    done
-
-    apt-get clean
-}
-
 ## Returns the privileged hosts. This will include both the IP(s) the
 ## logged in user conduction the ece-install is coming from, as well
 ## as any IPs defined in fai_privileged_hosts.
