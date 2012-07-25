@@ -4,9 +4,14 @@
 
 vosa_dir=/var/lib/vizrt/vosa/files
 
+remote_diff=0
+
 function get_user_options() {
-  while getopts ":i:f:s:" opt; do
+  while getopts ":i:f:s:r" opt; do
     case $opt in
+      r)
+        remote_diff=1
+        ;;
       i)
         instance=${OPTARG}
         ;;
@@ -72,9 +77,17 @@ function diff_vosa_file() {
   diff $vosa_file $scm_dir/$vosa_input_file
 }
 
-if [ -z "${scm_dir}" ]; then
-  cat_vosa_file
+function remote_vosa_diff() {
+  diff -w $(get_vosa_file) <(ssh chnepmledt001 cat /${vosa_input_file})
+}
+
+if [ ${remote_diff} -eq 1 ]; then
+  remote_vosa_diff
 else
-  diff_vosa_file
+  if [ -z "${scm_dir}" ]; then
+    cat_vosa_file
+  else
+    diff_vosa_file
+  fi
 fi
 
