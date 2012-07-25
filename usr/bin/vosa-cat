@@ -1,7 +1,5 @@
 #! /usr/bin/env bash
 
-# source ../share/vizrt/vosa/commands/diff.sh
-
 vosa_dir=/var/lib/vizrt/vosa/files
 
 remote_diff=0
