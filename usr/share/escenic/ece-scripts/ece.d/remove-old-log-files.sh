@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
-# removes log files older than three days
-max_days_old=3
+# removes log files older than <numbber> days
+max_days_old=5
 
 function get_log_file_dir_list() {
   local dir_list="${log_dir}"
@@ -25,7 +25,7 @@ function remove_old_logs_if_exist() {
     return
   fi
 
-  print "Deleting" $(echo "$old_log_files" | wc -l) \
+  print_and_log "Deleting" $(echo "$old_log_files" | wc -l) \
     "log files in $1" \
     "older than ${max_days_old} days"
   run rm $old_log_files
