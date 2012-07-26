@@ -190,13 +190,8 @@ function set_common_settings() {
     # instance specific ones.
     read_conf_file `basename $0`.conf
 
-    if [ "$instance" == "default" ]; then
-        log=$log_dir/$type.out
-        pid_file=$pid_dir/$type.pid
-    else
-        log=$log_dir/$type-$instance.out
-        pid_file=$pid_dir/$type-$instance.pid
-    fi
+    log=$log_dir/$instance.out
+    pid_file=$pid_dir/$instance.pid
     
     gc_log=${log_dir}/${type}-${instance}-gc.log
 
