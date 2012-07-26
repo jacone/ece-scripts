@@ -483,15 +483,16 @@ function create_ecedb() {
     for el in `find -L $ece_home/plugins -name $db_product`; do
       run_db_scripts $el
     done
-    # EAE, if there's more than one version of EAE plugin, the latest
-    # one will be used.
-    for el in $(find $escenic_root_dir -name eae-${db_product}.sql | \
-      grep -v upgrade | \
-      sort -r | \
-      head -1); do
-      run_db_script_file $el
-    done
   fi
 
+  # EAE, if there's more than one version of EAE plugin, the latest
+  # one will be used.
+  for el in $(find $escenic_root_dir -name eae-${db_product}.sql | \
+    grep -v upgrade | \
+    sort -r | \
+    head -1); do
+    run_db_script_file $el
+  done
+    
   log "${id} ${db_product}://${db_host}/${db_schema} is now ready for ${db_user}/${db_password}"
 }
