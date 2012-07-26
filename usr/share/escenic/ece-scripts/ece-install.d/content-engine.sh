@@ -132,7 +132,7 @@ function set_up_engine_and_plugins() {
   done
   
   if [ -n "$engine_dir" -a ! -d "${engine_dir}" ]; then
-    run unzip -q -u $download_dir/${engine_file}
+    run unzip -q -u -o $download_dir/${engine_file}
     if [ -h engine ]; then
       run rm engine
     fi
@@ -163,7 +163,7 @@ function set_up_assembly_tool() {
   cd $escenic_root_dir/assemblytool/
   
   if [ -e $download_dir/assemblytool*zip ]; then
-    run unzip -q -u $download_dir/assemblytool*zip
+    run unzip -q -u -o $download_dir/assemblytool*zip
   fi
 
   # adding an instance layer to the Nursery configuration
