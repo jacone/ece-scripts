@@ -135,8 +135,7 @@ function get_tomcat_download_url() {
 function download_tomcat() {
   local url=$(get_tomcat_download_url)
   
-  print "Downloading Tomcat ..."
-  log "Downloading Tomcat from $url ..."
+  print_and_log "Downloading Tomcat from $url ..."
   run cd $1
   run wget $wget_opts $url
 }
