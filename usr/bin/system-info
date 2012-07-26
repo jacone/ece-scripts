@@ -32,6 +32,7 @@ function init() {
   fi
 
   source $ece_scripts_dir/common-ece.sh
+  source $ece_scripts_dir/common-bashing.sh
 }
 
 ## Runs extra system-info modules
@@ -283,7 +284,7 @@ function print_section_end {
   fi
 }
 
-function print_h1_header() {
+ function print_h1_header() {
   if [ $format == "org" ]; then
     echo "* $@"
   elif [ $format == "html" ]; then

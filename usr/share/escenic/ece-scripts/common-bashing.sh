@@ -277,3 +277,8 @@ function is_unauthorized_to_access_url() {
     grep "401 Unauthorized" | \
     wc -l
 }
+
+## $1 the string to which you want to remove any leading white spaces.
+function ltrim() {
+  echo $1 | sed 's/^[ ]*//g'
+}
