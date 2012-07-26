@@ -43,17 +43,6 @@ function install_widget_framework()
 </settings>
 EOF
 
-  print_and_log "Downloading Widget Framework from technet.escenic.com ..."
-  for el in $wf_download_list; do
-    cd $download_dir
-    run wget $wget_opts \
-      --http-user $technet_user \
-      --http-password $technet_password \
-      $el
-    run cd $escenic_root_dir/
-    run unzip -q -u $download_dir/$(basename $el)
-  done
-
   install_packages_if_missing "maven2"
   assert_pre_requisite mvn
 

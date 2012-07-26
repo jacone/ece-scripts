@@ -133,10 +133,10 @@ function download_escenic_components()
         return
     fi
 
-    print "Downloading software from technet.escenic.com ..."
-    
+    print_and_log "Downloading software from technet.escenic.com ..."
     run cd $download_dir
-    for el in $technet_download_list; do
+    
+    for el in $technet_download_list $wf_download_list; do
       if [ -e $(basename $el) ]; then
         continue
       fi

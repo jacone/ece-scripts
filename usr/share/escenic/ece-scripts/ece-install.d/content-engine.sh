@@ -119,9 +119,8 @@ function set_up_engine_and_plugins() {
   fi
   
   print_and_log "Setting up the Escenic Content Engine & its plugins ..."
-
   make_dir $escenic_root_dir
-  cd $escenic_root_dir/
+  run cd $escenic_root_dir/
 
   for el in $technet_download_list; do
     if [ $(basename $el | \
@@ -145,17 +144,13 @@ function set_up_engine_and_plugins() {
 
   # we now extract all the plugins. We extract them in $escenic_root_dir
   # as we want to re-use them between minor updates of ECE.
-  cd $escenic_root_dir/
-  for el in $download_dir/*.zip; do
-    if [ $(basename $el | grep ^engine-.*.zip | wc -l) -gt 0 ]; then
-      continue
-    elif [ $(basename $el | grep ^assemblytool-.*.zip | wc -l) -gt 0 ]; then
-      continue
-    elif [ $(basename $el | grep ^jdk-.*.zip | wc -l) -gt 0 ]; then
+  run cd $escenic_root_dir/
+  for el in $technet_download_list $wf_download_list; do
+    local file=$(basename $el)
+    if [ $el == engine-* ]; then
       continue
     fi
-    
-    run unzip -q -u $el
+    run unzip -q -u -o $download_dir/$file
   done
 
   ece_software_setup_completed=1
