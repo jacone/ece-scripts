@@ -73,8 +73,16 @@ EOF
     ln -s $wf_dist_dir
   fi
 
-  cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
+  set_up_wf_nursery_config
 
   add_next_step "Widget Framework has been installed into your " \
     " Maven repo"
 }
+
+function set_up_wf_nursery_config() {
+  cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
+  local file=$common_nursery_dir/com/escenic/classification/IndexerPlugin.properties
+  run mkdir -p $(dirname $file)
+  echo "enableFacets=true" > $file
+}
+
