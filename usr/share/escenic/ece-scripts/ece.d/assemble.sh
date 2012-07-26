@@ -14,24 +14,18 @@ function assemble() {
     exit 1
   fi
 
-  message="Assembling your EAR file"
-  print $message "..."
-  log $message "..." >> $log
-
-  cd $assemblytool_home && \
-    ant -q ear -DskipRedundancyCheck=true \
-    1>>$log \
-    2>>$log
-  exit_on_error "$message"
+  print_and_log "Assembling your EAR file..."
+  run cd $assemblytool_home 
+  run ant -q ear -DskipRedundancyCheck=true
 
   # test to see if the new versions of ECE & plugins are upgrades of
   # the previous ones
   duplicates_found=0
   known_unharmful_duplicates="activation- $'\n' ehcache-$'\n' stax-api-$'\n'"
   
-  cd $assemblytool_home/dist/.work/ear/lib
+  run cd $assemblytool_home/dist/.work/ear/lib
   for el in *.jar; do
-    jar=$(basename $(echo $el | sed  -e  's/[0-9]//g') .jar | sed 's/\.//g')
+    jar=$(basename $(echo $el | sed -e 's/[0-9]//g') .jar | sed 's/\.//g')
     if [ $(echo $known_unharmful_duplicates | grep $jar | wc -l) -gt 0 ]; then
       continue
     fi
@@ -46,7 +40,11 @@ function assemble() {
       uniq | \
       wc -l) -gt 1 ]; then
       duplicates_found=1
-      print_and_log "More than one version of $(echo $jar | sed 's/-$//g')"
+      print_and_log "More than one version of $(echo $jar | sed 's/-$//g'):"
+      find -L $assemblytool_home/plugins -name "${jar}" | \
+        grep -v "-tests"
+      find -L $ece_home/plugins -name "${jar}" | \
+        grep -v "-tests"
     fi
   done
 
