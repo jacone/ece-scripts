@@ -340,8 +340,6 @@ EOF
   fi
 }
 
-
-
 function set_slave_to_replicate_master() {
   print_and_log "Setting slave to replicate master DB @ $db_master_host ..."
   mysql ${db_schema} <<EOF
@@ -361,4 +359,141 @@ EOF
   add_next_step "DB on $HOSTNAME replicates master DB @ ${db_master_host}"
 }
 
+drop_db_first=0
+db_user=ece5user
+db_password=ece5password
+db_schema=ece5db
+db_host=localhost
+ece_home=/opt/escenic/engine
+db_product=mysql
+
+# oracle specific settings
+create_oracle_user=0
+tablespace_data=ece5_data
+tablespace_index=ece5_index
+oracle_data_dir=/home/oracle/app/oracle/oradata/orcl
+
+function create_oracle_ece_user() {
+  sqlplus /nolog << EOF
+      connect /as sysdba;
+      create user $db_user
+        identified by $db_password
+        default tablespace $tablespace_data
+        quota unlimited on $tablespace_data;
+      grant connect to $db_user;
+      grant resource to $db_user;
+      grant create any view to $db_user;
+      grant execute on ctx_ddl to $db_user;
+EOF
+}
+
+function run_db_script_file() {
+  if [ $db_product = "oracle" ]; then
+    sqlplus $db_user/$db_password @$file
+  else
+    mysql -u $db_user -p$db_password -h $db_host $db_schema < $file
+  fi
+}
+
+function run_db_scripts() {
+  for el in $db_fn_list; do
+    file=$1/$el.sql
+    if [ -e $1/$el.sql ]; then
+      log "running $file ..."
+      run_db_script_file $file
+    fi
+    exit_on_error "running $el"
+  done
+}
+
+function pre_install_new_ecedb() {
+  set_ecedb_conf
   
+  if [ $create_oracle_user -eq 1 ]; then
+    create_oracle_ece_user
+  fi
+
+  if [ $drop_db_first -eq 1 ]; then
+    log "dropping and re-creating $db_schema on $db_host ..."
+    if [ $db_product = "mysql" ]; then
+      mysql -h $db_host << EOF
+drop database $db_schema;
+EOF
+    else
+      sqlplus /nolog << EOF
+connect /as sysdba;
+drop tablespace $tablespace_data including contents;
+drop tablespace $tablespace_index including contents;
+EOF
+    fi
+  fi
+}
+
+function create_schema() {
+    # we first create the DB (or, if drop_db_first is 1, we've just
+    # dropped it above) before running the SQL scripts.
+  if [ $db_product = "mysql" ]; then
+    mysql -h $db_host << EOF
+create database $db_schema character set utf8 collate utf8_general_ci;
+grant all on $db_schema.* to $db_user@'%' identified by '$db_password';
+grant all on $db_schema.* to $db_user@'localhost' identified by '$db_password';
+EOF
+    exit_on_error "create db"
+  else
+    sqlplus /nolog << EOF
+connect /as sysdba;
+  
+create tablespace $tablespace_data 
+datafile '$oracle_data_dir/${tablespace_data}01.dbf'
+size 200M reuse
+autoextend on next 50M maxsize 2047M
+extent management local autoallocate;
+
+create tablespace $tablespace_index
+datafile '$oracle_data_dir/${tablespace_index}01.dbf'
+size 100M reuse
+autoextend on next 50M maxsize 2047M
+extent management local autoallocate;          
+EOF
+  fi
+}
+
+db_fn_list="
+tables
+tables-stats
+views
+constants
+constants-stats
+constraints
+indexes
+history
+"
+
+function create_ecedb() {
+  if [ ${fai_db_sql_only-0} -eq 0 ]; then
+    create_schema
+  fi
+
+  if [ ${fai_db_schema_only-0} -eq 1 ]; then
+    print_and_log "Not running the ECE & plugin SQL files as you requested."
+    return
+  fi
+  
+  run_db_scripts $ece_home/database/$db_product
+
+  if [ -e $ece_home/plugins ]; then
+    for el in `find -L $ece_home/plugins -name $db_product`; do
+      run_db_scripts $el
+    done
+    # EAE, if there's more than one version of EAE plugin, the latest
+    # one will be used.
+    for el in $(find $escenic_root_dir -name eae-${db_product}.sql | \
+      grep -v upgrade | \
+      sort -r | \
+      head -1); do
+      run_db_script_file $el
+    done
+  fi
+
+  log "${id} ${db_product}://${db_host}/${db_schema} is now ready for ${db_user}/${db_password}"
+}
