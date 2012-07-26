@@ -553,7 +553,7 @@ function install_ece_third_party_packages
   
   install_packages_if_missing $packages
   
-  for el in ant java; do
+  for el in ant java jar; do
     assert_pre_requisite $el
   done
 }
