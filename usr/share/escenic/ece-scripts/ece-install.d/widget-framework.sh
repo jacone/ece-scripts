@@ -43,25 +43,9 @@ function install_widget_framework()
 </settings>
 EOF
 
-  install_packages_if_missing "maven2"
-  assert_pre_requisite mvn
-
-  export JAVA_HOME=$java_home
-  wf_maven_dir=$(echo $escenic_root_dir/widget-framework-core-*/maven)
-  run cd $wf_maven_dir
-
-  print_and_log "Installing Widget Framework into your Maven repository ..."
-  log "JAVA_HOME=$JAVA_HOME"
-
-  run mvn $maven_opts install
-
-    # installing the widget-framework-common as a ECE plugin
-  wf_dist_dir=$(echo $wf_maven_dir/widget-framework-common/target/widget-framework-common-*-dist/widget-framework-common-*)
-  cd $escenic_root_dir/assemblytool/plugins
-  if [ ! -h $(basename $wf_dist_dir) ]; then
-    ln -s $wf_dist_dir
-  fi
-
+  install_wf_1_if_present
+  install_wf_2_if_present
+  
   set_up_wf_nursery_config
 
   add_next_step "Widget Framework has been installed into your " \
@@ -73,5 +57,40 @@ function set_up_wf_nursery_config() {
   local file=$common_nursery_dir/com/escenic/classification/IndexerPlugin.properties
   run mkdir -p $(dirname $file)
   echo "enableFacets=true" > $file
+}
+
+function install_wf_1_if_present() {
+  for el in $wf_download_list; do
+    local wf_dist_dir=$(basename $el .zip)
+    
+    if [[ $wf_dist_dir != "widget-framework-[a-z]*-1.1*" ]]; then
+      return
+    fi
+    
+    install_packages_if_missing "maven2"
+    assert_pre_requisite mvn
+    export JAVA_HOME=$java_home
+    
+    print_and_log "Installing Widget Framework into your Maven repository ..."
+    local wf_maven_dir=$escenic_root_dir/$wf_dist_dir/maven
+    run cd $wf_maven_dir
+    run mvn $maven_opts install
+  done
+}
+
+function install_wf_2_if_present() {
+  for el in $wf_download_list; do
+    local wf_dist_dir=$(basename $el .zip)
+    
+    if [[ $wf_dist_dir == "widget-framework-[a-z]*-1.1*" ]]; then
+      return
+    fi
+    
+    run cd $escenic_root_dir/assemblytool/plugins
+    
+    if [ ! -h $wf_dist_dir ]; then
+      ln -s $escenic_root_dir/$wf_dist_dir
+    fi
+  done
 }
 
