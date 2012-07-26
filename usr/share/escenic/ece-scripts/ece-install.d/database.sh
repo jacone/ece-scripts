@@ -383,7 +383,9 @@ function create_oracle_ece_user() {
 EOF
 }
 
+## $1 is the file
 function run_db_script_file() {
+  local file=$1
   if [ $db_product = "oracle" ]; then
     sqlplus $db_user/$db_password @$file
   else
@@ -393,8 +395,8 @@ function run_db_script_file() {
 
 function run_db_scripts() {
   for el in $db_fn_list; do
-    file=$1/$el.sql
-    if [ -e $1/$el.sql ]; then
+    local file=$1/$el.sql
+    if [ -e $file ]; then
       log "running $file ..."
       run_db_script_file $file
     fi
