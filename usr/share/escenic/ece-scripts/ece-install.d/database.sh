@@ -385,6 +385,7 @@ EOF
 
 ## $1 is the file
 function run_db_script_file() {
+  log "Running $1 ..."
   local file=$1
   if [ $db_product = "oracle" ]; then
     sqlplus $db_user/$db_password @$file
