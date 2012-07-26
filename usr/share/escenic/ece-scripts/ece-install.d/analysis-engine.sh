@@ -25,7 +25,7 @@ function install_analysis_server()
 
   set_correct_permissions
   
-  local ece_command="ece -i ${instance_name} -t ${type} start"
+  local ece_command="ece -i ${instance_name} -t ${type} restart"
   su - $ece_user -c "$ece_command" 1>>$log 2>>$log
   exit_on_error "su - $ece_user -c \"$ece_command\""
 
