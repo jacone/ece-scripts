@@ -21,8 +21,6 @@ function install_database_server()
 {
   print_and_log "Installing database server on $HOSTNAME ..."
 
-  source $(dirname $0)/drop-and-create-ecedb
-
   if [ $on_debian_or_derivative -eq 1 -a ${fai_db_sql_only-0} -eq 0 ]; then
 
     code_name=$(lsb_release -s -c)
@@ -132,8 +130,6 @@ function set_ecedb_conf() {
   # the user may override standard DB settings in ece-install.conf
   set_db_settings_from_fai_conf
   set_db_defaults_if_not_set
-
-  # the methods in drop-and-create-ecedb needs ece_home to be set
   ece_home=${escenic_root_dir}/engine
 }
 

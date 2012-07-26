@@ -141,12 +141,11 @@ function restore_from_backup()
     sql_file=$(ls -tra var/backups/escenic/*.sql.gz | tail -1)
     print_and_log "Selecting database dump: $(basename $sql_file)"
 
-    # methods in drop-and-create-ecedb to set up the database
-    # schema & user
+    # methods in database.sh to set up the database schema & user
     pre_install_new_ecedb
     create_schema
 
-    # db_schema is defined in drop-and-create-ecedb
+    # db_schema is defined in database.sh
     gunzip < $sql_file | mysql $db_schema
     exit_on_error "restoring from $sql_file"
     

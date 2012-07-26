@@ -78,7 +78,7 @@ function set_up_escenic-content-engine-installer() {
   mkdir -p $target_dir/usr/share/doc/escenic
   mkdir -p $target_dir/usr/share/escenic/ece-scripts
   
-  cp -r ../../../sbin/{ece-install,drop-and-create-ecedb} $target_dir/usr/sbin/
+  cp -r ../../../sbin/ece-install $target_dir/usr/sbin/
   cp -r ../../escenic/ece-scripts/ece-install.d/ \
     $target_dir/usr/share/escenic/ece-scripts/
   cp -r ../../doc/escenic/ece-install-guide.{org,html} \

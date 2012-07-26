@@ -240,9 +240,7 @@ If not, MySQL or Percona must be installed in advance.
 
 Given that the mysqld is install, this profile will download all the
 Escenic components and install the ECE database schema based from the
-SQL files contained inside the distribution bundles. To accomplish
-this, the script will make a call to drop-and-create-ecedb in the same
-directory as the ece-intall script itself.
+SQL files contained inside the distribution bundles. 
 
 The script will fail by itself if the DB already exists:
 #+BEGIN_SRC conf
@@ -868,7 +866,6 @@ but these should be the most interesting ones.
 | /opt/tomcat                                 | Symlink pointing to the install Apache Tomcat (catalina_home)   |
 | /opt/tomcat-<instance>                      | Instance specific Tomcat files (catalina_base)                  |
 | /usr/bin/ece                                | Script for operating all ECE instances + RMI hub and EAE         |
-| /usr/sbin/drop-and-create-ecedb             | DB script used by the ece-install script                         |
 | /usr/sbin/ece-install                       | The installation script described in this guide                  |
 | /var/log/escenic/<type>-<instance>.log      | The instance's log4j  log                                        |
 | /var/log/escenic/<type>-<instance>.out      | The instance system out log                                      |
