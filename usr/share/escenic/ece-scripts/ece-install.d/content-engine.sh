@@ -533,6 +533,7 @@ function install_ece_third_party_packages
       libtcnative-1
       libmysql-java
       memcached
+      xml-twig-tools
       wget
     "
   elif [ $on_redhat_or_derivative -eq 1 ]; then
