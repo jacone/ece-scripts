@@ -75,26 +75,53 @@ force_packages=0
 # ECE software components.
 ece_software_setup_completed=0
 
+############################################################################
+# For ECE 5.3
+############################################################################
 technet_download_list="
 http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
 http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.7.0.zip
-http://technet.escenic.com/downloads/release/53/community-engine-3.6.1.0.zip
-http://technet.escenic.com/downloads/release/53/dashboard-1.1.0.2.zip
-http://technet.escenic.com/downloads/release/53/engine-5.3.5.121857.zip
-http://technet.escenic.com/downloads/release/53/forum-3.0.0.0.zip
+http://technet.escenic.com/downloads/release/53/community-engine-3.6.2.124119.zip
+http://technet.escenic.com/downloads/release/53/dashboard-1.1.1.124124.zip
+http://technet.escenic.com/downloads/release/53/engine-5.3.7.126916.zip
+http://technet.escenic.com/downloads/release/53/forum-3.0.1.124096.zip
 http://technet.escenic.com/downloads/release/53/geocode-dist-2.3.1.0.zip
 http://technet.escenic.com/downloads/release/53/inpage-2.0.0.0.zip
 http://technet.escenic.com/downloads/release/53/lucy-dist-4.1.6.0.zip
 http://technet.escenic.com/downloads/release/53/menu-editor-dist-2.0.6.0.zip
-http://technet.escenic.com/downloads/release/53/mobile-expansion-3.0.0.0.zip
 http://technet.escenic.com/downloads/release/53/poll-2.1.3.0.zip
-http://technet.escenic.com/downloads/release/53/revision-history-dist-1.0.0.1.zip
 http://technet.escenic.com/downloads/release/53/section-feed-dist-2.0.4.0.zip
 http://technet.escenic.com/downloads/release/53/xml-editor-dist-2.1.0.0.zip
 "
 wf_download_list="
 http://technet.escenic.com/downloads/widget-framework/widget-framework-core-1.10.0.0.zip
+http://technet.escenic.com/downloads/widget-framework/widget-framework-community-1.10.0.0.zip
 "
+############################################################################
+
+############################################################################
+# For ECE 5.4
+############################################################################
+# technet_download_list="
+# http://technet.escenic.com/downloads/community-engine/community-engine-3.7.0.123608.zip
+# http://technet.escenic.com/downloads/release/54/analysis-engine-2.4.0.127591.zip
+# http://technet.escenic.com/downloads/release/54/dashboard-1.3.0.123618.zip
+# http://technet.escenic.com/downloads/release/54/engine-5.4.1.126472.zip
+# http://technet.escenic.com/downloads/release/54/forum-3.1.0.123741.zip
+# http://technet.escenic.com/downloads/release/54/geocode-dist-2.4.0.123726.zip
+# http://technet.escenic.com/downloads/release/54/inpage-2.1.1.126618.zip
+# http://technet.escenic.com/downloads/release/54/lucy-dist-4.2.0.0.zip
+# http://technet.escenic.com/downloads/release/54/menu-editor-dist-2.1.0.123205.zip
+# http://technet.escenic.com/downloads/release/54/poll-2.2.0.123043.zip
+# http://technet.escenic.com/downloads/release/54/section-feed-dist-2.1.0.122795.zip
+# http://technet.escenic.com/downloads/release/54/xml-editor-dist-2.2.0.0.zip
+# "
+
+# wf_download_list="
+# http://download.escenic.com/release/release/54/widget-framework-core-2.0.1.126521.zip
+# http://download.escenic.com/release/release/54/widget-framework-community-2.0.1.126521.zip
+# "
+############################################################################
 
 ## Bootstrapping, load files from /usr/share/escenic/ece-scripts The
 ## method will first try to be smart, in case the user has copied the
