@@ -81,7 +81,7 @@ ece_software_setup_completed=0
 technet_download_list="
 http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
 http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.7.0.zip
-http://technet.escenic.com/downloads/release/53/community-engine-3.6.2.124119.zip
+http://technet.escenic.com/downloads/release/53/community-engine-3.6.1.0.zip
 http://technet.escenic.com/downloads/release/53/dashboard-1.1.1.124124.zip
 http://technet.escenic.com/downloads/release/53/engine-5.3.7.126916.zip
 http://technet.escenic.com/downloads/release/53/forum-3.0.1.124096.zip
