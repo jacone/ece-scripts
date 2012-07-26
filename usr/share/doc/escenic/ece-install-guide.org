@@ -252,7 +252,7 @@ ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already exists
 If you for some reason wish to make ece-install drop the DB fro you
 before creating a new one, you can set
 #+BEGIN_SRC sh
-  fai_db_drop_old_db_first=1
+fai_db_drop_old_db_first=1
 #+END_SRC
 
 *** Master & slave setup
