@@ -10,6 +10,13 @@ ece_scripts_home=/usr/share/escenic/ece-scripts
 log=/var/log/ece-builder.log
 pid_file=/var/run/ece-builder.pid
 
+# script dependencies
+dependencies="tar
+ant
+sed
+unzip
+wget"
+
 # available commands
 setup_builder=0
 add_user=0
@@ -96,6 +103,20 @@ function enforce_variable
 }
 
 ##
+function verify_command {
+  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; remove_pid_and_exit_in_error; }
+}
+
+##
+function verify_dependencies
+{
+  for f in $dependencies
+  do
+    verify_command $f
+  done
+}
+
+##
 function get_user_options
 {
   while getopts ":i:u:a:l:c:s:m:p:" opt; do
@@ -157,10 +178,12 @@ function execute
 {
   if [ $setup_builder -eq 1 ]; then
     verify_setup_builder
+    verify_builder_conf
     setup_builder
   else
     verify_builder_exist
     read_builder_configuration
+    verify_builder_conf
     if [ $add_user -eq 1 ]; then
       ensure_no_user_conflict
       verify_add_user
@@ -176,6 +199,20 @@ function execute
       remove_pid_and_exit_in_error
     fi
   fi
+}
+
+##
+function verify_builder_conf
+{
+  enforce_variable technet_user "Your builder configuration file is missing the variable technet_user, exiting!"
+  enforce_variable technet_user "Your builder configuration file is missing the variable technet_password, exiting!"
+  wget --http-user $technet_user --http-password $technet_password http://technet.escenic.com/ -qO /dev/null
+  if [ $? -ne 0 ]; then
+    print_and_log "Your user can't reach http://technet.escenic.com/, exiting!"
+    remove_pid_and_exit_in_error
+  fi
+  enforce_variable escenic_plugin_indentifiers "You need to configure a list of supported plugins in you builder configuration file using the variable escenic_plugin_indentifiers, exiting!"
+  enforce_variable unsupported_plugin_indentifiers "You need to configure a list of unsupported plugins in you builder configuration file using the variable unsupported_plugin_indentifiers, exiting!" 
 }
 
 ##
@@ -542,6 +579,7 @@ function phase_startup {
   verify_root_privilege
   set_pid
   init
+  verify_dependencies
 }
 
 ##
