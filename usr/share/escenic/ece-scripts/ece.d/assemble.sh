@@ -42,9 +42,9 @@ function assemble() {
       duplicates_found=1
       print_and_log "More than one version of $(echo $jar | sed 's/-$//g'):"
       find -L $assemblytool_home/plugins -name "${jar}" | \
-        grep -v "-tests"
-      find -L $ece_home/plugins -name "${jar}" | \
-        grep -v "-tests"
+        grep -v "tests"
+      find -L $assemblytool_home/plugins -name "${jar}" | \
+        grep -v "tests"
     fi
   done
 
