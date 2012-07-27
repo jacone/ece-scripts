@@ -24,6 +24,8 @@ function assemble() {
   known_unharmful_duplicates="activation- $'\n' ehcache-$'\n' stax-api-$'\n'"
   
   run cd $assemblytool_home/dist/.work/ear/lib
+  local duplicate_jar_list=""
+  
   for el in *.jar; do
     jar=$(basename $(echo $el | sed -e 's/[0-9]//g') .jar | sed 's/\.//g')
     if [ $(echo $known_unharmful_duplicates | grep $jar | wc -l) -gt 0 ]; then
@@ -40,14 +42,22 @@ function assemble() {
       uniq | \
       wc -l) -gt 1 ]; then
       duplicates_found=1
-      print_and_log "More than one version of $(echo $jar | sed 's/-$//g'):"
-      find -L $assemblytool_home/plugins -name "${jar}" | \
-        grep -v "tests"
-      find -L $assemblytool_home/plugins -name "${jar}" | \
-        grep -v "tests"
+      duplicate_jar_list="${jar}\n${duplicate_jar_list}"
     fi
   done
 
+  # now, list the duplicate JARs 
+  for el in $(echo -e "$duplicate_jar_list" | sort | uniq); do
+    print_and_log "Duplicates found of library" $(echo $el | sed 's/-$//g')":"
+    for ele in $(find -L \
+      $assemblytool_home/plugins \
+      $ece_home/lib \
+      -name "${el}*.jar" | \
+      egrep -v "tests|WEB-INF"); do
+      print_and_log "-" $ele
+    done
+  done
+  
   if [ "$duplicates_found" -eq 1 ]; then
     print "Multiple versions of ECE and/or 3rd party libraries found."
     print "Remember, you need to run '$(basename $0) clean assemble' when "
@@ -60,7 +70,7 @@ function assemble() {
   mkdir -p $ear_cache_dir/
   exit_on_error "creating $ear_cache_dir"
 
-  cp $assemblytool_home/dist/engine.ear $cache_dir
+  run cp $assemblytool_home/dist/engine.ear $cache_dir
   exit_on_error "copying ear to $ear_cache_dir"
 
   debug $assemblytool_home/dist/engine.ear "is now ready"
