@@ -2,25 +2,47 @@
 
 # by tkj@vizrt.com
 
-## $1 is instance
+
+
+function get_instance_type() {
+  local type="engine"
+
+  if [ -e /etc/default/ece ]; then
+    source /etc/default/ece
+
+    for el in "$analysis_instance_list"; do
+      echo "[$el] == [$1] ?" >> /tmp/t
+      
+      if [[ "$(ltrim $el)" == "$1" ]]; then
+        echo yes >> /tmp/t
+        type=analysis
+      fi
+    done
+  fi
+  
+  echo $type
+}
+
+## $1 is the instance name
 function create_ece_overview() {
+  local type=$(get_instance_type $1)
   
   if [ $(whoami) == "root" ]; then
     if [ -n "$ece_user" ]; then
-      local command="ece -q -i $1 info"
+      local command="ece -q -i $1 info -t $type"
       local data="$(su - $ece_user -c " $command ")"$'\n'
       
       command="ece -q -i $1 status"
       if [ "UP" == "$(su - $ece_user -c "$command" | cut -d' ' -f1)" ]; then
-        command="ece -q -i $1 versions"
+        command="ece -q -i $1 -t $type versions"
         data="$data $(su - $ece_user -c" $command " | cut -d'*' -f2-)"
       fi
     fi
   else
     local data="$(ece -q -i $1 info)"$'\n'
     
-    if [ "UP" == "$(ece -q -i $1 status | cut -d' ' -f1)" ]; then
-      data="$data $(ece -q -i $1 versions | cut -d'*' -f2-)"
+    if [ "UP" == "$(ece -q -i $1 status -t $type | cut -d' ' -f1)" ]; then
+      data="$data $(ece -q -i $1 versions -t $type | cut -d'*' -f2-)"
     fi
   fi
   

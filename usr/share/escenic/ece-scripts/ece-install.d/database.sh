@@ -16,17 +16,15 @@ function get_percona_supported_list() {
 }
 
 ## $1: optional parameter, binaries_only. If passed, $1=binaries_only,
-##     the ECE DB schema is not set up. 
+##     the ECE DB schema is not set up.
 function install_database_server()
 {
   print_and_log "Installing database server on $HOSTNAME ..."
 
-  source $(dirname $0)/drop-and-create-ecedb
-
   if [ $on_debian_or_derivative -eq 1 -a ${fai_db_sql_only-0} -eq 0 ]; then
 
     code_name=$(lsb_release -s -c)
-    
+
     supported_code_name=0
     supported_list=$(get_percona_supported_list)
     for el in $supported_list; do
@@ -34,12 +32,12 @@ function install_database_server()
         supported_code_name=1
       fi
     done
-    
+
     # some how, this is to install Percona 5.5
     if [ -e /var/lib/mysql/debian-*.flag ]; then
       run rm /var/lib/mysql/debian-*.flag
     fi
-    
+
     if [ $supported_code_name -eq 1 ]; then
       print_and_log "Installing the Percona database ..."
 
@@ -47,7 +45,7 @@ function install_database_server()
         gpg --keyserver hkp://keys.gnupg.net:80 \
           --recv-keys 1C4CBDCDCD2EFD2A \
           1>>$log 2>>$log
-        
+
         # There has been three times now, during six months, that the
         # key cannot be retrieved from keys.gnupg.net. Therefore,
         # we're checking if it failed and if yes, force the package
@@ -68,11 +66,11 @@ function install_database_server()
 
         run apt-get update
       fi
-      
+
       add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
       packages="percona-server-server percona-server-client libmysqlclient16"
     else
-      print_and_log "The Percona APT repsository doesn't have packages" 
+      print_and_log "The Percona APT repsository doesn't have packages"
       print_and_log "for your Debian (or derivative) version with code"
       print_and_log "name $code_name. "
       print_and_log "I will use vanilla MySQL instead."
@@ -81,11 +79,11 @@ function install_database_server()
     fi
   elif [ $on_redhat_or_derivative -eq 1 ]; then
     print_and_log "Installing the Percona database ..."
-    
+
     if [ $(rpm -qa | grep $percona_rpm_release_package_name | wc -l) -lt 1 ]; then
       run rpm -Uhv $percona_rpm_release_url
     fi
-    
+
     packages="
       Percona-Server-shared-compat
       Percona-Server-server-55
@@ -107,7 +105,7 @@ function install_database_server()
     # RDS, we need the mysql-client.
     install_packages_if_missing "mysql-client"
   fi
-  
+
   assert_pre_requisite mysql
 
   if [ -z "$1" ]; then
@@ -132,8 +130,6 @@ function set_ecedb_conf() {
   # the user may override standard DB settings in ece-install.conf
   set_db_settings_from_fai_conf
   set_db_defaults_if_not_set
-
-  # the methods in drop-and-create-ecedb needs ece_home to be set
   ece_home=${escenic_root_dir}/engine
 }
 
@@ -143,14 +139,14 @@ function set_up_ecedb()
 
   make_dir $escenic_root_dir/engine/plugins
   run cd $escenic_root_dir/engine/plugins
-  
+
   find ../../ -maxdepth 1 -type d | \
     grep -v assemblytool | \
     while read directory; do
     if [ $directory = "../../" ]; then
       continue
     fi
-    
+
           # nuisance to get the community engine, but not the engine
     if [ $(echo $directory | grep engine | wc -l) -gt 0 ]; then
       if [ $(echo $directory | grep community | wc -l) -lt 1 ]; then
@@ -166,7 +162,7 @@ function set_up_ecedb()
   set_ecedb_conf
   pre_install_new_ecedb
   create_ecedb
-  
+
   cd ~/
   run rm -rf $escenic_root_dir/engine/plugins
 
@@ -201,7 +197,7 @@ function set_db_settings_from_fai_conf()
     db_password=${fai_db_password-${default_db_password}}
     db_schema=${fai_db_schema-${default_db_schema}}
   fi
-  
+
   if [ -n "${fai_db_drop_old_db_first}" ]; then
     drop_db_first=${fai_db_drop_old_db_first}
     if [ $fai_db_drop_old_db_first -eq 1 ]; then
@@ -209,12 +205,12 @@ function set_db_settings_from_fai_conf()
       print_and_log "$(yellow WARNING): fai_db_drop_old_db_first is 1 (true)"
     fi
   fi
-  
+
   # replication is only available in FAI mode
   db_replication=${fai_db_replication-0}
   db_replication_user=${fai_db_replication_user-replicationuser}
   db_replication_password=${fai_db_replication_password-replicationpassword}
-  
+
   db_master=${fai_db_master-0}
   db_master_host=${fai_db_master_host}
   db_master_log_file=${fai_db_master_log_file}
@@ -235,19 +231,19 @@ function set_db_defaults_if_not_set()
   if [ -z "$db_host" ]; then
     db_host=${default_db_host}
   fi
-  
+
   if [ -z "$db_port" ]; then
     db_port=${default_db_port}
   fi
-  
+
   if [ -z "$db_user" ]; then
     db_user=${default_db_user}
   fi
-  
+
   if [ -z "$db_password" ]; then
     db_password=${default_db_password}
   fi
-  
+
   if [ -z "$db_schema" ]; then
     db_schema=${default_db_schema}
   fi
@@ -264,7 +260,7 @@ EOF
 
 function configure_mysql_for_replication() {
   print_and_log "Configuring DB for replication ..."
-  
+
   local file=/etc/mysql/my.cnf
   if [ $on_redhat_or_derivative -eq 1 ]; then
     file=/etc/my.cnf
@@ -282,19 +278,19 @@ EOF
   if [ $db_master -eq 1 ]; then
     local old="#server-id.*=.*1"
     local new="server-id=1"
-    
+
     if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
       sed -i "s~^$old~$new~g" $file
     elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
       echo "$new" >> $file
     fi
-  
+
     old="bind-address.*= 127.0.0.1"
     new="# bind-address = 127.0.0.1"
     if [ $(grep ^"${old}" $file | wc -l) -gt 0 ]; then
       sed -i "s~^${old}~$new~g" $file
     fi
-    
+
     old="#log_bin.*= /var/log/mysql/mysql-bin.log"
     new="log_bin = /var/log/mysql/mysql-bin.log"
     if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
@@ -302,7 +298,7 @@ EOF
     elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
       echo "$new" >> $file
     fi
-      
+
     old="#binlog_do_db.*=.*"
     new="binlog_do_db = ${db_schema}"
 
@@ -311,7 +307,7 @@ EOF
     elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
       echo "$new" >> $file
     fi
-    
+
     run /etc/init.d/mysql restart
 
     # report the needed settings for a slave
@@ -329,18 +325,16 @@ EOF
   else
     local old="#server-id.*= 1"
     local new="server-id=2"
-    
+
     if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
       sed -i "s~^$old~$new~g" $file
     elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
       echo "$new" >> $file
     fi
-    
+
     run /etc/init.d/mysql restart
   fi
 }
-
-
 
 function set_slave_to_replicate_master() {
   print_and_log "Setting slave to replicate master DB @ $db_master_host ..."
@@ -361,4 +355,158 @@ EOF
   add_next_step "DB on $HOSTNAME replicates master DB @ ${db_master_host}"
 }
 
-  
+drop_db_first=0
+db_user=ece5user
+db_password=ece5password
+db_schema=ece5db
+db_host=localhost
+ece_home=/opt/escenic/engine
+db_product=mysql
+
+# oracle specific settings
+create_oracle_user=0
+tablespace_data=ece5_data
+tablespace_index=ece5_index
+oracle_data_dir=/home/oracle/app/oracle/oradata/orcl
+
+function create_oracle_ece_user() {
+  sqlplus /nolog << EOF
+      connect /as sysdba;
+      create user $db_user
+        identified by $db_password
+        default tablespace $tablespace_data
+        quota unlimited on $tablespace_data;
+      grant connect to $db_user;
+      grant resource to $db_user;
+      grant create any view to $db_user;
+      grant execute on ctx_ddl to $db_user;
+EOF
+}
+
+## $1 is the file
+function run_db_script_file() {
+  log "Running $1 ..."
+  local file=$1
+  if [ $db_product = "oracle" ]; then
+    sqlplus $db_user/$db_password @$file
+  else
+    mysql -u $db_user -p$db_password -h $db_host $db_schema < $file
+  fi
+}
+
+function run_db_scripts() {
+  for el in $db_fn_list; do
+    local file=$1/$el.sql
+    if [ -e $file ]; then
+      run_db_script_file $file
+    fi
+    exit_on_error "running $el"
+  done
+}
+
+function pre_install_new_ecedb() {
+  set_ecedb_conf
+
+  if [ $create_oracle_user -eq 1 ]; then
+    create_oracle_ece_user
+  fi
+
+  if [ $drop_db_first -eq 1 ]; then
+    log "dropping and re-creating $db_schema on $db_host ..."
+    if [ $db_product = "mysql" ]; then
+      mysql -h $db_host << EOF
+drop database $db_schema;
+EOF
+    else
+      sqlplus /nolog << EOF
+connect /as sysdba;
+drop tablespace $tablespace_data including contents;
+drop tablespace $tablespace_index including contents;
+EOF
+    fi
+  fi
+}
+
+function create_schema() {
+    # we first create the DB (or, if drop_db_first is 1, we've just
+    # dropped it above) before running the SQL scripts.
+  if [ $db_product = "mysql" ]; then
+    mysql -h $db_host << EOF
+create database $db_schema character set utf8 collate utf8_general_ci;
+grant all on $db_schema.* to $db_user@'%' identified by '$db_password';
+grant all on $db_schema.* to $db_user@'localhost' identified by '$db_password';
+EOF
+    exit_on_error "create db"
+  else
+    sqlplus /nolog << EOF
+connect /as sysdba;
+
+create tablespace $tablespace_data
+datafile '$oracle_data_dir/${tablespace_data}01.dbf'
+size 200M reuse
+autoextend on next 50M maxsize 2047M
+extent management local autoallocate;
+
+create tablespace $tablespace_index
+datafile '$oracle_data_dir/${tablespace_index}01.dbf'
+size 100M reuse
+autoextend on next 50M maxsize 2047M
+extent management local autoallocate;
+EOF
+  fi
+}
+
+db_fn_list="
+tables
+tables-stats
+views
+constants
+constants-stats
+constraints
+indexes
+history
+"
+
+function create_ecedb() {
+  if [ ${fai_db_sql_only-0} -eq 0 ]; then
+    create_schema
+  fi
+
+  if [ ${fai_db_schema_only-0} -eq 1 ]; then
+    print_and_log "Not running the ECE & plugin SQL files as you requested."
+    return
+  fi
+
+  run_db_scripts $ece_home/database/$db_product
+
+  if [ -e $ece_home/plugins ]; then
+    for el in `find -L $ece_home/plugins -name $db_product`; do
+      run_db_scripts $el
+    done
+  fi
+
+  run_eae_scripts_if_available
+
+  log "${id} ${db_product}://${db_host}/${db_schema} is now ready for ${db_user}/${db_password}"
+}
+
+## will run the EAE scripts if they are availabe.
+function run_eae_scripts_if_available() {
+      
+  for el in $(find $escenic_root_dir -name eae-${db_product}.sql | \
+    grep -v upgrade | \
+    sort -r | \
+    head -1); do
+    work_around_eae_bug_stats-76 $el
+    run_db_script_file $el
+  done
+}
+
+## Workaround for: https://jira.vizrt.com/browse/STATS-76
+## 
+## $1 is the SQL file
+function work_around_eae_bug_stats-76() {
+  print_and_log "Fixing $1 ..."
+  grep -i -v ^'drop index' $1 > $1.tmp
+  mv $1.tmp $1
+}

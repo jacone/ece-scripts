@@ -1,12 +1,18 @@
 #! /usr/bin/env bash
 
-file=/etc/default/ece
-if [ ! -r $file ]; then
-  return
-else
-  source $file
-fi
+# cron script to remove old escenic related log files. It's safe to
+# install this cron script on all servers, also the ones that don't
+# have Escenic Content Engine or Escenic Analysis Engine installed.
 
-if [ ${remove_old_escenic_log_files-0} -eq 1 ]; then
+function remove_old_escenic_log_files() {
+  if [ ! -e /etc/init.d/ece ]; then
+    return
+  fi
+
   /etc/init.d/ece remove-old-log-files
-fi
+}
+
+## Uncomment the following line to have daily removal of old log
+## files.
+# remove_old_escenic_log_files
+

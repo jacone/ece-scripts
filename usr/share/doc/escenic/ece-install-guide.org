@@ -1,4 +1,5 @@
-Welcome to the /usr/sbin/ece-install Guide
+#+TITLE: Welcome to the ece-install Guide
+#+AUTHOR: Torstein Krause Johansen
 
 * Supported Operating Systems
 For the best experience, run this script on Debian Squeeze (or newer),
@@ -6,12 +7,12 @@ the latest Ubuntu LTS or most other Debian based operating systems,
 but it should work without any problems on any Unix like system that
 has BASH version 4.2 or newer.
 
-** Debian based operating systems
+** Debian Based Operating Systems
 If running on a Debian based operating system, ece-install will take
 care of installing all required third party software, such as database
 & caching server.
 
-** RedHat based operating systems
+** RedHat Based Operating Systems
 ece-install constantly gets better support for automatic installation
 on RedHat based operating systems. However, since the public RedHat
 repositories are significantly smaller than the Debian ones, there
@@ -30,13 +31,26 @@ You may also look inside the ece-install script for all calls to the
 'assert_pre_prequesite' method and you'll get a list of the binaries
 ece-install assumes are present.
 
+** Common Requirements for All Operating Systems
+*** Internet Connection
+The installer needs an internet connection, preferably a fast one as
+several hundreds of megabytes are downloaded.
+
+*** Firewall Rules
+ece-install must be able to make outgoing connections from the machine
+on which it is running to the following ports:
+
+- 80 (standard HTTP)
+- 443 (HTTPS)
+
 ** Tested Operating Systems
 | Operating system     | Status                                              | Date updated     |
 |----------------------+-----------------------------------------------------+------------------|
-| Debian 6.0 (squeeze) | Everything is 100% automatic                        | 2012-02-27 13:18 |
-| Ubuntu LTS 10.04     | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
-| Ubuntu 11.10         | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
 | CentOS 6.2           | HA, APR & monitoring are not automatic              | 2012-03-07 13:42 |
+| Debian 6.0 (squeeze) | Everything is 100% automatic                        | 2012-02-27 13:18 |
+| Ubuntu 11.10         | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
+| Ubuntu LTS 10.04     | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
+| Ubuntu LTS 12.04     | Everything except Tomcat/APR wrappers are automatic | 2012-07-27 03:27 |
 
 * A Note on Running ece-install On Non-GNU/Linux Systems
 Please note, it's assumed that the OS uses GNU's tools, i.e. find, cp
@@ -66,7 +80,7 @@ After getting the latest version of ece-scripts, you run it with:
 # bash ece-scripts/usr/sbin/ece-install  
 #+END_SRC
 
-** Requires super user privileges
+** Requires Super User Privileges
 You must run the script as the root user.  If you start the script as
 a regular user, it will complain:
 #+BEGIN_SRC conf
@@ -239,9 +253,7 @@ If not, MySQL or Percona must be installed in advance.
 
 Given that the mysqld is install, this profile will download all the
 Escenic components and install the ECE database schema based from the
-SQL files contained inside the distribution bundles. To accomplish
-this, the script will make a call to drop-and-create-ecedb in the same
-directory as the ece-intall script itself.
+SQL files contained inside the distribution bundles. 
 
 The script will fail by itself if the DB already exists:
 #+BEGIN_SRC conf
@@ -253,7 +265,7 @@ ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already exists
 If you for some reason wish to make ece-install drop the DB fro you
 before creating a new one, you can set
 #+BEGIN_SRC sh
-  fai_db_drop_old_db_first=1
+fai_db_drop_old_db_first=1
 #+END_SRC
 
 *** Master & slave setup
@@ -647,7 +659,7 @@ This will produce the following stanzas in server.xml:
 <Host name="ild.escenic.com" appBase="webapps" autoDeploy="false">
   <Context displayName="ild.escenic.com"
            docBase="ildpub"
-           path="/"
+           path=""
   />
 </Host>
 #+END_SRC
@@ -673,6 +685,8 @@ $HOME/ece-install.conf file of the root user:
 |-------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------|
 | Parameter                           | Default                                           | Description                                                                                                                           |
 |-------------------------------------+---------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------|
+| fai_all_conf_archive                | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
+| fai_all_ear                         | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
 | fai_all_install                     | 0                                                 | Install all components on your server.                                                                                                |
 | fai_analysis_db_host                | localhost                                         | For the EAE DB (different from ECE's)                                                                                                 |
 | fai_analysis_db_install             | 0                                                 | Install db profile                                                                                                                    |
@@ -680,6 +694,7 @@ $HOME/ece-install.conf file of the root user:
 | fai_analysis_db_port                | 3306                                              | For the EAE DB (different from ECE's)                                                                                                 |
 | fai_analysis_db_schema              | ece5db                                            | For the EAE DB (different from ECE's)                                                                                                 |
 | fai_analysis_db_user                | ece5user                                          | For the EAE DB (different from ECE's)                                                                                                 |
+| fai_analysis_install                | 0                                                 | Will install the Escenic Analysis Engine, aka Stats, EAE.                                                                             |
 | fai_analysis_name                   | analysis1                                         | EAE instance name                                                                                                                     |
 | fai_analysis_port                   | 8080                                              | Port of the EAE                                                                                                                       |
 | fai_analysis_shutdown               | 8005                                              | Shutdown port for the EAE app server                                                                                                  |
@@ -864,7 +879,6 @@ but these should be the most interesting ones.
 | /opt/tomcat                                 | Symlink pointing to the install Apache Tomcat (catalina_home)   |
 | /opt/tomcat-<instance>                      | Instance specific Tomcat files (catalina_base)                  |
 | /usr/bin/ece                                | Script for operating all ECE instances + RMI hub and EAE         |
-| /usr/sbin/drop-and-create-ecedb             | DB script used by the ece-install script                         |
 | /usr/sbin/ece-install                       | The installation script described in this guide                  |
 | /var/log/escenic/<type>-<instance>.log      | The instance's log4j  log                                        |
 | /var/log/escenic/<type>-<instance>.out      | The instance system out log                                      |
@@ -953,16 +967,48 @@ A common error by users, is to run ece-install in a (virtual) machine
 that has e.g. only 1GB RAM. For happy running, we recommend having a
 machine with at least 3GB when installing a full ECE stack on it.
 
-* Uninstalling Everything That the ece-install Set Up
+* Uninstalling Everything that the ece-install Set Up
 WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
 host. However, this may be useful if you're installing a clean
 environment and want to e.g. undo your previous install to install a
 different profile.
 
-Open the ece-install script and look for the "un_install_ece"
-function, it has copy and pastable commands for undoing most/all
-things set up by the script.
+** Uninstall (most of) the packages installed by ece-install
+#+BEGIN_SRC sh
+# apt-get --yes --purge remove \
+    ant \
+    ant-contrib \
+    ant-optional \
+    curl \
+    escenic-* \
+    libmysql-java \
+    maven2 \
+    memcached \
+    munin* \
+    nginx \
+    percona* \
+    sun-java6-jdk \
+    varnish \
+    wget 
+#+END_SRC
+
+
+** Remove the directories created by ece-install
+#+BEGIN_SRC sh
+# rm -rf \
+    /var/{lib,cache,crash,log,run}/escenic \
+    /{etc,opt}/escenic \
+    /opt/*tomcat*
+#+END_SRC
+
+
+** Remove the GPG keys added by ece-install
+#+BEGIN_SRC sh
+# apt-key remove C4DEFFEB
+# apt-key remove CD2EFD2A
+#+END_SRC
+   
 
 
 * Example Output FAI
@@ -985,45 +1031,4 @@ the host that runs the install script.
 The following output is produced from ece-install:
 #+INCLUDE: "~/tmp/ece-install.out" src text
 
-
-* Exceptions
-** Easily 500
-{~} what now... while true; do curl -s  -I
-"http://newindianexpress.com//cities/chennai/article555367.ece%C2%^C";
-done
-
-
-** 2012-07-02 16:24
-2012-07-02 17:30:15,589 ERROR [http-8080-34]
-(com.escenic.framework.search.solr.SolrSearchEngine) solr search
-failed
-org.apache.solr.client.solrj.SolrServerException: Error executing
-query
-
-␐[..]
-
-Caused by: org.apache.solr.common.SolrException: Bad Request
-
-Bad Request
-
-request: http://localhost:8081/solr/select?sort=score
-desc&fl=*&start=0&q=(smoking OR scenes:censor OR board OR damages OR
-people`s OR health)+section:(3)+contenttype:
-(news)+publication:(nie)+(state:(published)+expiredate:[2012-07-02T12:00:15Z
-TO *]+activatedate:[* TO
-2012-07-02T12:00:15Z])+publishdate:[1970-01-01T00:00:00Z TO
-2012-07-02T12:00:15Z]&rows=15&wt=javabin&version=1
-        at
-        org.apache.solr.client.solrj.impl.CommonsHttpSolrServer.request(CommonsHttpSolrServer.java:424)
-        at
-        org.apache.solr.client.solrj.impl.CommonsHttpSolrServer.request(CommonsHttpSolrServer.java:243)
-        at
-        org.apache.solr.client.solrj.request.QueryRequest.process(QueryRequest.java:89)
-        ... 108 more
-2012-07-02 17:30:15,593 ERROR [http-8080-34]
-(com.escenic.framework.search.solr.action.SearchAction) Error while
-executing search
-java.lang.NullPointerException
-        at
-        com.escenic.framework.search.solr.action.SearchAction.execute(SearchAction.java:56)
 

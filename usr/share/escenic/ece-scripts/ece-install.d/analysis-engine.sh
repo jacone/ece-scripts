@@ -25,15 +25,15 @@ function install_analysis_server()
 
   set_correct_permissions
   
-  local ece_command="ece -i ${instance_name} -t ${type} start"
+  local ece_command="ece -i ${instance_name} -t ${type} restart"
   su - $ece_user -c "$ece_command" 1>>$log 2>>$log
   exit_on_error "su - $ece_user -c \"$ece_command\""
 
-  local seconds=5
+  local seconds=15
   print_and_log "Waiting ${seconds} seconds for EAE to come up ..."
-  sleep 10
+  sleep $seconds
   
-    # EAE cannot handle .cfg files with quotes values (!)
+  # EAE cannot handle .cfg files with quotes values (!)
   dont_quote_conf_values=1
   
   print_and_log "Configuring EAE Reports ..."
