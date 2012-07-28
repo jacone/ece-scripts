@@ -602,5 +602,5 @@ print_and_log "Starting process @ $(date)"
 print_and_log "Additional output can be found in $log"
 get_user_options $@
 phase_execute
-print_and_log "Success! @ $(date)"
+print_and_log "SUCCESS! @ $(date)"
 phase_shutdown
