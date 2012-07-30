@@ -144,10 +144,17 @@ EOF
     run cp ${fai_publication_war} ${publication_war}
   elif [ -d $escenic_root_dir/widget-framework-core-* ]; then
     print_and_log "Basing ${publication_name}.war on Widget Framework Demo ..."
-    run cd $escenic_root_dir/widget-framework-core-*/publications/demo-core
-    assert_pre_requisite mvn
-    run mvn $maven_opts package
-    run cp target/demo-core-*.war ${publication_war}
+    # WF 1.x
+    if [ -d $escenic_root_dir/widget-framework-core-*/publications/demo-core ]; then
+      run cd $escenic_root_dir/widget-framework-core-*/publications/demo-core
+      assert_pre_requisite mvn
+      run mvn $maven_opts package
+      run cp target/demo-core-*.war ${publication_war}
+    # WF 2.x
+    elif [ -e $escenic_root_dir/widget-framework-core-*/wars/wf-core-war-2*.war ]; then
+      run cp $escenic_root_dir/widget-framework-core-*/wars/wf-core-war-2*.war \
+        ${publication_war}
+    fi
   else
     print_and_log "Basing your ${publication_name}.war on ECE/demo-clean ..."
     run cp $escenic_root_dir/engine/contrib/wars/demo-clean.war ${publication_war}

@@ -1,4 +1,4 @@
-#+TITLE: Welcome to the /usr/sbin/ece-install Guide
+#+TITLE: Welcome to the ece-install Guide
 #+AUTHOR: Torstein Krause Johansen
 
 * Supported Operating Systems
@@ -7,12 +7,12 @@ the latest Ubuntu LTS or most other Debian based operating systems,
 but it should work without any problems on any Unix like system that
 has BASH version 4.2 or newer.
 
-** Debian based operating systems
+** Debian Based Operating Systems
 If running on a Debian based operating system, ece-install will take
 care of installing all required third party software, such as database
 & caching server.
 
-** RedHat based operating systems
+** RedHat Based Operating Systems
 ece-install constantly gets better support for automatic installation
 on RedHat based operating systems. However, since the public RedHat
 repositories are significantly smaller than the Debian ones, there
@@ -31,13 +31,26 @@ You may also look inside the ece-install script for all calls to the
 'assert_pre_prequesite' method and you'll get a list of the binaries
 ece-install assumes are present.
 
+** Common Requirements for All Operating Systems
+*** Internet Connection
+The installer needs an internet connection, preferably a fast one as
+several hundreds of megabytes are downloaded.
+
+*** Firewall Rules
+ece-install must be able to make outgoing connections from the machine
+on which it is running to the following ports:
+
+- 80 (standard HTTP)
+- 443 (HTTPS)
+
 ** Tested Operating Systems
 | Operating system     | Status                                              | Date updated     |
 |----------------------+-----------------------------------------------------+------------------|
-| Debian 6.0 (squeeze) | Everything is 100% automatic                        | 2012-02-27 13:18 |
-| Ubuntu LTS 10.04     | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
-| Ubuntu 11.10         | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
 | CentOS 6.2           | HA, APR & monitoring are not automatic              | 2012-03-07 13:42 |
+| Debian 6.0 (squeeze) | Everything is 100% automatic                        | 2012-02-27 13:18 |
+| Ubuntu 11.10         | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
+| Ubuntu LTS 10.04     | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
+| Ubuntu LTS 12.04     | Everything except Tomcat/APR wrappers are automatic | 2012-07-27 03:27 |
 
 * A Note on Running ece-install On Non-GNU/Linux Systems
 Please note, it's assumed that the OS uses GNU's tools, i.e. find, cp
@@ -67,7 +80,7 @@ After getting the latest version of ece-scripts, you run it with:
 # bash ece-scripts/usr/sbin/ece-install  
 #+END_SRC
 
-** Requires super user privileges
+** Requires Super User Privileges
 You must run the script as the root user.  If you start the script as
 a regular user, it will complain:
 #+BEGIN_SRC conf
@@ -252,7 +265,7 @@ ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already exists
 If you for some reason wish to make ece-install drop the DB fro you
 before creating a new one, you can set
 #+BEGIN_SRC sh
-  fai_db_drop_old_db_first=1
+fai_db_drop_old_db_first=1
 #+END_SRC
 
 *** Master & slave setup

@@ -398,7 +398,6 @@ function run_db_scripts() {
   for el in $db_fn_list; do
     local file=$1/$el.sql
     if [ -e $file ]; then
-      log "running $file ..."
       run_db_script_file $file
     fi
     exit_on_error "running $el"

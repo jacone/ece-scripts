@@ -119,9 +119,8 @@ function set_up_engine_and_plugins() {
   fi
   
   print_and_log "Setting up the Escenic Content Engine & its plugins ..."
-
   make_dir $escenic_root_dir
-  cd $escenic_root_dir/
+  run cd $escenic_root_dir/
 
   for el in $technet_download_list; do
     if [ $(basename $el | \
@@ -133,7 +132,7 @@ function set_up_engine_and_plugins() {
   done
   
   if [ -n "$engine_dir" -a ! -d "${engine_dir}" ]; then
-    run unzip -q -u $download_dir/${engine_file}
+    run unzip -q -u -o $download_dir/${engine_file}
     if [ -h engine ]; then
       run rm engine
     fi
@@ -145,17 +144,13 @@ function set_up_engine_and_plugins() {
 
   # we now extract all the plugins. We extract them in $escenic_root_dir
   # as we want to re-use them between minor updates of ECE.
-  cd $escenic_root_dir/
-  for el in $download_dir/*.zip; do
-    if [ $(basename $el | grep ^engine-.*.zip | wc -l) -gt 0 ]; then
-      continue
-    elif [ $(basename $el | grep ^assemblytool-.*.zip | wc -l) -gt 0 ]; then
-      continue
-    elif [ $(basename $el | grep ^jdk-.*.zip | wc -l) -gt 0 ]; then
+  run cd $escenic_root_dir/
+  for el in $technet_download_list $wf_download_list; do
+    local file=$(basename $el)
+    if [ $el == engine-* ]; then
       continue
     fi
-    
-    run unzip -q -u $el
+    run unzip -q -u -o $download_dir/$file
   done
 
   ece_software_setup_completed=1
@@ -168,7 +163,7 @@ function set_up_assembly_tool() {
   cd $escenic_root_dir/assemblytool/
   
   if [ -e $download_dir/assemblytool*zip ]; then
-    run unzip -q -u $download_dir/assemblytool*zip
+    run unzip -q -u -o $download_dir/assemblytool*zip
   fi
 
   # adding an instance layer to the Nursery configuration
@@ -538,6 +533,7 @@ function install_ece_third_party_packages
       libtcnative-1
       libmysql-java
       memcached
+      xml-twig-tools
       wget
     "
   elif [ $on_redhat_or_derivative -eq 1 ]; then
@@ -557,7 +553,7 @@ function install_ece_third_party_packages
   
   install_packages_if_missing $packages
   
-  for el in ant java; do
+  for el in ant java jar; do
     assert_pre_requisite $el
   done
 }

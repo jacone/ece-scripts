@@ -47,7 +47,7 @@ wget"
 ##
 function set_pid {
   if [ -e $pid_file ]; then
-    print "Instance of $(basename $0) already running!"
+    echo "Instance of $(basename $0) already running!"
     exit 1
   else
     echo $BASHPID > $pid_file
