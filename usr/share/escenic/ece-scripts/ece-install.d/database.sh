@@ -124,6 +124,8 @@ function install_database_server()
       set_slave_to_replicate_master
     fi
   fi
+
+  leave_db_trails
 }
 
 function set_ecedb_conf() {
@@ -509,4 +511,8 @@ function work_around_eae_bug_stats-76() {
   print_and_log "Fixing $1 ..."
   grep -i -v ^'drop index' $1 > $1.tmp
   mv $1.tmp $1
+}
+
+function leave_db_trails() {
+  leave_trail "trail_db_port=${db_port-3306}"
 }

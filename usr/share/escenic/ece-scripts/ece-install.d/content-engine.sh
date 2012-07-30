@@ -82,7 +82,7 @@ function install_ece_instance() {
   set_up_app_server
   set_up_proper_logging_configuration
 
-    # We set a WAR white list for all profiles except all in one
+  # We set a WAR white list for all profiles except all in one
   if [ $install_profile_number -ne $PROFILE_ALL_IN_ONE -a \
     $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
     local file=$escenic_conf_dir/ece-${instance_name}.conf
@@ -102,6 +102,8 @@ function install_ece_instance() {
   update_type_instances_to_start_up
   set_conf_file_value ece_unix_user $ece_user /etc/default/ece
   set_conf_file_value ece_unix_group $ece_group /etc/default/ece
+
+  leave_content_engine_trails
 
   admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin/
   add_next_step "New ECE instance $instance_name installed."
@@ -634,4 +636,23 @@ function set_up_engine_directories() {
   for el in $engine_dir_list; do
     make_dir $el
   done
+}
+
+function leave_content_engine_trails() {
+  if [ ${fai_editor_install-0} -eq 1 ]; then
+    leave_trail "trail_editor_port=${fai_editor_port-8080}"
+    leave_trail "trail_editor_shutdown=${fai_editor_shutdown-8005}"
+  fi
+  if [ ${fai_presentation_install-0} -eq 1 ]; then
+    leave_trail "trail_presentation_port=${fai_presentation_port-8080}"
+    leave_trail "trail_presentation_shutdown=${fai_presentation_shutdown-8005}"
+  fi
+  if [ ${fai_analysis_install-0} -eq 1 ]; then
+    leave_trail "trail_analysis_port=${fai_analysis_port-8080}"
+    leave_trail "trail_analysis_shutdown=${fai_analysis_shutdown-8005}"
+  fi
+  if [ ${fai_all_install-0} -eq 1 ]; then
+    leave_trail "trail_all_port=8080"
+    leave_trail "trail_all_shutdown=8005"
+  fi
 }

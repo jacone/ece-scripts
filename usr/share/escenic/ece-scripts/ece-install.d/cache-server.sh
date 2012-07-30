@@ -58,7 +58,8 @@ function install_cache_server()
   fi
 
   set_up_varnish $backend_servers
-
+  leave_cache_trails
+  
   add_next_step "Cache server is up and running at http://${HOSTNAME}:80/"
 }
 
@@ -210,4 +211,8 @@ EOF
 }
 EOF
   run /etc/init.d/varnish start
+}
+
+function leave_cache_trails() {
+  leave_trail "trail_cache_port=80"
 }

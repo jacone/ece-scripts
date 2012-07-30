@@ -846,6 +846,14 @@ function common_post_install() {
   run rm $pid_file
 }
 
+ece_install_trail_file=/var/lib/ece-install/$(date +%s)-$(basename $0).trail
+## $@ add this trail
+function leave_trail() {
+  local dir=$(dirname $ece_install_trail_file)
+  run mkdir -p $dir
+  echo "$@" >> $ece_install_trail_file
+}
+
 for el in $@; do
     if [ $el = "-v" -o $el = "--verbose" ]; then
         debug=1
