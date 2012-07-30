@@ -53,6 +53,10 @@ EOF
 }
 
 function set_up_wf_nursery_config() {
+  for el in $wf_download_list; do
+    local wf_dist_dir=$(basename $el .zip)
+  done
+  
   cp -r $wf_dist_dir/misc/siteconfig/* $common_nursery_dir/
   local file=$common_nursery_dir/com/escenic/classification/IndexerPlugin.properties
   run mkdir -p $(dirname $file)
