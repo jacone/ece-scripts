@@ -1,66 +1,65 @@
-assemble_attempts=0
+function run_assembly_tool() {
+  run cd $assemblytool_home 
+  run ant -q ear -DskipRedundancyCheck=true
+}
+
+# the JARs are known to share code between them (!)
+jar_white_list="xmlParserAPIs|commons-beanutils|jaxen|xom|xml-apis|relaxngDatatype"
+
+function warn_about_duplicate_jars() {
+  local a_class_list=""
+  for el in $assemblytool_home/dist/.work/ear/lib/*.jar; do
+    local a_class=$(unzip -t $el | \
+      grep class | \
+      grep -v "No errors" | \
+      cut -d':' -f2 | \
+      sed 's/^[ ]//g' | \
+      cut -d' ' -f1 | \
+      sort -r | \
+      head -1)
+    a_class_list="${a_class}\n${a_class_list}"
+  done
+
+  for el in $(echo -e "$a_class_list" | sort | uniq); do
+    local a_class_count=$(
+      grep $el $assemblytool_home/dist/.work/ear/lib/*.jar | \
+        egrep -v "$jar_white_list" | \
+        wc -l
+    )
+    
+    if [ $a_class_count -gt 1 ]; then
+      print_and_log $(yellow WARNING) "These JARs contain (at least some) of the same files:"
+      grep $el $assemblytool_home/dist/.work/ear/lib/*.jar | \
+        egrep -v "$jar_white_list" | \
+        cut -d' ' -f3 | while read f; do
+        local file=$(basename $f)
+        for ele in $(find -L \
+          $assemblytool_home/plugins \
+          $ece_home/lib \
+          -name $file | \
+          egrep -v "WEB-INF|test"); do
+          print_and_log "-" $ele
+        done
+      done
+    fi
+  done
+}
 
 function assemble() {
-  if [ "$assemble_attempts" -gt 1 ]; then
-    print "I've tried to assemble twice now and FAILED :-("
-    print "You probably have multiple versions of one or more plugins"
-    print "Check your plugins directory, sort it out and try again."
-    exit 1
-  fi
-  assemble_attempts=$(( $assemble_attempts + 1 ))
-  
   if [[ "$type" != "engine" && "$type" != "search" ]]; then
     print "You cannot assemble instances of type $type"
     exit 1
   fi
 
   print_and_log "Assembling your EAR file..."
-  run cd $assemblytool_home 
-  run ant -q ear -DskipRedundancyCheck=true
+  run_assembly_tool
 
-  # test to see if the new versions of ECE & plugins are upgrades of
-  # the previous ones
-  duplicates_found=0
-  known_unharmful_duplicates="activation- $'\n' ehcache-$'\n' stax-api-$'\n'"
-  
-  run cd $assemblytool_home/dist/.work/ear/lib
-  for el in *.jar; do
-    jar=$(basename $(echo $el | sed -e 's/[0-9]//g') .jar | sed 's/\.//g')
-    if [ $(echo $known_unharmful_duplicates | grep $jar | wc -l) -gt 0 ]; then
-      continue
-    fi
-
-    # we check for duplicate JARs like plugin-1.2.3.jar and
-    # plugin-1.2.4.jar. We remove plugin-1.2.3-tests.jar out the
-    # equations (if it happens to be there).
-    if [ $(\ls *.jar | \
-      sed -e 's/\.jar//' -e 's/-tests$//g' | \
-      grep "^${jar}[0-9]" | \
-      sort | \
-      uniq | \
-      wc -l) -gt 1 ]; then
-      duplicates_found=1
-      print_and_log "More than one version of $(echo $jar | sed 's/-$//g'):"
-      find -L $assemblytool_home/plugins -name "${jar}" | \
-        grep -v "tests"
-      find -L $assemblytool_home/plugins -name "${jar}" | \
-        grep -v "tests"
-    fi
-  done
-
-  if [ "$duplicates_found" -eq 1 ]; then
-    print "Multiple versions of ECE and/or 3rd party libraries found."
-    print "Remember, you need to run '$(basename $0) clean assemble' when "
-    print "upgrading either ECE or one of the plugins."
-    print "I will now clean it up for you and re-run the assembly."
-    clean_up
-    assemble
-  fi
+  warn_about_duplicate_jars
   
   mkdir -p $ear_cache_dir/
   exit_on_error "creating $ear_cache_dir"
 
-  cp $assemblytool_home/dist/engine.ear $cache_dir
+  run cp $assemblytool_home/dist/engine.ear $cache_dir
   exit_on_error "copying ear to $ear_cache_dir"
 
   debug $assemblytool_home/dist/engine.ear "is now ready"
