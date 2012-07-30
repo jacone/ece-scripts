@@ -66,6 +66,37 @@ function post_push_changes() {
   fi
 }
 
+function set_etc_hosts() {
+  if [ ! -d $files_dir/common/etc/hosts.d ]; then
+    return
+  fi
+
+  local tmp_file=$(mktemp)
+  cat > $tmp_file <<EOF
+###################################################################
+## Generated default /etc/hosts header by $(basename $0) @ $(date)
+###################################################################
+127.0.0.1	localhost
+127.0.1.1	${instance}
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+###################################################################
+
+EOF
+
+  cat $tmp_file \
+    ${files_dir}/common/etc/hosts.d/* \
+    ${files_dir}/${instance}/etc/hosts.d/* | \
+    ssh ${rsync_ssh_opts} ${instance} "cat > /etc/hosts"
+  
+  rm $tmp_file
+}
+
 # the callee needs to to do:
 #
 # pre_push_changes
