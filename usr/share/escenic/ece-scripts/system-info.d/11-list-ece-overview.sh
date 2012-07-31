@@ -74,7 +74,8 @@ function list_error_overview_for_instance() {
   fi
 
   print_h4_header "Overview of ${1}'s errors"
-  local errors="$(grep ERROR ${file} | cut -d' ' -f6- | sort | uniq -c | sort -n -r | sed 's/^[ ]*//g')"
+  # listing the top 50 errors with indiviual count
+  local errors="$(grep ERROR ${file} | cut -d' ' -f6- | sort | uniq -c | sort -n -r | sed 's/^[ ]*//g' | head -n 50)"
   if [ $(echo "$errors" | wc -c) -lt 5 ]; then
       print_pre_text "There are no errors in today's log ($file)"
   else
