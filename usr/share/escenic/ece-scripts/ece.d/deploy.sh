@@ -1,3 +1,5 @@
+# Module for the 'ece deploy' command.
+
 wget_opts="--continue --inet4-only --quiet"
 
 function get_state_file() {
@@ -68,8 +70,11 @@ function deploy() {
   
   # extract EAR to a temporary area
   local dir=$(mktemp -d)
-  (mkdir -p $dir && cd $dir && jar xf $ear)
-  exit_on_error "extracting $ear to $dir"
+  (
+    run mkdir -p $dir
+    run cd $dir
+    run jar xf $ear
+  )
 
   print "Deploying $ear on $appserver ..."
   
@@ -81,10 +86,10 @@ function deploy() {
       # i.e wrong versions of certain libraries.
       if [ -d $tomcat_base/escenic/lib ]; then
         if [ `ls $tomcat_base/escenic/lib | grep .jar | wc -l` -gt 0 ]; then
-          rm $tomcat_base/escenic/lib/*.jar
-          exit_on_error "removing previous deployed libraries"
+          run rm $tomcat_base/escenic/lib/*.jar
         fi
         run cp $dir/lib/*.jar $tomcat_base/escenic/lib
+        remove_unwanted_libraries $tomcat_base/escenic/lib
       else
         print "Could not find $tomcat_base/escenic/lib. Exiting."
         print "Also make sure that you have defined this directory in"
@@ -94,26 +99,16 @@ function deploy() {
         exit 1
       fi
       
-      exit_on_error "copying lib files to app server classpath"
-
-      rm -rf $tomcat_base/work/* \
-        1>>$log \
-        2>>$log
-      
-      exit_on_error "removing work files from tomcat"
+      run rm -rf $tomcat_base/work/*
 
       for war in $dir/*.war ; do
         if [ -d $tomcat_base/webapps/`basename $war .war` ] ; then
-          rm -rf $tomcat_base/webapps/`basename $war .war` \
-            1>>$log \
-            2>>$log
-          exit_on_error "removing already deployed escenic wars in $tomcat_base/webapps/"
+          run rm -rf $tomcat_base/webapps/`basename $war .war`
         fi
       done
 
-            # this scenario is likely when running many minimal
-            # instances of tomcat and some of these are not properly
-            # initialised.
+      # this scenario is likely when running many minimal instances of
+      # tomcat and some of these are not properly initialised.
       if [ ! -d $tomcat_base/webapps ]; then
         print $tomcat_base/webapps "doesn't exist, exiting."
         exit 1
@@ -213,4 +208,21 @@ function add_memcached_support() {
   fi
 
   exit_on_error "sed on $file"
+}
+
+## Removes unwanted JARs. e.g. if type=search, we remove the
+## engine-config.jar
+##
+## $1 :: the directory to check
+function remove_unwanted_libraries() {
+  if [ ! $1 ]; then
+    return
+  elif [ ! -d $1 ]; then
+    return
+  elif [ $type != "search" ]; then
+    return
+  fi
+  
+  log "Removing $1/engine-config-*.jar since this is a search instance"
+  run rm $1/engine-config-*.jar
 }
