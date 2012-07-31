@@ -294,8 +294,8 @@ EOF
 
     for el in ${fai_publication_domain_mapping_list}; do
       local old_ifs=$IFS
-            # the entries in the fai_publication_domain_mapping_list
-            # are on the form: <publication>#<domain>
+      # the entries in the fai_publication_domain_mapping_list are on
+      # the form: <publication>#<domain>
       IFS='#'
       read publication domain <<< "$el"
       IFS=$old_ifs
@@ -310,6 +310,7 @@ EOF
         />
       </Host>
 EOF
+      leave_trail "trail_virtual_host_${publication}=${domain}:${appserver_port}"
     done
   fi
   
