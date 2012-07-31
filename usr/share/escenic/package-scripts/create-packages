@@ -128,6 +128,7 @@ function set_up_vosa() {
   mkdir -p $target_dir/etc/bash_completion.d
   
   cp -r ../../../bin/vosa $target_dir/usr/bin/
+  cp -r ../../../bin/vosa-push $target_dir/usr/bin/
   cp -r ../../vizrt/ $target_dir/usr/share/
   cp -r ../../doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
   cp -r ../../../../etc/bash_completion.d/vosa \
