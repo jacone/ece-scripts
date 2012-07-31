@@ -193,7 +193,7 @@ function set_common_settings() {
     log=$log_dir/$instance.out
     pid_file=$pid_dir/$instance.pid
     
-    gc_log=${log_dir}/${type}-${instance}-gc.log
+    gc_log=${log_dir}/${instance}-gc.log
 
     log4j_file_list="
       $log_dir/${HOSTNAME}-${instance}-messages
