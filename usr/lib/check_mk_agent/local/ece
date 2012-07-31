@@ -1,0 +1,41 @@
+#!/bin/bash
+
+engine_instance_list=""
+search_instance_list=""
+
+if [ ! -r /etc/default/ece ] ; then
+  exit 0
+fi
+
+function determine_health() {
+  local type=$1
+  shift
+  for i in $* ; do
+    basename="ece_$i"
+    pidfile=/var/run/escenic/$i.pid
+  
+    if [ ! -r $pidfile ] ; then
+      echo "2 ${basename}_up - The $pidfile is missing"
+      continue;
+    fi
+
+    local pid=$(<$pidfile)
+    if [ -z "$pid" ] ; then
+      echo "2 ${basename}_up - The $pidfile is empty"
+      continue;
+    fi
+
+    if [ ! -d /proc/$pid ] ; then
+      echo "2 ${basename}_up - The process in $pidfile is not running"
+      continue;
+    fi
+
+    echo "0 ${basename}_up - OK process $pid"
+
+  done
+}
+
+. /etc/default/ece
+determine_health engine $engine_instance_list 
+determine_health search $search_instance_list 
+
