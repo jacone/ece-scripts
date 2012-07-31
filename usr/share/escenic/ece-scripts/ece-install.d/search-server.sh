@@ -29,6 +29,7 @@ function install_search_server()
 
   set_up_solr
   assemble_deploy_and_restart_type
+  leave_search_server_trail
 }
 
 function set_up_solr()
@@ -73,4 +74,11 @@ function set_up_solr()
   fi
 
   run_hook set_up_solr.postinst
+}
+
+function leave_search_server_trail() {
+  if [ ${fai_search_install-0} -eq 1 ]; then
+    leave_trail "trail_search_port=${fai_search_port-8080}"
+    leave_trail "trail_search_shutdown=${fai_search_shutdown-8005}"
+  fi
 }
