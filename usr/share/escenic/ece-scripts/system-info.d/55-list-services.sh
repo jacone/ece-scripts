@@ -1,6 +1,16 @@
+function print_listening_services() {
+  echo -e "Port	PID/program";
+  netstat -ntlp 2>/dev/null | \
+    grep ^tcp | \
+    sed -e 's/127.0.0.1://g' -e 's/0.0.0.0://g' -e  's/::://g' | \
+    awk '{print $4, $7}' | \
+    sort -n | \
+    uniq | \
+    column -t
+}
 
 print_h2_header "Overview of all server services on $HOSTNAME"
-print_pre_text "$(netstat -ntlp 2>/dev/null | awk '{print $4, $7}' | cut -d':' -f2 | grep ^[0-9] | sort -n | uniq | column -t)"
+print_pre_text "$(print_listening_services)"
 
 if [ $(whoami) != "root" ]; then
   print_p_text "Run $(basename $0) as  root to get more details in this listing"
