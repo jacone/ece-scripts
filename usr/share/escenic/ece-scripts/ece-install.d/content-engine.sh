@@ -655,4 +655,6 @@ function leave_content_engine_trails() {
     leave_trail "trail_all_port=8080"
     leave_trail "trail_all_shutdown=8005"
   fi
+  
+  leave_trail "trail_public_host_name=${public_host_name}"
 }
