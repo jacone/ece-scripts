@@ -11,10 +11,7 @@ function get_instance_type() {
     source /etc/default/ece
 
     for el in "$analysis_instance_list"; do
-      echo "[$el] == [$1] ?" >> /tmp/t
-      
       if [[ "$(ltrim $el)" == "$1" ]]; then
-        echo yes >> /tmp/t
         type=analysis
       fi
     done
