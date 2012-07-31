@@ -3,7 +3,7 @@
 # wrapper around the vosa::push module. Can be removed once vosa -i
 # <instance> push has been implemented.
 
-source ../share/vizrt/vosa/commands/push.sh
+source $(dirname $0)/../share/vizrt/vosa/commands/push.sh
 outgoing=0
 instance=""
 
