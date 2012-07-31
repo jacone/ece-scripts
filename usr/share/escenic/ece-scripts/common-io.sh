@@ -160,3 +160,18 @@ function verify_that_directory_and_file_are_writeable() {
     fi
   fi
 }
+
+## Returns the number of seconds since the file was changed.
+## $1 the file
+function get_file_age_in_seconds() {
+  if [ ! $1 ]; then
+    return
+  elif [ ! -e $1 ]; then
+    return
+  fi
+
+  local changed=$(stat -c %Y "$1")
+  local now=$(date +%s)
+  
+  echo $(( now - changed ))
+}
