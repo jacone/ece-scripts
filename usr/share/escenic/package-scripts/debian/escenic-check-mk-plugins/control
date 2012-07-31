@@ -1,0 +1,8 @@
+Package: escenic-check-mk-plugins
+Version: VERSION
+Recommends: check-mk-agent
+Section: base
+Priority: optional
+Architecture: all
+Maintainer: MAINTAINER_NAME <MAINTAINER_EMAIL>
+Description: check-mk plugins for the Escenic Content Engine.
