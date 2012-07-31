@@ -55,7 +55,7 @@ function get_info_for_type() {
   create_block_diag_for_instance
 }
 
-print_deployment_state() {
+function print_deployment_state() {
   local file=$data_dir/$instance.state
   if [ ! -r $file ]; then
     return
@@ -153,6 +153,10 @@ function visualise_known_ports() {
 }
 
 function create_block_diag_for_instance() {
+  if [ -z $type_pid ]; then
+    return
+  fi
+  
   local file=/var/cache/escenic/${instance}.blockdiag
   cat > ${file} <<EOF
 blockdiag {
