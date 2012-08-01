@@ -65,6 +65,8 @@ function create_target_directory() {
     set_up_escenic-common-scripts
   elif [[ $package_name == "escenic-munin-plugins" ]]; then
     set_up_escenic-munin-plugins
+  elif [[ $package_name == "escenic-check-mk-plugins" ]]; then
+    set_up_escenic-check-mk-plugins
   fi
 
   debian_dir=$target_dir/DEBIAN
@@ -164,6 +166,8 @@ function set_up_escenic-common-scripts() {
 
 function set_up_escenic-check-mk-plugins() {
   mkdir -p $target_dir/usr/lib/check_mk_agent/local
+  cp -r ../../../lib/check_mk_agent/local/* \
+    $target_dir/usr/lib/check_mk_agent/local/
 }
 
 function set_up_escenic-munin-plugins() {

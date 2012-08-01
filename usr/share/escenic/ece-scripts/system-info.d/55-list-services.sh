@@ -1,12 +1,13 @@
 function print_listening_services() {
-  echo -e "Port	PID/program";
+  echo -e "Port\tProgram";
   netstat -ntlp 2>/dev/null | \
     grep ^tcp | \
-    sed -e 's/127.0.0.1://g' -e 's/0.0.0.0://g' -e  's/::://g' | \
+    sed -e 's/127.0.0.1://g' -e 's/0.0.0.0://g' -e 's/::://g' -e 's/::1://g' | \
     awk '{print $4, $7}' | \
     sort -n | \
     uniq | \
-    column -t
+    column -t | \
+    sed 's#[0-9]*/##'
 }
 
 print_h2_header "Overview of all server services on $HOSTNAME"
