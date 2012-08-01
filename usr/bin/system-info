@@ -33,6 +33,7 @@ function init() {
 
   source $ece_scripts_dir/common-ece.sh
   source $ece_scripts_dir/common-bashing.sh
+  source $ece_scripts_dir/common-io.sh
 }
 
 ## Runs extra system-info modules
