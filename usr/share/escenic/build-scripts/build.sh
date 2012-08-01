@@ -442,6 +442,7 @@ function phase_release
 {
   svn_checkout
   maven_build
+  symlink_project_assembly
   generate_publication_properties
   ant_build
   publish_ear
