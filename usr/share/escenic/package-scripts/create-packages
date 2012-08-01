@@ -75,14 +75,16 @@ function create_target_directory() {
 function set_up_escenic-content-engine-installer() {
   mkdir -p $target_dir/{etc,usr,/etc/default}
   mkdir -p $target_dir/usr/{bin,sbin,share/doc}
-  mkdir -p $target_dir/usr/share/doc/escenic
+  mkdir -p $target_dir/usr/share/doc/escenic/examples
   mkdir -p $target_dir/usr/share/escenic/ece-scripts
   
   cp -r ../../../sbin/ece-install $target_dir/usr/sbin/
   cp -r ../../escenic/ece-scripts/ece-install.d/ \
     $target_dir/usr/share/escenic/ece-scripts/
-  cp -r ../../doc/escenic/ece-install-guide.{org,html} \
+  cp -r ../../doc/escenic/ece-install-guide.org \
     $target_dir/usr/share/doc/escenic
+  cp -r ../../doc/escenic/examples/ece-install-*.conf \
+    $target_dir/usr/share/doc/escenic/examples/
 }
 
 function set_up_escenic-build-scripts() {
