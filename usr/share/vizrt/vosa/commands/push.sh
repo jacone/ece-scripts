@@ -89,8 +89,13 @@ ff02::2 ip6-allrouters
 ########################################################################
 EOF
 
-  find ${files_dir}/common/etc/hosts.d/ \
-    ${files_dir}/${instance}/etc/hosts.d \
+  local find_dirs=${files_dir}/common/etc/hosts.d
+  if [ -d ${files_dir}/${instance}/etc/hosts.d ]; then
+    find_dirs="$find_dirs ${files_dir}/${instance}/etc/hosts.d"
+  fi
+  
+  find  \
+    $find_dirs \
     -type f | while read f; do
     cat >> $file <<EOF
 ## From ${HOSTNAME}:${f}
