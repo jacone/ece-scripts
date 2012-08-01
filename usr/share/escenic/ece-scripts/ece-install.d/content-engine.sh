@@ -456,7 +456,7 @@ java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
 6localhost.org.apache.juli.FileHandler.directory = $escenic_log_dir
 6localhost.org.apache.juli.FileHandler.prefix = solr.
 
-org.apache.solr.level=INFO
+org.apache.solr.level=WARNING
 org.apache.solr.handlers=6localhost.org.apache.juli.FileHandler
 
 org.apache.catalina.core.ContainerBase.[Catalina].[localhost].level = INFO
