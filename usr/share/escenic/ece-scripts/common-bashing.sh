@@ -99,7 +99,7 @@ function exit_on_error() {
 }
 
 function run() {
-  $@ 1>>$log 2>>$log
+  "${@}" 1>>$log 2>>$log
   exit_on_error $@
 }
 
