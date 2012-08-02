@@ -31,7 +31,7 @@ fi
 
 if [ -z "$ECE_INSTALLER" ] ; then
   ssh -F $2/ssh.conf root@guest apt-cache show escenic-content-engine-installer > /dev/null &&
-  echo "Attempting to install escenic-content-engine-installer packge" &&
+  echo "Attempting to install escenic-content-engine-installer package" &&
   ssh -F $2/ssh.conf root@guest apt-get install -y -o DPkg::Options::=--force-confold \
       escenic-content-engine-installer
   if [ $? == 0 ] ; then
