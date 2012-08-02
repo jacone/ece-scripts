@@ -34,6 +34,6 @@ pres2, edit1, edit2, mon and analysis:
 #+BEGIN_SRC sh
 control$ for el in pres{1,2} edit{1,2}, mon analysis; do \
            echo "Now upgrading $el";
-           ssh $(basename $el) yum update; 
+           ssh yum update; 
          done
 #+END_SRC
