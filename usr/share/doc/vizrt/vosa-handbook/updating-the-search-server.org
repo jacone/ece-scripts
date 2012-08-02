@@ -1,0 +1,23 @@
+** Updating the Search Server
+
+When updating the search server, you might want to reconfigure the
+ECE instance(s) that use the search server you're updating. To do
+this, you can use the Component Browser in the escenic-admin
+interface.
+
+For instance, let's say you're upgrading the search server for edit1
+and want it to temporarily use edit2's search instance.
+
+First, go to:
+http://edit1:8080/escenic-admin/browser/Global/com/escenic/webservice/search/DelegatingSearchEngine?property=solrURI
+
+Then, change the value from:
+#+BEGIN_SRC sh
+http://localhost:8081/solr/select	  
+#+END_SRC
+
+to
+
+#+BEGIN_SRC sh
+http://edit2:8081/solr/select	  
+#+END_SRC
