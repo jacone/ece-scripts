@@ -276,41 +276,18 @@ function configure_mysql_for_replication() {
 EOF
   fi
 
+  set_common_replication_settings $file
+  
   # replication log configuration of the master
   if [ $db_master -eq 1 ]; then
-    local old="#server-id.*=.*1"
-    local new="server-id=1"
+    old="#server-id.*=.*1"
+    new="server-id=1"
 
     if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
       sed -i "s~^$old~$new~g" $file
     elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
       echo "$new" >> $file
     fi
-
-    old="bind-address.*= 127.0.0.1"
-    new="# bind-address = 127.0.0.1"
-    if [ $(grep ^"${old}" $file | wc -l) -gt 0 ]; then
-      sed -i "s~^${old}~$new~g" $file
-    fi
-
-    old="#log_bin.*= /var/log/mysql/mysql-bin.log"
-    new="log_bin = /var/log/mysql/mysql-bin.log"
-    if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
-      sed -i "s~^${old}~${new}~g" $file
-    elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
-      echo "$new" >> $file
-    fi
-
-    old="#binlog_do_db.*=.*"
-    new="binlog_do_db = ${db_schema}"
-
-    if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
-      sed -i "s~^${old}~${new}~g" $file
-    elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
-      echo "$new" >> $file
-    fi
-
-    run /etc/init.d/mysql restart
 
     # report the needed settings for a slave
     local master_status=$(mysql $db_schema -e "show master status" | tail -1)
@@ -325,8 +302,8 @@ EOF
     log $message
     add_next_step $message
   else
-    local old="#server-id.*= 1"
-    local new="server-id=2"
+    old="#server-id.*= 1"
+    new="server-id=2"
 
     if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
       sed -i "s~^$old~$new~g" $file
@@ -334,9 +311,40 @@ EOF
       echo "$new" >> $file
     fi
 
-    run /etc/init.d/mysql restart
   fi
+  
+  run /etc/init.d/mysql restart
 }
+
+## We set up mysql listening to the external servers and binary logs
+## on both the master and slave since we want to be able easily fail
+## over to the slave as master (and back again).
+function set_common_replication_settings() {
+  local file=$1
+  
+  local old="bind-address.*= 127.0.0.1"
+  local new="# bind-address = 127.0.0.1"
+  if [ $(grep ^"${old}" $file | wc -l) -gt 0 ]; then
+    sed -i "s~^${old}~$new~g" $file
+  fi
+
+  old="#log_bin.*= /var/log/mysql/mysql-bin.log"
+  new="log_bin = /var/log/mysql/mysql-bin.log"
+  if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
+    sed -i "s~^${old}~${new}~g" $file
+  elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
+    echo "$new" >> $file
+  fi
+
+  old="#binlog_do_db.*=.*"
+  new="binlog_do_db = ${db_schema}"
+
+  if [ $(grep ^"$old" $file | wc -l) -gt 0 ]; then
+    sed -i "s~^${old}~${new}~g" $file
+  elif [ $(grep ^"$new" $file | wc -l) -lt 1 ]; then
+    echo "$new" >> $file
+  fi
+}  
 
 function set_slave_to_replicate_master() {
   print_and_log "Setting slave to replicate master DB @ $db_master_host ..."
