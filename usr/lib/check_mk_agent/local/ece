@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# check_mk plug-in to verify that the Escenic Content Engine instances are
+# actually running.  If there's something wrong with the pidfile (missing,
+# empty) or if the pid is not up (e.g. dead) then it goes critical.
+#
+
 engine_instance_list=""
 search_instance_list=""
 
