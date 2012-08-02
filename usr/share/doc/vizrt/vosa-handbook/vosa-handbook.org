@@ -1,9 +1,7 @@
 #+TITLE: Welcome to the VOSA Handbook
-#+AUTHOR: Torstein Krause Johansen
-#+AUTHOR: Erik Mogensen
+#+AUTHOR: Erik Mogensen & Torstein Krause Johansen
 
 #+INCLUDE: "operating-system-maintenance.org" 
-
 * Deployment
 #+INCLUDE: "deploying-a-new-ear.org"
 #+INCLUDE: "updating-publication-resources.org"
