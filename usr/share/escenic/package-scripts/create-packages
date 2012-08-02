@@ -130,6 +130,7 @@ function set_up_vosa() {
   mkdir -p $target_dir/usr/{bin,sbin,share/doc}
   mkdir -p $target_dir/usr/share/doc/vosa
   mkdir -p $target_dir/etc/bash_completion.d
+  mkdir -p $target_dir/etc/init.d
   
   cp -r ../../../bin/vosa $target_dir/usr/bin/
   cp -r ../../../bin/vosa-push $target_dir/usr/bin/
@@ -137,6 +138,7 @@ function set_up_vosa() {
   cp -r ../../doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
   cp -r ../../../../etc/bash_completion.d/vosa \
     $target_dir/etc/bash_completion.d/
+  cp -r ../../../../etc/init.d/vosa $target_dir/etc/init.d/
 }
 
 function set_up_escenic-common-scripts() {
