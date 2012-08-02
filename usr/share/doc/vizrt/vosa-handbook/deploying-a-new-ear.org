@@ -11,6 +11,23 @@ torstein@control:~$ sudo ssh escenic@pres1 ece -i engine1 --uri http://builder.e
 [ece#engine-engine1] Deployment state file updated: /var/lib/escenic/engine1.state
 #+END_SRC
 
+We can now restart the ECE:
+
+#+BEGIN_SRC sh
+torstein@control$ sudo ssh root@pres1 /etc/init.d/ece restart 
+[ece#engine-engine1] Stopping the engine1 instance of engine on pres1 ...
+[ece#engine-engine1] Starting the engine1 instance of engine on pres1 ...
+[ece#search-search1] Stopping the search1 instance of search on pres1 ...
+[ece#search-search1] Starting the search1 instance of search on pres1 ...
+#+END_SRC
+
+To confirm see that the ECE instance came up again, do:
+
+#+BEGIN_SRC sh
+torstein@control:~$ sudo ssh root@pres1 /etc/init.d/ece status
+[ece#engine-engine1] UP 0d 0h 11m 45s
+[ece#search-search1] UP 0d 0h 11m 42s
+#+END_SRC
 
 *** Deploying a new EAR file for a search instance
 The search instance is special in that you have to specify the type
