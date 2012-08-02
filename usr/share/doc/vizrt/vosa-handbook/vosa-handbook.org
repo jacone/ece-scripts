@@ -5,3 +5,4 @@
 * Deployment
 #+INCLUDE: "deploying-a-new-ear.org"
 #+INCLUDE: "updating-publication-resources.org"
+#+INCLUDE: "updating-the-search-server.org"
