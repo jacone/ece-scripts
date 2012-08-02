@@ -76,8 +76,14 @@ function install_nfs_client() {
   local mount_point_list=""
   local file=/etc/fstab
   
+  # We set up NFS with the read write access, hard mounts to avoid
+  # data corruption and intr to allow hanging NFS operations to be
+  # interrupted. intr is much better than 'soft' as the latter often
+  # can lead to data corruption.
+  local nfs_fstab_options="rw,hard,intr"
+  
   for el in $nfs_export_list; do
-    local entry="${nfs_server_address}:$el ${nfs_client_mount_point_parent}/$(basename $0) nfs defaults 0 0"
+    local entry="${nfs_server_address}:$el ${nfs_client_mount_point_parent}/$(basename $0) nfs ${nfs_fstab_options} 0 0"
     if [ $(grep "$entry" $file | wc -l) -lt 1 ]; then
       cat >> $file <<EOF
 # added by $(basename $0) @ $(date)
