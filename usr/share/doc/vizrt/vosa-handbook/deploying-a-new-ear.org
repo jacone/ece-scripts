@@ -4,11 +4,7 @@ where we build EARs for the the tomato website.
 
 *** Deploying a new EAR file for an ECE instance
 #+BEGIN_SRC sh
-torstein@control:~$ sudo ssh escenic@pres1 \
-  ece \
-    -i engine1 \
-    --uri http://builder.example.com/tomato/releases/tomato-trunk-rev4121-2012-07-05_1524.ear \
-    deploy
+torstein@control:~$ sudo ssh escenic@pres1 ece -i engine1 --uri http://builder.example.com/tomato/releases/tomato-trunk-rev4121-2012-07-05_1524.ear  deploy
 [ece#engine-engine1] Deploying http://builder.example.com/tomato/releases/tomato-trunk-rev4121-2012-07-05_1524.ear on engine1 ...
 [ece#engine-engine1] Deploying /var/cache/escenic/tomato-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
 [ece#engine-engine1] Deployment white list active, only deploying: eb escenic-admin indexer-webservice
@@ -23,12 +19,7 @@ the search instance has a different deployment white list than that of
 the ECE instance above.
 
 #+BEGIN_SRC sh
-torstein@control:~$ sudo ssh escenic@pres1 \
-  ece \
-    -i search1 \
-    -t search \
-    --uri http://builder.example.com/tomato/releases/tomato-trunk-rev4121-2012-07-05_1524.ear \
-    deploy
+torstein@control:~$ sudo ssh escenic@pres1 ece -i search1 -t search --uri http://builder.example.com/tomato/releases/tomato-trunk-rev4121-2012-07-05_1524.ear deploy
 [ece#search-search1] Deploying http://builder.example.com/tomato/releases/tomato-trunk-rev4121-2012-07-05_1524.ear on search1 ...
 [ece#search-search1] Deploying /var/cache/escenic/tomato-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
 [ece#search-search1] Deployment white list active, only deploying: escenic-admin solr indexer-webapp
