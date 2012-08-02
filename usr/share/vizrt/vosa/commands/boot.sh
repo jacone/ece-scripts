@@ -230,7 +230,7 @@ function boot_kvm() {
   }
 
   # actually execute kvm
-  echo "Command to star this KVM:"
+  echo "Command to start this KVM:"
   echo "${startupcmd[@]}"
   "${startupcmd[@]}"; 
   local rc
