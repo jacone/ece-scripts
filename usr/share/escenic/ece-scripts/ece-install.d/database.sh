@@ -524,3 +524,25 @@ function work_around_eae_bug_stats-76() {
 function leave_db_trails() {
   leave_trail "trail_db_port=${db_port-3306}"
 }
+
+## Yes, calling the method name is a bit over the top, but it's
+## because it's an own installation profile (and everything that
+## *sounds* grand *is* grand, right?)
+function install_db_backup_server() {
+  install_packages_if_missing mysql-client
+  assert_pre_requisite mysqldump
+
+  local backup_file=${escenic_backups_dir}/${date}-${db_schema}.sql.gz
+  local file=/etc/cron.daily/${db_schema}-backup
+  cat > $file <<EOF  
+mysqldump -u $db_user | \
+  -p$db_password | \
+  -h $db_host | \
+  $db_schema | \
+  gzip -9 - \
+  > ${backup_file}
+EOF
+
+  run chmod +x $file
+  print_and_log "Daily backup of $db_schema is provided by $file"
+}
