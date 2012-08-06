@@ -42,9 +42,8 @@ function install_database_server()
       print_and_log "Installing the Percona database ..."
 
       if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
-        gpg --keyserver hkp://keys.gnupg.net:80 \
-          --recv-keys 1C4CBDCDCD2EFD2A \
-          1>>$log 2>>$log
+        run gpg --keyserver hkp://keys.gnupg.net:80 \
+          --recv-keys 1C4CBDCDCD2EFD2A
 
         # There has been three times now, during six months, that the
         # key cannot be retrieved from keys.gnupg.net. Therefore,
