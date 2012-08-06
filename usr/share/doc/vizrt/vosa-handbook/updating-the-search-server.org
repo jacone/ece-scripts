@@ -12,12 +12,12 @@ First, go to:
 http://edit1:8080/escenic-admin/browser/Global/com/escenic/webservice/search/DelegatingSearchEngine?property=solrURI
 
 Then, change the value from:
-#+BEGIN_SRC sh
+#+BEGIN_SRC conf
 http://localhost:8081/solr/select	  
 #+END_SRC
 
 to
 
-#+BEGIN_SRC sh
+#+BEGIN_SRC conf
 http://edit2:8081/solr/select	  
 #+END_SRC
