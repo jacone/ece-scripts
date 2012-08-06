@@ -15,20 +15,14 @@ function get_percona_supported_list() {
     grep -v apt
 }
 
-## $1: optional parameter, binaries_only. If passed, $1=binaries_only,
-##     the ECE DB schema is not set up.
-function install_database_server()
-{
-  print_and_log "Installing database server on $HOSTNAME ..."
-
+function set_up_percona_repository_if_possible() {
   if [ $on_debian_or_derivative -eq 1 -a ${fai_db_sql_only-0} -eq 0 ]; then
-
-    code_name=$(lsb_release -s -c)
-
-    supported_code_name=0
-    supported_list=$(get_percona_supported_list)
+    local code_name=$(lsb_release -s -c)
+    local supported_code_name=0
+    local supported_list=$(get_percona_supported_list)
+    
     for el in $supported_list; do
-      if [ $code_name = $el ]; then
+      if [[ $code_name == $el ]]; then
         supported_code_name=1
       fi
     done
@@ -39,7 +33,7 @@ function install_database_server()
     fi
 
     if [ $supported_code_name -eq 1 ]; then
-      print_and_log "Installing the Percona database ..."
+      print_and_log "Setting Up the Percona repository ..."
 
       if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
         run gpg --keyserver hkp://keys.gnupg.net:80 \
@@ -50,10 +44,8 @@ function install_database_server()
         # we're checking if it failed and if yes, force the package
         # installation.
         if [ $? -gt 0 ]; then
-          s="Failed retrieving the Percona key from keys.gnupg.net"
-          print_and_log $s
-          s="Will install the Percona packages without the GPG key"
-          print_and_log $s
+          print_and_log "Failed retrieving the Percona key from keys.gnupg.net"
+          print_and_log "Will install the Percona packages without the GPG key"
           force_packages=1
         else
           gpg --armor \
@@ -67,30 +59,34 @@ function install_database_server()
       fi
 
       add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
-      packages="percona-server-server percona-server-client libmysqlclient16"
+      mysql_server_packages="percona-server-server"
+      mysql_client_packages="percona-server-client"
     else
       print_and_log "The Percona APT repsository doesn't have packages"
       print_and_log "for your Debian (or derivative) version with code"
       print_and_log "name $code_name. "
       print_and_log "I will use vanilla MySQL instead."
 
-      packages="mysql-server mysql-client"
+      mysql_server_packages="mysql-server libmysqlclient16"
+      mysql_client_packages="mysql-client libmysqlclient16"
     fi
   elif [ $on_redhat_or_derivative -eq 1 ]; then
-    print_and_log "Installing the Percona database ..."
+    print_and_log "Settnig up the Percona repository ..."
 
     if [ $(rpm -qa | grep $percona_rpm_release_package_name | wc -l) -lt 1 ]; then
       run rpm -Uhv $percona_rpm_release_url
     fi
 
-    packages="
-      Percona-Server-shared-compat
-      Percona-Server-server-55
-      Percona-Server-client-55"
+    mysql_server_packages="Percona-Server-server-55 Percona-Server-shared-compat"
+    mysql_client_packages="Percona-Server-client-55 Percona-Server-shared-compat"
   fi
+}
+
+function install_mysql_server_software() {
+  set_up_percona_repository_if_possible
 
   if [ ${fai_db_sql_only-0} -eq 0 ]; then
-    install_packages_if_missing $packages
+    install_packages_if_missing $mysql_server_packages
     force_packages=0
 
     if [ $on_redhat_or_derivative -eq 1 ]; then
@@ -102,8 +98,37 @@ function install_database_server()
   else
     # when only running the SQL scripts, typically when using Amazon
     # RDS, we need the mysql-client.
-    install_packages_if_missing "mysql-client"
-  fi
+    install_packages_if_missing $mysql_client_packages
+  fi  
+}
+
+function install_mysql_client_software() {
+  set_up_percona_repository_if_possible
+  install_packages_if_missing $mysql_client_packages
+  assert_pre_requisite mysql
+}
+
+## $1: optional parameter, binaries_only. If passed, $1=binaries_only,
+##     the ECE DB schema is not set up.
+function install_database_server() {
+  print_and_log "Installing database server on $HOSTNAME ..."
+
+  if [ ${fai_db_sql_only-0} -eq 0 ]; then
+    install_mysql_server_software
+    install_mysql_client_software
+    force_packages=0
+
+    if [ $on_redhat_or_derivative -eq 1 ]; then
+      run chkconfig --level 35 mysql on
+      run /etc/init.d/mysql restart
+    fi
+
+    assert_pre_requisite mysqld
+  else
+    # when only running the SQL scripts, typically when using Amazon
+    # RDS, we need the mysql-client.
+    install_mysql_client_software
+   fi
 
   assert_pre_requisite mysql
 
@@ -164,7 +189,7 @@ function set_up_ecedb()
   pre_install_new_ecedb
   create_ecedb
 
-  cd ~/
+  run cd ~/
   run rm -rf $escenic_root_dir/engine/plugins
 
   add_next_step "DB is now set up on ${db_host}:${db_port}"
@@ -528,20 +553,24 @@ function leave_db_trails() {
 ## because it's an own installation profile (and everything that
 ## *sounds* grand *is* grand, right?)
 function install_db_backup_server() {
-  install_packages_if_missing mysql-client
+  install_mysql_client_software
   assert_pre_requisite mysqldump
-
-  local backup_file=${escenic_backups_dir}/${date}-${db_schema}.sql.gz
+  make_dir ${escenic_backups_dir}
   local file=/etc/cron.daily/${db_schema}-backup
-  cat > $file <<EOF  
-mysqldump -u $db_user | \
-  -p$db_password | \
-  -h $db_host | \
-  $db_schema | \
-  gzip -9 - \
-  > ${backup_file}
+  cat > $file <<EOF
+#! /usr/bin/env bash
+
+## Backup of the $db_schema DB
+## Set up by $(basename $0) @ $(date)
+
+mysqldump -u $db_user \\
+  -p$db_password \\
+  -h $db_host \\
+  $db_schema | \\
+  gzip -9 - \\
+  > ${escenic_backups_dir}/\$(date --iso)-${db_schema}.sql.gz
 EOF
 
-  run chmod +x $file
-  print_and_log "Daily backup of $db_schema is provided by $file"
+  run chmod 700 $file
+  add_next_step "Daily backup of the $db_schema DB is provided by $file"
 }
