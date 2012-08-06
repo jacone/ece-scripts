@@ -1,4 +1,4 @@
-** Updating the Search Server
+* Updating the Search Server
 
 When updating the search server, you might want to reconfigure the
 ECE instance(s) that use the search server you're updating. To do
