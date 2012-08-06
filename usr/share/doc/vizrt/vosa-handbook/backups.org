@@ -1,9 +1,8 @@
 * Backups
 
 ** DB backups
-If you've told ece-install to set up daily backups
-(fai_db_daily_backup=1 in your ece-install.conf), there will be a cron
-scripts set up which create backups.
+If you've told ece-install to set up daily backups, there will be a
+cron scripts set up which create backups.
 
 Part of the name of the cron script is the name of your DB schema, so
 the default location of the cron script is:
