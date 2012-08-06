@@ -5,7 +5,7 @@ the OS packages, you should feel comfortable resolving typical RPM or
 DEB conflicts and set aside enough time to deal with any package
 breakage which might occur. 
 
-All servers, both the Ubunut and RedHat ones, are running stable
+All servers, both the Ubuntu and RedHat ones, are running stable
 branches of their OS, so normally, there will be no breakage, and
 upgrades should be safe to be carried out on a regular (bi-weekly for
 instance) basis. However, you should always be fully alert when making
