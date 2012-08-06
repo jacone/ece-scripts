@@ -2,7 +2,6 @@
 #+AUTHOR: Erik Mogensen & Torstein Krause Johansen
 
 #+INCLUDE: "operating-system-maintenance.org" 
-* Deployment
-#+INCLUDE: "deploying-a-new-ear.org"
-#+INCLUDE: "updating-publication-resources.org"
+#+INCLUDE: "deployment.org"
 #+INCLUDE: "updating-the-search-server.org"
+#+INCLUDE: "backups.org"
