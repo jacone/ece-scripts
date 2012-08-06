@@ -797,7 +797,7 @@ function do_disable() {
 ## that _should_ be running (i.e. if a .pid file exists).
 ##
 ## Please be careful with uninstall.
-function do_uninstall() {
+function do_destroy() {
   requires_instance_dir && {
     # check if the instance is available
     # check if the instance isn't enabled already
@@ -859,7 +859,7 @@ commands="$(readlink -f "$(dirname $0)")/../share/vizrt/vosa/commands"
 ##
 ## It is not possible to install an instance that has already been
 ## installed.
-function do_install() {
+function do_create() {
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[2]}" == "installed" ] ; then
@@ -915,7 +915,7 @@ function do_install() {
 ## It is possible to postinst an instance that has already been
 ## postinst'ed.  It is only possible to postinst an instance
 ## that is running.
-function do_postinst() {
+function do_install() {
   requires_instance_dir && {
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[2]}" != "installed" ] ; then
