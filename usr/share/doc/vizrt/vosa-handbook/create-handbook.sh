@@ -13,12 +13,20 @@ EOF
   exit 1
 }
 
+function run() {
+  "$@"
+  if [ $? -ne 0 ]; then
+    echo "Command [ $@ ] FAILED :-("
+    exit 1
+  fi
+}
+
 function generate_png_from_blockdiag() {
-  cp -r graphics $target_dir
+  run cp -r graphics $target_dir
   
   for el in $target_dir/graphics/*.blockdiag; do
     echo "Generating PNG of $el ..."
-    blockdiag $el
+    run blockdiag $el
   done
 }
 
@@ -52,14 +60,14 @@ function set_customer_specific_variables() {
     read from to <<< "$el"
     IFS=$old_ifs
     find $target_dir -name "*.org" | while read f; do
-      sed -i "s~${from}~${to}~g" ${f}
+      run sed -i "s~${from}~${to}~g" ${f}
     done
   done
 }
 
 function set_up_build_directory() {
-  mkdir -p $target_dir
-  cp *.org $target_dir
+  run mkdir -p $target_dir
+  run cp *.org $target_dir
 }
 
 function get_blockdiag_defs() {
@@ -179,15 +187,10 @@ EOF
 function generate_html_from_org() {
 # use emacs to generate HTML from the ORG files
   echo "Generating new handbook HTML from ORG ..." 
-  emacs \
+  run emacs \
     --load vizrt-branding-org-mode.el \
     --batch --visit $target_dir/$handbook_org \
-    --funcall org-export-as-html-batch 2> /dev/null || {
-    cat <<EOF
-Failed running the org export through Emacs.
-EOF
-  }
-
+    --funcall org-export-as-html-batch 2> /dev/null
   echo "$target_dir/$(basename $handbook_org .org).html is now ready"
 }
 
