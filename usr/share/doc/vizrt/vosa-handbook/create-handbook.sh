@@ -225,9 +225,9 @@ function generate_html_from_org() {
   echo "$target_dir/$(basename $handbook_org .org).html is now ready"
 }
 
-
 set_up_build_directory
 set_customer_specific_variables
 generate_architecture_diagram
 generate_png_from_blockdiag
 generate_html_from_org
+
