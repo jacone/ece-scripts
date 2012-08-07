@@ -19,7 +19,7 @@ where we build EARs for the the my-website website.
 On my-control-server, do:
 
 #+BEGIN_SRC sh
-$ sudo ssh escenic@my-presentation-server ece -i engine1 --uri http://my-build-server/tomato/releases/tomato-trunk-rev4121-2012-07-05_1524.ear  deploy
+$ sudo ssh escenic@my-presentation-server ece -i engine1 --uri http://my-build-server/my-builder-user/releases/my-website-trunk-rev4121-2012-07-05_1524.ear  deploy
 [ece#engine-engine1] Deploying http://my-build-server/my-build-user/releases/my-website-trunk-rev4121-2012-07-05_1524.ear on engine1 ...
 [ece#engine-engine1] Deploying /var/cache/escenic/my-website-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
 [ece#engine-engine1] Deployment white list active, only deploying: my-webapp escenic-admin indexer-webservice
@@ -51,9 +51,9 @@ the search instance has a different deployment white list than that of
 the ECE instance above.
 
 #+BEGIN_SRC sh
-torstein@control:~$ sudo ssh escenic@my-presentation-server ece -i search1 -t search --uri http://my-build-server/tomato/releases/tomato-trunk-rev4121-2012-07-05_1524.ear deploy
-[ece#search-search1] Deploying http://my-build-server/tomato/releases/tomato-trunk-rev4121-2012-07-05_1524.ear on search1 ...
-[ece#search-search1] Deploying /var/cache/escenic/tomato-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
+torstein@control:~$ sudo ssh escenic@my-presentation-server ece -i search1 -t search --uri http://my-build-server/my-builder-user/releases/my-website-trunk-rev4121-2012-07-05_1524.ear deploy
+[ece#search-search1] Deploying http://my-build-server/my-builder-user/releases/my-website-trunk-rev4121-2012-07-05_1524.ear on search1 ...
+[ece#search-search1] Deploying /var/cache/escenic/my-website-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
 [ece#search-search1] Deployment white list active, only deploying: escenic-admin solr indexer-webapp
 [ece#search-search1] Deployment state file updated: /var/lib/escenic/search1.state  
 #+END_SRC
