@@ -995,13 +995,13 @@ function do_stop() {
       shutdown "${status[0]}"
       # should now be "dead" if we asked it.
     fi
-    if [ $aws -eq 0 ] ; then
+    #if [ $aws -eq 0 ] ; then
       # regardless of this, we _want_ it to die. remove pidfile.
       # TODO: continue trying to kill it more forcibly, and
       # remove the pidfile when it's done.
-      local pidfile=$(echo_rundir_of ${status[0]})/${status[0]}.pid
-      rm -f $pidfile
-    fi
+      #local pidfile=$(echo_rundir_of ${status[0]})/${status[0]}.pid
+      #rm -f $pidfile
+    #fi
   }
 }
 
