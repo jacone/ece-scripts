@@ -1,0 +1,4 @@
+* Getting the Overview
+
+#+ATTR_HTML: alt="Typical ECE architecture"
+[[[[graphics/typical-ece-architecture.png]]
