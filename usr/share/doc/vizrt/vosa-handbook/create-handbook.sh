@@ -46,12 +46,12 @@ function set_customer_specific_variables() {
     my-build-server~${trail_builder_host-builder}
     my-build-user~${trail_builder_user-buildy}
     my-control-server~${trail_control_host-control}
-    my-db-server~${trail_db_server-db1}
+    my-db-server~${trail_db_master_host-db1}
     my-db~${trail_db_schema-mydb}
     my-editorial-server~${trail_editor_host-edit1}
     my-import-server~${trail_import_host-edit2}
     my-monitoring-server~${trail_monitoring_host-mon}
-    my-nfs-server~${trail_nfs_server_host-nfs1}
+    my-nfs-server~${trail_nfs_master_host-nfs1}
     my-presentation-server~${trail_presentation_host-pres1}
     my-stats-server~${trail_analysis_host-analysis}
     my-webapp~${trail_website_name-mywebapp}
@@ -92,21 +92,34 @@ function get_blockdiag_defs() {
   if [ -n "$trail_import_host" ]; then
     echo " " $trail_import_host '[color = "orange" ];'
   fi
+  if [ -n "$trail_analysis_host" ]; then
+    echo " " $trail_analysis_host '[color = "yellow" ];'
+  fi
+  if [ -n "$trail_db_vip_host" ]; then
+    echo " " $trail_db_vip_host '[shape = roundedbox];'
+  fi
+  if [ -n "$trail_nfs_vip_host" ]; then
+    echo " " $trail_nfs_vip_host '[shape = roundedbox];'
+  fi
+  if [ -n "$trail_lb_host" ]; then
+    echo " " $trail_lb_host '[shape = roundedbox];'
+  fi
 }
 
 function get_blockdiag_groups() {
+  # serving presentation
   echo "  group {"
-  
-  if [ -n "$trail_editor_host" ]; then
-    echo "    $trail_editor_host;"
-  fi
-  if [ -n "$trail_import_host" ]; then
-    echo "    $trail_import_host;"
+  echo "    internet;"
+  if [ -n "$trail_lb_host" ]; then
+    echo "    $trail_lb_host;"
   fi
   if [ -n "$trail_presentation_host_list" ]; then
     for el in $trail_presentation_host_list; do
       echo "    $el;"
     done
+  fi
+  if [ -n "$trail_analysis_host" ]; then
+    echo "    $trail_analysis_host;"
   fi
   echo '    color = "white";'
   echo "  }"
@@ -148,9 +161,17 @@ function get_blockdiag_call_flow() {
     elif [ -n "$trail_nfs_master_host" ]; then
       one_flow="${one_flow} $trail_nfs_master_host,"
     fi
-    
     echo " " ${one_flow} | sed 's/,$/;/g'
   done
+
+  for el in $trail_presentation_host_list; do
+    local one_flow="$el ->"
+    if [ -n "$trail_analysis_host" ]; then
+      one_flow="${one_flow} $trail_analysis_host;"
+    fi
+    echo " " $one_flow;
+  done
+
   
   # DB
   if [ -n "$trail_db_vip_host" -a \
@@ -190,7 +211,7 @@ blockdiag {
   internet [ shape = "cloud" ];
 $(get_blockdiag_defs)
 
-
+$(get_blockdiag_groups)
 
 $(get_blockdiag_call_flow)
 }
