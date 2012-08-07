@@ -166,7 +166,7 @@ function get_blockdiag_call_flow() {
 
   for el in $trail_presentation_host_list; do
     if [ -n "$trail_analysis_host" ]; then
-      echo "  $el -> ${one_flow} $trail_analysis_host;"
+      echo "  $el -> $trail_analysis_host;"
     fi
   done
   
