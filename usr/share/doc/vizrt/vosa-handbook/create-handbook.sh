@@ -180,7 +180,8 @@ function get_blockdiag_call_flow() {
   fi
   if [ -n "$trail_db_master_host" -a \
     -n "$trail_db_slave_host" ]; then
-    echo " " $trail_db_master_host "<->" $trail_db_slave_host";"
+    echo " " $trail_db_master_host "<->" $trail_db_slave_host \
+      '[ label = "syncs" ];'
   fi
 
   # NFS
@@ -193,7 +194,8 @@ function get_blockdiag_call_flow() {
   fi
   if [ -n "$trail_nfs_master_host" -a \
     -n "$trail_nfs_slave_host" ]; then
-    echo " " $trail_nfs_master_host "<->" $trail_nfs_slave_host";"
+    echo " " $trail_nfs_master_host "<->" $trail_nfs_slave_host \
+      '[ label = "syncs" ];'
   fi
 }
 
