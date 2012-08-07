@@ -3,7 +3,7 @@
 # by tkj@vizrt.com
 
 handbook_org=vosa-handbook.org
-target_dir=target
+target_dir=/tmp/$(basename $0 .sh)-$(date --iso)
 
 $(which blockdiag >/dev/null) || {
   cat <<EOF
@@ -35,7 +35,11 @@ function set_customer_specific_variables() {
   if [ -r $conf_file  ]; then
     source $conf_file
   else
-    return
+    echo "No ${conf_file} found, I'm making something up ..."
+    trail_presentation_host=pres1
+    trail_presentation_host_list=$trail_presentation_host
+    trail_db_master_host=db1
+    trail_nfs_master_host=nfs1
   fi
 
   customer_filter_map="
@@ -66,7 +70,7 @@ function set_customer_specific_variables() {
 }
 
 function set_up_build_directory() {
-  run mkdir -p $target_dir
+  run mkdir -p $target_dir/graphics
   run cp *.org $target_dir
 }
 
@@ -133,9 +137,18 @@ function get_blockdiag_call_flow() {
     $trail_editor_host \
     $trail_import_host; do
     local one_flow="$el ->"
-    for ele in $trail_db_vip_host $trail_nfs_vip_host; do
-      one_flow="${one_flow} ${ele},"
-    done
+
+    if [ -n "$trail_db_vip_host" ]; then
+      one_flow="${one_flow} $trail_db_vip_host,"
+    elif [ -n "$trail_db_master_host" ]; then
+      one_flow="${one_flow} $trail_db_master_host,"
+    fi
+    if [ -n "$trail_nfs_vip_host" ]; then
+      one_flow="${one_flow} $trail_nfs_vip_host,"
+    elif [ -n "$trail_nfs_master_host" ]; then
+      one_flow="${one_flow} $trail_nfs_master_host,"
+    fi
+    
     echo " " ${one_flow} | sed 's/,$/;/g'
   done
   
