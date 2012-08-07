@@ -7,7 +7,7 @@ cron scripts set up which create backups.
 Part of the name of the cron script is the name of your DB schema, so
 the default location of the cron script is:
 #+BEGIN_SRC sh
-/etc/cron.daily/ece5db-backup  
+/etc/cron.daily/my-db-backup  
 #+END_SRC
 
 And it'll put its backups in
@@ -17,3 +17,18 @@ And it'll put its backups in
 
 All these are overridable, see the ece-install guide for further
 details.
+
+** Multimedia archive
+The other place were you've got actual content, is in the multimedia
+archive. This, typically live on a host called nfs1 (with a mirror on
+nfs2) and a backup of the exports directory  should suffice. This is
+the directory in which all the NFS exported directories reside.
+
+#+BEGIN_SRC sh
+my-nfs-server:/var/exports  
+#+END_SRC
+
+It's recommended that the backup isn't done using the NFS mount on one
+of the other hosts using this NFS server, but instead target the
+nfs1's /var/exports directory directly as the backup tools would
+access any server directory.

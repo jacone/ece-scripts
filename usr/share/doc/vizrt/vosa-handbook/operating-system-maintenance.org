@@ -15,25 +15,30 @@ any issues before going ahead with the upgrades below.
 ** Debian based operating systems
 This applies to OSs like Debian, Ubuntu and Mint.
 
-In the example below, we update the Ubuntu servers called pres1,
-pres2, edit1, edit2, mon and analysis:
+In the example below, we update the Ubuntu servers called
+my-presentation-server my-editorial-server my-import-server
+my-monitoring-server my-stats-server from the comfort of
+my-control-server.
+
 #+BEGIN_SRC sh
-control$ for el in pres{1,2} edit{1,2}, mon analysis; do \
-           echo "Now upgrading $el"; \
-           sudo ssh root@$el 'apt-get -qq update && apt-get -q upgrade' ; \
-         done
+$ for el in my-presentation-server my-editorial-server my-import-server my-monitoring-server my-stats-server; do \
+      echo "Now upgrading $el"; \
+      sudo ssh root@$el 'apt-get -qq update && apt-get -q upgrade' ; \
+  done
 #+END_SRC
 
 
 ** RedHat based operating systems
 This applies to OSs like CentOS, RedHat and Fedora:
 
-In the example below, we update the Ubuntu servers called pres1,
-pres2, edit1, edit2, mon and analysis:
+In the example below, we update the RedHat servers called
+my-presentation-server my-editorial-server my-import-server
+my-monitoring-server my-stats-server from the comfort of
+my-control-server.
 
 #+BEGIN_SRC sh
-control$ for el in pres{1,2} edit{1,2}, mon analysis; do \
-           echo "Now upgrading $el";
-           ssh yum update; 
-         done
+$ for el in my-presentation-server my-editorial-server my-import-server my-monitoring-server my-stats-server; do \
+      echo "Now upgrading $el";
+      ssh yum update; 
+  done
 #+END_SRC

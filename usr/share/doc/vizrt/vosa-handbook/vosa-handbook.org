@@ -1,7 +1,11 @@
 #+TITLE: Welcome to the VOSA Handbook
 #+AUTHOR: Erik Mogensen & Torstein Krause Johansen
+#+OPTIONS: toc:2 
 
+#+INCLUDE: "overview.org"
 #+INCLUDE: "operating-system-maintenance.org" 
 #+INCLUDE: "deployment.org"
 #+INCLUDE: "updating-the-search-server.org"
 #+INCLUDE: "backups.org"
+#+INCLUDE: "monitoring.org"
+#+INCLUDE: "glossary.org"

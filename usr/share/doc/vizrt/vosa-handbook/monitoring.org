@@ -19,15 +19,21 @@ the user under which ECE, EAE and the Search instance are running as
 *** In the Web Browser
 All VOSA hosts also has a (maximum) one minute old HTML report from
 system-info running on port 5678. So for instance, if your host is
-called pres1, you can access the system-info report on
-http://pres1:5678/
+called my-presentation-server, you can access the system-info report on
+http://my-presentation-server:5678/
 
-Here's a screenshot of the system-info report running on http://pres1:5678/:
+Here's a screenshot of the system-info report running on http://my-presentation-server:5678/:
 [[[[graphics/pres1-system-info.png]]
 
 ** Hugin
 
 ** Munin
+Each VOSA habitat has its own Munin installation where you can see the
+trending of your site. I.e. how it has been behaving the last days,
+weeks and months.
+
+If we assume your monitoring server is called "my-monitoring-server",
+the address to your munin is: http://my-monitoring-server/munin/
 
 ** Icinga (enhanced Nagios)
 

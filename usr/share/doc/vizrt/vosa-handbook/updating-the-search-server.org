@@ -5,11 +5,12 @@ ECE instance(s) that use the search server you're updating. To do
 this, you can use the Component Browser in the escenic-admin
 interface.
 
-For instance, let's say you're upgrading the search server for edit1
-and want it to temporarily use edit2's search instance.
+For instance, let's say you're upgrading the search server for
+my-editorial-server and want it to temporarily use my-import-server's
+search instance.
 
 First, go to:
-http://edit1:8080/escenic-admin/browser/Global/com/escenic/webservice/search/DelegatingSearchEngine?property=solrURI
+http://my-editorial-server:8080/escenic-admin/browser/Global/com/escenic/webservice/search/DelegatingSearchEngine?property=solrURI
 
 Then, change the value from:
 #+BEGIN_SRC conf
@@ -19,5 +20,5 @@ http://localhost:8081/solr/select
 to
 
 #+BEGIN_SRC conf
-http://edit2:8081/solr/select	  
+http://my-import-server:8081/solr/select	  
 #+END_SRC
