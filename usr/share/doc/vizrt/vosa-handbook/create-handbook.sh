@@ -165,13 +165,10 @@ function get_blockdiag_call_flow() {
   done
 
   for el in $trail_presentation_host_list; do
-    local one_flow="$el ->"
     if [ -n "$trail_analysis_host" ]; then
-      one_flow="${one_flow} $trail_analysis_host;"
+      echo "  $el -> ${one_flow} $trail_analysis_host;"
     fi
-    echo " " $one_flow;
   done
-
   
   # DB
   if [ -n "$trail_db_vip_host" -a \
