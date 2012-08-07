@@ -1,0 +1,35 @@
+* Monitoring
+
+On a VOSA system you have several tools to aid you in getting an
+overview of how your system is doing, how it is configured and how it
+has been behaving from its inception till the present.
+
+** system-info
+
+*** On the Command Line
+On any VOSA host, you can execute the command system-info. If you
+execute this command as root, you better pass a parameter to tell it
+the user under which ECE, EAE and the Search instance are running as
+(typically "escenic"):
+
+#+BEGIN_SRC sh
+# system-info -u escenic  
+#+END_SRC
+
+*** In the Web Browser
+All VOSA hosts also has a (maximum) one minute old HTML report from
+system-info running on port 5678. So for instance, if your host is
+called pres1, you can access the system-info report on
+http://pres1:5678/
+
+Here's a screenshot of the system-info report running on http://pres1:5678/:
+[[[[graphics/pres1-system-info.png]]
+
+** Hugin
+
+** Munin
+
+** Icinga (enhanced Nagios)
+
+** Check MK
+
