@@ -7,9 +7,9 @@
 # sorting of the entries in this table if you mark the entries and
 # then do: M-x sort-lines
 
-|----------+--------------------------------------------------------------------------|
-| Term     | Explanation                                                              |
-|----------+--------------------------------------------------------------------------|
-| Habitat  | A collection of machines which makes up a web site.                      |
-| Trending | Seeing the behavioural statistics of a server over longer amount of time |
-|----------+--------------------------------------------------------------------------|
+|----------+----------------------------------------------------------------------------------------------|
+| Term     | Explanation                                                                                  |
+|----------+----------------------------------------------------------------------------------------------|
+| Habitat  | Collection of machines which makes up an environment, such as testing, staging & production. |
+| Trending | Seeing the behavioural statistics of a server over longer amount of time                     |
+|----------+----------------------------------------------------------------------------------------------|
