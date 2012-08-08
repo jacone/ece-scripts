@@ -227,9 +227,82 @@ function generate_html_from_org() {
   echo "$target_dir/$(basename $handbook_org .org).html is now ready"
 }
 
+
+function get_generated_overview() {
+  cat <<EOF
+|-------------------------------------------|
+| Machine     | Service quick links         |
+|-------------------------------------------|
+EOF
+  if [ -n "${trail_monitoring_host}" ]; then
+    cat <<EOF 
+| ${trail_monitoring_host} | \
+  [[http://${trail_monitoring_host}/munin/][munin]] \
+  [[http://${trail_monitoring_host}/icinga/][icinga]] \
+|
+EOF
+  fi
+  
+  if [ -n "${trail_control_host}" ]; then
+    cat <<EOF 
+| ${trail_control_host} | \
+  [[http://${trail_control_host}:5679][hugin]] \
+|
+EOF
+  fi
+
+  for el in nop $trail_editor_host $trail_import_host; do
+    if [[ $el == "nop" ]]; then
+      continue
+    fi
+    cat <<EOF 
+| ${el} | \
+  [[http://${el}:5678/][system-info]] \
+  [[http://${el}/escenic-admin/][escenic-admin]] \
+  [[http://${el}/escenic/][escenic]] \
+  [[http://${el}/webservice/][webservice]] \
+|
+EOF
+  done
+  for el in nop $trail_presentation_host_list; do
+    if [[ $el == "nop" ]]; then
+      continue
+    fi
+    cat <<EOF 
+| ${el} | \
+  [[http://${el}:5678/][system-info]] \
+  [[http://${el}:8080/escenic-admin/][escenic-admin]] \
+  [[http://${el}:8081/solr/admin/][solr]] \
+|
+EOF
+  done
+  
+  if [ -n "${trail_analysis_host}" ]; then
+    cat <<EOF 
+| ${trail_analysis_host} | \
+  [[http://${trail_analysis_host}:8080/analysis-reports/][analysis-reports]] \
+  [[http://${trail_analysis_host}:8080/analysis-logger/admin][analysis-logger]] \
+  [[http://${trail_analysis_host}:8080/analysis-qs/admin][analysis-qs]] \
+|
+EOF
+  fi
+  cat <<EOF
+|-------------------------------------------|
+EOF
+}
+
+## included from overview.org
+function generate_overview_org() {
+  local file=$target_dir/generated-overview.org
+  cat > $file <<EOF
+$(get_generated_overview)
+EOF
+}
+
 set_up_build_directory
 set_customer_specific_variables
 generate_architecture_diagram
 generate_png_from_blockdiag
+generate_overview_org
 generate_html_from_org
 
