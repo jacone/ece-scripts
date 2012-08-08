@@ -21,12 +21,12 @@ function run() {
   fi
 }
 
-function generate_png_from_blockdiag() {
+function generate_svg_from_blockdiag() {
   run cp -r graphics $target_dir
   
   for el in $target_dir/graphics/*.blockdiag; do
-    echo "Generating PNG of $el ..."
-    run blockdiag $el
+    echo "Generating SVG of $el ..."
+    run blockdiag -T SVG $el
   done
 }
 
@@ -302,7 +302,7 @@ EOF
 set_up_build_directory
 set_customer_specific_variables
 generate_architecture_diagram
-generate_png_from_blockdiag
+generate_svg_from_blockdiag
 generate_overview_org
 generate_html_from_org
 

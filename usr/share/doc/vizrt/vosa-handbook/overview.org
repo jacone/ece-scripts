@@ -1,4 +1,5 @@
 * Getting the Overview
 
 #+ATTR_HTML: alt="Typical ECE architecture"
-[[[[graphics/architecture.png]]
+[[[[graphics/architecture.svg]]
+#+INCLUDE: "generated-overview.org"
