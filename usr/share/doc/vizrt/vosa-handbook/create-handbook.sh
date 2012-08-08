@@ -258,7 +258,7 @@ EOF
     cat <<EOF 
 | ${el} | \
   [[http://${el}:5678/][system-info]] \
-  [[http://${el}/escenic-admin/][escenic-admin]] \
+  [[http://${el}:8080/escenic-admin/][escenic-admin]] \
   [[http://${el}/escenic/][escenic]] \
   [[http://${el}/webservice/][webservice]] \
 |
