@@ -66,4 +66,6 @@ function set_up_ece_scripts()
   file=/etc/bash_completion.d/ece
   run sed -i "s#/etc/escenic#${escenic_conf_dir}#g" $file
   run sed -i "s#/opt/escenic#${escenic_root_dir}#g" $file
+
+  leave_trail "trail_escenic_backups_dir=${escenic_backups_dir}"
 }
