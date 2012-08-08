@@ -21,9 +21,9 @@ my-control-server (but you could of course also first log on to each
 of the servers and run the commands locally there).
 
 #+BEGIN_SRC sh
-$ sudo ssh escenic@my-presentation-server ece -i engine1 --uri http://my-build-server/my-builder-user/releases/my-website-trunk-rev4121-2012-07-05_1524.ear  deploy
-[ece#engine-engine1] Deploying http://my-build-server/my-build-user/releases/my-website-trunk-rev4121-2012-07-05_1524.ear on engine1 ...
-[ece#engine-engine1] Deploying /var/cache/escenic/my-website-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
+$ sudo ssh escenic@my-presentation-server ece -i engine1 --uri http://my-build-server/my-build-user/releases/my-build-user-trunk-rev4121-2012-07-05_1524.ear  deploy
+[ece#engine-engine1] Deploying http://my-build-server/my-build-user/releases/my-build-user-trunk-rev4121-2012-07-05_1524.ear on engine1 ...
+[ece#engine-engine1] Deploying /var/cache/escenic/my-build-user-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
 [ece#engine-engine1] Deployment white list active, only deploying: my-webapp escenic-admin indexer-webservice
 [ece#engine-engine1] Deployment state file updated: /var/lib/escenic/engine1.state
 #+END_SRC
@@ -53,9 +53,9 @@ the search instance has a different deployment white list than that of
 the ECE instance above.
 
 #+BEGIN_SRC sh
-torstein@control:~$ sudo ssh escenic@my-presentation-server ece -i search1 -t search --uri http://my-build-server/my-builder-user/releases/my-website-trunk-rev4121-2012-07-05_1524.ear deploy
-[ece#search-search1] Deploying http://my-build-server/my-builder-user/releases/my-website-trunk-rev4121-2012-07-05_1524.ear on search1 ...
-[ece#search-search1] Deploying /var/cache/escenic/my-website-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
+torstein@control:~$ sudo ssh escenic@my-presentation-server ece -i search1 -t search --uri http://my-build-server/my-build-user/releases/my-builder-user-trunk-rev4121-2012-07-05_1524.ear deploy
+[ece#search-search1] Deploying http://my-build-server/my-build-user/releases/my-build-user-trunk-rev4121-2012-07-05_1524.ear on search1 ...
+[ece#search-search1] Deploying /var/cache/escenic/my-build-user-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
 [ece#search-search1] Deployment white list active, only deploying: escenic-admin solr indexer-webapp
 [ece#search-search1] Deployment state file updated: /var/lib/escenic/search1.state  
 #+END_SRC
@@ -88,7 +88,7 @@ of it.
 #+BEGIN_SRC sh
 $ mkdir ~/backup
 $ wget -O ~/backup/content-type-$(date --iso)-before-deployment \
-       http://localhost:8080/escenic-admin/publication-resources/mypub/escenic/content-type
+       http://localhost:8080/escenic-admin/publication-resources/my-publication/escenic/content-type
 #+END_SRC
 
 The next step is to locate the new content-type definition.  Go to the
@@ -107,14 +107,14 @@ Now, upload the new content-type to ECE.  The command below assumes
 that there is a file called the same as the publication resource in
 the current directory. 
 #+BEGIN_SRC sh
-$ ece -i engine1 -p mypub -r content-type update
+$ ece -i engine1 -p my-publication -r content-type update
 #+END_SRC
 
 To confirm our changes, we now download the resource again to check if
 all the changes are the way we want them:
 #+BEGIN_SRC sh
 $ wget -O ~/backup/content-type-$(date --iso)-after-deployment \
-       http://localhost:8080/escenic-admin/publication-resources/mypub/escenic/content-type
+       http://localhost:8080/escenic-admin/publication-resources/my-publication/escenic/content-type
 #+END_SRC
 
 

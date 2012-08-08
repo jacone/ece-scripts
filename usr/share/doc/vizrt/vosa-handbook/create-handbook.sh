@@ -42,7 +42,31 @@ function set_customer_specific_variables() {
     trail_nfs_master_host=nfs1
   fi
 
+  local virtual_host_key_prefix="trail_virtual_host_"
+  local first_virtual_host=$(
+    set | grep ^${virtual_host_key_prefix} | head -1
+  )
+
+  if [ -n $first_virtual_host ]; then
+    first_publication=$(
+      echo  $first_virtual_host | \
+        sed "s#${virtual_host_key_prefix}##" | \
+        cut -d'=' -f1
+    )
+    first_website=$(
+      echo  $first_virtual_host | \
+        cut -d'=' -f2 | \
+        cut -d':' -f1
+    )
+  fi
+
+  if [ -n "$trail_network_name" ]; then
+    network_name="."${trail_network_name}
+  fi
+  
   customer_filter_map="
+    my-backup-dir~${trail_escenic_backups_dir}
+    my-network~${network_name}
     my-build-server~${trail_builder_host-builder}
     my-build-user~${trail_builder_user-buildy}
     my-control-server~${trail_control_host-control}
@@ -54,10 +78,10 @@ function set_customer_specific_variables() {
     my-nfs-server~${trail_nfs_master_host-nfs1}
     my-presentation-server~${trail_presentation_host-pres1}
     my-stats-server~${trail_analysis_host-analysis}
-    my-webapp~${trail_website_name-mywebapp}
-    my-website~${trail_website_name-mywebsite}
+    my-publication~${first_publication}
+    my-webapp~${first_publication}
+    my-website~${first_website}
   "
-
   for el in $customer_filter_map; do
     local old_ifs=$IFS
     IFS='~'
@@ -227,6 +251,23 @@ function generate_html_from_org() {
   echo "$target_dir/$(basename $handbook_org .org).html is now ready"
 }
 
+function get_network_name() {
+  if [ -n $trail_network_name ]; then
+    echo ".${trail_network_name}"
+  else
+    echo ""
+  fi
+}
+
+## $1 :; the host (not FQDN)
+function get_fqdn() {
+  echo "${1}$(get_network_name)"
+}
+
+## $1 :; the host (not FQDN)
+function get_link() {
+  echo "http://$(get_fqdn $1)"
+}
 
 function get_generated_overview() {
   cat <<EOF
@@ -236,17 +277,17 @@ function get_generated_overview() {
 EOF
   if [ -n "${trail_monitoring_host}" ]; then
     cat <<EOF 
-| ${trail_monitoring_host} | \
-  [[http://${trail_monitoring_host}:${trail_monitoring_port-80}/munin/][munin]] \
-  [[http://${trail_monitoring_host}:${trail_monitoring_port-80}/icinga/][icinga]] \
+| $(get_fqdn $trail_monitoring_host) | \
+  [[$(get_link ${trail_monitoring_host}):${trail_monitoring_port-80}/munin/][munin]] \
+  [[$(get_link ${trail_monitoring_host}):${trail_monitoring_port-80}/icinga/][icinga]] \
 |
 EOF
   fi
   
   if [ -n "${trail_control_host}" ]; then
     cat <<EOF 
-| ${trail_control_host} | \
-  [[http://${trail_control_host}:5679][hugin]] \
+| $(get_fqdn $trail_control_host) | \
+  [[http://$(get_link $trail_control_host):5679][hugin]] \
 |
 EOF
   fi
@@ -256,11 +297,11 @@ EOF
       continue
     fi
     cat <<EOF 
-| ${el} | \
-  [[http://${el}:5678/][system-info]] \
-  [[http://${el}:8080/escenic-admin/][escenic-admin]] \
-  [[http://${el}:8080/escenic/][escenic]] \
-  [[http://${el}:8080/webservice/][webservice]] \
+| $(get_fqdn ${el}) | \
+  [[$(get_link ${el}):5678/][system-info]] \
+  [[$(get_link ${el}):8080/escenic-admin/][escenic-admin]] \
+  [[$(get_link ${el}):8080/escenic/][escenic]] \
+  [[$(get_link ${el}):8080/webservice/][webservice]] \
 |
 EOF
   done
@@ -269,23 +310,38 @@ EOF
       continue
     fi
     cat <<EOF 
-| ${el} | \
-  [[http://${el}:5678/][system-info]] \
-  [[http://${el}:8080/escenic-admin/][escenic-admin]] \
-  [[http://${el}:8081/solr/admin/][solr]] \
+| $(get_fqdn ${el}) | \
+  [[$(get_link ${el}):5678/][system-info]] \
+  [[$(get_link ${el}):8080/escenic-admin/][escenic-admin]] \
+  [[$(get_link ${el}):8081/solr/admin/][solr]] \
 |
 EOF
   done
   
   if [ -n "${trail_analysis_host}" ]; then
     cat <<EOF 
-| ${trail_analysis_host} | \
-  [[http://${trail_analysis_host}:${trail_analysis_port-8080}/analysis-reports/][analysis-reports]] \
-  [[http://${trail_analysis_host}:${trail_analysis_port-8080}/analysis-logger/admin][analysis-logger]] \
-  [[http://${trail_analysis_host}:${trail_analysis_port-8080}/analysis-qs/admin][analysis-qs]] \
+| $(get_fqdn ${trail_analysis_host}) | \
+  [[$(get_link ${trail_analysis_host}):5678/][system-info]] \
+  [[$(get_link ${trail_analysis_host}):${trail_analysis_port-8080}/analysis-reports/][analysis-reports]] \
+  [[$(get_link ${trail_analysis_host}):${trail_analysis_port-8080}/analysis-logger/admin][analysis-logger]] \
+  [[$(get_link ${trail_analysis_host}):${trail_analysis_port-8080}/analysis-qs/admin][analysis-qs]] \
 |
 EOF
   fi
+  
+  for el in nop $trail_nfs_master_host \
+    $trail_nfs_slave_host \
+    $trail_db_master_host \
+    $trail_db_slave_host; do
+    if [[ $el == "nop" ]]; then
+      continue
+    fi
+    cat <<EOF 
+| $(get_fqdn ${el}) | \
+  [[$(get_link ${el}):5678/][system-info]] \
+|
+EOF
+  done
   cat <<EOF
 |-------------------------------------------|
 EOF
