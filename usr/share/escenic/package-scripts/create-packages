@@ -5,7 +5,7 @@
 
 # by tkj@vizrt.com
 
-target_dir=${PWD}/target
+target_dir=/tmp/$(basename $0)-$(date --iso)
 package_name=escenic-content-engine-installer
 package_version=$(date +%Y-%m-%d.%H%M%S)
 default_maintainer_name="Torstein Krause Johansen"
