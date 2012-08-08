@@ -1,7 +1,3 @@
-default_app_server_port=8080
-default_app_server_shutdown=8005
-default_app_server_redirect=8443
-
 function set_up_app_server()
 {
   print_and_log "Setting up the application server ..."

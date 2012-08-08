@@ -26,3 +26,8 @@ default_db_user=ece5user
 default_db_password=ece5password
 default_db_schema=ece5db
 
+# app server constants
+default_app_server_port=8080
+default_app_server_shutdown=8005
+default_app_server_redirect=8443
+
