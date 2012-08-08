@@ -18,14 +18,7 @@ the user under which ECE, EAE and the Search instance are running as
 
 *** In the Web Browser
 All VOSA hosts also has a (maximum) one minute old HTML report from
-system-info running on port 5678. So for any VOSA habitat, you can
-access these reports like this:
-- http://my-presentation-server:5678/
-- http://my-editorial-server:5678/
-- http://my-import-server:5678/
-- http://my-nfs-server:5678/
-- http://my-db-server:5678/
-- http://my-stats-server:5678/
+system-info running on port 5678. 
 
 Here's a screenshot of the system-info report running on http://my-presentation-server:5678/:
 [[[[graphics/pres1-system-info.png]]
