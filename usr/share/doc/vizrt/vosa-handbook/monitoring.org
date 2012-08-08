@@ -31,7 +31,17 @@ Here's a screenshot of the system-info report running on http://my-presentation-
 [[[[graphics/pres1-system-info.png]]
 
 ** Hugin
+Hugin is an automatic, frequent aggregation of the system-info data of
+all the hosts in your habitat. It does this by asking the hossts to
+produce a system-info report in YAML and check the files into a
+version repository.
 
+When browsing the Hugin web interface at
+http://my-control-server:5679/ you can quickly see all changes on the
+various servers. A change could be a new service which is all of a
+sudden listening on a new port or that the version of a installed
+package has changed. Nothing escapes Hugin's watchful eyes! 
+ 
 ** Munin
 Each VOSA habitat has its own Munin installation where you can see the
 trending of your site. I.e. how it has been behaving the last days,
@@ -41,6 +51,11 @@ If we assume your monitoring server is called "my-monitoring-server",
 the address to your munin is: http://my-monitoring-server/munin/
 
 ** Icinga (enhanced Nagios)
+Icinga gives a good overview of the current health of the
+habitat. Head over to http://my-monitoring-server/icinga/ to get
+updates on host & service uptimes and disk fill rates. This is also
+the place were you'll schedule any maintenance work you do to prevent
+unnecessary alerts filling up your mobile phone and email inboxes.
 
 ** Check MK
 
