@@ -165,7 +165,6 @@ function get_total_memory_in_mega_bytes() {
 }
 
 function add_apt_source() {
-  local escenic_sources=/etc/apt/sources.list.d/escenic.list
   if [[ ! -e $escenic_sources &&
         $(grep "$@" /etc/apt/sources.list | wc -l) -lt 1 ]]; then
     echo "$@" >> $escenic_sources
