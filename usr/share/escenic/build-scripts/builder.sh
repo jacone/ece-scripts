@@ -128,7 +128,7 @@ function get_user_options
         ;;
       u)
         print_and_log "Adding user ${OPTARG} ..."
-        user_name=${OPTARG}
+        user_config_file=${OPTARG}
         add_user=1
         ;;
       a)
@@ -140,10 +140,6 @@ function get_user_options
         print_and_log "Adding list of artifacts ${OPTARG} ..."
         list_path=${OPTARG}
         add_artifact_list=1
-        ;;
-      f)
-        print_and_log "Using config file ${OPTARG} ..."
-        user_config_file=${OPTARG}
         ;;
       \?)
         print_and_log "Invalid option: -$OPTARG" >&2
@@ -169,8 +165,8 @@ function execute
     read_builder_configuration
     verify_builder_conf
     if [ $add_user -eq 1 ]; then
-      ensure_no_user_conflict
       verify_add_user
+      ensure_no_user_conflict
       add_user
     elif [ $add_artifact -eq 1 ]; then
       verify_add_artifact
@@ -349,7 +345,7 @@ function ensure_no_user_conflict
 function verify_add_user 
 {
   if [ ! -e $user_config_file ]; then
-    print_and_log "You must provide a config file for the user using the -f flag."
+    print_and_log "You must provide a config file for the user."
     remove_pid_and_exit_in_error
   else
     run source $user_config_file
