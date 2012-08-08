@@ -1,6 +1,4 @@
 function get_vip_configuration() {
-  # TODO add interactive mode if it's needed/requested
-
   # dependant on the running ece-install process/host
   vip_address=${fai_vip_address}
   vip_interface=${fai_vip_interface-eth0}
@@ -68,6 +66,17 @@ EOF
   
   add_next_step "Heartbeat installed on $HOSTNAME to provide VIP ${vip_address},"
   add_next_step "be sure that $vip_sibling_ip gets similar setup as $HOSTNAME."
+
+  leave_vip_trails
+}
+
+function leave_vip_trails() {
+  for el in $vip_service_list; do
+    if [[ "$el" == "nfs-kernel-server" || "$el" == "nfs" ]]; then
+      leave_trail "trail_nfs_master_host=${vip_primary_node_name}"
+      leave_trail "trail_nfs_slave_host=${vip_secondary_node_name}"
+    fi
+  done
 }
 
 function set_kernel_vip_parameters() {
