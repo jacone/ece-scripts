@@ -237,8 +237,8 @@ EOF
   if [ -n "${trail_monitoring_host}" ]; then
     cat <<EOF 
 | ${trail_monitoring_host} | \
-  [[http://${trail_monitoring_host}/munin/][munin]] \
-  [[http://${trail_monitoring_host}/icinga/][icinga]] \
+  [[http://${trail_monitoring_host}:${trail_monitoring_port-80}/munin/][munin]] \
+  [[http://${trail_monitoring_host}:${trail_monitoring_port-80}/icinga/][icinga]] \
 |
 EOF
   fi
@@ -259,8 +259,8 @@ EOF
 | ${el} | \
   [[http://${el}:5678/][system-info]] \
   [[http://${el}:8080/escenic-admin/][escenic-admin]] \
-  [[http://${el}/escenic/][escenic]] \
-  [[http://${el}/webservice/][webservice]] \
+  [[http://${el}:8080/escenic/][escenic]] \
+  [[http://${el}:8080/webservice/][webservice]] \
 |
 EOF
   done
@@ -280,9 +280,9 @@ EOF
   if [ -n "${trail_analysis_host}" ]; then
     cat <<EOF 
 | ${trail_analysis_host} | \
-  [[http://${trail_analysis_host}:8080/analysis-reports/][analysis-reports]] \
-  [[http://${trail_analysis_host}:8080/analysis-logger/admin][analysis-logger]] \
-  [[http://${trail_analysis_host}:8080/analysis-qs/admin][analysis-qs]] \
+  [[http://${trail_analysis_host}:${trail_analysis_port-8080}/analysis-reports/][analysis-reports]] \
+  [[http://${trail_analysis_host}:${trail_analysis_port-8080}/analysis-logger/admin][analysis-logger]] \
+  [[http://${trail_analysis_host}:${trail_analysis_port-8080}/analysis-qs/admin][analysis-qs]] \
 |
 EOF
   fi
