@@ -141,25 +141,9 @@ function get_user_options
         list_path=${OPTARG}
         add_artifact_list=1
         ;;
-      c)
-        print_and_log "Using svn path: ${OPTARG}"
-        user_svn_path=${OPTARG}
-        ;;
-      s)
-        print_and_log "Using svn username: ${OPTARG}"
-        user_svn_username=${OPTARG}
-        ;;
-      m)
-        print_and_log "Using maven username: ${OPTARG}"
-        user_maven_username=${OPTARG}
-        ;;
-      p)
-        print_and_log "Using password file: ${OPTARG}"
-        user_password_file=${OPTARG}
-        if [ ! -e $user_password_file ]; then
-          print_and_log "Provided password file does not exist, exiting!" >&2
-          remove_pid_and_exit_in_error
-        fi
+      f)
+        print_and_log "Using config file ${OPTARG} ..."
+        user_config_file=${OPTARG}
         ;;
       \?)
         print_and_log "Invalid option: -$OPTARG" >&2
@@ -363,20 +347,18 @@ function ensure_no_user_conflict
 
 ##
 function verify_add_user 
-{  
-  enforce_variable user_name "You need to provide your username using the -u flag."
-  enforce_variable user_svn_path "You need to provide your svn path using the -c flag."
-  enforce_variable user_svn_username "You need to provide your svn username using the -s flag."
-  enforce_variable user_maven_username "You need to provide your maven username using the -m flag."
-  if [ -e "$user_password_file" ]; then
-    source $user_password_file
-    enforce_variable svn_password "The variable svn_password needs to be present in $user_password_file."
-    enforce_variable maven_password "The variable maven_password needs to be present in $user_password_file."
-    user_svn_password=$svn_password
-    user_maven_password=$maven_password
-  else
-    print_and_log "You must provide a password file using the -p flag."
+{
+  if [ ! -e $user_config_file ]; then
+    print_and_log "You must provide a config file for the user using the -f flag."
     remove_pid_and_exit_in_error
+  else
+    run source $user_config_file
+    enforce_variable user_name "You $user_config_file needs to specify user_name!"
+    enforce_variable user_svn_path "You $user_config_file needs to specify user_svn_path!"
+    enforce_variable user_svn_username "You $user_config_file needs to specify user_svn_username!"
+    enforce_variable user_maven_username "You $user_config_file needs to specify user_maven_username!"
+    enforce_variable svn_password "You $user_config_file needs to specify svn_password!"
+    enforce_variable maven_password "You $user_config_file needs to specify maven_password!"
   fi
 }
 
