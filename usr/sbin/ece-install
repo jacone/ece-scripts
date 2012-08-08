@@ -928,7 +928,7 @@ function un_install_everything() {
   print_and_log "have been removed from ${HOSTNAME}."
 }
 
-ece_install_trail_file=/var/lib/ece-install/$(date +%s)-$(basename $0).trail
+ece_install_trail_file=/var/lib/$(basename $0)/$(date +%s)-$(basename $0).trail
 ## $@ add this trail
 function leave_trail() {
   local dir=$(dirname $ece_install_trail_file)
