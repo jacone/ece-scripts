@@ -546,7 +546,19 @@ function work_around_eae_bug_stats-76() {
 }
 
 function leave_db_trails() {
-  leave_trail "trail_db_port=${db_port-3306}"
+  leave_trail "trail_db_host=${HOSTNAME}"
+  leave_trail "trail_db_port=${db_port-${default_db_port}}"
+
+  if [ ${db_master-0} -eq 1 ]; then
+    leave_trail "trail_db_master_host=${fai_db_master_host-${default_db_host}}"
+    leave_trail "trail_db_master_port=${fai_db_master_port-${default_db_port}}"
+  elif [ ${fai_db_replication-0} -eq 1 ]; then
+    leave_trail "trail_db_slave_host=${fai_db_host-${default_db_host}}"
+    leave_trail "trail_db_slave_port=${fai_db_port-${default_db_port}}"
+  else
+    leave_trail "trail_db_master_host=${fai_db_host-${default_db_host}}"
+    leave_trail "trail_db_master_port=${fai_db_master_port-${default_db_port}}"
+  fi
 }
 
 ## Yes, calling the method name is a bit over the top, but it's
