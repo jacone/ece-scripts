@@ -851,46 +851,6 @@ function common_post_install() {
 
 function un_install_everything() {
   local pretty_please="I know what I'm doing, please do as I say."
-
-  print "You have set fai_un_install_everything=1 in your ${conf_file}"
-  print "This will $(red uninstall everything on $HOSTNAME)"
-  print "If you're absolutely sure about this, type:"
-  print "$pretty_please"
-  read answer
-
-  if [[ "$answer" != "$pretty_please" ]]; then
-    print_and_log "You didn't type the confirmation string correctly."
-    print_and_log "You typed: [ ${answer} ]. I will not Uninstall anything"
-    return
-  else
-    print_and_log "OK, I'll do as you wish:"
-    print_and_log "I will uninstall everything set up by $(basename $0)"
-  fi
-
-  local file_to_remove_list="
-    $escenic_conf_dir
-    ${appserver_parent_dir}/*tomcat*
-    $escenic_root_dir
-    $escenic_data_dir
-    $escenic_run_dir
-    $escenic_conf_dir
-    $escenic_log_dir
-    $escenic_sources
-  " 
-  for el in $file_to_remove_list; do
-    run rm -rf $el
-  done
-
-  local key_to_remove_list="
-    C4DEFFEB
-    CD2EFD2A
-  "
-  for el in $key_to_remove_list; do
-    if [ $(apt-key list | grep $el | wc -l) -gt 0 ]; then
-      run apt-key remove $el
-    fi
-  done
-  
   local package_to_remove_list="
     ant
     ant-contrib
@@ -914,6 +874,47 @@ function un_install_everything() {
     varnish
     sun-java6-jdk
   "
+  local file_to_remove_list="
+    $escenic_conf_dir
+    ${appserver_parent_dir}/*tomcat*
+    $escenic_root_dir
+    $escenic_data_dir
+    $escenic_run_dir
+    $escenic_conf_dir
+    $escenic_log_dir
+    $escenic_sources
+  "
+  local key_to_remove_list="
+    C4DEFFEB
+    CD2EFD2A
+  "
+  print_and_log "You have set fai_un_install_everything=1 in your ${conf_file}"
+  print_and_log "This will $(red uninstall the following on $HOSTNAME):"
+  print_and_log "Packages to be removed:" $(echo $package_to_remove_list)
+  print_and_log "Files & directories to be removed:" $file_to_remove_list
+  print_and_log "APT keys to be removed:" $key_to_remove_list
+  print "If you're absolutely sure about this, type:"
+  print "$pretty_please"
+  read answer
+
+  if [[ "$answer" != "$pretty_please" ]]; then
+    print_and_log "You didn't type the confirmation string correctly."
+    print_and_log "You typed: [ ${answer} ]. I will not Uninstall anything"
+    return
+  else
+    print_and_log "OK, I'll do as you wish:"
+    print_and_log "I will uninstall everything set up by $(basename $0)"
+  fi
+
+  for el in $file_to_remove_list; do
+    run rm -rf $el
+  done
+
+  for el in $key_to_remove_list; do
+    if [ $(apt-key list | grep $el | wc -l) -gt 0 ]; then
+      run apt-key remove $el
+    fi
+  done
   
   for el in $remove_package_list; do
     if [ $(dpkg -l $el | grep ^ii | wc -l) -gt 0 ]; then
@@ -923,11 +924,8 @@ function un_install_everything() {
 
   run apt-get clean
 
-  print_and_log "Everything (well, most) set up by $(basename $0) should now"
-  print_and_log "have been removed from ${HOSTNAME}. Here's a summary:"
-  print_and_log "Packages removed           :" $package_to_remove_list
-  print_and_log "Files & directories removed:" $file_to_remove_list
-  print_and_log "APT keys removed           :" $key_to_remove_list
+  print_and_log "Everything set up by $(basename $0) should now"
+  print_and_log "have been removed from ${HOSTNAME}."
 }
 
 ece_install_trail_file=/var/lib/ece-install/$(date +%s)-$(basename $0).trail
