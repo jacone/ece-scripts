@@ -31,3 +31,5 @@ default_app_server_port=8080
 default_app_server_shutdown=8005
 default_app_server_redirect=8443
 
+# cache server constants
+default_cache_port=80
