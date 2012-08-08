@@ -40,7 +40,7 @@ function install_cache_server()
 
   install_packages_if_missing varnish
   assert_pre_requisite varnishd
-
+  
   if [ $fai_enabled -eq 0 ]; then
     print "You must now list your backend servers."
     print "These must be host names (not IPs) and must all be resolvable"
@@ -49,8 +49,10 @@ function install_cache_server()
     print "Press ENTER to accept the default: ${HOSTNAME}:${appserver_port}"
     echo -n "Your choice [${HOSTNAME}:${appserver_port}]> "
     read backend_servers
+    cache_port=$default_cache_port
   else
     backend_servers=${fai_cache_backends}
+    cache_port=${fai_cache_port-$default_cache_port}
   fi
 
   if [ -z "$backend_servers" ]; then
@@ -60,7 +62,7 @@ function install_cache_server()
   set_up_varnish $backend_servers
   leave_cache_trails
   
-  add_next_step "Cache server is up and running at http://${HOSTNAME}:80/"
+  add_next_step "Cache server is up and running at http://${HOSTNAME}:${cache_port}/"
 }
 
 function set_up_varnish()
@@ -68,17 +70,17 @@ function set_up_varnish()
   print_and_log "Setting up Varnish to match your environment ..."
   run /etc/init.d/varnish stop
 
-    # we need to swap standard err and standard out here as varnishd
-    # -V for some reason writes to standard error.
-  using_varnish_3=$(varnishd -V 3>&1 1>&2 2>&3 | grep varnish-3 | wc -l)
+  # we need to swap standard err and standard out here as varnishd -V
+  # for some reason writes to standard error.
+  local using_varnish_3=$(varnishd -V 3>&1 1>&2 2>&3 | grep varnish-3 | wc -l)
   
   local file=/etc/default/varnish
   if [ $on_redhat_or_derivative -eq 1 ]; then
     file=/etc/sysconfig/varnish
   fi
   
-  sed -i -e 's/6081/80/g' -e 's/^START=no$/START=yes/' $file
-  exit_on_error "sed on $file"
+  run sed -i -e "s/6081/${cache_port}/g" \
+    -e 's/^START=no$/START=yes/' $file
 
   cat > /etc/varnish/default.vcl <<EOF
 /* Varnish configuration for Escenic Content Engine              -*- java -*- */
@@ -214,5 +216,6 @@ EOF
 }
 
 function leave_cache_trails() {
-  leave_trail "trail_cache_port=80"
+  leave_trail "trail_cache_host=${HOSTNAME}"
+  leave_trail "trail_cache_port=${cache_port}"
 }
