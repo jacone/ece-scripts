@@ -16,7 +16,9 @@ In the examples here, we have a build server on my-build-server
 where we build EARs for the the my-website website.
 
 *** Deploying a new EAR file for an ECE instance
-On my-control-server, do:
+All the commands in this section is written to be executed on
+my-control-server (but you could of course also first log on to each
+of the servers and run the commands locally there).
 
 #+BEGIN_SRC sh
 $ sudo ssh escenic@my-presentation-server ece -i engine1 --uri http://my-build-server/my-builder-user/releases/my-website-trunk-rev4121-2012-07-05_1524.ear  deploy
@@ -29,7 +31,7 @@ $ sudo ssh escenic@my-presentation-server ece -i engine1 --uri http://my-build-s
 We can now restart the ECE:
 
 #+BEGIN_SRC sh
-torstein@control$ sudo ssh root@my-presentation-server /etc/init.d/ece restart 
+$ sudo ssh root@my-presentation-server /etc/init.d/ece restart 
 [ece#engine-engine1] Stopping the engine1 instance of engine on my-presentation-server ...
 [ece#engine-engine1] Starting the engine1 instance of engine on my-presentation-server ...
 [ece#search-search1] Stopping the search1 instance of search on my-presentation-server ...
@@ -39,7 +41,7 @@ torstein@control$ sudo ssh root@my-presentation-server /etc/init.d/ece restart
 To confirm see that the ECE instance came up again, do:
 
 #+BEGIN_SRC sh
-torstein@control:~$ sudo ssh root@my-presentation-server /etc/init.d/ece status
+$ sudo ssh root@my-presentation-server /etc/init.d/ece status
 [ece#engine-engine1] UP 0d 0h 11m 45s
 [ece#search-search1] UP 0d 0h 11m 42s
 #+END_SRC
@@ -69,57 +71,54 @@ SCM, but for consistency, you can just follow the guide below for
 these as well (layout, layout-group, menu, community/security and so
 on).
 
-1) First, extract the publication resources.  Make sure you have already
-done the deployment in the my-presentation-server server
-
-2) Login to one of the presentation servers
-From my-control-server, do:
+First, make sure you have already done the deployment on the
+my-presentation-server server. Login to one of the presentation
+servers. From my-control-server, do:
 #+BEGIN_SRC sh
 $ sudo ssh root@my-presentation-server  
 #+END_SRC
 
-*** Change to the escenic user
+Then, change to the user running the ECE user
 #+BEGIN_SRC sh
 # su - escenic
 #+END_SRC
 
-*** Download current content-type
+After this, download current content-type so that we can keep a backup
+of it.
 #+BEGIN_SRC sh
+$ mkdir ~/backup
 $ wget -O ~/backup/content-type-$(date --iso)-before-deployment \
        http://localhost:8080/escenic-admin/publication-resources/mypub/escenic/content-type
 #+END_SRC
 
-*** Locate the new content-type definition
-Go to the new new content-type from your latest deployment 
+The next step is to locate the new content-type definition.  Go to the
+new new content-type from your latest deployment
 
 #+BEGIN_SRC sh
-$ cd /opt/tomcat-engine1/webapps/eb/META-INF/escenic/publication-resources/escenic/
+$ cd /opt/tomcat-engine1/webapps/my-webapp/META-INF/escenic/publication-resources/escenic/
 #+END_SRC
 
-*** Confirm the changes with diff
+Then, confirm the changes using diff:
 #+BEGIN_SRC sh
 $ diff -w ~/backup/content-type-$(date --iso)-before-deployment content-type  
 #+END_SRC
 
-
-*** Now upload the new content-type to ECE
-The command below assumes that there is a file called the same as the
-publication resource in the current directory. Since we changed into
-that directory in step 5), we can therefore now do:
-
+Now, upload the new content-type to ECE.  The command below assumes
+that there is a file called the same as the publication resource in
+the current directory. 
 #+BEGIN_SRC sh
 $ ece -i engine1 -p mypub -r content-type update
 #+END_SRC
 
-
-*** Download the resource again to check if its in place
+To confirm our changes, we now download the resource again to check if
+all the changes are the way we want them:
 #+BEGIN_SRC sh
 $ wget -O ~/backup/content-type-$(date --iso)-after-deployment \
-               http://localhost:8080/escenic-admin/publication-resources/mypub/escenic/content-type
+       http://localhost:8080/escenic-admin/publication-resources/mypub/escenic/content-type
 #+END_SRC
 
 
-*** Do check with diff again
+Finally, run diff again to see that the changes are correct:
 #+BEGIN_SRC sh
 $ diff -w ~/backup/content-type-$(date --iso)-before-deployment \
           ~/backup/content-type-$(date --iso)-after-deployment
