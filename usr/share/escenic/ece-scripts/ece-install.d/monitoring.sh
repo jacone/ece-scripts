@@ -9,15 +9,15 @@ function install_nagios_monitoring_server()
 {
   print "Installing an $1 server on $HOSTNAME ..."
   local monitoring_vendor=$1
-  
+
   if [ $on_debian_or_derivative -eq 1 ]; then
     if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
       install_packages_if_missing \
-	check-mk-server check-mk-config-nagios \
+        check-mk-server check-mk-config-nagios \
         apache2 nagios3 nagios-nrpe-plugin
     else
       install_packages_if_missing \
-	check-mk-server check-mk-config-icinga \
+        check-mk-server check-mk-config-icinga \
         apache2 icinga nagios-nrpe-plugin icinga-doc
     fi
 
@@ -38,14 +38,14 @@ function install_nagios_monitoring_server()
     run htpasswd -b -c $file icingaadmin \
       ${fai_monitoring_admin_password-admin}
   fi
-  
+
   # enable remote commands
   if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
     local file=/etc/nagios3/nagios.cfg
   else
     local file=/etc/icinga/icinga.cfg
   fi
-  
+
   dont_quote_conf_values=1
   set_conf_file_value check_external_commands 1 $file
   dont_quote_conf_values=0
@@ -58,14 +58,14 @@ function install_nagios_monitoring_server()
     fi
   fi
 
-  set_up_monitoring_host_def $monitoring_vendor $fai_monitoring_host_list; 
+  set_up_monitoring_host_def $monitoring_vendor $fai_monitoring_host_list;
 
   if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
     file=/etc/nagios3/conf.d/hostgroups_nagios2.cfg
   else
     file=/etc/icinga/objects/hostgroups_icinga.cfg
   fi
-  
+
   set_up_monitoring_host_group \
     $file \
     "ece-hosts" \
@@ -85,7 +85,7 @@ function install_nagios_monitoring_server()
     run /etc/init.d/icinga restart
     add_next_step "Icinga monitoring interface: http://${HOSTNAME}/icinga"
   fi
-  
+
   run /etc/init.d/apache2 reload
 
 }
@@ -151,7 +151,7 @@ function install_nagios_node()
     print_and_log "You will have to install it manually."
     return
   fi
-  
+
   local file=/etc/nagios/nrpe.cfg
   dont_quote_conf_values=1
   set_conf_file_value \
@@ -165,7 +165,7 @@ function install_nagios_node()
   # isn't there (!)
   run touch /var/run/nagios/nrpe.pid
   run /etc/init.d/nagios-nrpe-server restart
-  
+
   add_next_step "A Nagios NRPE node and check_mk has been installed"
   add_next_step "on ${HOSTNAME}"
 }
@@ -194,7 +194,7 @@ function install_munin_node()
   if [ -z "$monitoring_server_ip" ]; then
     monitoring_server_ip=$default_ip
   fi
-  
+
   if [ $on_debian_or_derivative -eq 1 ]; then
     packages="munin-node munin-plugins-extra"
     install_packages_if_missing $packages
@@ -213,10 +213,10 @@ function install_munin_node()
 allow ${escaped_munin_gather_ip}
 EOF
   fi
-  
+
   # install the escenic_jstat munin plugin
   install_escenic_munin_plugins
-  
+
   if [ $on_debian_or_derivative -eq 1 ]; then
     run service munin-node restart
   fi
@@ -227,9 +227,9 @@ EOF
 function install_escenic_munin_plugins() {
   if [ $on_debian_or_derivative -eq 1 ]; then
     install_packages_if_missing escenic-munin-plugins
-    return 
+    return
   fi
-  
+
   local file=/usr/share/munin/plugins/escenic_jstat_
   run wget $wget_opts \
     https://github.com/mogsie/escenic-munin/raw/master/escenic_jstat_ \
@@ -239,7 +239,7 @@ function install_escenic_munin_plugins() {
   local instance_list=$(get_instance_list)
   if [ -z "${instance_list}" ]; then
     print_and_log "No ECE instances found on $HOSTNAME, so I'm not adding"
-    print_and_log "additional Munin configuration"  
+    print_and_log "additional Munin configuration"
 
     if [ $on_debian_or_derivative -eq 1 ]; then
       run service munin-node restart
@@ -248,7 +248,7 @@ function install_escenic_munin_plugins() {
     add_next_step "A Munin node has been installed on $HOSTNAME"
     return
   fi
-  
+
   local escenic_jstat_modules="_gc _gcoverhead _heap _uptime"
   for current_instance in $instance_list; do
     for module in $escenic_jstat_modules; do
@@ -281,7 +281,7 @@ user $ece_user
 
 EOF
   fi
-  
+
 }
 
 function install_munin_gatherer()
@@ -302,14 +302,14 @@ function install_munin_gatherer()
     print "Separate your hosts with a space, e.g.: 'editor01 db01 web01'"
     echo -n "Your choice> "
     read user_munin_nodes
-    
+
     if [ -n "$user_munin_nodes" ]; then
       node_list=$user_munin_nodes
     fi
   else
     node_list=${fai_monitoring_munin_node_list}
   fi
-  
+
   if [ -z "$node_list" ]; then
     return
   fi
@@ -320,7 +320,7 @@ function install_munin_gatherer()
       print_and_log "${el} already exists on the ${HOSTNAME} Munin gatherer ..."
       continue
     fi
-    
+
     print_and_log "Adding ${el} to the Munin gatherer on ${HOSTNAME} ..."
     cat >> $file <<EOF
 [${el}]
@@ -329,8 +329,8 @@ use_node_name yes
 EOF
   done
 
-    # TODO add the priveleged network to the Allowed stanza (i.e. the
-    # network wich will do the monitoring of the servers.
+  # TODO add the priveleged network to the allowed stanza (i.e. the
+  # network wich will do the monitoring of the servers.
   local file=/etc/apache2/conf.d/munin
   if [ -n "$(get_privileged_hosts)" ]; then
     local privileged_hosts=$(
@@ -352,7 +352,7 @@ function create_monitoring_server_overview()
 {
   local file=/var/www/index.html
   local title="Welcome to the mighty monitoring server @ ${HOSTNAME}"
-  
+
 cat > $file <<EOF
 <html>
   <head>
@@ -385,17 +385,20 @@ EOF
 function install_monitoring_server()
 {
   local nagios_flavour=${fai_monitoring_nagios_flavour-$MONITORING_VENDOR_ICINGA}
-  
+
   if [ "$(lsb_release -s -c 2>/dev/null)" = "lucid" ]; then
     log "Version $(lsb_release -s -c 2>/dev/null) of" \
       $(lsb_release -s -c 2>/dev/null) \
       "doesn't support Icinga, will use vanilla Nagios instead."
     nagios_flavour=$MONITORING_VENDOR_NAGIOS
   fi
-  
+
   install_nagios_monitoring_server $nagios_flavour
   install_munin_gatherer
   create_monitoring_server_overview $nagios_flavour
+
+  leave_trail "trail_monitoring_host=$HOSTNAME"
+  leave_trail "trail_monitoring_port=80"
 }
 
 ## $1 configuration file name
@@ -423,7 +426,7 @@ function set_up_monitoring_host_group()
       "already defined, skipping it."
     return
   fi
-  
+
   cat >> $file <<EOF
 define hostgroup {
   hostgroup_name $host_group_name
@@ -445,16 +448,16 @@ function install_system_info() {
   if [ $on_redhat_or_derivative -eq 1 ]; then
     return
   fi
-  
+
   print_and_log "Setting up a self-reporting module on $HOSTNAME ..."
-  
+
   install_packages_if_missing lighttpd escenic-common-scripts
   assert_pre_requisite lighttpd
 
   local port=${fai_reporting_port-5678}
   local dir=${fai_reporting_dir-/var/www/system-info}
   make_dir $dir
-  
+
   # configure the web server
   local file=/etc/lighttpd/lighttpd.conf
 
@@ -465,23 +468,23 @@ function install_system_info() {
   else
     run sed -i "s~^${property}.*=.*$~${property}=\"${port}\"~g" $file
   fi
-  
+
   # set the document root
   property=server.document-root
   run sed -i "s~^${property}.*=.*\"/var/www\"$~${property}=\"$dir\"~g" $file
-  
+
   # make the web server start
   run /etc/init.d/lighttpd restart
-  
+
   # set system-info to be run every minute on the host
   local command="system-info -f html -u $ece_user > $dir/index.html"
   if [ $(grep -v ^# /etc/crontab | grep "$command" | wc -l) -lt 1 ]; then
     echo '* *     * * *   root    '$command >> /etc/crontab
   fi
-  
+
   # doing a first run of system-info since cron will take a minute to start
   eval $command
-  
+
   # creating symlinks like:
   # /var/www/system-info/var/log/escenic -> /var/log/escenic
   # /var/www/system-info/etc/escenic -> /etc/escenic
@@ -496,30 +499,30 @@ function install_system_info() {
   if [ ! -h $target ]; then
     run ln -s ${escenic_conf_dir} $target
   fi
-  
+
   make_dir ${dir}/$tomcat_base
   target=${dir}/$tomcat_base/logs
   if [ ! -h $target ]; then
     run ln -s $tomcat_base/logs $target
   fi
-  
+
   # thttpd doesn't serve files if they've got the execution bit set
   # (it then think it's a misnamed CGI script). Hence, we must ensure
   # the execute bit is set.
   if [ -d $escenic_log_dir ]; then
     find $escenic_log_dir -type f | egrep ".log$|.out$" | xargs chmod 644
   fi
-  
+
   if [ -d $escenic_conf_dir ]; then
     find $escenic_conf_dir -type f | \
       egrep ".conf$|.properties$" | \
       xargs chmod 644
   fi
-  
+
   if [ -d  $tomcat_base/logs ]; then
     find $tomcat_base/logs -type f | egrep ".log$" | xargs chmod 644
   fi
-  
+
   add_next_step "Always up to date system info: http://$HOSTNAME:$port/"
   add_next_step "you can also see system-info in the shell, type: system-info"
 }
