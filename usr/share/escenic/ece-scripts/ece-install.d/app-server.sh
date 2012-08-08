@@ -1,3 +1,7 @@
+default_app_server_port=8080
+default_app_server_shutdown=8005
+default_app_server_redirect=8443
+
 function set_up_app_server()
 {
   print_and_log "Setting up the application server ..."
@@ -6,7 +10,7 @@ function set_up_app_server()
     print "On which ports do you wish to run the app server on?"
     print "Press ENTER to accept the default ports"
     print "or enter: <port> <shutdown port> <redirect port>:"
-    echo -n "Your choice [8080 8005 8443]> "
+    echo -n "Your choice [${default_app_server_port} ${default_app_server_shutdown} ${default_app_server_redirect}]> "
     read user_ports
     
     if [ -n "$user_ports" ]; then
@@ -14,32 +18,40 @@ function set_up_app_server()
     fi
   else
     if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
-      appserver_port=${fai_editor_port-8080}
-      shutdown_port=${fai_editor_shutdown-8005}
-      redirect_port=${fai_editor_redirect-8443}
+      appserver_port=${fai_editor_port-${default_app_server_port}}
+      shutdown_port=${fai_editor_shutdown-${default_app_server_shutdown}}
+      redirect_port=${fai_editor_redirect-${default_app_server_redirect}}
+      leave_trail "trail_editor_host=${HOSTNAME}"
+      leave_trail "trail_editor_port=${fai_editor_port-${default_app_server_port}}"
     elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
-      appserver_port=${fai_presentation_port-8080}
-      shutdown_port=${fai_presentation_shutdown-8005}
-      redirect_port=${fai_presentation_redirect-8443}
+      appserver_port=${fai_presentation_port-${default_app_server_port}}
+      shutdown_port=${fai_presentation_shutdown-${default_app_server_shutdown}}
+      redirect_port=${fai_presentation_redirect-${default_app_server_redirect}}
+      leave_trail "trail_presentation_host=${HOSTNAME}"
+      leave_trail "trail_presentation_port=${fai_presentation_port-${default_app_server_port}}"
     elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
-      appserver_port=${fai_search_port-8080}
-      shutdown_port=${fai_search_shutdown-8005}
-      redirect_port=${fai_search_redirect-8443}
+      appserver_port=${fai_search_port-${default_app_server_port}}
+      shutdown_port=${fai_search_shutdown-${default_app_server_shutdown}}
+      redirect_port=${fai_search_redirect-${default_app_server_redirect}}
+      leave_trail "trail_search_host=${HOSTNAME}"
+      leave_trail "trail_search_port=${fai_search_port-${default_app_server_port}}"
     elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
-      appserver_port=${fai_analysis_port-8080}
-      shutdown_port=${fai_analysis_shutdown-8005}
-      redirect_port=${fai_analysis_redirect-8443}
+      appserver_port=${fai_analysis_port-${default_app_server_port}}
+      shutdown_port=${fai_analysis_shutdown-${default_app_server_shutdown}}
+      redirect_port=${fai_analysis_redirect-${default_app_server_redirect}}
+      leave_trail "trail_analysis_host=${HOSTNAME}"
+      leave_trail "trail_analysis_port=${fai_analysis_port-${default_app_server_port}}"
     fi
   fi
 
   if [ -z "$appserver_port" ]; then
-    appserver_port=8080
+    appserver_port=${default_app_server_port}
   fi
   if [ -z "$shutdown_port" ]; then
-    shutdown_port=8005
+    shutdown_port=${default_app_server_shutdown}
   fi
   if [ -z "$redirect_port" ]; then
-    redirect_port=8443
+    redirect_port=${default_app_server_redirect}
   fi
   
   if [ $fai_enabled -eq 0 ]; then
@@ -63,7 +75,7 @@ function set_up_app_server()
     print "Awfully sorry to bug you with so many questions, but:"
     print "What's the URI to the indexer-webservice? (this is typically"
     print "something like http://editor1/indexer-webservice/index/)"
-    echo -n "Your choice [http://${HOSTNAME}:8080/indexer-webservice/index/]> "
+    echo -n "Your choice [http://${HOSTNAME}:${default_app_server_port}/indexer-webservice/index/]> "
     read user_indexer_ws_uri
   else
     user_indexer_ws_uri=${fai_search_indexer_ws_uri}
@@ -78,10 +90,10 @@ function set_up_app_server()
   
   if [ $fai_enabled -eq 0 ]; then
     print "Last question, I promise!: Where does the search instance run?"
-    print "Press ENTER to accept the default ($HOSTNAME:8080)"
-    print "or enter: <host>:<port>, e.g.: 'search1:8080'"
+    print "Press ENTER to accept the default ($HOSTNAME:${default_app_server_port})"
+    print "or enter: <host>:<port>, e.g.: 'search1:${default_app_server_port}'"
     print "If you're in doubt, just press ENTER :-)"
-    echo -n "Your choice [$HOSTNAME:8080]> "
+    echo -n "Your choice [$HOSTNAME:${default_app_server_port}]> "
     read user_search
   else
     user_search=$(get_conf_value fai_search_host)
@@ -92,7 +104,7 @@ function set_up_app_server()
 
   if [ -z "$user_search" ]; then
     search_host=$HOSTNAME
-    search_port=8080
+    search_port=${default_app_server_port}
   else
     search_host=$(echo $user_search | cut -d':' -f1)
     search_port=$(echo $user_search | cut -d':' -f2)
