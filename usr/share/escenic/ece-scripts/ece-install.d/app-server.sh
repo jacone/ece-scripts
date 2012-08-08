@@ -87,6 +87,7 @@ function set_up_app_server()
     indexer_ws_uri=http://${HOSTNAME}:${appserver_port}/indexer-webservice/index/
   fi
   
+  leave_trail "trail_indexer_ws_uri=${indexer_ws_uri}"
   
   if [ $fai_enabled -eq 0 ]; then
     print "Last question, I promise!: Where does the search instance run?"
