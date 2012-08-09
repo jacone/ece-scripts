@@ -427,8 +427,8 @@ EOF
 set_up_build_directory
 set_customer_specific_variables
 generate_architecture_diagram
-generate_svg_from_blockdiag
 generate_overview_org
 generate_cache_server_org
 generate_html_from_org
+generate_svg_from_blockdiag
 
