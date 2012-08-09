@@ -2,3 +2,8 @@
 
 A <%= my-db-vendor %> DB has been installed in your habitat.
 
+[[./graphics/db.svg]]
+
+
+
+
