@@ -8,7 +8,7 @@ turned on BASH completion per default).
 ** Completing ece commands
 You will find yourself using this regularly, both for speed, but also
 to remember all the different options and their correct wording:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece TAB TAB
 applog      deploy      log         start       threaddump  
 assemble    help        outlog      status      update      
@@ -17,7 +17,7 @@ clean       kill        restart     stop        versions
 The commands are all described in detail in "ece help"
 
 ** Completing types of servers the ece scripts can operate on
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -t TAB TAB
 analysis  engine    rmi-hub   search 
 #+END_SRC
@@ -28,13 +28,13 @@ publication.
 
 To help selecting the correct publication resource, you can make ece
 list and complete the available resource names:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -p mypub -r TAB TAB
 content-type   image-version  layout-group   
 feature        layout         menu
 #+END_SRC
 * Getting an overview of all available options
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece help
 Usage: /home/torstein/bin/ece [-t <type>] [-i <instance>] <command>
 
@@ -89,7 +89,7 @@ going on on your system.
 ** Getting an overview of the log files
 The ece script will be more than happy to tell you about the log files
 on your system that are of interest to your instance:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i dev1 loglist
 [ece#engine-dev1] System out log: /var/log/escenic/engine-dev1.out
 [ece#engine-dev1] App server log: /opt/tomcat-dev1/logs/localhost.2011-09-20.log
@@ -102,7 +102,7 @@ tailing the log file, ece will also first print out where the file is
 located on the file system so you can open it later for further
 inspection. 
 
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i dev1 outlog
 [ece#engine-dev1] Tailing the system out log /var/log/escenic/engine-dev1.out
 #+END_SRC
@@ -116,25 +116,25 @@ The available log file commands are:
 If you wish to pass the log files onto another pipe, for instance to
 grep all the log files for a certain exception or error message, you
 will find the -q parameter useful:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i dev1 -q loglist | xargs grep IllegalArgumentException
 #+END_SRC
 
 This approach is also useful if you wish to tail all the log files at
 once: 
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i dev1 -q loglist | xargs tail -f
 #+END_SRC
 
 * Assembling a new EAR
 The script will quite happily assemble your EAR file. Please note that
 you need to run 
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i clean assemble
 #+END_SRC
 whenever you've upgraded either ECE or one of its plugins. The script
 will try to take care of you though and warn you of such duplication:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 [ece#engine] Multiple versions of ECE and/or 3rd party libraries found.
 [ece#engine] Remember, you need to run 'ece clean assemble' when
 [ece#engine] upgrading either ECE or one of the plugins.
@@ -146,12 +146,12 @@ will try to take care of you though and warn you of such duplication:
 If you're just re-running the assembly after just adding a new plugin
 or want to re-build your publications after template changes, you can
 omit the clean command and just run:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece assembly
 #+END_SRC
 
 The EAR produced is now ready to be deployed with
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece [-i <instance>] deploy
 #+END_SRC
 
@@ -159,14 +159,14 @@ $ ece [-i <instance>] deploy
 ece will default wise attempt to deploy the EAR which "ece assemble"
 produces and resides in:
 
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 /var/cache/escenic/engine.ear
 #+END_SRC
 
 It is also possible to deploy an EAR directly from a local or remote
 URI. This is especially useful where you have a build server and you
 want the ECEs deploy this EAR directly, you can then do:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i myinstance deploy --uri http://my.build.server.com/engine-mysite.com-2.314.ear
 #+END_SRC
 
@@ -177,14 +177,14 @@ The following URIs are supported:
 
 It is also possible to deploy a local file without the URI protocol
 prefix using the -f (file) parameter:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i myinstance deploy -f /tmp/engine-mysite.com-2.314.ear
 #+END_SRC
 
 The URI of the EAR file is completely up to you, but if use the
 pattern
-#+BEGIN_SRC sh
-  engine-<a string>-<a number>.ear
+#+BEGIN_SRC text
+engine-<a string>-<a number>.ear
 #+END_SRC
 ece will understand this as version: mysite.com-2.314 and write this
 to its deployment state file: /var/lib/escenic/<instance>.state, which
@@ -194,7 +194,7 @@ again will be reported by the "ece info" command.
 It's easy to update the publication resources using the ece script. If
 you have all these publication resources in your current directory,
 you can update them just by:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ for el in layout* feature teaser-type content-type ; do 
   ece -i myinstance -p mypub -r $el update; 
 done  
@@ -202,14 +202,14 @@ done
 
 In this connection, it might be of your interest to also flush all the
 ECE caches on all the instances, this you can easily do with:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i myinstance flush
 #+END_SRC
 
 * Getting information about the ECE instance
 The "ece info" command will give you a lot of useful information about
 the current instance:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i web1 info
 [ece#engine-web1] Current instance: web1
 [ece#engine-web1] Instances available on myhost: web1
@@ -253,15 +253,15 @@ has a fairly recent version of BASH installed.
 ** Overview of File Paths Used by the ece script
 These are recommended files and locations for using the ece script:
 
-|----------------------------------+----------------------------------|
-| Path                             | Explanation                      |
-|----------------------------------+----------------------------------|
-| /usr/bin/ece                     | The script itself                |
-| /etc/escenic/ece.conf            | The main configuration file      |
-| /etc/escenic/ece-<instance>.conf | Instance specific settings       |
-| /var/cache/escenic               | Directory of assembled EAR files |
-| /tmp                             | Directory for temporary files    |
-|----------------------------------+----------------------------------|
+|------------------------------------+----------------------------------|
+| Path                               | Explanation                      |
+|------------------------------------+----------------------------------|
+| ~/usr/bin/ece~                     | The script itself                |
+| ~/etc/escenic/ece.conf~            | The main configuration file      |
+| ~/etc/escenic/ece-<instance>.conf~ | Instance specific settings       |
+| ~/var/cache/escenic~               | Directory of assembled EAR files |
+| ~/tmp~                             | Directory for temporary files    |
+|------------------------------------+----------------------------------|
 
 As you can see in ece.conf, there are a number of default locations
 dealing with log files, pid files, crash files as well as application
@@ -273,16 +273,16 @@ that the ece script has preset list of locations where it looks for
 the .conf files mentioned above, namely:
 
 - current working directory
-- /etc/escenic/<type>/instance/<instance name>
-- /etc/escenic/<type>/host/<hostname>
-- /etc/escenic/<type>/common
-- /etc/escenic/<type>
-- /etc/escenic
-- <current working direcotry>/../etc
+- ~/etc/escenic/<type>/instance/<instance name>~
+- ~/etc/escenic/<type>/host/<hostname>~
+- ~/etc/escenic/<type>/common~
+- ~/etc/escenic/<type>~
+- ~/etc/escenic~
+- ~<current working direcotry>/../etc~
 
 You may override this list of locations by setting the
-this environment variable in your .bashrc or similar:
-#+BEGIN_SRC sh
+this environment variable in your ~.bashrc~ or similar:
+#+BEGIN_SRC text
 ECE_CONF_LOCATIONS 
 #+END_SRC
 
@@ -295,7 +295,7 @@ over time :-)
 ** You must run it as a non-privileged user
 You must be normal user to run the ece script, otherwise it will
 complain:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 [ece#engine] Sorry, you cannot be root when running ece
 [ece#engine] The root user can only use /etc/init.d/ece
 #+END_SRC
@@ -308,13 +308,13 @@ The script is made for being easy to use with multiple instances on
 the same host. You specify the instance you want to operate on using
 the -i parameter. E.g. to assemble and deploy the editor1 instance, you'd
 do:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i editor1 assemble deploy restart
 #+END_SRC
 
 The script's TAB completion will also help you with completing the
 available instances on your system, so you can just type:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i TAB TAB
 mypub myotherpub
 #+END_SRC
@@ -333,18 +333,18 @@ only one instance was installed.
 ** TAB completion
 The ece script offers TAB completion of all commands, options and
 option values. For this to work, you need the completion file loaded
-from your .bashrc. 
+from your ~.bashrc~. 
 
 This can either be done by enabling all BASH completions on your
 system (some systems have this set up per default), refer to your OS
 documentation for this.
 
 Alternatively, to just enable the ece completion, simply add the
-following line to your .bashrc:
-#+BEGIN_SRC sh
+following line to your ~.bashrc~:
+#+BEGIN_SRC text
 . /etc/bash_completion.d/ece
 #+END_SRC
-Naturally, the bash_comletion.d needs to be in the above location :-)
+Naturally, the ~bash_comletion.d~ needs to be in the above location :-)
 * Backup
 One of the many features of the ece script, is that you can take a
 snapshot of your current running system, which can then be restored
@@ -356,12 +356,12 @@ all the Escenic software binaries, your publication and your
 application servers.
 
 To create the backup, you'll simply do:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i editor1 backup
 #+END_SRC
 
 It will then create tarball with everything and put it in 
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 /var/backups/escenic
 #+END_SRC
 
@@ -369,14 +369,14 @@ Sometimes, you only want to take a backup of the data files and are
 not so concerned with the Escenic and application server binaries as
 these are easily installed from elsewhere. If so, you may do the
 following:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i editor1 backup --exclude-binaries
 #+END_SRC
 
 When running in a production environment, it's advised to first stop
 the search instance which runs the Solr indexer, so that the Solr
 index isn't corrupted:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 $ ece -i search1 stop
 $ ece -i editor1 backup
 #+END_SRC
