@@ -353,8 +353,8 @@ function verify_add_user
     enforce_variable user_svn_path "You $user_config_file needs to specify user_svn_path!"
     enforce_variable user_svn_username "You $user_config_file needs to specify user_svn_username!"
     enforce_variable user_maven_username "You $user_config_file needs to specify user_maven_username!"
-    enforce_variable svn_password "You $user_config_file needs to specify svn_password!"
-    enforce_variable maven_password "You $user_config_file needs to specify maven_password!"
+    enforce_variable user_svn_password "You $user_config_file needs to specify user_svn_password!"
+    enforce_variable user_maven_password "You $user_config_file needs to specify user_maven_password!"
   fi
 }
 
