@@ -9,7 +9,7 @@ We have deliberately _not_ set this up as an automatic failover using
 [[http://linux-ha.org][Heartbeat]] as we want DB failover to be a conscious matter.
 
 *** Take down the existing VIP
-If <%= my-db-master %> is still up, log on to it and take down the
+If <%= my-db-master %> is still up, log on to it and take down its
 VIP:
 #+BEGIN_SRC text
 $ ssh root@<%= my-db-master %>
@@ -29,5 +29,12 @@ $ ssh root@<%= my-db-slave %>
 # ifconfig eth0:0 <%= my-db-vip-ip %> <%= my-db-vip-netmask %> up
 #+END_SRC
 
+Pinging <%= my-db-vip %> should now yield <%= my-db-vip-ip %> again,
+and the answer should come frmo <%= my-db-slave %>:
+#+BEGIN_SRC text
+$ ping <%= my-db-vip %>
+PING <%= my-db-vip %> (<%= my-db-vip-ip %>) 56(84) bytes of data.
+64 bytes from <%= my-db-slave %> (192.168.1.23): icmp_req=1 ttl=249 time=1.18 ms
+#+END_SRC
 
 
