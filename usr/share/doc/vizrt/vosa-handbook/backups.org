@@ -2,12 +2,12 @@
 
 ** DB backups
 If you've told ece-install to set up daily backups, there will be a
-cron scripts set up which create backups.
+cron scripts set up which create backups. 
 
 Part of the name of the cron script is the name of your DB schema, so
-the default location of the cron script is:
+the default location of the cron script on <%= my-db-backup-host %> is:
 #+BEGIN_SRC sh
-/etc/cron.daily/my-db-backup  
+/etc/cron.daily/<%= my-db %>-backup  
 #+END_SRC
 
 And it'll put its backups in
@@ -25,7 +25,7 @@ nfs2) and a backup of the exports directory  should suffice. This is
 the directory in which all the NFS exported directories reside.
 
 #+BEGIN_SRC sh
-my-nfs-server:/var/exports  
+<%= my-nfs-server %>:/var/exports  
 #+END_SRC
 
 It's recommended that the backup isn't done using the NFS mount on one

@@ -12,7 +12,7 @@ execute this command as root, you better pass a parameter to tell it
 the user under which ECE, EAE and the Search instance are running as
 (typically "escenic"):
 
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 # system-info -u escenic  
 #+END_SRC
 
@@ -20,7 +20,8 @@ the user under which ECE, EAE and the Search instance are running as
 All VOSA hosts also has a (maximum) one minute old HTML report from
 system-info running on port 5678. 
 
-Here's a screenshot of the system-info report running on http://my-presentation-server:5678/:
+Here's a screenshot of the system-info report running on
+http://<%= my-presentation-server %>:5678/:
 [[[[graphics/pres1-system-info.png]]
 
 ** Hugin
@@ -30,25 +31,28 @@ produce a system-info report in YAML and check the files into a
 version repository.
 
 When browsing the Hugin web interface at
-http://my-control-servermy-network:5679/ you can quickly see all changes on the
-various servers. A change could be a new service which is all of a
-sudden listening on a new port or that the version of a installed
-package has changed. Nothing escapes Hugin's watchful eyes! 
+http://<%= my-control-server %><%= my-network %>:5679/ you can quickly 
+see all changes on the various servers. A change could be a new
+service which is all of a sudden listening on a new port or that the
+version of a installed package has changed. Nothing escapes Hugin's
+watchful eyes!
  
 ** Munin
 Each VOSA habitat has its own Munin installation where you can see the
 trending of your site. I.e. how it has been behaving the last days,
 weeks and months.
 
-If we assume your monitoring server is called "my-monitoring-server",
-the address to your munin is: http://my-monitoring-servermy-network/munin/
+The address to your Munin instance is is:
+ http://<%= my-monitoring-server %><%= my-network %>/munin/
 
 ** Icinga (enhanced Nagios)
 Icinga gives a good overview of the current health of the
-habitat. Head over to http://my-monitoring-servermy-network/icinga/ to get
-updates on host & service uptimes and disk fill rates. This is also
-the place were you'll schedule any maintenance work you do to prevent
-unnecessary alerts filling up your mobile phone and email inboxes.
+habitat. Head over to
+ http://<%= my-monitoring-server %><%= my-network %>/icinga/ 
+to get updates on host & service uptimes and disk fill rates. This is
+also the place were you'll schedule any maintenance work you do to
+prevent unnecessary alerts filling up your mobile phone and email
+inboxes.
 
 ** Check MK
 

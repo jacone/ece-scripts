@@ -6,11 +6,11 @@ this, you can use the Component Browser in the escenic-admin
 interface.
 
 For instance, let's say you're upgrading the search server for
-my-editorial-server and want it to temporarily use my-import-server's
-search instance.
+<%= my-editorial-server %> and want it to temporarily use
+<%= my-import-server %>'s search instance.
 
 First, go to:
-http://my-editorial-server:8080/escenic-admin/browser/Global/com/escenic/webservice/search/DelegatingSearchEngine?property=solrURI
+http://<%= my-editorial-server %>:8080/escenic-admin/browser/Global/com/escenic/webservice/search/DelegatingSearchEngine?property=solrURI
 
 Then, change the value from:
 #+BEGIN_SRC conf
@@ -20,5 +20,5 @@ http://localhost:8081/solr/select
 to
 
 #+BEGIN_SRC conf
-http://my-import-server:8081/solr/select	  
+http://<%= my-import-server %>:8081/solr/select	  
 #+END_SRC

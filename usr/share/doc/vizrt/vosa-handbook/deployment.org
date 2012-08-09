@@ -4,7 +4,7 @@ Log on to the build server as the user for the given habitat and run
 the build script:
 
 #+BEGIN_SRC sh
-$ ssh my-build-user@my-build-server
+$ ssh <%= my-build-user %>@<%= my-build-server %>
 $ ./build.sh release
 #+END_SRC
 
@@ -12,36 +12,36 @@ Once the build is done, the URI of the finished EAR file is printed in
 the shell. This is the URI you use for the 'ece deploy' command below.
 
 ** Deploying a new EAR file
-In the examples here, we have a build server on my-build-server
-where we build EARs for the the my-website website.
+In the examples here, we have a build server on <%= my-build-server %>
+where we build EARs for the the <%= my-website %> website.
 
 *** Deploying a new EAR file for an ECE instance
 All the commands in this section is written to be executed on
-my-control-server (but you could of course also first log on to each
+<%= my-control-server %> (but you could of course also first log on to each
 of the servers and run the commands locally there).
 
 #+BEGIN_SRC sh
-$ sudo ssh escenic@my-presentation-server ece -i engine1 --uri http://my-build-server/my-build-user/releases/my-build-user-trunk-rev4121-2012-07-05_1524.ear  deploy
-[ece#engine-engine1] Deploying http://my-build-server/my-build-user/releases/my-build-user-trunk-rev4121-2012-07-05_1524.ear on engine1 ...
-[ece#engine-engine1] Deploying /var/cache/escenic/my-build-user-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
-[ece#engine-engine1] Deployment white list active, only deploying: my-webapp escenic-admin indexer-webservice
+$ sudo ssh escenic@<%= my-presentation-server %> ece -i engine1 --uri http://<%= my-build-server %>/<%= my-build-user %>/releases/<%= my-build-user %>-trunk-rev4121-2012-07-05_1524.ear deploy
+[ece#engine-engine1] Deploying http://<%= my-build-server %>/<%= my-build-user %>/releases/<%= my-build-user %>-trunk-rev4121-2012-07-05_1524.ear on engine1 ...
+[ece#engine-engine1] Deploying /var/cache/escenic/<%= my-build-user %>-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
+[ece#engine-engine1] Deployment white list active, only deploying: <%= my-webapp %> escenic-admin indexer-webservice
 [ece#engine-engine1] Deployment state file updated: /var/lib/escenic/engine1.state
 #+END_SRC
 
 We can now restart the ECE:
 
 #+BEGIN_SRC sh
-$ sudo ssh root@my-presentation-server /etc/init.d/ece restart 
-[ece#engine-engine1] Stopping the engine1 instance of engine on my-presentation-server ...
-[ece#engine-engine1] Starting the engine1 instance of engine on my-presentation-server ...
-[ece#search-search1] Stopping the search1 instance of search on my-presentation-server ...
-[ece#search-search1] Starting the search1 instance of search on my-presentation-server ...
+$ sudo ssh root@<%= my-presentation-server %> /etc/init.d/ece restart 
+[ece#engine-engine1] Stopping the engine1 instance of engine on <%= my-presentation-server %>...
+[ece#engine-engine1] Starting the engine1 instance of engine on <%= my-presentation-server %>...
+[ece#search-search1] Stopping the search1 instance of search on <%= my-presentation-server %>...
+[ece#search-search1] Starting the search1 instance of search on <%= my-presentation-server %>...
 #+END_SRC
 
 To confirm see that the ECE instance came up again, do:
 
 #+BEGIN_SRC sh
-$ sudo ssh root@my-presentation-server /etc/init.d/ece status
+$ sudo ssh root@<%= my-presentation-server %> /etc/init.d/ece status
 [ece#engine-engine1] UP 0d 0h 11m 45s
 [ece#search-search1] UP 0d 0h 11m 42s
 #+END_SRC
@@ -53,9 +53,10 @@ the search instance has a different deployment white list than that of
 the ECE instance above.
 
 #+BEGIN_SRC sh
-torstein@control:~$ sudo ssh escenic@my-presentation-server ece -i search1 -t search --uri http://my-build-server/my-build-user/releases/my-builder-user-trunk-rev4121-2012-07-05_1524.ear deploy
-[ece#search-search1] Deploying http://my-build-server/my-build-user/releases/my-build-user-trunk-rev4121-2012-07-05_1524.ear on search1 ...
-[ece#search-search1] Deploying /var/cache/escenic/my-build-user-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
+torstein@control:~$ sudo ssh escenic@<%= my-presentation-server %> ece
+-i search1 -t search --uri http://<%= my-build-server %>/<%= my-build-user %>/releases/<%= my-build-user %>-trunk-rev4121-2012-07-05_1524.ear deploy
+[ece#search-search1] Deploying http://<%= my-build-server %>/<%= my-build-user %>/releases/<%= my-build-user %>-trunk-rev4121-2012-07-05_1524.ear on search1 ...
+[ece#search-search1] Deploying /var/cache/escenic/<%= my-build-user %>-trunk-rev4121-2012-07-05_1524.ear on tomcat ...
 [ece#search-search1] Deployment white list active, only deploying: escenic-admin solr indexer-webapp
 [ece#search-search1] Deployment state file updated: /var/lib/escenic/search1.state  
 #+END_SRC
@@ -72,10 +73,10 @@ these as well (layout, layout-group, menu, community/security and so
 on).
 
 First, make sure you have already done the deployment on the
-my-presentation-server server. Login to one of the presentation
-servers. From my-control-server, do:
+<%= my-presentation-server %> server. Login to one of the presentation
+servers. From <%= my-control-server %>, do:
 #+BEGIN_SRC sh
-$ sudo ssh root@my-presentation-server  
+$ sudo ssh root@<%= my-presentation-server %>
 #+END_SRC
 
 Then, change to the user running the ECE user
@@ -88,14 +89,14 @@ of it.
 #+BEGIN_SRC sh
 $ mkdir ~/backup
 $ wget -O ~/backup/content-type-$(date --iso)-before-deployment \
-       http://localhost:8080/escenic-admin/publication-resources/my-publication/escenic/content-type
+       http://localhost:8080/escenic-admin/publication-resources/<%= my-publication %>/escenic/content-type
 #+END_SRC
 
 The next step is to locate the new content-type definition.  Go to the
 new new content-type from your latest deployment
 
 #+BEGIN_SRC sh
-$ cd /opt/tomcat-engine1/webapps/my-webapp/META-INF/escenic/publication-resources/escenic/
+$ cd /opt/tomcat-engine1/webapps/<%= my-webapp %>/META-INF/escenic/publication-resources/escenic/
 #+END_SRC
 
 Then, confirm the changes using diff:
@@ -107,16 +108,15 @@ Now, upload the new content-type to ECE.  The command below assumes
 that there is a file called the same as the publication resource in
 the current directory. 
 #+BEGIN_SRC sh
-$ ece -i engine1 -p my-publication -r content-type update
+$ ece -i engine1 -p <%= my-publication %> -r content-type update
 #+END_SRC
 
 To confirm our changes, we now download the resource again to check if
 all the changes are the way we want them:
 #+BEGIN_SRC sh
 $ wget -O ~/backup/content-type-$(date --iso)-after-deployment \
-       http://localhost:8080/escenic-admin/publication-resources/my-publication/escenic/content-type
+       http://localhost:8080/escenic-admin/publication-resources/<%= my-publication %>/escenic/content-type
 #+END_SRC
-
 
 Finally, run diff again to see that the changes are correct:
 #+BEGIN_SRC sh

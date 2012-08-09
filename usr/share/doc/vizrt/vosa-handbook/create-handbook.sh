@@ -66,19 +66,21 @@ function set_customer_specific_variables() {
 
   customer_filter_map="
     my-backup-dir~${trail_escenic_backups_dir}
-    my-network~$(get_network_name)
+    my-db-vendor~${trail_db_vendor-mysql}
     my-build-server~${trail_builder_host-builder}
     my-build-user~${trail_builder_user-buildy}
     my-control-server~${trail_control_host-control}
+    my-db-backup-host~${trail_db_daily_backup_host}
     my-db-server~${trail_db_master_host-db1}
     my-db~${trail_db_schema-mydb}
     my-editorial-server~${trail_editor_host-edit1}
     my-import-server~${trail_import_host-edit2}
     my-monitoring-server~${trail_monitoring_host-mon}
+    my-network~$(get_network_name)
     my-nfs-server~${trail_nfs_master_host-nfs1}
     my-presentation-server~${trail_presentation_host-pres1}
-    my-stats-server~${trail_analysis_host-analysis}
     my-publication~${first_publication}
+    my-stats-server~${trail_analysis_host-analysis}
     my-webapp~${first_publication}
     my-website~${first_website}
   "
@@ -87,8 +89,11 @@ function set_customer_specific_variables() {
     IFS='~'
     read from to <<< "$el"
     IFS=$old_ifs
+    if [ -z "$to" ]; then
+      continue
+    fi
     find $target_dir -name "*.org" | while read f; do
-      run sed -i "s~${from}~${to}~g" ${f}
+      run sed -i "s~<%=[ ]*${from}[ ]*%>~${to}~g" ${f}
     done
   done
 }
@@ -411,6 +416,12 @@ EOF
 
 ## included from cache-server.org
 function generate_cache_server_org() {
+  # if the trail_cache_host is not set, we assume the cache is running
+  # on (at least one o) the presentation servers.
+  if [ -z "$trail_cache_host" ]; then
+    trail_cache_host=$trail_presentation_host
+  fi
+
   generate_cache_server_diagram
   local file=$target_dir/generated-cache-server.org
   cat > $file <<EOF

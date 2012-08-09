@@ -61,6 +61,8 @@ function set_up_percona_repository_if_possible() {
       add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
       mysql_server_packages="percona-server-server"
       mysql_client_packages="percona-server-client"
+      
+      leave_trail "trail_db_vendor=percona"
     else
       print_and_log "The Percona APT repsository doesn't have packages"
       print_and_log "for your Debian (or derivative) version with code"
@@ -69,6 +71,8 @@ function set_up_percona_repository_if_possible() {
 
       mysql_server_packages="mysql-server libmysqlclient16"
       mysql_client_packages="mysql-client libmysqlclient16"
+      
+      leave_trail "trail_db_vendor=mysql"
     fi
   elif [ $on_redhat_or_derivative -eq 1 ]; then
     print_and_log "Settnig up the Percona repository ..."
