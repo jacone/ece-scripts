@@ -292,19 +292,32 @@ EOF
 EOF
   fi
 
-  for el in nop $trail_editor_host $trail_import_host; do
-    if [[ $el == "nop" ]]; then
-      continue
-    fi
-    cat <<EOF 
-| $(get_fqdn ${el}) | \
-  [[$(get_link ${el}):5678/][system-info]] \
-  [[$(get_link ${el}):8080/escenic-admin/][escenic-admin]] \
-  [[$(get_link ${el}):8080/escenic/][escenic]] \
-  [[$(get_link ${el}):8080/webservice/][webservice]] \
+  if [ -n "${trail_editor_host}" ]; then
+  cat <<EOF 
+| $(get_fqdn ${trail_editor_host}) | \
+  [[$(get_link ${trail_editor_host}):5678/][system-info]] \
+  [[$(get_link ${trail_editor_host}):8080/escenic-admin/][escenic-admin]] \
+  [[$(get_link ${trail_editor_host}):8081/solr/admin/][solr]] \
+  [[$(get_link ${trail_editor_host}):8080/studio/][studio]] \
+  [[$(get_link ${trail_editor_host}):8080/escenic/][escenic]] \
+  [[$(get_link ${trail_editor_host}):8080/webservice/][webservice]] \
 |
 EOF
-  done
+  fi
+  
+  if [ -n "${trail_import_host}" ]; then
+  cat <<EOF 
+| $(get_fqdn ${trail_import_host}) | \
+  [[$(get_link ${trail_import_host}):5678/][system-info]] \
+  [[$(get_link ${trail_import_host}):8080/escenic-admin/][escenic-admin]] \
+  [[$(get_link ${trail_import_host}):8081/solr/admin/][solr]] \
+  [[$(get_link ${trail_import_host}):8080/studio/][studio]] \
+  [[$(get_link ${trail_import_host}):8080/escenic/][escenic]] \
+  [[$(get_link ${trail_import_host}):8080/webservice/][webservice]] \
+|
+EOF
+  fi
+  
   for el in nop $trail_presentation_host_list; do
     if [[ $el == "nop" ]]; then
       continue
