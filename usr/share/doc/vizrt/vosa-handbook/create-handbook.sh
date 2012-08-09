@@ -34,6 +34,10 @@ function set_customer_specific_variables() {
   local conf_file=$(basename $0 .sh).conf
   if [ -r $conf_file  ]; then
     source $conf_file
+    host_name_list_outside_network="
+      $host_name_list_outside_network
+      ${trail_host_name_list_outside_network}
+    "
   else
     echo "No ${conf_file} found, I'm making something up ..."
     trail_presentation_host=pres1
@@ -257,8 +261,20 @@ function get_network_name() {
   fi
 }
 
+host_name_list_outside_network="
+  amazonaws.com
+"
+
 ## $1 :; the host (not FQDN)
 function get_fqdn() {
+  for el in $host_name_list_outside_network; do
+    echo "el=$el" >> /tmp/t
+    if [ $(echo $1 | grep $el | wc -l) -gt 0 ]; then
+      echo "$1"
+      return
+    fi
+  done
+  
   echo "${1}$(get_network_name)"
 }
 
