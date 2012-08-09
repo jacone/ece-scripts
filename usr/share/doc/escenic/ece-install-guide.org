@@ -63,7 +63,7 @@ ece-install.
 * Downloading the ece-install Script
 The easiest way of getting ece-install is to use git. Type this in
 your shell:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 $ git clone https://github.com/skybert/ece-scripts.git
 #+END_SRC
 
@@ -77,24 +77,24 @@ archive here: https://github.com/skybert/ece-scripts/zipball/master
 
 * Running the ece-install Script
 After getting the latest version of ece-scripts, you run it with:
-#+BEGIN_SRC sh
+#+BEGIN_SRC text
 # bash ece-scripts/usr/sbin/ece-install  
 #+END_SRC
 
 ** Requires Super User Privileges
 You must run the script as the root user.  If you start the script as
 a regular user, it will complain:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 [ece-install] You must be root when running ece-install
 #+END_SRC
 To become root on Ubuntu based systems and Mac OS X, do:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 $ sudo su
 #+END_SRC
 Please note that just doing "sudo ece-install" may not work.
 
 On all other Unix like system, do:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 $ su -
 #+END_SRC
 
@@ -103,13 +103,13 @@ You will need access to http://technet.escenic.com and put these
 credentials in the root user's $HOME/ece-install.conf, normally this
 means /root/ece-install.conf, the script will also tell you this if
 you forget to provide such a configuration file:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 [ece-install] /root/ece-install.conf doesn't exist, I cannot live without it :-(
 #+END_SRC
 
 As for the technet credentials, the script will also tell you if it
 cannot find what it's looking for:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 [ece-install] Be sure to set technet_user and technet_password
 [ece-install] in /root/ece-install.conf
 #+END_SRC
@@ -128,7 +128,7 @@ below.
 
 ** Basic invocation & how to debug errors
 With the configuration file in place, you're now ready to run it:
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 # bash ece-install [-v|--verbose|<-f|--file> <conf-file>]
 #+END_SRC
 
@@ -137,7 +137,7 @@ log file located at /var/log/ece-install.log.
 
 ece-install will try to "fail fast", exiting as soon as it detects an
 error during its execution:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 [ece-install-1] The command [cd /does/not/exist] FAILED, exiting :-(
 [ece-install-1] See /var/log/ece-install.log for further details.
 #+END_SRC
@@ -145,7 +145,7 @@ error during its execution:
 As a last resort, if something goes astray with the script, and the
 log file cannot give you enough clues, the ultimate way of debugging
 this is to run the BASH interpreter with the -x flag:
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 # bash -x ece-install
 #+END_SRC
 
@@ -159,13 +159,13 @@ ece-install has support for a lock file. This is useful for systems
 were you want to ensure that no one incidentally triggers ece-install
 without wanting to. The location of this lock file is:
 
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 /var/lock/ece-install.lock
 #+END_SRC
     
 If this lock file is in place, ece-install will fail fast:
 
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 The lock file is present: /var/lock/ece-install.lock and ece-install
 will therefore refuse to run.
 #+END_SRC
@@ -173,7 +173,7 @@ will therefore refuse to run.
 * Available Server Profiles
 When starting the script, it will ask you which server profile you
 want to install:
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 Hi, which server profile do you wish to install?
 
    1 - All in one, full stack on one host, suitable for dev & test environments
@@ -257,7 +257,7 @@ Escenic components and install the ECE database schema based from the
 SQL files contained inside the distribution bundles. 
 
 The script will fail by itself if the DB already exists:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 [ece-install] Setting up the ECE database schema ...
 ERROR 1007 (HY000) at line 1: Can't create database 'ece5db'; database exists
 ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already exists
@@ -283,7 +283,7 @@ fai_db_replication=1
 
 The script will itself output some replication log settings you need
 for the slave:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 [ece-install-35] - DB is now set up on localhost:3306
 [ece-install-35] - ece-install.conf for slave: fai_db_master_log_file=mysql-bin.000013
 [ece-install-35] - ece-install.conf for slave: fai_db_master_log_position=106
@@ -349,7 +349,7 @@ these, please contact support@escenic.com.
 
 If you don't have these ready in your ece-install.conf, ece-install will
 complain:
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 [ece-install] Be sure to set wf_user and wf_password in /root/ece-install.conf
 [ece-install] If you don't have these, please contact support@escenic.com
 #+END_SRC
@@ -370,7 +370,7 @@ monitoring the different nodes.
 
 ** Profile :: Restoring from backup
 ece-install can restore from a backup made by the ece script:
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 $ ece -i <instance> backup
 #+END_SRC
 
@@ -474,10 +474,8 @@ Your choice [1]>
 #+END_SRC
 
 The ece script mentioned above will create backups in
-#+BEGIN_SRC conf
-/var/backups/escenic
-#+END_SRC
-and the ece-install script will hence expect to find them here.
+~/var/backups/escenic~ and the ece-install script will hence expect to
+find them here.
 
 *** Choose What to Restore
 #+BEGIN_SRC text
@@ -511,7 +509,7 @@ restore from:
 | ~fai_restore_data_files~        |       0 | Restore the Solr & ECE data files                  |
 | ~fai_restore_configuration~     |       0 | Restore the Solr & ECE configuration files         |
 | ~fai_restore_software_binaries~ |       0 | Restore the Escenic and Apache Tomcat software     |
-| ~fai_restore_from_file~         |      "" | The .tar.gz produced by "ece -i <instance> backup" |
+| ~fai_restore_from_file~         |      "" | The .tar.gz produced by ~ece -i <instance> backup~ |
 |---------------------------------+---------+----------------------------------------------------|
 
 For example, to restore everything possible from a given tarball, you
@@ -552,12 +550,12 @@ fai_editor_install
 
 When running in FAI mode, you probably want to redirect standard
 output to a log file for easy reading later on:
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 # bash ece-install > ece-install.out &
 #+END_SRC
 
 Alternatively, you may do:
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 # nohup bash ece-install > ece-install.out &
 #+END_SRC
 The "nohup" at the beginning and the ampersand at the end lets you log
@@ -570,7 +568,7 @@ configuration archive instead of using the files provided with the
 Escenic Content Engine & plugins.
 
 The EAR to provide is the one you generate with:
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 $ ece -i <instance> assemble 
 #+END_SRC
 Normally, the EAR will then be available in:
@@ -579,7 +577,7 @@ Normally, the EAR will then be available in:
 #+END_SRC
 
 The configuration bundle must contain:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 engine/security
 engine/siteconfig/bootstrap-skeleton
 engine/siteconfig/config-skeleton
@@ -587,14 +585,14 @@ assemblytool/plugins/<plugin>/siteconfig
 #+END_SRC
 
 and optionally also:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 engine/solr/conf
 #+END_SRC
 
 A simple way to create this bundle, is to use a server which has the
 assembly environment set up and then do:
 
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 $ cd /opt/escenic
 $ tar czf /tmp/nursery-skeleton-solr-and-security.tar.gz \
   engine/security \
@@ -804,7 +802,7 @@ whereas the second one needs to override these.
 
 ** Verifying That the Script Is Running In FAI Mode
 When FAI is enabled, ece-install will report:
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 [ece-install] Full Automatic Install (FAI) enabled.
 [ece-install] All user input will be read from /root/ece-install.conf
 #+END_SRC
@@ -812,7 +810,7 @@ When FAI is enabled, ece-install will report:
 * Running More Than One Installation Process
 If the script believes there's already an ece-intall process running,
 it will abort:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 [ece-install] There's already one ece-install process running. If you believe
 [ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
 [ece-install] before it completed, you may delete /var/run/ece-install.pid and
@@ -849,7 +847,7 @@ bundle, see the FAI section.
 
 * Using a Custom Configuration File for ece-install
 You can specify a different configuration by using the -f parameter: 
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 $ ece-install -f ece-install-presentation-server.conf
 #+END_SRC
 
@@ -857,35 +855,35 @@ $ ece-install -f ece-install-presentation-server.conf
 There are of course other paths involved when setting up your system,
 but these should be the most interesting ones.
 
-|---------------------------------------------+------------------------------------------------------------------|
-| Path                                        | Explanation                                                      |
-|---------------------------------------------+------------------------------------------------------------------|
-| /etc/apt/sources.list.d/escenic.list        | 3rd party APT repositories added by ece-install *)               |
-| /etc/default/ece                            | The configuration file for the ece init.d script                 |
-| /etc/escenic/ece-<instance>.conf            | Instance specific settings for /usr/bin/ece                      |
-| /etc/escenic/ece.conf                       | Common ece.conf file for /usr/bin/ece                            |
-| /etc/escenic/engine/common                  | Common Nursery configuration layer                               |
-| /etc/escenic/engine/common/security         | Common security configuration for all ECE instances.             |
-| /etc/escenic/engine/common/trace.properties | Log4j configuration, produces instance specific log files.       |
-| /etc/escenic/engine/instance/<instance>     | Instance specific Nursery configuration                          |
-| /etc/escenic/solr                           | ECE specific Solr configuration                                  |
-| /etc/init.d/mysql[d]                        | For starting and stopping MySQL/Percona                          |
-| /etc/init.d/varnish                         | For starting and stopping Varnish                                |
-| /etc/intit.d/ece                            | The init.d script managing _all_ the ECE instances on your host. |
-| /etc/varnish/default.vcl                    | The Varnish configuration                                        |
-| /opt/escenic                                | All ECE components can be found here                             |
-| /opt/escenic/assemblytool                   | The assembly tool                                                |
-| /opt/escenic/assemblytool/plugins           | Contains symlinks to all plugins in /opt/escenic                 |
-| /opt/escenic/engine                         | Symlink pointing to the current ECE                              |
-| /opt/tomcat                                 | Symlink pointing to the install Apache Tomcat (catalina_home)   |
-| /opt/tomcat-<instance>                      | Instance specific Tomcat files (catalina_base)                  |
-| /usr/bin/ece                                | Script for operating all ECE instances + RMI hub and EAE         |
-| /usr/sbin/ece-install                       | The installation script described in this guide                  |
-| /var/log/escenic/<type>-<instance>.log      | The instance's log4j  log                                        |
-| /var/log/escenic/<type>-<instance>.out      | The instance system out log                                      |
-| /var/log/escenic/solr.<date>.log            | The Solr log (not in standard out!)                              |
-| /var/run/escenic/<type>-<instance>.pid      | The instance's  PID file                                         |
-|---------------------------------------------+------------------------------------------------------------------|
+|-----------------------------------------------+------------------------------------------------------------------|
+| Path                                          | Explanation                                                      |
+|-----------------------------------------------+------------------------------------------------------------------|
+| ~/etc/apt/sources.list.d/escenic.list~        | 3rd party APT repositories added by ece-install *)               |
+| ~/etc/default/ece~                            | The configuration file for the ece init.d script                 |
+| ~/etc/escenic/ece-<instance>.conf~            | Instance specific settings for ~/usr/bin/ece~                    |
+| ~/etc/escenic/ece.conf~                       | Common ece.conf file for ~/usr/bin/ece~                          |
+| ~/etc/escenic/engine/common~                  | Common Nursery configuration layer                               |
+| ~/etc/escenic/engine/common/security~         | Common security configuration for all ECE instances.             |
+| ~/etc/escenic/engine/common/trace.properties~ | Log4j configuration, produces instance specific log files.       |
+| ~/etc/escenic/engine/instance/<instance>~     | Instance specific Nursery configuration                          |
+| ~/etc/escenic/solr~                           | ECE specific Solr configuration                                  |
+| ~/etc/init.d/mysql[d]~                        | For starting and stopping MySQL/Percona                          |
+| ~/etc/init.d/varnish~                         | For starting and stopping Varnish                                |
+| ~/etc/intit.d/ece~                            | The init.d script managing _all_ the ECE instances on your host. |
+| ~/etc/varnish/default.vcl~                    | The Varnish configuration                                        |
+| ~/opt/escenic~                                | All ECE components can be found here                             |
+| ~/opt/escenic/assemblytool~                   | The assembly tool                                                |
+| ~/opt/escenic/assemblytool/plugins~           | Contains symlinks to all plugins in ~/opt/escenic~               |
+| ~/opt/escenic/engine~                         | Symlink pointing to the current ECE                              |
+| ~/opt/tomcat~                                 | Symlink pointing to the install Apache Tomcat (~catalina_home~)  |
+| ~/opt/tomcat-<instance>~                      | Instance specific Tomcat files (~catalina_base~)                 |
+| ~/usr/bin/ece~                                | Script for operating all ECE instances + RMI hub and EAE         |
+| ~/usr/sbin/ece-install~                       | The installation script described in this guide                  |
+| ~/var/log/escenic/<type>-<instance>.log~      | The instance's log4j log                                         |
+| ~/var/log/escenic/<type>-<instance>.out~      | The instance system out log                                      |
+| ~/var/log/escenic/solr.<date>.log~            | The Solr log (not in standard out!)                              |
+| ~/var/run/escenic/<type>-<instance>.pid~      | The instance's  PID file                                         |
+|-----------------------------------------------+------------------------------------------------------------------|
 
 *) Applies only to Debian based systems.
 
@@ -918,13 +916,13 @@ ece-install  has a number of hooks on which you can hook on your own
 scripts. The scripts are to reside in $HOME/ece-conf.d/ and have names
 inspired by Debian's package scripts:
 
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 <hook name>.<phase>
 #+END_SRC
 
 e.g.:
 
-#+BEGIN_SRC conf
+#+BEGIN_SRC text
 install_analysis_server.preinst
 #+END_SRC
 
@@ -952,7 +950,7 @@ echo "Hello from $0, EAE is installed in ${tomcat_base}" > /tmp/hello.txt
 ** Available hooks
 Currently, the following hooks are available:
 
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 install_analysis_server.preinst
 install_analysis_server.postinst
 set_up_solr.preinst
@@ -996,7 +994,7 @@ fai_presentation_install=1
 #+END_SRC
 
 The output will be similar to:
-#+BEGIN_SRC fundamental
+#+BEGIN_SRC text
 [ece-install-5] You have set fai_un_install_everything=1 in your /root/ece-install.conf
 [ece-install-5] This will uninstall the following on raven:
 [ece-install-5] Packages to be removed: ant ant-contrib ant-optional escenic-content-engine-scripts escenic-munin-plugins escenic-munin-plugins libmysql-java maven2 memcached munin munin-node munin-plugins-extra munin-java-extra nginx percona-server-client percona-server-client-5.5 percona-server-common-5.5 percona-server-server percona-server-server-5.5 varnish sun-java6-jdk
