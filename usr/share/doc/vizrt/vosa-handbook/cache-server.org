@@ -1,0 +1,42 @@
+* Cache server
+
+The habitat uses Varnish caching servers. Caching servers are
+sometimes referred to as reverse proxies (as opposed to normal proxies
+such as Squid, which cache an office's web site traffic Squid) 
+
+The Varnish caches are set up to do several tasks to make your web
+site really fast and secure.
+
+** Caching
+This is the obvious task of any caching server and per default, the
+Varnish caches will cache static content like pictures, flash, CSS and
+JS for you.
+
+** Security
+The Varnish caches are set up to protect the following services in
+your habitat:
+
+|----------------+------------------------------------|
+| URI            | What                               |
+|----------------+------------------------------------|
+| /escenic       | Web Studio                         |
+| /escenic-admin | Escenic Admin                      |
+| /studio        | Content Studio                     |
+| /webservice    | Escenic Content Engine Web service |
+| /munin         | The Munin overview                 |
+| /binary        | The Adactus access point           |
+|----------------+------------------------------------|
+
+** Useful features for debugging
+Varnish in your habitat will add the following HTTP headers to add you
+in your debugging of the web site:
+
+|------------------------+--------------------------------------------------------------------------------------|
+| Example                | Explanation                                                                          |
+|------------------------+--------------------------------------------------------------------------------------|
+| X-Cache-Backend: pres2 | Which backend the cache used                                                         |
+| X-Cache: HIT #68/80s   | If the requested URI's content was found in cache, and how old it has been in cache. |
+|------------------------+--------------------------------------------------------------------------------------|
+
+
+#+INCLUDE: "generated-cache-server.org"
