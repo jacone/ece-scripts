@@ -117,7 +117,7 @@ function set_up_escenic-content-engine-scripts() {
   cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
 
   # doc
-  cp -r ../../doc/escenic/ece-guide.{org,html} \
+  cp -r ../../doc/escenic/ece-guide.org \
     $target_dir/usr/share/doc/escenic
 
   # cron
@@ -153,7 +153,7 @@ function set_up_escenic-common-scripts() {
   cp -r ../../escenic/ece-scripts/system-info.d \
     $target_dir/usr/share/escenic/ece-scripts/
   cp ../../../../etc/default/system-info $target_dir/etc/default/
-  cp -r ../../doc/escenic/system-info-guide.{org,html} \
+  cp -r ../../doc/escenic/system-info-guide.org \
     $target_dir/usr/share/doc/escenic
   
   # both the installer and ece-scripts use the common scripts and
