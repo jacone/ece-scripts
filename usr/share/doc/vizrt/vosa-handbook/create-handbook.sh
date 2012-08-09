@@ -236,8 +236,6 @@ blockdiag {
   internet [ shape = "cloud" ];
 $(get_blockdiag_defs)
 
-$(get_blockdiag_groups)
-
 $(get_blockdiag_call_flow)
 }
 EOF
