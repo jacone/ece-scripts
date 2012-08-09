@@ -218,4 +218,5 @@ EOF
 function leave_cache_trails() {
   leave_trail "trail_cache_host=${HOSTNAME}"
   leave_trail "trail_cache_port=${cache_port}"
+  leave_trail "trail_backend_servers=$backend_servers"
 }
