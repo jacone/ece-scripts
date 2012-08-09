@@ -39,6 +39,6 @@ my-control-server.
 #+BEGIN_SRC sh
 $ for el in my-presentation-server my-editorial-server my-import-server my-monitoring-server my-stats-server; do \
       echo "Now upgrading $el";
-      ssh yum update; 
+      ssh $el yum update; 
   done
 #+END_SRC
