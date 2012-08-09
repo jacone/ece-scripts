@@ -158,10 +158,12 @@ function get_blockdiag_call_flow() {
   echo " " ${lb_call_flow} | sed 's/,$/;/g'
   
   if [ -n "$trail_editor_host" ]; then
-    echo "  journalist -> $trail_editor_host;"
+    echo "  journalist -> $trail_editor_host" \
+      '[ label = "writes" ];'
   fi
   if [ -n "$trail_import_host" ]; then
-    echo "  import-feeds -> $trail_import_host;"
+    echo "  xml-feeds -> $trail_import_host" \
+      '[ label = "imports" ];'
   fi
   
   # ECEs
