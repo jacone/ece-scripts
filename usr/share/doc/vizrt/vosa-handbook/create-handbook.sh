@@ -74,7 +74,7 @@ function set_customer_specific_variables() {
     my-db-server~${trail_db_master_host-db1}
     my-db-slave~${trail_db_slave_host-db2}
     my-db-vendor~${trail_db_vendor-mysql}
-    my-db-vip-interface~${trail_db_vip_interface}
+    my-db-vip-interface~${trail_db_vip_interface-eth0:0}
     my-db-vip-ip~${trail_db_vip_ip}
     my-db-vip-netmask~${trail_db_vip_netmask-255.255.255.0}
     my-db-vip~${trail_db_vip_host-db-vip}
