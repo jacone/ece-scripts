@@ -585,4 +585,6 @@ EOF
 
   run chmod 700 $file
   add_next_step "Daily backup of the $db_schema DB is provided by $file"
+
+  leave_trail "trail_db_daily_backup_host=${HOSTNAME}"
 }
