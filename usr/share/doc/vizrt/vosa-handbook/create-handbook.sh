@@ -60,13 +60,9 @@ function set_customer_specific_variables() {
     )
   fi
 
-  if [ -n "$trail_network_name" ]; then
-    network_name="."${trail_network_name}
-  fi
-  
   customer_filter_map="
     my-backup-dir~${trail_escenic_backups_dir}
-    my-network~${network_name}
+    my-network~$(get_network_name)
     my-build-server~${trail_builder_host-builder}
     my-build-user~${trail_builder_user-buildy}
     my-control-server~${trail_control_host-control}
@@ -252,7 +248,7 @@ function generate_html_from_org() {
 }
 
 function get_network_name() {
-  if [ -n $trail_network_name ]; then
+  if [ -n "$trail_network_name" ]; then
     echo ".${trail_network_name}"
   else
     echo ""
