@@ -4,7 +4,9 @@
 
 handbook_org=vosa-handbook.org
 target_dir=/tmp/$(basename $0 .sh)-$(date --iso)
-
+host_name_list_outside_network="
+  amazonaws.com
+"
 $(which blockdiag >/dev/null) || {
   cat <<EOF
 You must have blockdiag installed. On Debian & Ubuntu the package is
@@ -38,12 +40,6 @@ function set_customer_specific_variables() {
       $host_name_list_outside_network
       ${trail_host_name_list_outside_network}
     "
-  else
-    echo "No ${conf_file} found, I'm making something up ..."
-    trail_presentation_host=pres1
-    trail_presentation_host_list=$trail_presentation_host
-    trail_db_master_host=db1
-    trail_nfs_master_host=nfs1
   fi
 
   local virtual_host_key_prefix="trail_virtual_host_"
@@ -70,14 +66,33 @@ function set_customer_specific_variables() {
   expand_all_variables_in_org_files
 }
 
-function expand_all_variables_in_org_files() {
-  # add crucial defaults if the trails aren't set
-  trail_db_vip_ip=${trail_db_vip_ip-192.168.1.200}
+function set_defaults_if_the_trails_are_not_set() {
+  trail_analysis_host=${trail_analysis_host-analysis1}
+  trail_builder_host=${trail_builder_host-builder1}
+  trail_builder_user=${trail_builder_user-buildy}
+  trail_control_host=${trail_control_host-control}
+  trail_db_master_host=${trail_db_master_host-db1}
+  trail_db_schema=${trail_db_schema-ecedb}
+  trail_db_vendor=${trail_db_vendor-mysql}
   trail_db_vip_interface=${trail_db_vip_interface-eth0:0}
-  trail_nfs_export_list=${trail_nfs_export_list-/var/exports/multimedia}
+  trail_db_vip_ip=${trail_db_vip_ip-192.168.1.200}
+  trail_editor_host=${trail_editor_host-edit1}
+  trail_editor_port=${trail_editor_port-8080}
+  trail_import_host=${trail_import_host-edit2}
+  trail_import_port=${trail_import_port-8080}
+  trail_searh_port=${trail_search_port-8081}
+  trail_monitoring_host=${trail_monitoring_host-mon}
+  trail_network_name=$(get_network_name)
   trail_nfs_client_mount_point_parent=${trail_nfs_client_mount_point_parent-/mnt}
-  
-  # replace
+  trail_nfs_export_list=${trail_nfs_export_list-/var/exports/multimedia}
+  trail_nfs_master_host=${trail_nfs_master_host-nfs1}
+  trail_presentation_host=${trail_presentation_host-pres1}
+  trail_presentation_host_list=${trail_presentation_host-pres1}
+}
+
+function expand_all_variables_in_org_files() {
+  set_defaults_if_the_trails_are_not_set
+
   declare | grep ^trail_ | while read el; do
     local old_ifs=$IFS
     IFS='='
@@ -149,16 +164,14 @@ function get_blockdiag_groups() {
 }
 
 function get_blockdiag_call_flow() {
-
   # from the internet and to the ECEs
   local lb_call_flow="internet ->"
   if [ -n "$trail_lb_host" ]; then
     lb_call_flow="$lb_call_flow $trail_lb_host ->"
   fi
-  for el in $trail_presentation_host_list; do
+  for el in "$trail_presentation_host_list"; do
     lb_call_flow="$lb_call_flow ${el},"
   done
-  echo " " ${lb_call_flow} | sed 's/,$/;/g'
   
   if [ -n "$trail_editor_host" ]; then
     echo "  journalist -> $trail_editor_host" \
@@ -257,10 +270,6 @@ function get_network_name() {
     echo ""
   fi
 }
-
-host_name_list_outside_network="
-  amazonaws.com
-"
 
 ## $1 :; the host (not FQDN)
 function get_fqdn() {
@@ -398,12 +407,14 @@ EOF
       local appserver_host=$(echo $el | cut -d':' -f1)
       local appserver_port=$(echo $el | cut -d':' -f2)
       cat >> $file <<EOF
-  varnish -> "${appserver_host}:${appserver_port}";
+  "${appserver_host}:${appserver_port}" [ color = "orange" ];
+  "varnish:${trail_cache_port-80} -> "${appserver_host}:${appserver_port}";
 EOF
     done
   else
     cat >> $file <<EOF
-  varnish -> "tomcat:8080";
+  "tomcat:8080" [ color = "orange" ];
+  "varnish:${trail_cache_port-80}" -> "tomcat:8080";
 EOF
   fi
   echo "}" >> $file
@@ -510,6 +521,12 @@ function generate_content_engine_org() {
   generate_content_engine_diagram
 }
 
+function generate_backup_org() {
+  if [ -n "${trail_db_daily_backup_host}" ]; then
+    run cat $target_dir/backups-db.org >> $target_dir/backups.org
+  fi
+}
+
 set_up_build_directory
 set_customer_specific_variables
 generate_architecture_diagram
@@ -518,6 +535,7 @@ generate_content_engine_org
 generate_cache_server_org
 generate_db_org
 generate_nfs_org
+generate_backup_org
 generate_html_from_org
 generate_svg_from_blockdiag
 
