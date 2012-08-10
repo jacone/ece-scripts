@@ -304,14 +304,17 @@ EOF
   fi
 
   if [ -n "${trail_editor_host}" ]; then
-  cat <<EOF 
+    local ece_url="$(get_link ${trail_editor_host}):${trail_editor_port-8080}"
+    cat <<EOF 
 | $(get_fqdn ${trail_editor_host}) | \
   [[$(get_link ${trail_editor_host}):5678/][system-info]] \
-  [[$(get_link ${trail_editor_host}):${trail_editor_port-8080}/escenic-admin/][escenic-admin]] \
-  [[$(get_link ${trail_editor_host}):${trail_editor_port-8080}/solr/admin/][solr]] \
-  [[$(get_link ${trail_editor_host}):${trail_editor_port-8080}/studio/][studio]] \
-  [[$(get_link ${trail_editor_host}):${trail_editor_port-8080}/escenic/][escenic]] \
-  [[$(get_link ${trail_editor_host}):${trail_editor_port-8080}/webservice/][webservice]] \
+  [[${ece_url}/escenic-admin/][escenic-admin]] \
+  [[${ece_url}/solr/admin/][solr]] \
+  [[${ece_url}/studio/][studio]] \
+  [[${ece_url}/escenic/][escenic]] \
+  [[${ece_url}/webservice/][webservice]] \
+  [[${ece_url}/escenic-admin/browser/Webapp%20ECE%20Webservice%20Webapp/com/escenic/servlet/filter/cache/AuthenticationFilterCache][logged in users]] \
+
 |
 EOF
   fi
