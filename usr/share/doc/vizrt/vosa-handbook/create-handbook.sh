@@ -98,9 +98,6 @@ function expand_all_variables_in_org_files() {
     IFS='='
     read key value <<< "$el"
     IFS=$old_ifs
-    if [ -z "$value" ]; then
-      continue
-    fi
     find $target_dir -name "*.org" | while read f; do
       sed -i "s~<%=[ ]*${key}[ ]*%>~${value}~g" ${f}
     done
@@ -110,6 +107,10 @@ function expand_all_variables_in_org_files() {
 function set_up_build_directory() {
   run mkdir -p $target_dir/graphics
   run cp *.org $target_dir
+  if [ -d $(pwd)/customer ]; then
+    echo "Copying customer specific files & overrides"
+    cp -r $(pwd)/customer $target_dir 
+  fi
 }
 
 function get_blockdiag_defs() {
@@ -527,6 +528,19 @@ function generate_backup_org() {
   fi
 }
 
+function add_customer_chapters() {
+  if [ -e $target_dir/customer/extra-chapters/*.org ]; then
+    (
+      cd $target_dir
+      for el in customer/extra-chapters/*.org; do
+        cat >> vosa-handbook.org <<EOF
+#+INCLUDE "$el"
+EOF
+      done
+    )
+  fi
+}
+
 set_up_build_directory
 set_customer_specific_variables
 generate_architecture_diagram
@@ -536,6 +550,7 @@ generate_cache_server_org
 generate_db_org
 generate_nfs_org
 generate_backup_org
+add_customer_chapters
 generate_html_from_org
 generate_svg_from_blockdiag
 
