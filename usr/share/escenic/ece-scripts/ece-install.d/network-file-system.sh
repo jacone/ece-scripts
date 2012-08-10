@@ -15,6 +15,9 @@ function get_nfs_configuration() {
   elif [ $install_profile_number -eq $PROFILE_NFS_CLIENT ]; then
     ensure_variable_is_set fai_nfs_server_address
   fi
+
+  leave_trail "trail_nfs_export_list=$nfs_export_list"
+  leave_trail "trail_nfs_client_mount_point_parent=$nfs_client_mount_point_parent"
 }
 
 function install_nfs_server() {
@@ -87,7 +90,7 @@ function install_nfs_client() {
     if [ $(grep "$entry" $file | wc -l) -lt 1 ]; then
       cat >> $file <<EOF
 # added by $(basename $0) @ $(date)
-${nfs_server_address}:$el ${nfs_client_mount_point_parent}/$(basename $el) nfs defaults 0 0
+${nfs_server_address}:$el ${nfs_client_mount_point_parent}/$(basename $el) nfs ${nfs_fstab_options} 0 0
 EOF
     fi
 
