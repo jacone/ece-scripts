@@ -40,7 +40,7 @@ function set_up_percona_repository_if_possible() {
         # see comment below.
         gpg --keyserver hkp://keys.gnupg.net:80 \
           --recv-keys 1C4CBDCDCD2EFD2A \
-          1>> /dev/null 2>> /dev/null
+          1>>$log 2>>$log
 
         # There has been three times now, during six months, that the
         # key cannot be retrieved from keys.gnupg.net. Therefore,
