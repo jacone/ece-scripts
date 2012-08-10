@@ -62,45 +62,32 @@ function set_customer_specific_variables() {
         cut -d'=' -f2 | \
         cut -d':' -f1
     )
+    trail_publication_name=$first_publication
+    trail_webapp_name=$first_publication
+    trail_website_name=$first_website
   fi
 
-  customer_filter_map="
-    my-backup-dir~${trail_escenic_backups_dir}
-    my-build-server~${trail_builder_host-builder}
-    my-build-user~${trail_builder_user-buildy}
-    my-control-server~${trail_control_host-control}
-    my-db-backup-host~${trail_db_daily_backup_host}
-    my-db-master~${trail_db_master_host-db1}
-    my-db-server~${trail_db_master_host-db1}
-    my-db-slave~${trail_db_slave_host-db2}
-    my-db-vendor~${trail_db_vendor-mysql}
-    my-db-vip-interface~${trail_db_vip_interface-eth0:0}
-    my-db-vip-ip~${trail_db_vip_ip}
-    my-db-vip-netmask~${trail_db_vip_netmask-255.255.255.0}
-    my-db-vip~${trail_db_vip_host-db-vip}
-    my-db~${trail_db_schema-mydb}
-    my-editorial-server~${trail_editor_host-edit1}
-    my-import-server~${trail_import_host-edit2}
-    my-monitoring-server~${trail_monitoring_host-mon}
-    my-network~$(get_network_name)
-    my-nfs-server~${trail_nfs_master_host-nfs1}
-    my-presentation-server~${trail_presentation_host-pres1}
-    my-publication~${first_publication}
-    my-stats-server~${trail_analysis_host-analysis}
-    my-webapp~${first_publication}
-    my-webapp~${first_publication}
-    my-website~${first_website}
-  "
-  for el in $customer_filter_map; do
+  expand_all_variables_in_org_files
+}
+
+function expand_all_variables_in_org_files() {
+  # add crucial defaults if the trails aren't set
+  trail_db_vip_ip=${trail_db_vip_ip-192.168.1.200}
+  trail_db_vip_interface=${trail_db_vip_interface-eth0:0}
+  trail_nfs_export_list=${trail_nfs_export_list-/var/exports/multimedia}
+  trail_nfs_client_mount_point_parent=${trail_nfs_client_mount_point_parent-/mnt}
+  
+  # replace
+  declare | grep ^trail_ | while read el; do
     local old_ifs=$IFS
-    IFS='~'
-    read from to <<< "$el"
+    IFS='='
+    read key value <<< "$el"
     IFS=$old_ifs
-    if [ -z "$to" ]; then
+    if [ -z "$value" ]; then
       continue
     fi
     find $target_dir -name "*.org" | while read f; do
-      run sed -i "s~<%=[ ]*${from}[ ]*%>~${to}~g" ${f}
+      sed -i "s~<%=[ ]*${key}[ ]*%>~${value}~g" ${f}
     done
   done
 }
@@ -437,7 +424,7 @@ The cache server on $trail_cache_host is available on
 $(get_link ${trail_cache_host}):${trail_cache_port-80}
 
 #+ATTR_HTML: alt="Cache server on $trail_cache_host"
-[[[[graphics/${trail_cache_host}-cache.svg]]
+[[./graphics/${trail_cache_host}-cache.svg]]
 EOF
 }
 
@@ -484,12 +471,50 @@ function generate_db_org() {
   fi
 }
 
+function generate_nfs_org() {
+  if [[ -n "${trail_nfs_master_host}" && -n "${trail_nfs_slave_host}" ]]; then
+    run cat $target_dir/network-file-system-sync.org >> \
+      $target_dir/network-file-system.org
+  fi
+}
+
+function generate_content_engine_diagram() {
+  local file=$target_dir/graphics/content-engine.blockdiag
+  local the_db="${trail_db_vendor-mysql}:${trail_db_master_port-${trail_db_port-3306}}"
+  
+  cat > $file <<EOF
+blockdiag {
+
+  "content-engine" [ color = "orange" ];
+  "${the_db}" [shape = "flowchart.database" ];
+  "content-engine" -> "memcached:11211";
+  "content-engine" -> "${the_db}";
+  "content-engine" -> "${trail_nfs_vip_host-${trail_nfs_master_host-${trail_nfs_host}}}:2049";
+EOF
+
+  if [ -n "${trail_analysis_host}" ]; then
+    cat >> $file <<EOF
+  "content-engine" -> "${trail_analysis_host}:${trail_analysis_port-8080}";
+EOF
+  fi
+  
+  cat >> $file <<EOF
+}
+EOF
+}
+
+function generate_content_engine_org() {
+  generate_content_engine_diagram
+}
+
 set_up_build_directory
 set_customer_specific_variables
 generate_architecture_diagram
 generate_overview_org
+generate_content_engine_org
 generate_cache_server_org
 generate_db_org
+generate_nfs_org
 generate_html_from_org
 generate_svg_from_blockdiag
 

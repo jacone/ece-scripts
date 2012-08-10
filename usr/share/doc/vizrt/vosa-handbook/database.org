@@ -1,6 +1,6 @@
 * Database
 
-A <%= my-db-vendor %> DB has been installed in your habitat.
+A <%= trail_db_vendor %> DB has been installed in your habitat.
 
 [[./graphics/db.svg]]
 

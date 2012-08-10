@@ -1,0 +1,4 @@
+** Syncing the Master & Slave NFS
+
+The NFS slave on <%= trail_nfs_slave_host %> replicates the master NFS
+on <%= trail_nfs_master_host %> using an ourly cron job.
