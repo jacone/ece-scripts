@@ -304,16 +304,16 @@ EOF
   fi
 
   if [ -n "${trail_editor_host}" ]; then
-    local ece_url="$(get_link ${trail_editor_host}):${trail_editor_port-8080}"
+    local ece_url="$(get_link ${trail_editor_host})"
     cat <<EOF 
 | $(get_fqdn ${trail_editor_host}) | \
   [[$(get_link ${trail_editor_host}):5678/][system-info]] \
-  [[${ece_url}/escenic-admin/][escenic-admin]] \
-  [[${ece_url}/solr/admin/][solr]] \
-  [[${ece_url}/studio/][studio]] \
-  [[${ece_url}/escenic/][escenic]] \
-  [[${ece_url}/webservice/][webservice]] \
-  [[${ece_url}/escenic-admin/browser/Webapp%20ECE%20Webservice%20Webapp/com/escenic/servlet/filter/cache/AuthenticationFilterCache][logged in users]] \
+  [[${ece_url}:${trail_editor_port-8080}/escenic-admin/][escenic-admin]] \
+  [[${ece_url}:${trail_search_port-8081}/solr/admin/][solr]] \
+  [[${ece_url}:${trail_editor_port-8080}/studio/][studio]] \
+  [[${ece_url}:${trail_editor_port-8080}/escenic/][escenic]] \
+  [[${ece_url}:${trail_editor_port-8080}/webservice/][webservice]] \
+  [[${ece_url}:${trail_editor_port-8080}/escenic-admin/browser/Webapp%20ECE%20Webservice%20Webapp/com/escenic/servlet/filter/cache/AuthenticationFilterCache][logged in users]] \
 
 |
 EOF
@@ -324,7 +324,7 @@ EOF
 | $(get_fqdn ${trail_import_host}) | \
   [[$(get_link ${trail_import_host}):5678/][system-info]] \
   [[$(get_link ${trail_import_host}):${trail_import_port}/escenic-admin/][escenic-admin]] \
-  [[$(get_link ${trail_import_host}):${trail_import_port}/solr/admin/][solr]] \
+  [[$(get_link ${trail_import_host}):${trail_search_port-8081}/solr/admin/][solr]] \
   [[$(get_link ${trail_import_host}):${trail_import_port}/studio/][studio]] \
   [[$(get_link ${trail_import_host}):${trail_import_port}/escenic/][escenic]] \
   [[$(get_link ${trail_import_host}):${trail_import_port}/webservice/][webservice]] \
