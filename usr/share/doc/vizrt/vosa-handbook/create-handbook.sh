@@ -82,7 +82,8 @@ function set_defaults_if_the_trails_are_not_set() {
   trail_import_port=${trail_import_port-8080}
   trail_searh_port=${trail_search_port-8081}
   trail_monitoring_host=${trail_monitoring_host-mon}
-  trail_network_name=$(get_network_name)
+  trail_network_name=${trail_network_name}
+  trail_dot_network_name=$(get_network_name)
   trail_nfs_client_mount_point_parent=${trail_nfs_client_mount_point_parent-/mnt}
   trail_nfs_export_list=${trail_nfs_export_list-/var/exports/multimedia}
   trail_nfs_master_host=${trail_nfs_master_host-nfs1}
@@ -409,7 +410,7 @@ EOF
       local appserver_port=$(echo $el | cut -d':' -f2)
       cat >> $file <<EOF
   "${appserver_host}:${appserver_port}" [ color = "orange" ];
-  "varnish:${trail_cache_port-80} -> "${appserver_host}:${appserver_port}";
+  "varnish:${trail_cache_port-80}" -> "${appserver_host}:${appserver_port}";
 EOF
     done
   else
@@ -488,7 +489,19 @@ function generate_db_org() {
 
 function generate_nfs_org() {
   if [[ -n "${trail_nfs_master_host}" && -n "${trail_nfs_slave_host}" ]]; then
-    run cat $target_dir/network-file-system-sync.org >> \
+    local blockdiag_file=$target_dir/graphics/network-file-system-sync.blockdiag
+    cat > $blockdiag_file <<EOF
+blockdiag {
+  "${trail_nfs_master_host}";
+  "${trail_nfs_slave_host}";
+  "${trail_nfs_slave_host}" -> "${trail_nfs_master_host}" [label = "reads"];
+}
+EOF
+    local file=$target_dir/network-file-system-sync.org
+    cat >> $file <<EOF
+[[./graphics/$(basename $blockdiag_file .blockdiag).svg]]
+EOF
+    run cat $file >> \
       $target_dir/network-file-system.org
   fi
 }
@@ -529,7 +542,7 @@ function generate_backup_org() {
 }
 
 function add_customer_chapters() {
-  if [ -e $target_dir/customer/extra-chapters/*.org ]; then
+  if [ $(ls $target_dir/customer/extra-chapters/ | grep .org$ | wc -l) -gt 0 ]; then
     (
       cd $target_dir
       for el in customer/extra-chapters/*.org; do
@@ -541,10 +554,18 @@ EOF
   fi
 }
 
+function generate_ssh_access_org() {
+  if [[ -n "${trail_gk_host}" && -n "${trail_control_host}" ]]; then
+    run cat $target_dir/ssh-access.org >> $target_dir/vosa-handbook.org
+  fi
+  
+}
+
 set_up_build_directory
 set_customer_specific_variables
 generate_architecture_diagram
 generate_overview_org
+generate_ssh_access_org
 generate_content_engine_org
 generate_cache_server_org
 generate_db_org

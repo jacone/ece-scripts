@@ -1,8 +1,8 @@
 * Network File System
 
 ** NFS server
-<%= trail_nfs_master_host %>  has these network file shares: ~<%=
-trail_nfs_export_list %>~ These file share(s) are made available using
+<%= trail_nfs_master_host %>  has these network file shares: 
+~<%= trail_nfs_export_list %>~ These file share(s) are made available using
 NFS.
 
 ** NFS clients
@@ -11,5 +11,5 @@ have these shares mounted. The most important one is the one holding
 the multimedia archive of Escenic Content Engine. Typically, this
 share is called ~multimedia~. 
 
-In your habitat, all the shares from <%= trail_nfs_export_list %> are
-mounted on <%= trail_nfs_client_mount_point_parent %>.
+In your habitat, all the shares from ~<%= trail_nfs_export_list %>~ are
+mounted on ~<%= trail_nfs_client_mount_point_parent %>~.

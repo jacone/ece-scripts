@@ -17,7 +17,7 @@ For instance, let's say you're upgrading the search server for
 <%= trail_import_host %>'s search instance.
 
 First, go to:
-http://<%= trail_editor_host %>:<%= trail_editor_port %>/escenic-admin/browser/Global/com/escenic/webservice/search/DelegatingSearchEngine?property=solrURI
+http://<%= trail_editor_host %><%= trail_dot_network_name %>:<%= trail_editor_port %>/escenic-admin/browser/Global/com/escenic/webservice/search/DelegatingSearchEngine?property=solrURI
 
 Then, change the value from:
 #+BEGIN_SRC conf

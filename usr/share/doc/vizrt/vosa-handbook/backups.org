@@ -1,23 +1,5 @@
 * Backups
 
-** DB backups
-If you've told ece-install to set up daily backups, there will be a
-cron scripts set up which create backups. 
-
-Part of the name of the cron script is the name of your DB schema, so
-the default location of the cron script on <%= trail_db_daily_backup_host %> is:
-#+BEGIN_SRC sh
-/etc/cron.daily/<%= trail_db_schema %>-backup  
-#+END_SRC
-
-And it'll put its backups in
-#+BEGIN_SRC sh
-/var/backups/escenic  
-#+END_SRC
-
-All these are overridable, see the ece-install guide for further
-details.
-
 ** Multimedia archive
 The other place were you've got actual content, is in the multimedia
 archive. This, typically live on a host called nfs1 (with a mirror on

@@ -18,11 +18,12 @@ the user under which ECE, EAE and the Search instance are running as
 
 *** In the Web Browser
 All VOSA hosts also has a (maximum) one minute old HTML report from
-system-info running on port 5678. 
+system-info running on port ~5678~. 
 
-Here's a screenshot of the system-info report running on
-http://<%= trail_presentation_host %>:5678/:
-[[[[graphics/pres1-system-info.png]]
+Here's a screenshot of the system-info report running on a
+presentation server:
+
+[[./graphics/pres1-system-info.png]]
 
 ** Hugin
 Hugin is an automatic, frequent aggregation of the system-info data of
@@ -31,7 +32,7 @@ produce a system-info report in YAML and check the files into a
 version repository.
 
 When browsing the Hugin web interface at
-http://<%= trail_control_host %><%= trail_network_name %>:5679/ you can quickly 
+http://<%= trail_control_host %><%= trail_dot_network_name %>:5679/ you can quickly 
 see all changes on the various servers. A change could be a new
 service which is all of a sudden listening on a new port or that the
 version of a installed package has changed. Nothing escapes Hugin's
@@ -43,12 +44,12 @@ trending of your site. I.e. how it has been behaving the last days,
 weeks and months.
 
 The address to your Munin instance is is:
- http://<%= trail_monitoring_host %><%= trail_network_name %>/munin/
+ http://<%= trail_monitoring_host %><%= trail_dot_network_name %>/munin/
 
 ** Icinga (enhanced Nagios)
 Icinga gives a good overview of the current health of the
 habitat. Head over to
- http://<%= trail_monitoring_host %><%= trail_network_name %>/icinga/ 
+ http://<%= trail_monitoring_host %><%= trail_dot_network_name %>/icinga/ 
 to get updates on host & service uptimes and disk fill rates. This is
 also the place were you'll schedule any maintenance work you do to
 prevent unnecessary alerts filling up your mobile phone and email
