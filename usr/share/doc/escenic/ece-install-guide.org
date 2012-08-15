@@ -643,7 +643,7 @@ in the following FAI parameter:
 #+BEGIN_SRC conf
 fai_publication_domain_mapping_list="
   firepub#fire.escenic.com
-  ildpub#ild.escenic.com
+  ildpub#ild.escenic.com#feuer.escenic.com,fuego.escenic.com
 "
 #+END_SRC
 
@@ -657,12 +657,19 @@ This will produce the following stanzas in server.xml:
   />
 </Host>
 <Host name="ild.escenic.com" appBase="webapps" autoDeploy="false">
+  <Alias>feuer.escenic.com</Alias>
+  <Alias>fuego.escenic.com</Alias>
   <Context displayName="ild.escenic.com"
            docBase="ildpub"
            path=""
   />
 </Host>
 #+END_SRC
+
+As you can see, there's a third optional option to the
+~fai_publication_domain_mapping_list~ which can be specified as a
+comma separated list of host aliases to be added to the app server host
+configuration. 
 
 Furthermore, if these host names are  not resolvable to your local
 host (neither localhost or the IP of your $HOSTNAME), ece-install will
@@ -738,7 +745,7 @@ $HOME/ece-install.conf file of the root user:
 | ~fai_presentation_shutdown~           | 8005                                              | Shutdown port of the presentation instance                                                                                            |
 | ~fai_public_host_name~                | ${HOSTNAME}:8080                                  | The public address for your website                                                                                                   |
 | ~fai_publication_create~              | 0                                                 | Create a new publication                                                                                                              |
-| ~fai_publication_domain_mapping_list~ | ""                                                | Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com"                          |
+| ~fai_publication_domain_mapping_list~ | ""                                                | Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com[#<alias1>[,<alias2>]]"    |
 | ~fai_publication_name~                | mypub                                             | Name of the publication                                                                                                               |
 | ~fai_publication_use_instance~        | dev1                                              | Name of local instance to use for creation                                                                                            |
 | ~fai_publication_war~                 | "WF or ECE demo WAR"                              | WAR to base the new publication on                                                                                                    |
