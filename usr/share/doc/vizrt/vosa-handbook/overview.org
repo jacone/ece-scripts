@@ -2,4 +2,4 @@
 
 #+ATTR_HTML: alt="Typical ECE architecture"
 [[[[graphics/architecture.svg]]
-#+INCLUDE: "generated-overview.org"
+#+INCLUDE: "overview-generated.org"
