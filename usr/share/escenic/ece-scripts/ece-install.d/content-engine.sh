@@ -395,6 +395,14 @@ jreRequirement=1.6
 # https://www.varnish-cache.org/trac/wiki/Future_Feature#Chunkedencodingclientrequests
 # For Escenic-ites, see: VF-3480
 property.com.escenic.client.chunked=false
+
+# This font have been tested and works with (at least): English,
+# Norwegian & Tamil.
+property.com.escenic.studio.font.macosx=Arial Unicode MS
+property.com.escenic.studio.font.linux=Arial Unicode MS
+property.com.escenic.studio.font.windows7=Arial Unicode MS
+property.com.escenic.studio.font.windowsxp=Arial Unicode MS
+property.com.escenic.studio.font.windowsvista=Arial Unicode MS
 EOF
 }
 
