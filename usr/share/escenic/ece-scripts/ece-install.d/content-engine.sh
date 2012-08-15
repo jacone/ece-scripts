@@ -397,7 +397,8 @@ jreRequirement=1.6
 property.com.escenic.client.chunked=false
 
 # This font have been tested and works with (at least): English,
-# Norwegian & Tamil.
+# Norwegian & Tamil. The font comes with (at least) MS Office and OS X
+# 10.5 and up.
 property.com.escenic.studio.font.macosx=Arial Unicode MS
 property.com.escenic.studio.font.linux=Arial Unicode MS
 property.com.escenic.studio.font.windows7=Arial Unicode MS
