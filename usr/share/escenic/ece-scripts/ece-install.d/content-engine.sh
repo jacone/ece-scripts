@@ -8,18 +8,17 @@ function get_deploy_white_list() {
     return
   fi
   
-  local white_list="escenic-admin"
+  local white_list=""
   
   if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER \
     -a -n "${publication_name}" ]; then
-    white_list="${white_list} ${publication_name} "
+    white_list="escenic-admin ${publication_name} "
   elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then 
-    white_list="${white_list} solr indexer-webapp"
+    white_list="solr indexer-webapp"
   elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
-    white_list="${white_list} "$(get_publication_short_name_list)
+    white_list="escenic-admin "$(get_publication_short_name_list)
   elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
-    white_list="${white_list} escenic studio indexer-webservice webservice"
-    white_list="${white_list} "$(get_publication_short_name_list)
+    white_list="escenic-admin escenic studio indexer-webservice webservice"
   fi
 
   echo ${white_list}
