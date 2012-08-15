@@ -88,7 +88,7 @@ function set_defaults_if_the_trails_are_not_set() {
   trail_nfs_export_list=${trail_nfs_export_list-/var/exports/multimedia}
   trail_nfs_master_host=${trail_nfs_master_host-nfs1}
   trail_presentation_host=${trail_presentation_host-pres1}
-  trail_presentation_host_list=${trail_presentation_host-pres1}
+  trail_presentation_host_list=${trail_presentation_host_list-${trail_presentation_host}}
 }
 
 function expand_all_variables_in_org_files() {
@@ -320,6 +320,7 @@ EOF
 | $(get_fqdn ${trail_editor_host}) | \
   [[$(get_link ${trail_editor_host}):5678/][system-info]] \
   [[${ece_url}:${trail_editor_port-8080}/escenic-admin/][escenic-admin]] \
+  [[${ece_url}:${trail_editor_port-8080}/escenic-admin/top][top]] \
   [[${ece_url}:${trail_search_port-8081}/solr/admin/][solr]] \
   [[${ece_url}:${trail_editor_port-8080}/studio/][studio]] \
   [[${ece_url}:${trail_editor_port-8080}/escenic/][escenic]] \
@@ -335,6 +336,7 @@ EOF
 | $(get_fqdn ${trail_import_host}) | \
   [[$(get_link ${trail_import_host}):5678/][system-info]] \
   [[$(get_link ${trail_import_host}):${trail_import_port}/escenic-admin/][escenic-admin]] \
+  [[$(get_link ${trail_import_host}):${trail_import_port}/escenic-admin/top][top]] \
   [[$(get_link ${trail_import_host}):${trail_search_port-8081}/solr/admin/][solr]] \
   [[$(get_link ${trail_import_host}):${trail_import_port}/studio/][studio]] \
   [[$(get_link ${trail_import_host}):${trail_import_port}/escenic/][escenic]] \
@@ -351,6 +353,7 @@ EOF
 | $(get_fqdn ${el}) | \
   [[$(get_link ${el}):5678/][system-info]] \
   [[$(get_link ${el}):8080/escenic-admin/][escenic-admin]] \
+  [[$(get_link ${el}):8080/escenic-admin/top][top]] \
   [[$(get_link ${el}):8081/solr/admin/][solr]] \
 |
 EOF
@@ -387,7 +390,7 @@ EOF
 
 ## included from overview.org
 function generate_overview_org() {
-  local file=$target_dir/generated-overview.org
+  local file=$target_dir/overview-generated.org
   cat > $file <<EOF
 $(get_generated_overview)
 EOF
@@ -542,7 +545,9 @@ function generate_backup_org() {
 }
 
 function add_customer_chapters() {
-  if [ $(ls $target_dir/customer/extra-chapters/ | grep .org$ | wc -l) -gt 0 ]; then
+  if [ $(ls $target_dir/customer/extra-chapters/ 2>/dev/null | \
+    grep .org$ | \
+    wc -l) -gt 0 ]; then
     (
       cd $target_dir
       for el in customer/extra-chapters/*.org; do
@@ -595,7 +600,7 @@ guests, see the
 from RedHat.
 EOF
 
-  cat $file >> $target_dir/generated-overview.org
+  cat $file >> $target_dir/overview-generated.org
 }
 
 set_up_build_directory
