@@ -276,9 +276,8 @@ function get_network_name() {
 ## $1 :; the host (not FQDN)
 function get_fqdn() {
   for el in $host_name_list_outside_network; do
-    echo "el=$el" >> /tmp/t
     if [ $(echo $1 | grep $el | wc -l) -gt 0 ]; then
-      echo "$1"
+      echo "network outside: $el" "$1"
       return
     fi
   done
@@ -293,6 +292,7 @@ function get_link() {
 
 function get_generated_overview() {
   cat <<EOF
+** The machines and their services
 |-------------------------------------------|
 | Machine     | Service quick links         |
 |-------------------------------------------|
@@ -558,7 +558,44 @@ function generate_ssh_access_org() {
   if [[ -n "${trail_gk_host}" && -n "${trail_control_host}" ]]; then
     run cat $target_dir/ssh-access.org >> $target_dir/vosa-handbook.org
   fi
-  
+}
+
+function generate_virtualization_overview_org() {
+  if [ -z "$trail_virtualization_map" ]; then
+    return
+  fi
+
+  local file=$target_dir/virtualization-overview-generated.org
+  cat > $file <<EOF
+** Virtualization Overview
+Here's an overview of your virtualization hosts & their guests:
+
+|-------------------------------------------|
+| Virtualization host | IP | Virtualization guests |
+|-------------------------------------------|
+EOF
+  for el in $trail_virtualization_map; do
+    local old_ifs=$IFS
+    IFS='#'
+    read host ip guests <<< "$el"
+    IFS=$old_ifs
+    echo -n "| $(get_fqdn $host) | $ip | " >> $file
+    for ele in $(echo "$guests" | sed 's/,/ /g'); do
+      echo -n " [[$(get_link $ele):5678][$(get_fqdn $ele)]] " >> $file
+    done
+    echo "|" >> $file
+  done
+
+  cat >> $file <<EOF
+|-------------------------------------------|
+
+For more background and documentation on virtualization hosts &
+guests, see the
+[[http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html-single/Virtualization_Host_Configuration_and_Guest_Installation_Guide][Virtualization Host Configuration and Guest Installation Guide]]
+from RedHat.
+EOF
+
+  cat $file >> $target_dir/generated-overview.org
 }
 
 set_up_build_directory
@@ -571,6 +608,7 @@ generate_cache_server_org
 generate_db_org
 generate_nfs_org
 generate_backup_org
+generate_virtualization_overview_org
 add_customer_chapters
 generate_html_from_org
 generate_svg_from_blockdiag
