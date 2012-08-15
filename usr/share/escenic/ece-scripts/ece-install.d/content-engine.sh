@@ -388,6 +388,8 @@ EOF
 
   file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
   cat >> $file <<EOF
+# Currently (2012-08-15), ECS insists on JRE = 1.6.
+jreRequirement=1.6
 
 # We set this to get around a missing feature in Varnish, see:
 # https://www.varnish-cache.org/trac/wiki/Future_Feature#Chunkedencodingclientrequests
