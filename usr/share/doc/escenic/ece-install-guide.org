@@ -63,6 +63,7 @@ ece-install.
 * Downloading the ece-install Script
 The easiest way of getting ece-install is to use git. Type this in
 your shell:
+
 #+BEGIN_SRC text
 $ git clone https://github.com/skybert/ece-scripts.git
 #+END_SRC
