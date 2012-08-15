@@ -282,3 +282,22 @@ function is_unauthorized_to_access_url() {
 function ltrim() {
   echo $1 | sed 's/^[ ]*//g'
 }
+
+## $1    : the character on to wich to split it
+## $@[1] : the rest of the arguments is the string(s) you want to have
+##         splitted.
+function split_string() {
+  if [[ -z $1 || -z $2 ]]; then
+    return
+  fi
+  
+  local delimeter=$1
+  shift;
+  
+  local old_ifs=$IFS
+  IFS=$delimeter
+  read splitted_string <<< $@
+  IFS=$old_ifs
+
+  echo $splitted_string
+}
