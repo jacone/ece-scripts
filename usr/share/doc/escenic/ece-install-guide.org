@@ -383,6 +383,72 @@ what's available on the host where it's run):
 - ECE, cache and web server configuration
 - Escenic software
 
+** Running interactively
+*** Start ece-install and choose the Option, "Restore from backup"
+#+BEGIN_SRC text
+# ece-install
+#+END_SRC
+
+*** Select Which Backup to Restore
+
+#+BEGIN_SRC text
+[ece-install-5] From which dataset do you wish to backup?
+    1 - engine-dev1-backup-2011-10-10.tar.gz
+    2 - engine-dev1-backup-2011-10-11.tar.gz
+[ece-install-5] Enter the number next to the tarball, from 1 to 2
+Your choice [1]>
+#+END_SRC
+
+The ece script mentioned above will create backups in
+~/var/backups/escenic~ and the ece-install script will hence expect to
+find them here.
+
+*** Choose What to Restore
+#+BEGIN_SRC text
+[ece-install-12] Which part of the system do you wish to restore?
+    1 - The database
+    2 - The Solr and ECE data files (multimedia archive)
+    3 - The ECE configuration files
+    4 - The Escenic and Tomcat software binaries + publication templates
+Your choice [1]> 2
+#+END_SRC
+
+*** Sit Back and Watch ece-install Restore the Data for You
+#+BEGIN_SRC text
+[ece-install-13] Restoring the Solr & ECE data files on ubiquitous ...
+[ece-install-21] - The installation is now complete! It took 0d 0h 0m 20s
+[ece-install] Successfully restored Solr & ECE data files
+[ece-install] from backup:  engine-dev1-backup-2011-10-12.tar.gz
+[ece-install] Check /var/lib/escenic to verify they're all there
+#+END_SRC
+
+** Running in FAI mode
+If you're running in FAI mode, you can choose between these settings
+to decide what to restore and where to find the backup file to
+restore from:
+
+|---------------------------------+---------+----------------------------------------------------|
+| Parameter                       | Default | Description                                        |
+|---------------------------------+---------+----------------------------------------------------|
+| ~fai_restore_all~               |       0 | Restore everything found in the backup file        |
+| ~fai_restore_db~                |       0 | Install the DB server & restore its contents       |
+| ~fai_restore_data_files~        |       0 | Restore the Solr & ECE data files                  |
+| ~fai_restore_configuration~     |       0 | Restore the Solr & ECE configuration files         |
+| ~fai_restore_software_binaries~ |       0 | Restore the Escenic and Apache Tomcat software     |
+| ~fai_restore_from_file~         |      "" | The .tar.gz produced by ~ece -i <instance> backup~ |
+|---------------------------------+---------+----------------------------------------------------|
+
+For example, to restore everything possible from a given tarball, you
+need this in your ece-install.conf:
+#+BEGIN_SRC conf
+fai_enabled=1
+
+fai_restore_from_backup=1
+fai_restore_all=1
+fai_restore_from_file=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
+#+END_SRC
+
+
 ** Profile :: Analysis Server
 This profile will install the Escenic Analysis Engine and configure it
 for production use with sane defaults. Be sure to use a different DB
@@ -456,71 +522,6 @@ node. Generate this key, do:
 $ dd if=/dev/urandom bs=512 count=1 | \
     openssl md5 | \
     cut -d' ' -f2   
-#+END_SRC
-
-** Running interactively
-*** Start ece-install and choose the Option, "Restore from backup"
-#+BEGIN_SRC text
-# ece-install
-#+END_SRC
-
-*** Select Which Backup to Restore
-
-#+BEGIN_SRC text
-[ece-install-5] From which dataset do you wish to backup?
-    1 - engine-dev1-backup-2011-10-10.tar.gz
-    2 - engine-dev1-backup-2011-10-11.tar.gz
-[ece-install-5] Enter the number next to the tarball, from 1 to 2
-Your choice [1]>
-#+END_SRC
-
-The ece script mentioned above will create backups in
-~/var/backups/escenic~ and the ece-install script will hence expect to
-find them here.
-
-*** Choose What to Restore
-#+BEGIN_SRC text
-[ece-install-12] Which part of the system do you wish to restore?
-    1 - The database
-    2 - The Solr and ECE data files (multimedia archive)
-    3 - The ECE configuration files
-    4 - The Escenic and Tomcat software binaries + publication templates
-Your choice [1]> 2
-#+END_SRC
-
-*** Sit Back and Watch ece-install Restore the Data for You
-#+BEGIN_SRC text
-[ece-install-13] Restoring the Solr & ECE data files on ubiquitous ...
-[ece-install-21] - The installation is now complete! It took 0d 0h 0m 20s
-[ece-install] Successfully restored Solr & ECE data files
-[ece-install] from backup:  engine-dev1-backup-2011-10-12.tar.gz
-[ece-install] Check /var/lib/escenic to verify they're all there
-#+END_SRC
-
-** Running in FAI mode
-If you're running in FAI mode, you can choose between these settings
-to decide what to restore and where to find the backup file to
-restore from:
-
-|---------------------------------+---------+----------------------------------------------------|
-| Parameter                       | Default | Description                                        |
-|---------------------------------+---------+----------------------------------------------------|
-| ~fai_restore_all~               |       0 | Restore everything found in the backup file        |
-| ~fai_restore_db~                |       0 | Install the DB server & restore its contents       |
-| ~fai_restore_data_files~        |       0 | Restore the Solr & ECE data files                  |
-| ~fai_restore_configuration~     |       0 | Restore the Solr & ECE configuration files         |
-| ~fai_restore_software_binaries~ |       0 | Restore the Escenic and Apache Tomcat software     |
-| ~fai_restore_from_file~         |      "" | The .tar.gz produced by ~ece -i <instance> backup~ |
-|---------------------------------+---------+----------------------------------------------------|
-
-For example, to restore everything possible from a given tarball, you
-need this in your ece-install.conf:
-#+BEGIN_SRC conf
-fai_enabled=1
-
-fai_restore_from_backup=1
-fai_restore_all=1
-fai_restore_from_file=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
 #+END_SRC
 
 ** Data security
