@@ -11,4 +11,5 @@
 #+INCLUDE: "network-file-system.org"
 #+INCLUDE: "backups.org"
 #+INCLUDE: "monitoring.org"
-#+INCLUDE: "glossary.org"
+#+INCLUDE: "ssh-access.org"
+
