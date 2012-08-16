@@ -33,13 +33,15 @@ function generate_svg_from_blockdiag() {
 }
 
 function set_customer_specific_variables() {
-  local conf_file=$(basename $0 .sh).conf
   if [ -r $conf_file  ]; then
     source $conf_file
     host_name_list_outside_network="
       $host_name_list_outside_network
       ${trail_host_name_list_outside_network}
     "
+  else
+    echo $conf_file " doesn't exist :-("
+    exit 1
   fi
 
   local virtual_host_key_prefix="trail_virtual_host_"
@@ -106,11 +108,25 @@ function expand_all_variables_in_org_files() {
 }
 
 function set_up_build_directory() {
+  if [[ -n "$target_dir" && -d $target_dir ]]; then
+    rm -rf $target_dir
+  fi
   run mkdir -p $target_dir/graphics
   run cp *.org $target_dir
-  if [ -d $(pwd)/customer ]; then
-    echo "Copying customer specific files & overrides"
-    cp -r $(pwd)/customer $target_dir 
+
+  # customer chapters & overrides
+  if [[ -n $customer_doc_dir && -d $customer_doc_dir ]]; then
+    run mkdir -p $target_dir/customer
+    
+    if [ $(ls $customer_doc_dir/*.org 2>/dev/null | wc -l) -gt 0 ]; then
+      echo "Copying chapter overides from $customer_doc_dir ..."
+      run cp $customer_doc_dir/*.org $target_dir/customer/
+    fi
+    local dir=$customer_doc_dir/extra-chapters
+    if [ -d $dir ]; then
+      echo "Copying extra customer chapters from $dir"
+      run cp -r $dir $target_dir/customer/extra-chapters/
+    fi
   fi
 }
 
@@ -292,11 +308,9 @@ function get_link() {
 
 function get_generated_overview() {
   cat <<EOF
-** The machines and their services
-|-------------------------------------------|
-| Machine     | Service quick links         |
-|-------------------------------------------|
+** Production Habitat :: Machines & Their Services
 EOF
+  get_machine_matrix_header
   if [ -n "${trail_monitoring_host}" ]; then
     cat <<EOF 
 | $(get_fqdn $trail_monitoring_host) | \
@@ -315,48 +329,30 @@ EOF
   fi
 
   if [ -n "${trail_editor_host}" ]; then
-    local ece_url="$(get_link ${trail_editor_host})"
-    cat <<EOF 
-| $(get_fqdn ${trail_editor_host}) | \
-  [[$(get_link ${trail_editor_host}):5678/][system-info]] \
-  [[${ece_url}:${trail_editor_port-8080}/escenic-admin/][escenic-admin]] \
-  [[${ece_url}:${trail_editor_port-8080}/escenic-admin/top][top]] \
-  [[${ece_url}:${trail_search_port-8081}/solr/admin/][solr]] \
-  [[${ece_url}:${trail_editor_port-8080}/studio/][studio]] \
-  [[${ece_url}:${trail_editor_port-8080}/escenic/][escenic]] \
-  [[${ece_url}:${trail_editor_port-8080}/webservice/][webservice]] \
-  [[${ece_url}:${trail_editor_port-8080}/escenic-admin/browser/Webapp%20ECE%20Webservice%20Webapp/com/escenic/servlet/filter/cache/AuthenticationFilterCache][logged in users]] \
-
-|
-EOF
+    echo $(
+      get_editor_host_overview \
+        $trail_editor_host \
+        $trail_editor_port
+    )
   fi
   
   if [ -n "${trail_import_host}" ]; then
-  cat <<EOF 
-| $(get_fqdn ${trail_import_host}) | \
-  [[$(get_link ${trail_import_host}):5678/][system-info]] \
-  [[$(get_link ${trail_import_host}):${trail_import_port}/escenic-admin/][escenic-admin]] \
-  [[$(get_link ${trail_import_host}):${trail_import_port}/escenic-admin/top][top]] \
-  [[$(get_link ${trail_import_host}):${trail_search_port-8081}/solr/admin/][solr]] \
-  [[$(get_link ${trail_import_host}):${trail_import_port}/studio/][studio]] \
-  [[$(get_link ${trail_import_host}):${trail_import_port}/escenic/][escenic]] \
-  [[$(get_link ${trail_import_host}):${trail_import_port}/webservice/][webservice]] \
-|
-EOF
+    echo $(
+      get_editor_host_overview \
+        $trail_import_host \
+        $trail_import_port
+    )
   fi
   
   for el in nop $trail_presentation_host_list; do
     if [[ $el == "nop" ]]; then
       continue
     fi
-    cat <<EOF 
-| $(get_fqdn ${el}) | \
-  [[$(get_link ${el}):5678/][system-info]] \
-  [[$(get_link ${el}):8080/escenic-admin/][escenic-admin]] \
-  [[$(get_link ${el}):8080/escenic-admin/top][top]] \
-  [[$(get_link ${el}):8081/solr/admin/][solr]] \
-|
-EOF
+    echo $(
+      get_presentation_host_overview \
+        $el \
+        8080
+    )
   done
   
   if [ -n "${trail_analysis_host}" ]; then
@@ -377,14 +373,74 @@ EOF
     if [[ $el == "nop" ]]; then
       continue
     fi
-    cat <<EOF 
-| $(get_fqdn ${el}) | \
-  [[$(get_link ${el}):5678/][system-info]] \
-|
-EOF
+    echo $(
+      get_simple_host_overview $el
+    )
   done
+  get_machine_matrix_footer
+
+  if [ -n "$trail_staging_editor_host" ]; then
+    cat <<EOF 
+** Staging Habitat :: Machines & Their Services
+EOF
+    get_machine_matrix_header
+    echo $(get_editor_host_overview \
+      $trail_staging_editor_host \
+      $trail_staging_editor_port
+    )
+    get_machine_matrix_footer
+  fi
+}
+
+function get_machine_matrix_header() {
   cat <<EOF
 |-------------------------------------------|
+| Machine     | Service quick links         |
+|-------------------------------------------|
+EOF
+}
+
+function get_machine_matrix_footer() {
+  cat <<EOF
+|-------------------------------------------|
+EOF
+}
+
+## $1 :: host
+## $2 :: port
+function get_editor_host_overview() {
+  local ece_url="$(get_link ${1})"
+  cat <<EOF
+| $(get_fqdn ${1}) | \
+  [[$(get_link ${1}):5678/][system-info]] \
+  [[${ece_url}:${2-8080}/escenic-admin/][escenic-admin]] \
+  [[${ece_url}:${2-8080}/escenic-admin/top][top]] \
+  [[${ece_url}:${2-8081}/solr/admin/][solr]] \
+  [[${ece_url}:${2-8080}/studio/][studio]] \
+  [[${ece_url}:${2-8080}/escenic/][escenic]] \
+  [[${ece_url}:${2-8080}/webservice/][webservice]] \
+  [[${ece_url}:${2-8080}/escenic-admin/browser/Webapp%20ECE%20Webservice%20Webapp/com/escenic/servlet/filter/cache/AuthenticationFilterCache][logged in users]]
+|
+EOF
+}
+
+function get_presentation_host_overview() {
+  cat <<EOF 
+| $(get_fqdn ${1}) | \
+  [[$(get_link ${1}):5678/][system-info]] \
+  [[$(get_link ${1}):${2-8080}/escenic-admin/][escenic-admin]] \
+  [[$(get_link ${1}):${2-8080}/escenic-admin/top][top]] \
+  [[$(get_link ${1}):8081/solr/admin/][solr]] \
+|
+EOF
+}
+
+## $1 :: host
+function get_simple_host_overview() {
+  cat <<EOF 
+| $(get_fqdn ${1}) | \
+  [[$(get_link ${1}):5678/][system-info]] \
+|
 EOF
 }
 
@@ -545,23 +601,43 @@ function generate_backup_org() {
 }
 
 function add_customer_chapters() {
+  if [ $(ls $target_dir/customer 2>/dev/null | \
+    grep .org$ | \
+    wc -l) -gt 0 ]; then
+    echo "Applying customer overrides ..."
+    cp $target_dir/customer/*.org $target_dir
+  fi
+
   if [ $(ls $target_dir/customer/extra-chapters/ 2>/dev/null | \
     grep .org$ | \
     wc -l) -gt 0 ]; then
     (
       cd $target_dir
-      for el in customer/extra-chapters/*.org; do
-        cat >> vosa-handbook.org <<EOF
-#+INCLUDE "$el"
+      local file=vosa-handbook.org
+      local title="Customer specific chapters"
+      if [ -n "$trail_network_name" ]; then
+        title="Special chapters for the $trail_network_name network"
+      fi
+      cat >> $file <<EOF
+* ${title}
 EOF
+      for el in customer/extra-chapters/*.org; do
+        echo "Preparing extra chapter $(basename $el .org) ..."
+        sed -i 's/^*/**/' $el
       done
-    )
-  fi
-}
 
-function generate_ssh_access_org() {
-  if [[ -n "${trail_gk_host}" && -n "${trail_control_host}" ]]; then
-    run cat $target_dir/ssh-access.org >> $target_dir/vosa-handbook.org
+      if [ -e customer/extra-chapters/overview.org ]; then
+        echo "Including extra chapters according to customer's overview.org"
+        cat >> $file <<EOF
+#+INCLUDE "customer/extra-chapters/overview.org"
+EOF
+      else
+        for el in customer/extra-chapters/*.org; do
+          echo "Appending chapter $el ..."
+          cat $el >> $file
+        done
+      fi
+    )
   fi
 }
 
@@ -603,11 +679,32 @@ EOF
   cat $file >> $target_dir/overview-generated.org
 }
 
+function get_user_input() {
+  local customer_doc_dir_is_next=0
+  local customer_conf_is_next=0
+  conf_file=$(basename $0 .sh).conf
+
+  for el in $@; do
+    # -s as in input
+    if [[ "$el" == "--doc-dir" || "$el" == "-i" ]]; then
+      customer_doc_dir_is_next=1
+    elif [[ "$el" == "--conf-file" || "$el" == "-f" ]]; then
+      customer_conf_is_next=1
+    elif [ $customer_conf_is_next -eq 1 ]; then
+      conf_file=$el
+      customer_conf_is_next=0
+    elif [ $customer_doc_dir_is_next -eq 1 ]; then
+      customer_doc_dir=$el
+      customer_doc_dir_is_next=0
+    fi
+  done
+}
+
+get_user_input $@
 set_up_build_directory
 set_customer_specific_variables
 generate_architecture_diagram
 generate_overview_org
-generate_ssh_access_org
 generate_content_engine_org
 generate_cache_server_org
 generate_db_org
