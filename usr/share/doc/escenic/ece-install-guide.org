@@ -448,6 +448,18 @@ fai_restore_all=1
 fai_restore_from_file=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
 #+END_SRC
 
+ece-install can also remove files  prior to restoring from the
+backup:
+
+|------------------------------+---------+-----------------------------------|
+| Parameter                    | Default | Description                       |
+|------------------------------+---------+-----------------------------------|
+| ~fai_restore_pre_wipe_all~   |       0 | Remove all data/state & log files |
+| ~fai_restore_pre_wipe_cache~ |       0 | Remove the cache files            |
+| ~fai_restore_pre_wipe_crash~ |       0 | Remove the crash files            |
+| ~fai_restore_pre_wipe_logs~  |       0 | Remove all log files              |
+| ~fai_restore_pre_wipe_solr~  |       0 | Remove the solr data/state files  |
+|------------------------------+---------+-----------------------------------|
 
 ** Profile :: Analysis Server
 This profile will install the Escenic Analysis Engine and configure it
