@@ -1,7 +1,6 @@
 #+TITLE: Escenic Installer User Guide
-#+AUTHOR: Torstein Krause Johansen
+#+AUTHOR: Vizrt Online / The SaaS Team
 #+OPTIONS: H:6 num:5 toc:2 
-
 
 * Introduction
 The Escenic Content Engine Installer, =ece-install=  is a command line
@@ -836,10 +835,11 @@ $HOME/ece-install.conf file of the root user:
 | ~fai_public_host_name~                | ${HOSTNAME}:8080                                  | The public address for your website                                                                                                   |
 | ~fai_publication_create~              | 0                                                 | Create a new publication                                                                                                              |
 | ~fai_publication_domain_mapping_list~ | ""                                                | Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com[#<alias1>[,<alias2>]]"    |
+| ~fai_publication_environment~         | "production"                                      | The kind of environment/habitat being installed. Typical values are: production, staging, testing, development.                       |
 | ~fai_publication_name~                | mypub                                             | Name of the publication                                                                                                               |
 | ~fai_publication_use_instance~        | dev1                                              | Name of local instance to use for creation                                                                                            |
-| ~fai_publication_war~                 | "WF or ECE demo WAR"                              | WAR to base the new publication on                                                                                                    |
 | ~fai_publication_war_uri_list~        | ""                                                | Publication WARs used for setting up Assembly tool. Supported: http[s]://tmp.com/mypub.war, file:///tmp/mypub.war and /tmp/mypub.war. |
+| ~fai_publication_war~                 | "WF or ECE demo WAR"                              | WAR to base the new publication on                                                                                                    |
 | ~fai_rmi_install~                     | 0                                                 | Install RMI hub profile                                                                                                               |
 | ~fai_search_conf_archive~             | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
 | ~fai_search_ear~                      | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
