@@ -8,18 +8,17 @@ function get_deploy_white_list() {
     return
   fi
   
-  local white_list="escenic-admin"
+  local white_list=""
   
   if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER \
     -a -n "${publication_name}" ]; then
-    white_list="${white_list} ${publication_name} "
+    white_list="escenic-admin ${publication_name} "
   elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then 
-    white_list="${white_list} solr indexer-webapp"
+    white_list="solr indexer-webapp"
   elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
-    white_list="${white_list} "$(get_publication_short_name_list)
+    white_list="escenic-admin "$(get_publication_short_name_list)
   elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
-    white_list="${white_list} escenic studio indexer-webservice webservice"
-    white_list="${white_list} "$(get_publication_short_name_list)
+    white_list="escenic-admin escenic studio indexer-webservice webservice"
   fi
 
   echo ${white_list}
@@ -389,11 +388,22 @@ EOF
 
   file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
   cat >> $file <<EOF
+# Currently (2012-08-15), ECS insists on JRE = 1.6.
+jreRequirement=1.6
 
 # We set this to get around a missing feature in Varnish, see:
 # https://www.varnish-cache.org/trac/wiki/Future_Feature#Chunkedencodingclientrequests
 # For Escenic-ites, see: VF-3480
 property.com.escenic.client.chunked=false
+
+# This font have been tested and works with (at least): English,
+# Norwegian & Tamil. The font comes with (at least) MS Office and OS X
+# 10.5 and up.
+property.com.escenic.studio.font.macosx=Arial Unicode MS
+property.com.escenic.studio.font.linux=Arial Unicode MS
+property.com.escenic.studio.font.windows7=Arial Unicode MS
+property.com.escenic.studio.font.windowsxp=Arial Unicode MS
+property.com.escenic.studio.font.windowsvista=Arial Unicode MS
 EOF
 }
 

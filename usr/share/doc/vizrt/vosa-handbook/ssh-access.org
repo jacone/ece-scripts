@@ -8,6 +8,37 @@ It also assumes that the gateway IP of your office/network has been
 added to the access control list of hosts/networks which are allowed
 to access the gatekeeper.
 
+** Generate your SSH key
+You only need to do this if you don't already have an SSH key. The
+keys are normally stored in ~$HOME/.ssh~ so have a look here to see if
+you have any:
+#+BEGIN_SRC text
+$ ls ~/.ssh 
+authorized_keys  id_rsa  id_rsa.pub  known_hosts
+#+END_SRC
+If you see the ~id_rsa~ and ~id_dsa.pub~, you already have one. They
+can also be called something with ~dsa~ or indeed anything (the
+~id_rsa[.pub]~ are just the default).
+
+To generate a new key, you can do:
+#+BEGIN_SRC text
+$ ssh-keygen -t rsa
+#+END_SRC
+
+Just hit enter when you're prompted for the name of the file. When
+asked for a key password, be sure to set one. This is important, all
+your SSH keys should have a password set. If not, anyone can copy your
+keys and log on to all the servers where you've previously been
+granted access.
+
+If you wish to set the password on an old key, or set a new password,
+you can do this by
+#+BEGIN_SRC text
+$ ssh-keygen -f id_rsa -p
+#+END_SRC
+
+The ~id_rsa~ above corresponds to the ~$HOME/.ssh/id_rsa~ file.
+
 ** Add your SSH key to your key agent
 On your local machine, load your SSH key into your key agent. On Linux
 and Mac OS X, this should only be a matter of:

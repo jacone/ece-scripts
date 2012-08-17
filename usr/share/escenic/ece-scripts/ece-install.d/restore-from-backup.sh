@@ -44,6 +44,8 @@ function restore_from_backup()
   
   if [ $(get_boolean_conf_value fai_enabled) -eq 1 -a \
     $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
+    print_and_log "Restoring from backup on $HOSTNAME ..."
+    
     backup_file=${fai_restore_from_file}
 
     if [ -z "$backup_file" ]; then

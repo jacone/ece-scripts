@@ -6,7 +6,7 @@ Architecturally, these look the same (strictly speaking, the
 publication servers don't need the memory cache, but for simplicity of
 uniformity, we install memcached on the publication servers too):
 
-[[./graphics/content-engine.svg]]
+[[file:./graphics/content-engine.svg][./graphics/content-engine.svg]]
 
 ** Presentation Server
 The presentation is an ECE which has the publication(s) templates and

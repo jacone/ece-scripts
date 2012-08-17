@@ -378,7 +378,24 @@ the search instance which runs the Solr indexer, so that the Solr
 index isn't corrupted:
 #+BEGIN_SRC text
 $ ece -i search1 stop
-$ ece -i editor1 backup
+$ ece -i web1 backup
+[ece#engine-web1] Backing up the web1 instance of engine on raven ...
+[ece#engine-web1] Cleaning up generated files in /opt/escenic/assemblytool ...
+[ece#engine-web1] Cleaning up web1's work directory in /opt/tomcat-web1/work ...
+[ece#engine-web1] Cleaning up web1's temp directory in /opt/tomcat-web1/temp ...
+[ece#engine-web1] Database dumped: /var/backups/escenic/ece5db-2012-08-17.sql.gz
+[ece#engine-web1] Creating snapshot ... (this may take a while)
+[ece#engine-web1] Backup ready: /var/backups/escenic/engine-web1-backup-2012-08-17.tar size: 62M
+[ece#engine-web1] The backup arhcive includes:
+[ece#engine-web1] - Database snapshot
+[ece#engine-web1] - All Solr in /var/lib/escenic/solr
+[ece#engine-web1] - All Escenic data files in /var/lib/escenic/engine
+[ece#engine-web1] - All app servers in /opt
+[ece#engine-web1] - All Escenic software binaries in /opt/escenic/engine
+[ece#engine-web1] - All configuration in /etc/escenic and /etc/default/ece
+[ece#engine-web1] - All bootstrap scripts from /etc/init.d
+[ece#engine-web1] - All state files in /var/lib/escenic
+[ece#engine-web1] Enjoy!
 #+END_SRC
 
 
