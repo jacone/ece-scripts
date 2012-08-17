@@ -1,6 +1,7 @@
 #+TITLE: Escenic Installer User Guide
 #+AUTHOR: Torstein Krause Johansen
-#+OPTIONS: toc:2 
+#+OPTIONS: H:6 num:5 toc:2 
+
 
 * Introduction
 The Escenic Content Engine Installer, =ece-install=  is a command line
@@ -73,6 +74,7 @@ that the following requirements are met:
     - 80 (standard HTTP)
     - 443 (HTTPS)
 
+****** On non-GNU/Linux systems
 =ece-install= relies on the GNU versions of various tools such as =find=, =cp=
 and =tar=. If you use =ece-install= on any system which provides different
 versions of these tools by default, then you must make sure that:
@@ -94,7 +96,6 @@ Platforms on which you will need to do this include:
 | Ubuntu 11.10         | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
 | Ubuntu LTS 10.04     | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
 | Ubuntu LTS 12.04     | Everything except Tomcat/APR wrappers are automatic | 2012-07-27 03:27 |
-
 
 
 * Downloading the ece-install Script
