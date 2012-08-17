@@ -294,38 +294,43 @@ EOF
 # last, give the control back to the ECE user & group 
 function set_correct_permissions()
 {
-    log "Setting correct permissions on ECE related directories ..."
+  log "Setting correct permissions on ECE related directories ..."
 
-    for el in $engine_dir_list; do
-        if [ ! -d $el ]; then
-            continue
-        fi
-        
-        if [ ${el} = ${escenic_data_dir} ]; then
-            local correct_permission=$(find ${el} \
-                -maxdepth 0 \
-                -user ${ece_user} | \
-                wc -l)
-            if [ $correct_permission -gt 0 ]; then
-                log "Data directory root, $el,"
-                log "has correct permissions, skiping sub directories."
-                continue
-            fi
-        fi
-
-        run chown -R ${ece_user}:${ece_group} $el
-    done
-
-    if [ -d "$tomcat_base" ]; then
-        run chown -R ${ece_user}:${ece_group} $tomcat_base
+  for el in $engine_dir_list; do
+    if [ ! -d $el ]; then
+      continue
+    fi
+    
+    if [ ${el} = ${escenic_data_dir} ]; then
+      local correct_permission=$(find ${el} \
+        -maxdepth 0 \
+        -user ${ece_user} | \
+        wc -l)
+      if [ $correct_permission -gt 0 ]; then
+        log "Data directory root, $el,"
+        log "has correct permissions, skiping sub directories."
+        continue
+      fi
     fi
 
-    # it's important that the ECE user has access to read the
-    # tomcat_home files, e.g. when creating a backup of it.
-    if [ -d "$tomcat_home" ]; then
-        run chgrp -R ${ece_group} $tomcat_home
-        run chmod -R g+rx $tomcat_home
+    run chown -R ${ece_user}:${ece_group} $el
+  done
+
+  if [ -d "$tomcat_base" ]; then
+    run chown -R ${ece_user}:${ece_group} $tomcat_base
+  fi
+
+  # it's important that the ECE user has access to read the
+  # tomcat_home files, e.g. when creating a backup of it.
+  if [ -d "$tomcat_home" ]; then
+    run chgrp -R ${ece_group} $tomcat_home
+    run chmod -R g+rx $tomcat_home
+    if [ -h "$tomcat_home" ]; then
+      local file=$(dirname $tomcat_home)/$(readlink $tomcat_home)
+      run chgrp -R ${ece_group} ${file}
+      run chmod -R g+rx $tomcat_home ${file}
     fi
+  fi
 }
 
 function print_status_and_next_steps()
