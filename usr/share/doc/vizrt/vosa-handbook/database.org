@@ -2,7 +2,7 @@
 
 A <%= trail_db_vendor %> DB has been installed in your habitat.
 
-[[./graphics/db.svg]]
+[[file:./graphics/db.svg][./graphics/db.svg]]
 
 
 
