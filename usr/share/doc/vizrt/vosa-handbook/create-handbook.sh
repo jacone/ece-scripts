@@ -82,7 +82,8 @@ function set_defaults_if_the_trails_are_not_set() {
   trail_editor_port=${trail_editor_port-8080}
   trail_import_host=${trail_import_host-edit2}
   trail_import_port=${trail_import_port-8080}
-  trail_searh_port=${trail_search_port-8081}
+  trail_search_host=${trail_search_host-localhost}
+  trail_search_port=${trail_search_port-8081}
   trail_monitoring_host=${trail_monitoring_host-mon}
   trail_network_name=${trail_network_name}
   trail_dot_network_name=$(get_network_name)
@@ -529,7 +530,7 @@ EOF
   "$trail_db_vip_host" -> "${trail_db_master_host-${trail_db_host}}";
 EOF
   fi
-  
+
   echo "}" >> $file
 }
 
@@ -584,6 +585,14 @@ EOF
   "content-engine" -> "${trail_analysis_host}:${trail_analysis_port-8080}";
 EOF
   fi
+
+  if [ -n "$trail_search_host" ]; then
+    cat >> $file <<EOF
+  "content-engine" -> "${trail_search_host}:${trail_search_port}/solr";
+EOF
+  fi
+  
+  
   
   cat >> $file <<EOF
 }
