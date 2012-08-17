@@ -64,6 +64,13 @@ platforms:
 Whichever operating system(s) you will be installing on, you must ensure
 that the following requirements are met:
 
+ - Sufficient memory :: The precise amount of memory required by
+      =ece-install= depends on what components are to be installed. To
+      successfully install a complete software stack on one machine,
+      you need at least 3GB of RAM. If you are installing on a
+      virtual machine it is important to remember this requirement
+      when creating the virtual machine.
+
  - Internet connection :: =ece-install= needs an Internet
       connection. Ideally it should be a fast connection, since it
       will need to download several hundred megabytes of data.
@@ -97,9 +104,36 @@ Platforms on which you will need to do this include:
 | Ubuntu LTS 10.04     | Everything except Tomcat/APR wrappers are automatic | 2012-02-27 13:19 |
 | Ubuntu LTS 12.04     | Everything except Tomcat/APR wrappers are automatic | 2012-07-27 03:27 |
 
+* Using ece-install
+The various software components required to run an Escenic-powered web
+site are usually installed on a cluster of servers, with different
+components installed on each server according to the
+function it will perform. The set of components installed on a
+particular server is called its *profile*.
 
-* Downloading the ece-install Script
-The easiest way of getting ece-install is to use git. Type this in
+The overall procedure for installing Escenic on a cluster of machines
+is as follows: 
+
+ 1. Determine the profile of each server in the cluster. For
+    descriptions of all pre-defined profiles, see ??.
+ 1. For each server:
+    1. Log on to the server.
+    1. Install the =ece-install= script (see Get ece-install).
+    1. Become the root user (see Become Root).
+    1. Create an =ece-install= configuration file (see Create a
+       Configuration File).
+    1. Run the =ece-install= script, specifying the appropriate
+       profile (see Run ece-install).
+
+=ece-install= can be run in two ways:
+
+ - Interactive mode :: In this mode, =ece-install= prompts you to
+      enter the parameters it needs in order to perform the installation.
+ - Full automatic install (FAI) mode :: In this mode =ece-install=
+      reads all required parameters from a configuration file.
+
+** <<<Get ece-install>>>
+Use =git= to get the ece-install script. Type this in
 your shell:
 
 #+BEGIN_SRC text
@@ -114,58 +148,62 @@ ece-scripts directory.
 If you have problems installing git, you can also download a ZIP
 archive here: https://github.com/skybert/ece-scripts/zipball/master
 
-* Running the ece-install Script
-After getting the latest version of ece-scripts, you run it with:
-#+BEGIN_SRC text
-# bash ece-scripts/usr/sbin/ece-install  
-#+END_SRC
-
-** Requires Super User Privileges
-You must run the script as the root user.  If you start the script as
-a regular user, it will complain:
+** <<<Become Root>>>
+You must be the root user to run =ece-install=. If you try to run it as
+an ordinary user, it will complain:
 #+BEGIN_SRC text
 [ece-install] You must be root when running ece-install
 #+END_SRC
-To become root on Ubuntu based systems and Mac OS X, do:
+
+To become root on Ubuntu-based systems and Mac OS X, enter:
 #+BEGIN_SRC text
 $ sudo su
 #+END_SRC
-Please note that just doing "sudo ece-install" may not work.
 
-On all other Unix like system, do:
+On all other Unix-like system, enter:
 #+BEGIN_SRC text
 $ su -
 #+END_SRC
 
-** Technet & WF credentials
-You will need access to http://technet.escenic.com and put these
-credentials in the root user's $HOME/ece-install.conf, normally this
-means /root/ece-install.conf, the script will also tell you this if
-you forget to provide such a configuration file:
+#+BEGIN_QUOTE
+Note that using =sudo= to run =ece-install= (that is, entering  "=sudo
+ece-install=") may not work. You should actually become the root user.
+#+END_QUOTE
+
+** <<<Create a Configuration File>>>
+=ece-install= expects to find a configuration file called
+=ece-install.conf= in the root user's home directory, which is usually
+=/root=.
+
+If you forget to provide such a file before running =ece-install=,
+then =ece-install= will complain:
 #+BEGIN_SRC text
 [ece-install] /root/ece-install.conf doesn't exist, I cannot live without it :-(
 #+END_SRC
 
-As for the technet credentials, the script will also tell you if it
-cannot find what it's looking for:
-#+BEGIN_SRC text
-[ece-install] Be sure to set technet_user and technet_password
-[ece-install] in /root/ece-install.conf
-#+END_SRC
-
-The minimum ece-install.conf file is thus:
+=/root/ece-install.conf=. may contain a large number of configuration
+parameters, but the minimum requirement is that it contains a user
+name and password for downloading software from Escenic Technet:
 #+BEGIN_SRC conf
 technet_user=<user>
 technet_password=<password>
 #+END_SRC
 
-If you're installing WF as well, you'll need additional credentials
-for this, see the Widget Framwork section below, and if you want to
-runn a fully automatic install without any user interaction, you'll
-need to specify some FAI specific parameters, see the FAI section
-below. 
+If the configuration file does not contain these settings then
+=ece-install= will complain:
+#+BEGIN_SRC text
+[ece-install] Be sure to set technet_user and technet_password
+[ece-install] in /root/ece-install.conf
+#+END_SRC
 
-** Basic invocation & how to debug errors
+Depending on what components you are installing on the server, you may
+need to include other configuration parameters in the file. If you are
+installing the Widget Framework, for example, you will need to specify
+additional download credentials (see ??). If you want to run in FAI
+mode then you may need to include many more parameters.
+
+
+** <<<Run ece-install>>>
 With the configuration file in place, you're now ready to run it:
 #+BEGIN_SRC text
 # bash ece-install [-v|--verbose|<-f|--file> <conf-file>]
@@ -1016,15 +1054,6 @@ install_analysis_server.postinst
 set_up_solr.preinst
 set_up_solr.postinst
 #+END_SRC
-
-* Assumptions
-** The machine on which ece-install has enough RAM
-It is assumed that the machine on which ece-install has enough RAM to
-install the profiles the user asks for.
-
-A common error by users, is to run ece-install in a (virtual) machine
-that has e.g. only 1GB RAM. For happy running, we recommend having a
-machine with at least 3GB when installing a full ECE stack on it.
 
 * Uninstalling Everything that the ece-install Set Up
 WARNING: this is potentially dangerous as some of these components may
