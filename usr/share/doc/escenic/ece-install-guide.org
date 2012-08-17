@@ -370,13 +370,13 @@ TBD: This profile will also install the Nagios interface for
 monitoring the different nodes. 
 
 ** Profile :: Restoring from backup
-ece-install can restore from a backup made by the ece script:
+~ece-install~ can restore from a backup made by the ~ece~ script:
 #+BEGIN_SRC text
 $ ece -i <instance> backup
 #+END_SRC
 
-As stated in the ece guide, this backup may contain (depending on
-what's available on the host where it's run):
+As stated in the guide for the ece script, this backup may contain
+(depending on what's available on the host where it's run):
 - database dump of the instance
 - data files (pictures, video files and so on). This is often referred
   to as the "multimedia archive" in Escenic literature.
@@ -430,6 +430,7 @@ restore from:
 |---------------------------------+---------+----------------------------------------------------|
 | Parameter                       | Default | Description                                        |
 |---------------------------------+---------+----------------------------------------------------|
+| ~fai_restore_from_backup~       |       0 | Enable restoring from backup                       |
 | ~fai_restore_all~               |       0 | Restore everything found in the backup file        |
 | ~fai_restore_db~                |       0 | Install the DB server & restore its contents       |
 | ~fai_restore_data_files~        |       0 | Restore the Solr & ECE data files                  |
