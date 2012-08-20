@@ -20,11 +20,6 @@ the user under which ECE, EAE and the Search instance are running as
 All VOSA hosts also has a (maximum) one minute old HTML report from
 system-info running on port ~5678~. 
 
-Here's a screenshot of the system-info report running on a
-presentation server:
-
-[[./graphics/pres1-system-info.png]]
-
 ** Hugin
 Hugin is an automatic, frequent aggregation of the system-info data of
 all the hosts in your habitat. It does this by asking the hossts to
