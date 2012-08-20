@@ -1,4 +1,5 @@
 #+TITLE: Welcome to the VOSA Handbook
+#+AUTHOR: Vizrt Online / The SaaS Team
 #+OPTIONS: toc:2 
 
 #+INCLUDE: "overview.org"
