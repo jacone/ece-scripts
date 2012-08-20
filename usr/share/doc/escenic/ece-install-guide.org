@@ -336,9 +336,13 @@ set of high performance patches.
 
 If not, MySQL or Percona must be installed in advance.
 
-Given that the mysqld is install, this profile will download all the
+Given that the mysqld is installed, this profile will download all the
 Escenic components and install the ECE database schema based from the
-SQL files contained inside the distribution bundles. 
+SQL files contained inside the distribution bundles specified with in
+the =technet_download_list= and =wf_dowload_list= variables. The
+defaults are inside the =ece-install= script itself, but you can
+overrides these in your =ece-install.conf= if you wish different minor
+versions of the ECE and plugins.
 
 The script will fail by itself if the DB already exists:
 #+BEGIN_SRC text
