@@ -510,20 +510,21 @@ If you're running in FAI mode, you can choose between these settings
 to decide what to restore and where to find the backup file to
 restore from:
 
-|---------------------------------+---------+----------------------------------------------------|
-| Parameter                       | Default | Description                                        |
-|---------------------------------+---------+----------------------------------------------------|
-| ~fai_restore_from_backup~       |       0 | Enable restoring from backup                       |
-| ~fai_restore_all~               |       0 | Restore everything found in the backup file        |
-| ~fai_restore_db~                |       0 | Install the DB server & restore its contents       |
-| ~fai_restore_data_files~        |       0 | Restore the Solr & ECE data files                  |
-| ~fai_restore_configuration~     |       0 | Restore the Solr & ECE configuration files         |
-| ~fai_restore_software_binaries~ |       0 | Restore the Escenic and Apache Tomcat software     |
-| ~fai_restore_from_file~         |      "" | The .tar.gz produced by ~ece -i <instance> backup~ |
-|---------------------------------+---------+----------------------------------------------------|
+|---------------------------------+---------+-----------------------------------------------------------|
+| Parameter                       | Default | Description                                               |
+|---------------------------------+---------+-----------------------------------------------------------|
+| ~fai_restore_from_backup~       |       0 | Enable restoring from backup                              |
+| ~fai_restore_all~               |       0 | Restore all backup items. Requires a full backup tarball. |
+| ~fai_restore_db~                |       0 | Install the DB server & restore its contents              |
+| ~fai_restore_data_files~        |       0 | Restore the Solr & ECE data files                         |
+| ~fai_restore_configuration~     |       0 | Restore the Solr & ECE configuration files                |
+| ~fai_restore_software_binaries~ |       0 | Restore the Escenic and Apache Tomcat software            |
+| ~fai_restore_from_file~         |      "" | The .tar.gz produced by ~ece -i <instance> backup~        |
+|---------------------------------+---------+-----------------------------------------------------------|
 
-For example, to restore everything possible from a given tarball, you
-need this in your ece-install.conf:
+For example, to restore the DB, dta files, configuration & software
+binaries from a given tarball, you need this in your
+=ece-install.conf=:
 #+BEGIN_SRC conf
 fai_enabled=1
 
@@ -532,7 +533,7 @@ fai_restore_all=1
 fai_restore_from_file=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
 #+END_SRC
 
-ece-install can also remove files  prior to restoring from the
+=ece-install= can also remove files prior to restoring from the
 backup:
 
 |------------------------------+---------+-----------------------------------|
