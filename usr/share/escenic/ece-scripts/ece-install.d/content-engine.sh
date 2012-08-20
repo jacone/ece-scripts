@@ -102,6 +102,7 @@ function install_ece_instance() {
   set_conf_file_value ece_unix_user $ece_user /etc/default/ece
   set_conf_file_value ece_unix_group $ece_group /etc/default/ece
 
+  stop_and_clear_instance_if_requested
   leave_content_engine_trails
 
   admin_uri=http://$HOSTNAME:${appserver_port}/escenic-admin/
@@ -700,4 +701,39 @@ function leave_content_engine_trails() {
   fi
   
   leave_trail "trail_public_host_name=${public_host_name}"
+}
+
+## stop the ECE or EAE being installed and clear its logs, if so
+function stop_and_clear_instance_if_requested() {
+  local go_ahead=0
+
+  if [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
+    go_ahead=${fai_analysis_stop_and_clear-0}
+  elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+    go_ahead=${fai_editor_stop_and_clear-0}
+  elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+    go_ahead=${fai_presentation_stop_and_clear-0}
+  elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+    go_ahead=${fai_all_stop_and_clear-0}
+  fi
+
+  if [ $go_ahead -eq 1 ]; then
+    print_and_log "Stopping and clearing ${instance_name}'s work & log files:"
+    local ece_command="ece -i ${instance_name} -t ${type} clean stop"
+    run su - ${ece_user} -c "$ece_command"
+    local dir_list="
+      ${escenic_log_dir}
+      ${escenic_cache_dir}
+      ${escenic_crash_dir}
+      ${tomcat_base}/logs
+    "
+    for el in $dir_list; do
+      if [ ! -d "$el" ]; then
+        continue
+      fi
+      log "Removing all files in $el ..."
+      run rm -rf $el/*
+    done
+
+  fi
 }
