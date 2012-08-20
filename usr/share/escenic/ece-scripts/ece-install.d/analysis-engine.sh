@@ -1,7 +1,6 @@
 # ece-install module for installing EAE
 
-function install_analysis_server()
-{
+function install_analysis_server() {
   run_hook install_analysis_server.preinst
   
   print_and_log "Installing an analysis server on $HOSTNAME ..."
@@ -19,7 +18,7 @@ function install_analysis_server()
     appserver_port=${fai_analysis_port}
   fi
   
-    # deploy the EAE WARs
+  # deploy the EAE WARs
   run cp ${escenic_root_dir}/analysis-engine-*/wars/*.war \
     ${tomcat_base}/webapps
 
@@ -56,12 +55,12 @@ function install_analysis_server()
   set_conf_file_value pageview.aggr.hour.older.than.hours 2 $file
   set_conf_file_value pageview.maintenance.older.than.days 0 $file
 
-    # important to turn this off here, it's only for the EAE .cfg
-    # files, see above.
+  # important to turn this off here, it's only for the EAE .cfg
+  # files, see above.
   dont_quote_conf_values=0
 
-    # touching web.xml to trigger a re-deploy of the EAE Reports
-    # application.
+  # touching web.xml to trigger a re-deploy of the EAE Reports
+  # application.
   run touch ${tomcat_base}/webapps/analysis-reports/WEB-INF/web.xml
   run_hook install_analysis_server.postinst
 }
