@@ -189,11 +189,26 @@ function backup_db() {
       cut -d'"' -f2)
 
     db_backup_file=$backup_dir/${db}-$(date --iso).sql.gz
+    
+    # check DB credentials first.
+    mysqldump -u ${db_user} \
+      -p${db_password} \
+      -h ${db_host} \
+      -P ${db_port} ${db} \
+      -e 'select 1;' \
+      1>> $log 2>> $log
+    if [ $? -gt 0 ]; then
+      print "The DB credentials in $tomcat_base/conf seem to be wrong :-("
+      print "See $log for further details. I will exit now."
+      remove_pid_and_exit_in_error
+    fi
+
+    # then, go ahead with the dump, piping the output to gzip -9
     mysqldump -u ${db_user} \
       -p${db_password} \
       -h ${db_host} \
       -P ${db_port} ${db} | \
-      gzip - \
+      gzip -9 \
       > $db_backup_file
 
     print "Database dumped: $db_backup_file"

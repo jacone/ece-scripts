@@ -405,6 +405,39 @@ property.com.escenic.studio.font.windows7=Arial Unicode MS
 property.com.escenic.studio.font.windowsxp=Arial Unicode MS
 property.com.escenic.studio.font.windowsvista=Arial Unicode MS
 EOF
+
+  set_up_publication_nursery_conf
+}
+
+## Set publication specific configuration, set here and not in
+## set_up_instance_specific_nursery_configuration as this
+## configuration will be the same on two instaces running on the same
+## host.
+function set_up_publication_nursery_conf() {
+  if [ -n "$fai_publication_domain_mapping_list" ]; then
+    local publication_name=""
+    local publication_domain=""
+    local publication_aliases=""
+
+    for el in $fai_publication_domain_mapping_list; do
+      local old_ifs=$IFS
+      IFS='#'
+      read publication_name publication_domain publication_aliases <<< "$el"
+      IFS=$old_ifs
+      
+      local file=$escenic_conf_dir/engine/environment/${fai_publication_environment-production}/neo/publications/Pub-${publication_name}.properties
+      
+      print_and_log "Creating Nursery component" \
+        $(basename $file .properties) \
+        "for publication $publication_name"
+      make_dir $(dirname $file)
+      cat > $file <<EOF
+# Created by $(basename $0) @ $(date)
+\$class=neo.xredsys.config.SimplePublicationSupport
+url=http://${publication_domain}/
+EOF
+    done
+  fi
 }
 
 function set_up_instance_specific_nursery_configuration() {

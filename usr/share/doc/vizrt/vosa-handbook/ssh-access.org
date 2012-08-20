@@ -8,7 +8,8 @@ It also assumes that the gateway IP of your office/network has been
 added to the access control list of hosts/networks which are allowed
 to access the gatekeeper.
 
-** Generate your SSH key
+** Generate an SSH key on Linux or Mac OS X
+*** Check to see if you already have a key you can use
 You only need to do this if you don't already have an SSH key. The
 keys are normally stored in ~$HOME/.ssh~ so have a look here to see if
 you have any:
@@ -20,6 +21,7 @@ If you see the ~id_rsa~ and ~id_dsa.pub~, you already have one. They
 can also be called something with ~dsa~ or indeed anything (the
 ~id_rsa[.pub]~ are just the default).
 
+*** Generate a new SSH key
 To generate a new key, you can do:
 #+BEGIN_SRC text
 $ ssh-keygen -t rsa
@@ -39,7 +41,7 @@ $ ssh-keygen -f id_rsa -p
 
 The ~id_rsa~ above corresponds to the ~$HOME/.ssh/id_rsa~ file.
 
-** Add your SSH key to your key agent
+*** Add your SSH key to your key agent
 On your local machine, load your SSH key into your key agent. On Linux
 and Mac OS X, this should only be a matter of:
 #+BEGIN_SRC text
@@ -56,6 +58,24 @@ ring with:
 $ ssh-add -l
 2048 33:49:02:c5:30:8d:2e:9g:28:82:3a:89:5c:b3:5d:a3 /home/myuser/.ssh/id_rsa (RSA)
 #+END_SRC
+
+
+** Generate an SSH key on Windows
+Install [[http://cygwin.com][Cygwin]] and be sure to check for the =openssh-client= package
+when running =setup.exe=:
+
+[[./graphics/cygwin-openssh.png]]
+
+Once the installation is done, you should have a =cygwin= icon to
+click on:
+[[http://x.cygwin.com/cygwin-icon.gif]] This will open a Unix like shell
+on your Windows computer, in which you can use many of the standard
+Unix commands, such as =ls=, =cd=, =cp=, =rsync= & =grep=.
+
+In the Cygwin shell, you now run the same =ssh= command that you'd
+have on Linux. This command is what you can see being used and
+you can use the instructions above in the [[Generate an SSH key on Linux
+or Mac OS X]] section to generate and use your SSH key.
 
 ** Log on to the gatekeeper
 On your local machine, do:

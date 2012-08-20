@@ -188,9 +188,10 @@ function get_blockdiag_call_flow() {
   if [ -n "$trail_lb_host" ]; then
     lb_call_flow="$lb_call_flow $trail_lb_host ->"
   fi
-  for el in "$trail_presentation_host_list"; do
+  for el in $trail_presentation_host_list; do
     lb_call_flow="$lb_call_flow ${el},"
   done
+  echo " " "$(echo ${lb_call_flow} | sed 's/,$//g');"
   
   if [ -n "$trail_editor_host" ]; then
     echo "  journalist -> $trail_editor_host" \
@@ -493,6 +494,7 @@ function generate_cache_server_org() {
 
   generate_cache_server_diagram
   local file=$target_dir/generated-cache-server.org
+  local svg_file=./graphics/${trail_cache_host}-cache.svg
   cat > $file <<EOF
 ** Cache server on $trail_cache_host
 
@@ -500,7 +502,7 @@ The cache server on $trail_cache_host is available on
 $(get_link ${trail_cache_host}):${trail_cache_port-80}
 
 #+ATTR_HTML: alt="Cache server on $trail_cache_host"
-[[./graphics/${trail_cache_host}-cache.svg]]
+[[file:${svg_file}][${svg_file}]]
 EOF
 }
 
@@ -558,8 +560,9 @@ blockdiag {
 }
 EOF
     local file=$target_dir/network-file-system-sync.org
+    local svg_file=./graphics/$(basename $blockdiag_file .blockdiag).svg
     cat >> $file <<EOF
-[[./graphics/$(basename $blockdiag_file .blockdiag).svg]]
+[[file:${svg_file}][${svg_file}]]
 EOF
     run cat $file >> \
       $target_dir/network-file-system.org
