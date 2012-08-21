@@ -128,10 +128,10 @@ is as follows:
 
 =ece-install= can be run in two ways:
 
- - Interactive mode :: In this mode, =ece-install= prompts you to
-      enter the parameters it needs in order to perform the installation.
- - Full automatic install (FAI) mode :: In this mode =ece-install=
-      reads all required parameters from a configuration file.
+ - *Interactive mode*
+ - *Full automatic install (FAI) mode*
+
+For more about this, see ece-install Execution Modes.
 
 ** <<<Get ece-install>>>
 Use =git= to get the ece-install script. Type this in
@@ -238,25 +238,25 @@ the BASH interpreter with the -x flag:
 Doing this lets you see everything that BASH does while executing the
 script - how wild card variables are  expanded and so on.
 
-** Preventing accidental execution of ece-install 
-You can ensure that =ece-install= is not executed accidentally by
-creating a *lock file*. Simply create a file with this path:
-#+BEGIN_SRC text
-/var/lock/ece-install.lock
-#+END_SRC
-    
-If this file is present then =ece-install= will fail fast as follows:
-#+BEGIN_SRC text
-The lock file is present: /var/lock/ece-install.lock and ece-install
-will therefore refuse to run.
-#+END_SRC
+** <<<ece-install Execution Modes>>>
+=ece-install= can be run in two main ways:
 
-The lock file does not need to contain anything, it just needs to exist.
+ * In *interactive mode*, in which case it prompts you for input.
+ * In *fully automatic install (FAI)* mode, in which case it reads all
+   parameters from the configuration file =ece-install.conf=. If it
+   cannot find all the parameters it needs in the configuration file,
+   then it will fail.
 
-* <<<Server Profiles>>>
+Which mode =ece-install= runs in depends on a parameter in the
+configuration file, =fai_enabled=. If =fai_enabled= is not set or set
+to =0=, then =ece-install= runs in interactive mode. If =fai_enabled=
+is set to =1= then =ece-install= runs in FAI mode.
 
+*** Interactive Mode
 When you run =ece-install= in interactive mode, it displays a prompt
-asking which *profile* you want to install:
+asking what you want to install. You can either install one of a
+number of predefined *profiles*, or you can restore a previously
+installed profile from a backup copy:
 #+BEGIN_SRC text
 Hi, which server profile do you wish to install?
 
@@ -275,6 +275,76 @@ Hi, which server profile do you wish to install?
 Select 1-11 and press ENTER
 Your choice [1]> 
 #+END_SRC
+
+A *profile* is a pre-defined set of software components that enables a
+computer to perform a particular function. For descriptions of all
+available profiles, see ??. For a description of the =Restore from
+backup= option, see ??.
+
+Depending on what choice you make, more prompts may be displayed
+requesting further information. When you have supplied all the
+information =ece-install= needs, the installation process begins.
+
+THEN WHAT??
+
+*** FAI Mode
+To run =ece-install= in FAI mode you must first add the following settings
+to =ece-install.conf=:
+ 
+ * =fai_enabled=1= To switch FAI mode on.
+ * One =fai_???_install=1= setting to choose the profile you want to
+   install (or what about restoring a backup?).
+ * Optionally, additional settings related to the profile you have selected.
+
+Then when you run =ece-install= it will output:
+#+BEGIN_SRC
+[ece-install] Full Automatic Install (FAI) enabled.
+[ece-install] All user input will be read from /root/ece-install.conf
+#+END_SRC
+
+** Preventing accidental execution of ece-install 
+You can ensure that =ece-install= is not executed accidentally by
+creating a *lock file*. Simply create a file with this path:
+#+BEGIN_SRC text
+/var/lock/ece-install.lock
+#+END_SRC
+    
+If this file is present then =ece-install= will fail fast as follows:
+#+BEGIN_SRC text
+The lock file is present: /var/lock/ece-install.lock and ece-install
+will therefore refuse to run.
+#+END_SRC
+
+The lock file does not need to contain anything, it just needs to exist.
+
+* <<<Server Profiles>>>
+
+When you run =ece-install= in interactive mode, it displays a prompt
+asking what you want to install. You can either install one of a
+number of predefined *profiles*, or you can restore a previously
+installed profile from a backup copy:
+#+BEGIN_SRC text
+Hi, which server profile do you wish to install?
+
+   1 - All in one, full stack on one host, suitable for dev & test environments
+   2 - Editorial (publication) server
+   3 - Presentation server (ECE + memcached).
+   4 - Database server
+   5 - Cache server (cache and web server)
+   6 - RMI hub
+   7 - Search server (Solr + indexer-webapp)
+   8 - Install Widget Framework.
+   9 - Create a new publication based on WF if available, ECE/clean-demo if not
+   10 - A monitoring server (web server + Munin gatherer)
+   11 - Restore from backup (DB, data files, binaries, conf & publications)
+
+Select 1-11 and press ENTER
+Your choice [1]> 
+#+END_SRC
+
+A *profile* is a pre-defined set of software components that enables a
+computer to perform a particular function.
+
 ** Common for All Server Profiles
 The script will install a Munin node on the host. It will also
 install the Escenic specific Munin plugins on hosts where there are
@@ -323,13 +393,13 @@ the different profile descriptions bellow.
 Will set up a typical editorial server (often referred to as the
 publication server in Escenic literature).
 
-** Profile :: Presentation Server
+** Presentation Server
 This will set up a typical presentation server:
 - Memcached, distributed memory cache
 - Deployment setup to only deploy escenic-admin and the
   publication(s).
 
-** Profile :: Database Server
+** Database Server
 If ece-install is run on a support version of Debian or Ubuntu, this
 will install the excellent Percona distribution of MySQL with their
 set of high performance patches.
@@ -393,7 +463,7 @@ The script will set up and use the replication user & credentials with
 default values, if you wish to override these, have a look in the FAI
 parameter overview.
 
-** Profile :: Cache Server
+** Cache Server
 If ece-install is run on a support version of Debian or Ubuntu, it
 will install the latest Varnish 3.0 caching server from the Varnish
 APT repository.
@@ -429,7 +499,7 @@ TBD:
   to be in the staff network ACL, defined in the Varnish
   configuration. 
 
-** Profile :: Install Widget Framework
+** Install Widget Framework
 You'll need a user name and password for accessing the
 repo.escenic.com Maven repository. You should get these credentials
 when you bought Widget Framework. If you for some reason do not have
@@ -441,7 +511,7 @@ complain:
 [ece-install] Be sure to set wf_user and wf_password in /root/ece-install.conf
 [ece-install] If you don't have these, please contact support@escenic.com
 #+END_SRC
-** Profile :: Create Publication
+** Create Publication
 This profile will create a publication for you, only asking you the
 name of the publication and which ECE instance to use for its
 creation.
@@ -449,14 +519,14 @@ creation.
 This installation profile will base the publication on the Widget
 Framework if its present on the system, if not, ECE's clean demo WAR
 is used as a basis.  
-** Profile :: Monitoring Server
+** Monitoring Server
 This will install a Munin gatherer and web server. The latter for
 accessing the reports generated by the former.
 
 TBD: This profile will also install the Nagios interface for
 monitoring the different nodes. 
 
-** Profile :: Restoring from backup
+** Restoring from backup
 ~ece-install~ can restore from a backup made by the ~ece~ script:
 #+BEGIN_SRC text
 $ ece -i <instance> backup
@@ -471,7 +541,7 @@ As stated in the guide for the ece script, this backup may contain
 - Escenic software
 
 *** Running interactively
-**** Start ece-install and choose the Option, "Restore from backup"
+**** Start ece-install and choose the Option Restore from backup
 #+BEGIN_SRC text
 # ece-install
 #+END_SRC
@@ -550,15 +620,15 @@ backup:
 | ~fai_restore_pre_wipe_solr~  |       0 | Remove the solr data/state files  |
 |------------------------------+---------+-----------------------------------|
 
-** Profile :: Analysis Server
+** Analysis Server
 This profile will install the Escenic Analysis Engine and configure it
 for production use with sane defaults. Be sure to use a different DB
-than you use for ECE.
+thank you use for ECE.
 
-** Profile :: NFS server
+** NFS server
 Will install an NFS server.
 
-** Profile :: NFS client
+** NFS client
 Will install an NFS client, create all the mountpoints and mount these
 on the host.
 
@@ -571,7 +641,7 @@ fai_nfs_server_address=192.168.1.200
 fai_nfs_export_list="/var/exports/multimedia"  
 #+END_SRC
 
-** Profile :: VIP provider
+** VIP provider
 [[file:images/nfs-vip.png]]
 
 This profile will make the host capable of serving a certain virtual
