@@ -526,7 +526,7 @@ restore from:
 | ~fai_restore_from_file~         |      "" | The .tar.gz produced by ~ece -i <instance> backup~        |
 |---------------------------------+---------+-----------------------------------------------------------|
 
-For example, to restore the DB, dta files, configuration & software
+For example, to restore the DB, data files, configuration & software
 binaries from a given tarball, you need this in your
 =ece-install.conf=:
 #+BEGIN_SRC conf
@@ -797,9 +797,9 @@ $HOME/ece-install.conf file of the root user:
 | ~fai_all_conf_archive~                | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
 | ~fai_all_ear~                         | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
 | ~fai_all_install~                     | 0                                                 | Install all components on your server.                                                                                                |
-| ~fai_all_stop_and_clear~              | 0                                                 | After installation, stop the instances and clear its work & log files.                                                                |
+| ~fai_all_stop_and_clear~              | 0                                                 | After installation, stop the instance and clear its work & log files.                                                                 |
 | ~fai_analysis_db_host~                | localhost                                         | For the EAE DB (different from ECE's)                                                                                                 |
-| ~fai_analysis_db_install~             | 0                                                 | Install db profile                                                                                                                    |
+| ~fai_analysis_db_install~             | 0                                                 | Install DB profile                                                                                                                    |
 | ~fai_analysis_db_password~            | read-the-source-luke                              | For the EAE DB (different from ECE's)                                                                                                 |
 | ~fai_analysis_db_port~                | 3306                                              | For the EAE DB (different from ECE's)                                                                                                 |
 | ~fai_analysis_db_schema~              | ece5db                                            | For the EAE DB (different from ECE's)                                                                                                 |
