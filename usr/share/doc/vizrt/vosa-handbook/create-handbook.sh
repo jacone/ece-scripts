@@ -3,7 +3,7 @@
 # by tkj@vizrt.com
 
 handbook_org=vosa-handbook.org
-target_dir=/tmp/$(basename $0 .sh)-$(date --iso)
+target_dir=$HOME/tmp/$(basename $0 .sh)-$(date --iso)
 host_name_list_outside_network="
   amazonaws.com
 "
@@ -278,7 +278,8 @@ function generate_html_from_org() {
   echo "Generating new handbook HTML from ORG ..." 
   run emacs \
     --load vizrt-branding-org-mode.el \
-    --batch --visit $target_dir/$handbook_org \
+    --batch \
+    --visit $target_dir/$handbook_org \
     --funcall org-export-as-html-batch 2> /dev/null
   echo "$target_dir/$(basename $handbook_org .org).html is now ready"
 }

@@ -406,9 +406,13 @@ set of high performance patches.
 
 If not, MySQL or Percona must be installed in advance.
 
-Given that the mysqld is install, this profile will download all the
+Given that the mysqld is installed, this profile will download all the
 Escenic components and install the ECE database schema based from the
-SQL files contained inside the distribution bundles. 
+SQL files contained inside the distribution bundles specified with in
+the =technet_download_list= and =wf_dowload_list= variables. The
+defaults are inside the =ece-install= script itself, but you can
+overrides these in your =ece-install.conf= if you wish different minor
+versions of the ECE and plugins.
 
 The script will fail by itself if the DB already exists:
 #+BEGIN_SRC text
@@ -580,20 +584,21 @@ If you're running in FAI mode, you can choose between these settings
 to decide what to restore and where to find the backup file to
 restore from:
 
-|---------------------------------+---------+----------------------------------------------------|
-| Parameter                       | Default | Description                                        |
-|---------------------------------+---------+----------------------------------------------------|
-| ~fai_restore_from_backup~       |       0 | Enable restoring from backup                       |
-| ~fai_restore_all~               |       0 | Restore everything found in the backup file        |
-| ~fai_restore_db~                |       0 | Install the DB server & restore its contents       |
-| ~fai_restore_data_files~        |       0 | Restore the Solr & ECE data files                  |
-| ~fai_restore_configuration~     |       0 | Restore the Solr & ECE configuration files         |
-| ~fai_restore_software_binaries~ |       0 | Restore the Escenic and Apache Tomcat software     |
-| ~fai_restore_from_file~         |      "" | The .tar.gz produced by ~ece -i <instance> backup~ |
-|---------------------------------+---------+----------------------------------------------------|
+|---------------------------------+---------+-----------------------------------------------------------|
+| Parameter                       | Default | Description                                               |
+|---------------------------------+---------+-----------------------------------------------------------|
+| ~fai_restore_from_backup~       |       0 | Enable restoring from backup                              |
+| ~fai_restore_all~               |       0 | Restore all backup items. Requires a full backup tarball. |
+| ~fai_restore_db~                |       0 | Install the DB server & restore its contents              |
+| ~fai_restore_data_files~        |       0 | Restore the Solr & ECE data files                         |
+| ~fai_restore_configuration~     |       0 | Restore the Solr & ECE configuration files                |
+| ~fai_restore_software_binaries~ |       0 | Restore the Escenic and Apache Tomcat software            |
+| ~fai_restore_from_file~         |      "" | The .tar.gz produced by ~ece -i <instance> backup~        |
+|---------------------------------+---------+-----------------------------------------------------------|
 
-For example, to restore everything possible from a given tarball, you
-need this in your ece-install.conf:
+For example, to restore the DB, dta files, configuration & software
+binaries from a given tarball, you need this in your
+=ece-install.conf=:
 #+BEGIN_SRC conf
 fai_enabled=1
 
@@ -602,7 +607,7 @@ fai_restore_all=1
 fai_restore_from_file=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
 #+END_SRC
 
-ece-install can also remove files  prior to restoring from the
+=ece-install= can also remove files prior to restoring from the
 backup:
 
 |------------------------------+---------+-----------------------------------|
@@ -862,6 +867,7 @@ $HOME/ece-install.conf file of the root user:
 | ~fai_all_conf_archive~                | ""                                                | conf.tar.gz to use for Nursery & JAAS configuration                                                                                   |
 | ~fai_all_ear~                         | ""                                                | EAR to use instead of the Escenic binaries                                                                                            |
 | ~fai_all_install~                     | 0                                                 | Install all components on your server.                                                                                                |
+| ~fai_all_stop_and_clear~              | 0                                                 | After installation, stop the instances and clear its work & log files.                                                                |
 | ~fai_analysis_db_host~                | localhost                                         | For the EAE DB (different from ECE's)                                                                                                 |
 | ~fai_analysis_db_install~             | 0                                                 | Install db profile                                                                                                                    |
 | ~fai_analysis_db_password~            | read-the-source-luke                              | For the EAE DB (different from ECE's)                                                                                                 |
@@ -872,11 +878,12 @@ $HOME/ece-install.conf file of the root user:
 | ~fai_analysis_name~                   | analysis1                                         | EAE instance name                                                                                                                     |
 | ~fai_analysis_port~                   | 8080                                              | Port of the EAE                                                                                                                       |
 | ~fai_analysis_shutdown~               | 8005                                              | Shutdown port for the EAE app server                                                                                                  |
+| ~fai_analysis_stop_and_clear~         | 0                                                 | After installation, stop the instances and clear its work & log files                                                                 |
 | ~fai_apt_vizrt_pool~                  | stable                                            | Which package pool in the Vizrt APT to install package from.                                                                          |
 | ~fai_cache_backends~                  | ${HOSTNAME}:8080                                  | Space separated, e.g. "app1:8080 app2:8080"                                                                                           |
 | ~fai_cache_install~                   | 0                                                 | Install cache server profile                                                                                                          |
-| ~fai_db_drop_old_db_first~            | 0                                                 | Warning: this will drop the old database before installing a new one                                                                  |
 | ~fai_db_daily_backup~                 | 0                                                 | Sets up daily backup of the DB.                                                                                                       |
+| ~fai_db_drop_old_db_first~            | 0                                                 | Warning: this will drop the old database before installing a new one                                                                  |
 | ~fai_db_host~                         | $HOSTNAME                                         | Useful for editor & presentation profiles                                                                                             |
 | ~fai_db_install~                      | 0                                                 | Install db profile                                                                                                                    |
 | ~fai_db_password~                     | read-the-source-luke                              | Useful for DB installation profile                                                                                                    |
@@ -889,6 +896,7 @@ $HOME/ece-install.conf file of the root user:
 | ~fai_editor_name~                     | editor1                                           | Name of the editor instance                                                                                                           |
 | ~fai_editor_port~                     | 8080                                              | HTTP port of the editor instance                                                                                                      |
 | ~fai_editor_shutdown~                 | 8005                                              | Shutdown port of the editor instance                                                                                                  |
+| ~fai_editor_stop_and_clear~           | 0                                                 | After installation, stop the instances and clear its work & log files                                                                 |
 | ~fai_enabled~                         | 0                                                 | Whether or not to run ece-install in FAI mode                                                                                         |
 | ~fai_keep_off_etc_hosts~              | 0                                                 | Set this to 1 if you don't want ece-install adding entries to /etc/hosts                                                              |
 | ~fai_monitoring_admin_password~       | No telling you here ;-)                           | The admin password of the web interface(s). Currenlty only set for Icinga.                                                            |
@@ -910,6 +918,7 @@ $HOME/ece-install.conf file of the root user:
 | ~fai_presentation_name~               | web1                                              | Name of the presentation server instance                                                                                              |
 | ~fai_presentation_port~               | 8080                                              | HTTP port of the presentation server instance                                                                                         |
 | ~fai_presentation_shutdown~           | 8005                                              | Shutdown port of the presentation instance                                                                                            |
+| ~fai_presentation_stop_and_clear~     | 0                                                 | After installation, stop the instances and clear its work & log files                                                                 |
 | ~fai_public_host_name~                | ${HOSTNAME}:8080                                  | The public address for your website                                                                                                   |
 | ~fai_publication_create~              | 0                                                 | Create a new publication                                                                                                              |
 | ~fai_publication_domain_mapping_list~ | ""                                                | Mapping between publication names and their corresponding domains on the form: "one#one.com other#other.com[#<alias1>[,<alias2>]]"    |
