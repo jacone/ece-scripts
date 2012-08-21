@@ -2,26 +2,25 @@
 
 function get_deploy_white_list() {
   
+  local deploy_white_list=""
+  local presentation_deploy_white_list="escenic-admin $(get_publication_short_name_list)"
+  local editor_deploy_white_list="escenic-admin escenic studio indexer-webservice webservice"
+  local search_deploy_white_list="solr indexer-webapp"
+  
   # user's deploy white list, if present, takes precedence.
-  if [ $fai_enabled -eq 1 -a -n "${fai_publication_deploy_white_list}" ]; then
-    echo $fai_publication_deploy_white_list
-    return
-  fi
-  
-  local white_list=""
-  
-  if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER \
-    -a -n "${publication_name}" ]; then
-    white_list="escenic-admin ${publication_name} "
-  elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then 
-    white_list="solr indexer-webapp"
-  elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
-    white_list="escenic-admin "$(get_publication_short_name_list)
-  elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
-    white_list="escenic-admin escenic studio indexer-webservice webservice"
+  if [ $fai_enabled -eq 1 ]; then
+    if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+      deploy_white_list=${fai_presentation_deploy_white_list-$presentation_deploy_white_list}
+    elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+      deploy_white_list=${fai_editor_deploy_white_list-$editor_deploy_white_list}
+    elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+      deploy_white_list=${fai_search_deploy_white_list-$search_deploy_white_list}
+    else
+      deploy_white_list=${fai_publication_deploy_white_list-""}
+    fi
   fi
 
-  echo ${white_list}
+  echo ${deploy_white_list}
 }
 
 function get_publication_short_name_list() {
