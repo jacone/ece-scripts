@@ -860,8 +860,9 @@ function un_install_everything() {
     ant
     ant-contrib
     ant-optional
+    escenic-check-mk-plugins
+    escenic-common-scripts
     escenic-content-engine-scripts
-    escenic-munin-plugins
     escenic-munin-plugins
     libmysql-java
     maven2
