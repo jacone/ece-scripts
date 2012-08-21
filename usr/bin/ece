@@ -30,10 +30,8 @@ backup_exclude_init=0
 backup_exclude_multimedia=0
 backup_exclude_solr=0
 backup_exclude_state=0
-http_user=""
-http_password=""
-wget_auth=""
-curl_auth=""
+wget_appserver_auth=""
+curl_appserver_auth=""
 log=""
 
 type_list="
@@ -201,9 +199,10 @@ function set_common_settings() {
       $log_dir/Escenic-error.log
     "
 
-    if [[ -n "$http_user" && -n "$http_password" ]]; then
-        wget_auth="--http-user $http_user --http-password $http_password"
-        curl_auth="-u ${http_user}:${http_password}"
+    if [[ -n "$appserver_http_user" && -n "$appserver_http_password" ]]; then
+      wget_appserver_auth="--http-user $appserver_http_user --http-password $appserver_http_password"
+      curl_appserver_auth="-u ${appserver_http_user}:${appserver_http_password}"
+      wget_builder_auth="--http-user $builder_http_user --http-password $builder_http_password"
     fi
 }
 

@@ -18,6 +18,11 @@ function set_up_solr() {
     if [ $(is_using_conf_archive) -eq 1 ]; then
       print_and_log "Using the supplied Solr configuration from" 
       print_and_log "bundle: $ece_instance_conf_archive"
+      
+      # the conf archive typically resides on the build server, hence
+      # we set its authentication credentials here.
+      wget_auth=$wget_builder_auth
+    
       local a_tmp_dir=$(mktemp -d)
       local file=$(
         download_uri_target_to_dir \

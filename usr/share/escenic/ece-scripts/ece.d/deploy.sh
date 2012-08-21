@@ -1,7 +1,5 @@
 # Module for the 'ece deploy' command.
 
-wget_opts="--continue --inet4-only --quiet"
-
 function get_state_file() {
   echo $data_dir/${instance}.state
 }
@@ -48,6 +46,7 @@ function deploy() {
 
   if [ -n "$file" ]; then
     print_and_log "Deploying $file on $instance ..."
+    wget_auth=$wget_builder_auth
     ear=$(download_uri_target_to_dir $file $cache_dir)
     
     if [ ! -e "$ear" ]; then

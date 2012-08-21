@@ -55,7 +55,9 @@ function update_publication_resources() {
     fi
     
     run cd $tmp_dir;
-    run wget $wget_auth $url -O ${resource}
+
+    # adding auth credentials for the appserver (if set)
+    run wget $wget_appserver_auth $url -O ${resource}
     md5sum ${resource} > ${resource}.md5sum
     exit_on_error "md5sum ${resource}"
 
@@ -75,11 +77,11 @@ function update_publication_resources() {
   debug POSTing $resource to $url
   if [[ -n "$do_put" && "$do_put" == "true" ]]; then
     curl -T ${resource} \
-      ${curl_auth} \
+      ${curl_appserver_auth} \
       ${url} \
       1>>$log 2>>$log
   else
-    wget $wget_auth \
+    wget $wget_appserver_auth \
       -O - \
       --post-file ${resource} \
       $url \
