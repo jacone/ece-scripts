@@ -73,14 +73,14 @@ function install_ece_instance() {
       $ece_instance_conf_archive
   fi
 
+  set_up_app_server
+  set_up_proper_logging_configuration
+
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
     set_up_basic_nursery_configuration
     set_up_instance_specific_nursery_configuration
   fi
   
-  set_up_app_server
-  set_up_proper_logging_configuration
-
   # We set a WAR white list for all profiles except all in one
   if [ $install_profile_number -ne $PROFILE_ALL_IN_ONE -a \
     $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
@@ -408,6 +408,7 @@ property.com.escenic.studio.font.windowsvista=Arial Unicode MS
 EOF
 
   set_up_publication_nursery_conf
+  set_up_search_client_nursery_conf
 }
 
 ## Set publication specific configuration, set here and not in
@@ -621,6 +622,10 @@ function set_archive_files_depending_on_profile()
   elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
     ece_instance_ear_file=$fai_all_ear
     ece_instance_conf_archive=$fai_all_conf_archive
+  else
+    # All other profiles don't have EAR support.
+    ece_instance_ear_file=""
+    ece_instance_conf_archive=""
   fi
 }
 
@@ -737,3 +742,27 @@ function stop_and_clear_instance_if_requested() {
 
   fi
 }
+
+## called for presentation & editorial profiles
+function set_up_search_client_nursery_conf() {
+  local dir=$common_nursery_dir/com/escenic/framework/search/solr
+  make_dir $dir
+  echo "solrServerURI=http://${search_host}:${search_port}/solr" \
+    >>  $dir/SolrSearchEngine.properties
+  
+  dir=$common_nursery_dir/com/escenic/webservice/search
+  make_dir $dir
+  echo "solrURI=http://${search_host}:${search_port}/solr/select" \
+    >> $dir/DelegatingSearchEngine.properties
+
+  dir=$common_nursery_dir/com/escenic/lucy
+  make_dir $dir
+  echo "solrURI=http://${search_host}:${search_port}/solr" \
+    >> $dir/LucySearchEngine.properties
+
+  dir=$common_nursery_dir/com/escenic/forum/search/lucy
+  make_dir $dir
+  echo "solrURI=http://${search_host}:${search_port}/solr" \
+    >> $dir/SearchEngine.properties
+}  
+

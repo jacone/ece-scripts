@@ -1,39 +1,16 @@
 # ece-install module for installing the search server
 
-function install_search_server()
-{
+function install_search_server() {
   print_and_log "Installing a search server on $HOSTNAME ..."
   type=search
   install_ece_instance "search1" 0
   
-  # TODO update instead of append
-  local dir=$common_nursery_dir/com/escenic/framework/search/solr
-  make_dir $dir
-  echo "solrServerURI=http://${search_host}:${search_port}/solr" \
-    >>  $dir/SolrSearchEngine.properties
-  
-  dir=$common_nursery_dir/com/escenic/webservice/search
-  make_dir $dir
-  echo "solrURI=http://${search_host}:${search_port}/solr/select" \
-    >> $dir/DelegatingSearchEngine.properties
-
-  dir=$common_nursery_dir/com/escenic/lucy
-  make_dir $dir
-  echo "solrURI=http://${search_host}:${search_port}/solr" \
-    >> $dir/LucySearchEngine.properties
-
-  dir=$common_nursery_dir/com/escenic/forum/search/lucy
-  make_dir $dir
-  echo "solrURI=http://${search_host}:${search_port}/solr" \
-    >> $dir/SearchEngine.properties
-
   set_up_solr
   assemble_deploy_and_restart_type
   leave_search_server_trail
 }
 
-function set_up_solr()
-{
+function set_up_solr() {
   run_hook set_up_solr.preinst
   
   print_and_log "Setting up Solr ..."

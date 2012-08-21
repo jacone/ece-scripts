@@ -92,19 +92,17 @@ function set_up_app_server()
     print "If you're in doubt, just press ENTER :-)"
     echo -n "Your choice [$HOSTNAME:${default_app_server_port}]> "
     read user_search
-  else
-    user_search=$(get_conf_value fai_search_host)
-    if [ -n "${user_search}" ]; then
-      user_search=${user_search}":"$(get_conf_value fai_search_port)
+    
+    if [ -z "$user_search" ]; then
+      search_host=$HOSTNAME
+      search_port=${default_app_server_port}
+    else
+      search_host=$(echo $user_search | cut -d':' -f1)
+      search_port=$(echo $user_search | cut -d':' -f2)
     fi
-  fi
-
-  if [ -z "$user_search" ]; then
-    search_host=$HOSTNAME
-    search_port=${default_app_server_port}
   else
-    search_host=$(echo $user_search | cut -d':' -f1)
-    search_port=$(echo $user_search | cut -d':' -f2)
+    search_host=${fai_search_host-$HOSTNAME}
+    search_port=${fai_search_port-$default_app_server_port}
   fi
 
   download_tomcat $download_dir
