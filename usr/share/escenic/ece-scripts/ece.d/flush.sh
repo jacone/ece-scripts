@@ -6,9 +6,8 @@ function flush_caches() {
   
   print "Flushing all of ${instance}'s caches on $HOSTNAME"
   local url=$(get_escenic_admin_url)/do/publication/clearallcaches
-  wget $wget_auth \
+  run wget $wget_opts $wget_auth \
     -O - \
     --post-data='confirm=Confirm' \
-    $url \
-    1>>$log 2>>$log
+    $url
 }
