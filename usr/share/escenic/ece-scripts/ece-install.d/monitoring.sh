@@ -115,10 +115,50 @@ all_hosts = [ $hosts ]
 
 filesystem_default_levels = {
    "levels"         : (90, 95), # levels in percent
-   "trend_timeleft" : (150, 48)  # run time left in hours until full
+   "magic"          : 0.8,      # Make bigger disks grow to more than 90/95%
+   "trend_range"    : None,     # disable check_mk's trending
 }
 
+service_contactgroups = [
+  ( "admins", ALL_HOSTS, ALL_SERVICES ),
+]
+
+host_contactgroups = [
+  ( "admins", ALL_HOSTS ),
+]
+
+
+extra_service_conf["max_check_attempts"] = [
+ # NTP checks can fail for 2 days before they trigger an alert.
+ ( "2880", ALL_HOSTS, [ "NTP Time" ]),
+
+ # Disk must fill at sustained rate for 45 minutes before issuing a warning
+ ( "45", ALL_HOSTS, [ "disk_fill_rate" ]),
+
+ # External HTTP, TCP and DNS must fail for 10 minutes
+ ( "10", ALL_HOSTS, [ "external_HTTP", "external_TCP", "external_DNS", "external_PING" ]),
+
+ # All others get 4 minutes.
+ ( "4", ALL_HOSTS, ALL_SERVICES ),
+]
+
 EOF
+
+# specific local checks 
+# Note that these checks are run from the monitoring server itself, which is
+# assumed to have the same connectivity as the other server.
+  cat > /etc/check_mk/mrpe.cfg <<EOF
+# Check that we can access the Internet
+# PING google's DNS server.
+external_PING    /usr/lib/nagios/plugins/check_ping -H 8.8.8.8 -w 20,2% -c 30,2% -p 1 -t 0.5
+
+# Do a nameserver lookup
+external_DNS    /usr/lib/nagios/plugins/check_dns -H www.google.com -s 8.8.8.8 -w 0.3 -c 2 -t 2
+
+# Make a request to Google (this might use a proxy, don't know)
+external_HTTP   /usr/lib/nagios/plugins/check_http -H www.google.com -w 0.8 -c 2 -t 2
+EOF
+
   run check_mk -I
   run check_mk -O
 
