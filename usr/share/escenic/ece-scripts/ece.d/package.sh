@@ -105,13 +105,13 @@ EOF
         run mv *.rpm ${cache_dir}
         print "RPM package of your $instance $type instance with build"
         print "version $version is now available:"
-        print $(echo /var/cache/escenic/${package_name}-${version}*.rpm)
+        print $(echo ${cache_dir}/${package_name}-${version}*.rpm)
       fi
       
       mv *.deb ${cache_dir}
       print "DEB package of your $instance $type instance with with build"
       print "version $version is now available:"
-      print /var/cache/escenic/${deb_package}
+      print ${cache_dir}/${deb_package}
       ;;
     *)
       print "Package creation is only supported on Tomcat so far."

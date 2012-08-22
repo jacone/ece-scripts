@@ -157,7 +157,7 @@ function create_block_diag_for_instance() {
     return
   fi
   
-  local file=/var/cache/escenic/${instance}.blockdiag
+  local file=${cache_dir}/${instance}.blockdiag
   cat > ${file} <<EOF
 blockdiag {
   ${instance} [ color = "red" ];
