@@ -134,6 +134,7 @@ function set_up_app_server()
   set_ece_instance_conf tomcat_home $tomcat_home
   set_ece_instance_conf appserver_port $appserver_port
   set_appropriate_jvm_heap_sizes
+  set_http_auth_credentials_if_needed
   
   run cd $tomcat_base/lib
   make_ln $jdbc_driver
@@ -440,4 +441,16 @@ function set_appropriate_jvm_heap_sizes() {
   
   set_ece_instance_conf min_heap_size "${heap_size}m"
   set_ece_instance_conf max_heap_size "${heap_size}m"
+}
+
+function set_http_auth_credentials_if_needed() {
+  if [[ -n "$fai_builder_http_user" && -n "$fai_builder_http_password" ]]; then
+    set_ece_instance_conf builder_http_user "$fai_builder_http_user"
+    set_ece_instance_conf builder_http_password "$fai_builder_http_password"
+  fi
+  
+  if [[ -n "$fai_appserver_http_user" && -n "$fai_appserver_http_password" ]]; then
+    set_ece_instance_conf appserver_http_user "$fai_appserver_http_user"
+    set_ece_instance_conf appserver_http_password "$fai_appserver_http_user"
+  fi
 }
