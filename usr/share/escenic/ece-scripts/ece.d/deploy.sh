@@ -46,6 +46,8 @@ function deploy() {
 
   if [ -n "$file" ]; then
     print_and_log "Deploying $file on $instance ..."
+
+    # wget_auth is needed for download_uri_target_to_dir
     wget_auth=$wget_builder_auth
     ear=$(download_uri_target_to_dir $file $cache_dir)
     

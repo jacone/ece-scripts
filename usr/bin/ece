@@ -199,11 +199,6 @@ function set_common_settings() {
       $log_dir/Escenic-error.log
     "
 
-    if [[ -n "$appserver_http_user" && -n "$appserver_http_password" ]]; then
-      wget_appserver_auth="--http-user $appserver_http_user --http-password $appserver_http_password"
-      curl_appserver_auth="-u ${appserver_http_user}:${appserver_http_password}"
-      wget_builder_auth="--http-user $builder_http_user --http-password $builder_http_password"
-    fi
 }
 
 function set_type_settings() {
@@ -383,6 +378,15 @@ function set_instance_settings() {
 
     if [ "$force_ipv4" -eq 1 ]; then
         ece_args=$ece_args" -Djava.net.preferIPv4Stack=true"
+    fi
+    
+    if [[ -n "$appserver_http_user" && -n "$appserver_http_password" ]]; then
+      wget_appserver_auth="--http-user $appserver_http_user --http-password $appserver_http_password"
+      curl_appserver_auth="-u ${appserver_http_user}:${appserver_http_password}"
+    fi
+    
+    if [[ -n "$builder_http_user" && -n "$builder_http_password" ]]; then
+      wget_builder_auth="--http-user $builder_http_user --http-password $builder_http_password"
     fi
     
     # Resin needs some more arguments as its XML parser is not
