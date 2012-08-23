@@ -24,7 +24,7 @@ function run() {
 }
 
 function generate_svg_from_blockdiag() {
-  run cp -r graphics $target_dir
+  run cp -r $(dirname $0)/graphics $target_dir
   
   for el in $target_dir/graphics/*.blockdiag; do
     echo "Generating SVG of $el ..."
@@ -113,7 +113,7 @@ function set_up_build_directory() {
     rm -rf $target_dir
   fi
   run mkdir -p $target_dir/graphics
-  run cp *.org $target_dir
+  run cp $(dirname $0)/*.{org,el} $target_dir
 
   # customer chapters & overrides
   if [[ -n $customer_doc_dir && -d $customer_doc_dir ]]; then
@@ -277,7 +277,7 @@ function generate_html_from_org() {
 # use emacs to generate HTML from the ORG files
   echo "Generating new handbook HTML from ORG ..." 
   run emacs \
-    --load vizrt-branding-org-mode.el \
+    --load $target_dir/vizrt-branding-org-mode.el \
     --batch \
     --visit $target_dir/$handbook_org \
     --funcall org-export-as-html-batch 2> /dev/null
@@ -495,7 +495,7 @@ function generate_cache_server_org() {
 
   generate_cache_server_diagram
   local file=$target_dir/generated-cache-server.org
-  local svg_file=./graphics/${trail_cache_host}-cache.svg
+  local svg_file=$target_dir/graphics/${trail_cache_host}-cache.svg
   cat > $file <<EOF
 ** Cache server on $trail_cache_host
 
@@ -561,12 +561,11 @@ blockdiag {
 }
 EOF
     local file=$target_dir/network-file-system-sync.org
-    local svg_file=./graphics/$(basename $blockdiag_file .blockdiag).svg
+    local svg_file=$target_dir/graphics/$(basename $blockdiag_file .blockdiag).svg
     cat >> $file <<EOF
 [[file:${svg_file}][${svg_file}]]
 EOF
-    run cat $file >> \
-      $target_dir/network-file-system.org
+    run cat $file >> $target_dir/network-file-system.org
   fi
 }
 
@@ -618,15 +617,14 @@ function add_customer_chapters() {
     grep .org$ | \
     wc -l) -gt 0 ]; then
     echo "Applying customer overrides ..."
-    cp $target_dir/customer/*.org $target_dir
+#    cp $target_dir/customer/*.org $target_dir
   fi
 
   if [ $(ls $target_dir/customer/extra-chapters/ 2>/dev/null | \
     grep .org$ | \
     wc -l) -gt 0 ]; then
     (
-      cd $target_dir
-      local file=vosa-handbook.org
+      local file=$target_dir/vosa-handbook.org
       local title="Customer specific chapters"
       if [ -n "$trail_network_name" ]; then
         title="Special chapters for the $trail_network_name network"
@@ -634,18 +632,18 @@ function add_customer_chapters() {
       cat >> $file <<EOF
 * ${title}
 EOF
-      for el in customer/extra-chapters/*.org; do
+      for el in $target_dir/customer/extra-chapters/*.org; do
         echo "Preparing extra chapter $(basename $el .org) ..."
         sed -i 's/^*/**/' $el
       done
 
-      if [ -e customer/extra-chapters/overview.org ]; then
+      if [ -e $target_dir/customer/extra-chapters/overview.org ]; then
         echo "Including extra chapters according to customer's overview.org"
         cat >> $file <<EOF
 #+INCLUDE "customer/extra-chapters/overview.org"
 EOF
       else
-        for el in customer/extra-chapters/*.org; do
+        for el in $target_dir/customer/extra-chapters/*.org; do
           echo "Appending chapter $el ..."
           cat $el >> $file
         done
