@@ -10,7 +10,7 @@ the default location of the cron script on <%= trail_db_daily_backup_host %> is:
 
 And it'll put its backups in
 #+BEGIN_SRC text
-/var/backups/escenic  
+<%= trail_db_backup_dir %>
 #+END_SRC
 
 All these are overridable, see the ece-install guide for further

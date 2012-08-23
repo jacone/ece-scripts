@@ -75,6 +75,7 @@ function set_defaults_if_the_trails_are_not_set() {
   trail_control_host=${trail_control_host-control}
   trail_db_master_host=${trail_db_master_host-db1}
   trail_db_schema=${trail_db_schema-ecedb}
+  trail_db_backup_dir=${trail_db_backup_dir-/var/backups/escenic}
   trail_db_vendor=${trail_db_vendor-mysql}
   trail_db_vip_interface=${trail_db_vip_interface-eth0:0}
   trail_db_vip_ip=${trail_db_vip_ip-192.168.1.200}
