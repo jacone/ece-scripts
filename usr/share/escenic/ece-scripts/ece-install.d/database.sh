@@ -587,7 +587,7 @@ mysqldump -u $db_user \\
   -h $db_host \\
   $db_schema | \\
   gzip -9 - \\
-  > ${escenic_backups_dir}/\$(date --iso)-${db_schema}.sql.gz
+  > ${escenic_backups_dir}/\$(date --iso)-\${HOSTNAME}-${db_schema}.sql.gz
 EOF
 
   run chmod 700 $file
