@@ -93,6 +93,7 @@ function set_defaults_if_the_trails_are_not_set() {
   trail_nfs_master_host=${trail_nfs_master_host-nfs1}
   trail_presentation_host=${trail_presentation_host-pres1}
   trail_presentation_host_list=${trail_presentation_host_list-${trail_presentation_host}}
+  trail_today_date=${trail_today_date-$(date --iso)}
 }
 
 function expand_all_variables_in_org_files() {
