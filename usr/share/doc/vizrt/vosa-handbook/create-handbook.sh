@@ -496,7 +496,7 @@ function generate_cache_server_org() {
 
   generate_cache_server_diagram
   local file=$target_dir/generated-cache-server.org
-  local svg_file=$target_dir/graphics/${trail_cache_host}-cache.svg
+  local svg_file=./graphics/${trail_cache_host}-cache.svg
   cat > $file <<EOF
 ** Cache server on $trail_cache_host
 
@@ -562,7 +562,7 @@ blockdiag {
 }
 EOF
     local file=$target_dir/network-file-system-sync.org
-    local svg_file=$target_dir/graphics/$(basename $blockdiag_file .blockdiag).svg
+    local svg_file=./graphics/$(basename $blockdiag_file .blockdiag).svg
     cat >> $file <<EOF
 [[file:${svg_file}][${svg_file}]]
 EOF
