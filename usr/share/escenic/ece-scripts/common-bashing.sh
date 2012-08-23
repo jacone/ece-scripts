@@ -278,6 +278,18 @@ function is_unauthorized_to_access_url() {
     wc -l
 }
 
+## Will return 1 if the user can access the URL.
+## $1 user
+## $2 pass
+## $3 URL
+function is_authorized_to_access_url() {
+  curl -s  -I  -u ${1}:${2} ${3} | \
+    head -1 | \
+    grep "200 OK" | \
+    wc -l
+}
+
+
 ## $1 the string to which you want to remove any leading white spaces.
 function ltrim() {
   echo $1 | sed 's/^[ ]*//g'

@@ -448,9 +448,20 @@ function set_http_auth_credentials_if_needed() {
     set_ece_instance_conf builder_http_user "$fai_builder_http_user"
     set_ece_instance_conf builder_http_password "$fai_builder_http_password"
   fi
+
+  local http_user=""
+  local http_password=""
+
+  if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+    http_user=${fai_editor_escenic_admin_http_user}
+    http_password=${fai_editor_escenic_admin_http_password}
+  elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+    http_user=${fai_presentation_escenic_admin_http_user}
+    http_password=${fai_presentation_escenic_admin_http_password}
+  fi
   
-  if [[ -n "$fai_appserver_http_user" && -n "$fai_appserver_http_password" ]]; then
-    set_ece_instance_conf appserver_http_user "$fai_appserver_http_user"
-    set_ece_instance_conf appserver_http_password "$fai_appserver_http_user"
+  if [[ -n "$http_user" && -n "$http_password" ]]; then
+    set_ece_instance_conf escenic_admin_http_user "$http_user"
+    set_ece_instance_conf escenic_admin_http_password "$http_password"
   fi
 }

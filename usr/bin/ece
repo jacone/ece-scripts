@@ -380,13 +380,19 @@ function set_instance_settings() {
         ece_args=$ece_args" -Djava.net.preferIPv4Stack=true"
     fi
     
-    if [[ -n "$appserver_http_user" && -n "$appserver_http_password" ]]; then
-      wget_appserver_auth="--http-user $appserver_http_user --http-password $appserver_http_password"
-      curl_appserver_auth="-u ${appserver_http_user}:${appserver_http_password}"
+    if [[ -n "$escenic_admin_http_user" && -n "$escenic_admin_http_password" ]]; then
+      wget_appserver_auth="
+        --http-user $escenic_admin_http_user
+        --http-password $escenic_admin_http_password
+      "
+      curl_appserver_auth="-u ${escenic_admin_http_user}:${escenic_admin_http_password}"
     fi
     
     if [[ -n "$builder_http_user" && -n "$builder_http_password" ]]; then
-      wget_builder_auth="--http-user $builder_http_user --http-password $builder_http_password"
+      wget_builder_auth="
+        --http-user $builder_http_user
+        --http-password $builder_http_password
+      "
     fi
     
     # Resin needs some more arguments as its XML parser is not
