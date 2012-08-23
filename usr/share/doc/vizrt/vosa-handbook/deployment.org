@@ -15,6 +15,22 @@ the shell. This is the URI you use for the 'ece deploy' command below.
 In the examples here, we have a build server on <%= trail_builder_host %>
 where we build EARs for the the <%= trail_builder_user %> website.
 
+** Make sure you can roll back
+Before deploying a new EAR, take note of the previously deployed EAR
+so that you can easily roll back:
+
+#+BEGIN_SRC sh
+$ sudo ssh escenic@<%= trail_presentation_host %> ece -i engine1 info
+[ece#engine-engine1] Deployment state:
+[ece#engine-engine1] |-> Version: <%= trail_builder_user %>-trunk-rev4331-2012-07-25_1225
+[ece#engine-engine1] |-> EAR used: http://<% trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4331-2012-07-25_1225.ear
+[ece#engine-engine1] |-> MD5 sum: 58638b16efc7f4cebd8d0acb4eecfb40
+#+END_SRC
+
+If anything goes wrong in [[Deploying a new EAR file for an ECE
+instance]], you can just repeat the deployment steps with the URL of the
+previous EAR.
+
 *** Deploying a new EAR file for an ECE instance
 All the commands in this section is written to be executed on
 <%= trail_control_host %> (but you could of course also first log on to each
@@ -60,6 +76,7 @@ torstein@control:~$ sudo ssh escenic@<%= trail_presentation_host %> ece
 [ece#search-search1] Deployment white list active, only deploying: escenic-admin solr indexer-webapp
 [ece#search-search1] Deployment state file updated: /var/lib/escenic/search1.state  
 #+END_SRC
+
 
 ** Updating Publication Resources
 This document describes how you update publication resources. Here, we
