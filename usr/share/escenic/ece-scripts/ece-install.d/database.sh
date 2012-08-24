@@ -582,12 +582,22 @@ function install_db_backup_server() {
 ## Backup of the $db_schema DB
 ## Set up by $(basename $0) @ $(date)
 
+fn=\$(date --iso)-\${HOSTNAME}-${db_schema}.sql.gz
+
 mysqldump -u $db_user \\
   -p$db_password \\
   -h $db_host \\
   $db_schema | \\
   gzip -9 - \\
-  > ${escenic_backups_dir}/\$(date --iso)-\${HOSTNAME}-${db_schema}.sql.gz
+  > ${escenic_backups_dir}/${fn}
+
+# make a symlink to the latest backup to make it easy for monitoring &
+# operators to know what's the latest backup without using any brain
+# power.
+(
+  cd \${escenic_backups_dir}
+  ln -sf \${fn} latest-\${db_schema}-backup.sql.gz
+)
 EOF
 
   run chmod 700 $file
