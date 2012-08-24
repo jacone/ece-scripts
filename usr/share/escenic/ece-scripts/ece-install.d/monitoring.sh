@@ -10,6 +10,11 @@ function install_nagios_monitoring_server()
   print "Installing an $1 server on $HOSTNAME ..."
   local monitoring_vendor=$1
 
+  if [[ $(lsb_release -c -s) == "squeeze" ]]; then
+    # needed for check-mk
+    add_apt_source "deb http://backports.debian.org/debian-backports squeeze-backports main"
+  fi
+  
   if [ $on_debian_or_derivative -eq 1 ]; then
     if [[ $monitoring_vendor == $MONITORING_VENDOR_NAGIOS ]]; then
       install_packages_if_missing \
@@ -167,6 +172,12 @@ EOF
 function install_nagios_node()
 {
   print "Installing a Nagios client on $HOSTNAME ..."
+  
+  if [[ $(lsb_release -c -s) == "squeeze" ]]; then
+    # needed for check-mk
+    add_apt_source "deb http://backports.debian.org/debian-backports squeeze-backports main"
+  fi
+  
   if [ $on_debian_or_derivative -eq 1 ]; then
     install_packages_if_missing \
       xinetd \
