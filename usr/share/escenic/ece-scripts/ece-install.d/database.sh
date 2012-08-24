@@ -583,17 +583,37 @@ function install_db_backup_server() {
 ## Set up by $(basename $0) @ $(date)
 
 fn=\$(date --iso)-\${HOSTNAME}-${db_schema}.sql.gz
+log=/var/log/\$(basename \$0).log
 
-mysqldump -u $db_user \\
-  -p$db_password \\
+# (1) make backup
+
+# we must run as the root user here, hence not using user and regular
+# password:
+#  -u $db_user \\
+#  -p$db_password \\
+
+mysqldump \\
+  --master-data \\
+  --single-transaction \\
   -h $db_host \\
   $db_schema | \\
   gzip -9 - \\
   > ${escenic_backups_dir}/${fn}
 
-# make a symlink to the latest backup to make it easy for monitoring &
-# operators to know what's the latest backup without using any brain
-# power.
+# (2) make sure the backup went OK 
+# copy of pipe status since it's volatile
+pipe_status=(\${PIPESTATUS[@]})
+
+for (( i = 0; i < \${#pipe_status[@]}; i++ )); do
+  if [ \${pipe_status[\$i]} -ne 0 ]; then
+    echo "Command #\$(( \${i} + 1 )) in \$0 had exit code \${pipe_status[\$i]} :-(" >> \$log
+    exit 1
+  fi
+done
+
+# (3) make a symlink to the latest backup to make it easy for
+# monitoring & operators to know what's the latest backup without
+# using any brain power.
 (
   cd \${escenic_backups_dir}
   ln -sf \${fn} latest-\${db_schema}-backup.sql.gz
