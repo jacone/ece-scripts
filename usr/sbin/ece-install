@@ -978,7 +978,15 @@ if [ $fai_enabled -eq 1 ]; then
       un_install_everything
       no_fai_profile=0
     fi
-    
+
+    # some profiles, like DB slave might need the NFS client, hence we
+    # install it pretty far up.
+    if [ $(get_boolean_conf_value fai_nfs_client_install) -eq 1 ]; then
+      install_profile_number=$PROFILE_NFS_CLIENT
+      install_nfs_client
+      no_fai_profile=0
+    fi
+
     if [ $(get_boolean_conf_value fai_all_install) -eq 1 ]; then
         install_profile_number=$PROFILE_ALL_IN_ONE
         install_all_in_one_environment
@@ -1059,12 +1067,6 @@ if [ $fai_enabled -eq 1 ]; then
       no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_nfs_client_install) -eq 1 ]; then
-      install_profile_number=$PROFILE_NFS_CLIENT
-      install_nfs_client
-      no_fai_profile=0
-    fi
-
     # checking for VIP profile last so that ece-install can (if so
     # configured in the ece-install.con) install all dependent
     # services first.
