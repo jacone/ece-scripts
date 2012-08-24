@@ -92,7 +92,11 @@ function install_wf_2_if_present() {
     if [[ $wf_dist_dir == "widget-framework-[a-z]*-1.1*" ]]; then
       return
     fi
-    
+
+    if [ ! -d $escenic_root_dir/assemblytool/plugins ]; then
+      return
+    fi
+        
     run cd $escenic_root_dir/assemblytool/plugins
     
     if [ ! -h $wf_dist_dir ]; then
