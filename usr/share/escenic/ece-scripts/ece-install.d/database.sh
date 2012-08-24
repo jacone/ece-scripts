@@ -250,10 +250,13 @@ function set_db_settings_from_fai_conf()
   db_master_log_position=${fai_db_master_log_position}
 
   if [ $db_master -eq 0 -a $db_replication -eq 1 ]; then
-    ensure_variable_is_set \
-      fai_db_master_host \
-      fai_db_master_log_file \
-      fai_db_master_log_position
+    ensure_variable_is_set fai_db_master_host
+
+    if [ -z $fai_db_master_backup ]; then
+      ensure_variable_is_set \
+        fai_db_master_log_file \
+        fai_db_master_log_position
+    fi
   fi
 }
 
@@ -379,6 +382,9 @@ function set_common_replication_settings() {
 
 function set_slave_to_replicate_master() {
   print_and_log "Setting slave to replicate master DB @ $db_master_host ..."
+
+  # basing the replication off a fresh master, no backup
+  if [ -z ${fai_db_master_backup} ]; then
   mysql ${db_schema} <<EOF
 stop slave;
 
@@ -392,7 +398,29 @@ change master to
 
 start slave;
 EOF
+  else
+    if [ ! -r ${fai_db_master_backup} ]; then
+      print_and_log "Cannot set up slave" \
+        $fai_db_master_backup \
+        "doesn't exist"
+      remove_pid_and_exit_in_error
+    fi
+    
+    print_and_log "Setting up slave based on master backup"
+    gunzip --force ${fai_db_master_backup} | mysql ${db_schema}
+    mysql ${db_schema} <<EOF
+stop slave;
 
+change master to
+  master_host='${db_master_host}',
+  master_user='${db_replication_user}',
+  master_password='${db_replication_password}'
+;
+
+start slave;
+EOF
+  fi
+  
   add_next_step "DB on $HOSTNAME replicates master DB @ ${db_master_host}"
 }
 
@@ -472,6 +500,7 @@ function create_schema() {
     # we first create the DB (or, if drop_db_first is 1, we've just
     # dropped it above) before running the SQL scripts.
   if [ $db_product = "mysql" ]; then
+    print_and_log "Creating DB $db_schema on $HOSTNAME ..."
     mysql -h $db_host << EOF
 create database $db_schema character set utf8 collate utf8_general_ci;
 grant all on $db_schema.* to $db_user@'%' identified by '$db_password';
@@ -598,7 +627,7 @@ mysqldump \\
   -h $db_host \\
   $db_schema | \\
   gzip -9 - \\
-  > ${escenic_backups_dir}/${fn}
+  > ${escenic_backups_dir}/\${fn}
 
 # (2) make sure the backup went OK 
 # copy of pipe status since it's volatile
@@ -615,7 +644,7 @@ done
 # monitoring & operators to know what's the latest backup without
 # using any brain power.
 (
-  cd \${escenic_backups_dir}
+  cd ${escenic_backups_dir}
   ln -sf \${fn} latest-\${db_schema}-backup.sql.gz
 )
 EOF
