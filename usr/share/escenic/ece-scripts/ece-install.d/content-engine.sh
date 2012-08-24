@@ -148,7 +148,7 @@ function set_up_engine_and_plugins() {
   run cd $escenic_root_dir/
   for el in $technet_download_list $wf_download_list; do
     local file=$(basename $el)
-    if [ $el == engine-* ]; then
+    if [[ "$el" == engine-* ]]; then
       continue
     fi
     run unzip -q -u -o $download_dir/$file
