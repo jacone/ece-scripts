@@ -16,7 +16,7 @@ function get_nfs_configuration() {
     ensure_variable_is_set fai_nfs_server_address
   fi
 
-  leave_trail "trail_nfs_export_list=$nfs_export_list"
+  leave_trail "trail_nfs_export_list=\"$nfs_export_list\""
   leave_trail "trail_nfs_client_mount_point_parent=$nfs_client_mount_point_parent"
 }
 
