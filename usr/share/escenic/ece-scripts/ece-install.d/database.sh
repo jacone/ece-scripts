@@ -407,7 +407,7 @@ EOF
     fi
     
     print_and_log "Setting up slave based on master backup"
-    zcat ${fai_db_master_backup} | mysql ${db_schema} -
+    zcat ${fai_db_master_backup} | mysql ${db_schema}
     mysql ${db_schema} <<EOF
 stop slave;
 
