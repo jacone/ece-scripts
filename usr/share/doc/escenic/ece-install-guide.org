@@ -292,15 +292,21 @@ To run =ece-install= in FAI mode you must first add the following settings
 to =ece-install.conf=:
  
  * =fai_enabled=1= To switch FAI mode on.
- * One =fai_???_install=1= setting to choose the profile you want to
-   install (or what about restoring a backup?).
- * Optionally, additional settings related to the profile you have selected.
+ * One =fai_<profile>_install=1= setting to choose the profile you want to
+   install or =fai_restore_from_backup=1= to restore a previously
+   installed profile.
+ * Additional settings related to the profile installation
+   or restore operation you have selected. There are defaults for most
+   of these additional parameters, so in many cases you do not need to
+   specify anything else.
 
 Then when you run =ece-install= it will output:
-#+BEGIN_SRC
+#+BEGIN_SRC text
 [ece-install] Full Automatic Install (FAI) enabled.
 [ece-install] All user input will be read from /root/ece-install.conf
 #+END_SRC
+
+For more information see ??.
 
 ** Preventing accidental execution of ece-install 
 You can ensure that =ece-install= is not executed accidentally by
@@ -319,79 +325,69 @@ The lock file does not need to contain anything, it just needs to exist.
 
 * <<<Server Profiles>>>
 
-When you run =ece-install= in interactive mode, it displays a prompt
-asking what you want to install. You can either install one of a
-number of predefined *profiles*, or you can restore a previously
-installed profile from a backup copy:
-#+BEGIN_SRC text
-Hi, which server profile do you wish to install?
-
-   1 - All in one, full stack on one host, suitable for dev & test environments
-   2 - Editorial (publication) server
-   3 - Presentation server (ECE + memcached).
-   4 - Database server
-   5 - Cache server (cache and web server)
-   6 - RMI hub
-   7 - Search server (Solr + indexer-webapp)
-   8 - Install Widget Framework.
-   9 - Create a new publication based on WF if available, ECE/clean-demo if not
-   10 - A monitoring server (web server + Munin gatherer)
-   11 - Restore from backup (DB, data files, binaries, conf & publications)
-
-Select 1-11 and press ENTER
-Your choice [1]> 
-#+END_SRC
-
 A *profile* is a pre-defined set of software components that enables a
-computer to perform a particular function.
-
-** Common for All Server Profiles
-The script will install a Munin node on the host. It will also
-install the Escenic specific Munin plugins on hosts where there are
-any Escenic server components.
-
-** Common for Editorial, Presentation and Search Instances
-*** Sun Java 6
-*** Apache Tomcat application server
-- Compression of textual content (previously, this was typically set
-  up with Apache and its mod_deflate module).
-- pooling set up tweaked for high read/write performance.
-- proper logging configuration directing solr messages to its own log.
-- routing information in the cookies
-- application server access log
-*** Basic Escenic Nursery configuration
-The basic Nursery configuration is taken care of for you, including RMI,
-  database, search and application server/URIs. 
-*** APR, native library for optimal Tomcat I/O performance
-*** Escenic Assembly environment
-The reason why ece-install sets this up on each host, is to make the
-installation process as smooth as possible. The assembly environment
-may be removed after the installation if you want to.
-
-*** Database driver
-
-*** Compression of content 
-This was was previously accomplished by having a web server in fron t
-of the application server (or cache server if you used ESI). A typical
-system architecture would contain Apache with mod_deflate. However,
-this is no longer necessary as Varnish can handles ESI parsing of
-compressed content (and many other things that we before needed Apache
-for). Thus, we'll let the application server do the compression for us
-now.
-
-** Profile :: Full Stack on One Host
-This profile is suitable for developers and admins wanting to set up a
-test environment. It will install the full stack including caching
-server, application server, ECE, assembly host, database, Widget
-Framework, as well as creating a publication for you.
-
-For further details on each of the different server components, see
-the different profile descriptions bellow.
+computer to perform a particular function. The profiles that
+=ece-install= can currently install are described in the following sections.
 
 
-** Profile :: Editorial Server (Publication Server)
-Will set up a typical editorial server (often referred to as the
-publication server in Escenic literature).
+** Common Components
+=ece-install= always installs a Munin node on the host, irrespective
+of which profile you choose. It also installs the
+Escenic-specific Munin plugins if the profile you choose includes any
+Escenic server components.
+
+The following components are included in the Editorial Server,
+Presentation Server, Search Server and All In One profiles:
+
+ * Sun Java 6 :: This is required to run Tomcat and all the Escenic
+                 components.
+ * Apache Tomcat application server :: This is installed and
+      configured to provide:
+   - Compression of textual content (previously, this was typically
+     done using Apache's =mod_deflate= module)
+   - Pooling, tweaked for high read/write performance
+   - Proper logging, with Solr messages directed to a separate log
+   - Routing information in the cookies
+   - Application server access log
+ * Basic Escenic configuration :: Basic Escenic configuration layers
+      are installed, including RMI, database, search and application server/URIs. 
+ * APR :: native library for optimal Tomcat I/O performance
+ * Escenic assembly environment :: This is installed on every host in
+      order to make the installation process as smooth as
+      possible. You can remove it after installation if you wish.
+ * Database driver :: ??
+
+** <<<All In One>>>
+This profile is primarily intended for use by developers and system
+administrators as a test environment. It is *not* considered suitable
+for production purposes. A complete stack including caching
+server, application server, Escenic Content Engine, assembly host,
+database and Widget Framework is installed. In addition, a publication
+is created.
+
+To install this profile in interactive mode, select the
+#+BEGIN_SRC text
+   1 - All in one, full stack on one host, suitable for dev & test environments
+#+END_SRC
+option.
+
+To install it in FAI mode, add =fai_all_install=1= to your
+=ece-install.conf= file.
+
+** Editorial Server
+This profile contains all the components that need to be installed on an
+Escenic *editorial server*. An editorial server (sometimes also called
+a publication server) hosts a Content Engine used for editorial
+purposes (primarily Content Studio sessions).
+
+To install this profile in interactive mode, select the
+#+BEGIN_SRC text
+   2 - Editorial (publication) server
+#+END_SRC
+option.
+
+To install it in FAI mode, add =fai_editor_install=1= to your
+=ece-install.conf= file.
 
 ** Presentation Server
 This will set up a typical presentation server:
