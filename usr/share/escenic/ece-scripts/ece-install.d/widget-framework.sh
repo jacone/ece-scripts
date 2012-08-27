@@ -41,7 +41,7 @@ function install_widget_framework()
     <activeProfile>escenic-profile</activeProfile>
   </activeProfiles>
 
-  $(get_proxy_conf_if_set)
+$(get_proxy_conf_if_set)
 </settings>
 EOF
 
