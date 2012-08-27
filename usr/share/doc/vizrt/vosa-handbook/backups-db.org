@@ -1,18 +1,11 @@
 ** DB backups
-If you've told ece-install to set up daily backups, there will be a
-cron scripts set up which create backups. 
-
-Part of the name of the cron script is the name of your DB schema, so
-the default location of the cron script on <%= trail_db_daily_backup_host %> is:
+Daily backups of the DB is made on <%= trail_db_daily_backup_host %>
+by the way of the cron script:
 #+BEGIN_SRC text
 /etc/cron.daily/<%= trail_db_schema %>-backup  
 #+END_SRC
 
-And it'll put its backups in
+All of these DB backups on <%= trail_db_daily_backup_host %> are put in
 #+BEGIN_SRC text
-<%= trail_db_backup_dir %>
+<%= trail_db_daily_backup_host %>:<%= trail_db_backup_dir %>
 #+END_SRC
-
-All these are overridable, see the ece-install guide for further
-details.
-

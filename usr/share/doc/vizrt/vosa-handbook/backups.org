@@ -1,10 +1,11 @@
 * Backups
 
 ** Multimedia archive
-The other place were you've got actual content, is in the multimedia
-archive. This, typically live on a host called nfs1 (with a mirror on
-nfs2) and a backup of the exports directory  should suffice. This is
-the directory in which all the NFS exported directories reside.
+The mutlimedia archive lives on <%= trail_nfs_master_host %> (with a
+mirror on <%= trail_nfs_slave_host %> ) from which it exports its
+shares to the various hosts on the network through an NFS interface. A
+backup of the =/var/exports= directory on this server should suffice
+as all NFS shares reside in this directory:
 
 #+BEGIN_SRC sh
 <%= trail_nfs_master_host %>:/var/exports  
@@ -12,5 +13,5 @@ the directory in which all the NFS exported directories reside.
 
 It's recommended that the backup isn't done using the NFS mount on one
 of the other hosts using this NFS server, but instead target the
-nfs1's /var/exports directory directly as the backup tools would
-access any server directory.
+<%= trail_nfs_master_host %> =/var/exports= directory directly as the
+backup tools would access any server directory.
