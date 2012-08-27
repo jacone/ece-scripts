@@ -40,6 +40,8 @@ function install_widget_framework()
   <activeProfiles>
     <activeProfile>escenic-profile</activeProfile>
   </activeProfiles>
+
+  $(get_proxy_conf_if_set)
 </settings>
 EOF
 
@@ -51,6 +53,33 @@ EOF
   add_next_step "Widget Framework has been installed into your " \
     " Maven repo"
 }
+
+function get_proxy_conf_if_set() {
+  if [ -n "$http_proxy" ]; then
+    cat <<EOF
+  <proxies>
+    <proxy>
+      <active>true</active>
+      <protocol>http</protocol>
+      <host>$(echo $http_proxy | cut -d':' -f1)</host>
+      <port>$(echo $http_proxy | cut -d':' -f2)</port>
+    </proxy>
+  </proxies>
+EOF
+  elif [ -n "$https_proxy" ]; then
+    cat <<EOF
+  <proxies>
+    <proxy>
+      <active>true</active>
+      <protocol>https</protocol>
+      <host>$(echo $https_proxy | cut -d':' -f1)</host>
+      <port>$(echo $https_proxy | cut -d':' -f2)</port>
+    </proxy>
+  </proxies>
+EOF
+  fi
+}
+
 
 function set_up_wf_nursery_config() {
   for el in $wf_download_list; do
