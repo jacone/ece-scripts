@@ -408,17 +408,28 @@ EOF
     
     print_and_log "Setting up slave based on master backup"
     zcat ${fai_db_master_backup} | mysql ${db_schema}
+    
+    local file_and_pos=$(
+      zcat ${fai_db_master_backup} | \
+        head -n 30 | \
+        grep ^CHANGE | \
+        cut -d' ' -f4- | \
+        sed 's/\;$//g'
+    )
+
+    print_and_log "Setting master back to $db_master_host ..."
     mysql ${db_schema} <<EOF
 stop slave;
 
 change master to
   master_host='${db_master_host}',
   master_user='${db_replication_user}',
-  master_password='${db_replication_password}'
+  master_password='${db_replication_password}',
+  ${file_and_pos}
 ;
-
 start slave;
 EOF
+
   fi
   
   add_next_step "DB on $HOSTNAME replicates master DB @ ${db_master_host}"
