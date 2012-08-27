@@ -54,6 +54,8 @@ EOF
     " Maven repo"
 }
 
+## Will add Maven HTTP(s) proxy configuration if either of the
+## http_proxy or https_proxy environment variables are set.
 function get_proxy_conf_if_set() {
   if [ -n "$http_proxy" ]; then
     cat <<EOF
