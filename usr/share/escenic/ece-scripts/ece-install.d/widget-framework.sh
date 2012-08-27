@@ -40,7 +40,6 @@ function install_widget_framework()
   <activeProfiles>
     <activeProfile>escenic-profile</activeProfile>
   </activeProfiles>
-
 $(get_proxy_conf_if_set)
 </settings>
 EOF
@@ -57,27 +56,46 @@ EOF
 ## Will add Maven HTTP(s) proxy configuration if either of the
 ## http_proxy or https_proxy environment variables are set.
 function get_proxy_conf_if_set() {
-  if [ -n "$http_proxy" ]; then
+
+  ## We support setting either http or https proxy, or both, hence the
+  ## extra complexity.
+  if [[ -n "$http_proxy" || -n "$https_proxy" ]]; then
     cat <<EOF
+
   <proxies>
+EOF
+  fi
+  
+  if [ -n "$http_proxy" ]; then
+    local proxy_host=$(echo $http_proxy | sed 's#http://##g' | cut -d':' -f1)
+    local proxy_port=$(echo $http_proxy | sed 's#http://##g' | cut -d':' -f2)
+    cat <<EOF
     <proxy>
       <active>true</active>
       <protocol>http</protocol>
-      <host>$(echo $http_proxy | cut -d':' -f1)</host>
-      <port>$(echo $http_proxy | cut -d':' -f2)</port>
+      <host>$proxy_host</host>
+      <port>$proxy_port</port>
     </proxy>
-  </proxies>
 EOF
-  elif [ -n "$https_proxy" ]; then
+  fi
+  
+  if [ -n "$https_proxy" ]; then
+    local proxy_host=$(echo $https_proxy | sed 's#https://##g' | cut -d':' -f1)
+    local proxy_port=$(echo $https_proxy | sed 's#https://##g' | cut -d':' -f2)
     cat <<EOF
-  <proxies>
     <proxy>
       <active>true</active>
       <protocol>https</protocol>
-      <host>$(echo $https_proxy | cut -d':' -f1)</host>
-      <port>$(echo $https_proxy | cut -d':' -f2)</port>
+      <host>$proxy_host</host>
+      <port>$proxy_port</port>
     </proxy>
+EOF
+  fi
+  
+  if [[ -n "$http_proxy" || -n "$https_proxy" ]]; then
+    cat <<EOF
   </proxies>
+
 EOF
   fi
 }
