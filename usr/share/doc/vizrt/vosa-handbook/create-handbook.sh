@@ -328,7 +328,7 @@ EOF
   if [ -n "${trail_control_host}" ]; then
     cat <<EOF 
 | $(get_fqdn $trail_control_host) | \
-  [[http://$(get_link $trail_control_host):5679][hugin]] \
+  [[$(get_link $trail_control_host):5679][hugin]] \
 |
 EOF
   fi
