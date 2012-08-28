@@ -312,7 +312,7 @@ EOF
   elif [ $format == "json" ]; then
     echo "    \"message\": \"$@\","
   elif [ $format == "yaml" ]; then
-    echo "$(get_indent): $@"
+    echo "$(get_indent)$@"
   fi
 }
 
