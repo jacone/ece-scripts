@@ -885,6 +885,7 @@ $HOME/ece-install.conf file of the root user:
 | ~fai_db_password~                     | read-the-source-luke                                         | Useful for DB installation profile                                                                       |
 | ~fai_db_port~                         | 3306                                                         | Useful for editor & presentation profiles                                                                |
 | ~fai_db_schema~                       | ece5db                                                       | Useful for DB installation profile                                                                       |
+| ~fai_db_sql_only~                     | 0                                                            | Only run the SQL, but don't install the DB software. Useful for setting up remote DBs, like Amazon RDS   |
 | ~fai_db_user~                         | ece5user                                                     | Useful for DB installation profile                                                                       |
 | ~fai_editor_conf_archive~             | ""                                                           | conf.tar.gz to use for Nursery & JAAS configuration                                                      |
 | ~fai_editor_deploy_white_list~        | "escenic-admin escenic studio indexer-webservice webservice" | The list of WARs to be deployed on this instance.                                                        |
