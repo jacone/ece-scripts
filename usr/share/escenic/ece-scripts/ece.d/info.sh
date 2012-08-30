@@ -38,7 +38,7 @@ function get_info_for_type() {
         if [ -n "${tomcat_home}" ]; then
           print "|-> Tomcat home:" $tomcat_home
           print "|-> Tomcat base:" $tomcat_base
-          print_tomcat_resources
+          print_tomcat_resources $tomcat_base
           print_deployed_webapps $tomcat_base
         fi
         ;;
@@ -52,7 +52,6 @@ function get_info_for_type() {
   fi
 
   print_deployment_state
-  create_block_diag_for_instance
 }
 
 function print_deployment_state() {
@@ -90,10 +89,9 @@ function print_tomcat_resources() {
     return
   fi
 
-  print "Application server resources:"
-
-  local file=$tomcat_base/conf/context.xml
+  local file=$1/conf/context.xml
   if [ -r $file ]; then
+    print "Application server resources:"
     xml_grep  --nowrap --cond Context/Environment \
       $file | \
       sed 's/^[ \t]//g' | \
@@ -105,13 +103,9 @@ function print_tomcat_resources() {
       local value=$(echo $line | cut -d'"' -f2)
       print "|->" ${key}: ${value}
     done
-  else
-    print "|-> user $USER cannot read $file"
-  fi
-  
-  print "Database:"
-  file=$tomcat_base/conf/server.xml
-  if [ -r $file ]; then
+
+    print "Database:"
+    file=$tomcat_base/conf/server.xml
     xml_grep \
       --nowrap \
       --cond 'Server/GlobalNamingResources/Resource[@type="javax.sql.DataSource"]' \
@@ -119,19 +113,33 @@ function print_tomcat_resources() {
       sed 's/^[ \t]//g' | \
       sed "s#><#>\n<#g" | \
       while read line ; do
-      for el in $(echo $line | cut -d' ' -f1- ); do
-        if [[ $el == "name"* || $el == "url"* || $el == "username"* ]]; then
-          local key=$(echo $el | cut -d'"' -f1 | cut -d'=' -f1)
-          local value=$(echo $el | cut -d'"' -f2)
-          if [[ $value == "jdbc:mysql"* ]]; then
-            value=${value:5}
-          fi
-          
-          print "|->" ${key}: ${value}
-        fi
+        for el in $(echo $line | cut -d' ' -f1- ); do
+          if [[ $el == "name"* || $el == "url"* || $el == "username"* ]]; then
+            local key=$(echo $el | cut -d'"' -f1 | cut -d'=' -f1)
+            local value=$(echo $el | cut -d'"' -f2)
+            if [[ $value == "jdbc:mysql"* ]]; then
+              value=${value:5}
+            fi
 
+            print "|->" ${key}: ${value}
+          fi
+        done
       done
+
+    print "Virtual hosts:"
+    file=$tomcat_base/conf/server.xml
+    local virtual_hosts="$(
+      xml_grep \
+      --nowrap \
+      --cond 'Server/Service/Engine/Host/Alias' \
+      $file
+    )"
+    echo "$virtual_hosts" | \
+      sed 's#><#>\n<#g' | \
+      sed 's#<Alias>\(.*\)</Alias>#\1#g' | while read line; do
+      print "|-> http://${line}"
     done
+    
   else
     print "|-> user $USER cannot read $file"
   fi
@@ -152,30 +160,3 @@ function visualise_known_ports() {
   echo ${the_host}:${nice_port}
 }
 
-function create_block_diag_for_instance() {
-  if [ -z $type_pid ]; then
-    return
-  fi
-  
-  local file=${cache_dir}/${instance}.blockdiag
-  cat > ${file} <<EOF
-blockdiag {
-  ${instance} [ color = "red" ];
-EOF
-  netstat -nap --tcp 2>/dev/null | \
-    grep ${type_pid} | \
-    grep -v LISTEN | \
-    awk '{print $5}' | \
-    uniq -c | while read f; do
-    read count to <<< $f
-    cat >> $file <<EOF
-  "$(visualise_known_ports $to)";
-  ${instance} -> "$(visualise_known_ports $to)" [ label = "${count} conns" ];
-EOF
-  done
-
-  echo "}" >> $file
-  
-  print "Architecture diagram:"
-  print "|-> $file"
-}
