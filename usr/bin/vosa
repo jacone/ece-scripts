@@ -313,6 +313,14 @@ image ami-81c5fdf5
 # subnet subnet-43890
 
 
+# Elastic IP.  If you want to assign an elastic IP to an instance, type
+# the IP address here, and it will be assigned to the instance after
+# it has been started.  If it's not specified, no elastic IP will be
+# assigned.
+
+# ip_address 12.23.34.45
+
+
 # USER DATA ---------------------------------------------------
 # Specify a user data file that will be specified on installation.
 # The file should be in the form of a user-data file supported by
@@ -886,7 +894,16 @@ function do_create() {
         ${amazon_config_user_data/#/--user-data-file } \
         ${amazon_config_subnet/#/--subnet }
 
-
+      if [ ! -z "${amazon_config_ip_address}" ] ; then
+        echo "Associating IP $amazon_config_ip_address..."
+        ${commands}/ec2-cmd.sh \
+          "$instance_dir" \
+          "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+          associate-address \
+          ${amazon_config_ip_address} \
+          --instance INSTANCE
+      fi
+      
       ${commands}/ec2-determine-ip.sh \
         "$instance_dir" \
         "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
@@ -961,10 +978,22 @@ function do_start() {
       exit 1
     fi
     if [ $aws -eq 1 ] ; then
+      read_amazon_config $instance_dir/amazon.conf
       ${commands}/ec2-cmd.sh \
         "$instance_dir" \
         "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
         "start-instances" INSTANCE
+
+      if [ ! -z "${amazon_config_ip_address}" ] ; then
+        echo "Associating IP $amazon_config_ip_address..."
+        ${commands}/ec2-cmd.sh \
+          "$instance_dir" \
+          "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+          associate-address \
+          ${amazon_config_ip_address} \
+          --instance INSTANCE
+      fi
+
       # The word INSTANCE is replaced with the instance.
       ${commands}/ec2-determine-ip.sh \
         "$instance_dir" \

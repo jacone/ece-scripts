@@ -9,6 +9,7 @@ unset amazon_config_region
 unset amazon_config_availability_zone
 unset amazon_config_ssh_keypair
 unset amazon_config_ssh_access
+unset amazon_config_ip_address
 unset amazon_config_ssh_private_key
 unset amazon_config_image
 unset amazon_config_type
@@ -43,6 +44,10 @@ function amazon_config_ssh_access() {
   amazon_config_ssh_access=$1
 }
 
+function amazon_config_ip_address() {
+  amazon_config_ip_address=$1
+}
+
 function amazon_config_ssh_private_key() {
   amazon_config_ssh_private_key=$1
 }
@@ -71,3 +76,4 @@ function amazon_config_postinstall() {
 function amazon_config_group() {
   amazon_config_group=( "${amazon_config_group[@]}" "$1" )
 }
+
