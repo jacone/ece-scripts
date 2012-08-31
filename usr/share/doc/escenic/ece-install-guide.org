@@ -589,15 +589,15 @@ files you would like to remove using the following parameters:
 | =fai_restore_pre_wipe_solr=  |       0 | Remove the solr data/state files  |
 |------------------------------+---------+-----------------------------------|
 
-** Analysis Server
+** <<<ai_analysis_install>>>
 This profile will install the Escenic Analysis Engine and configure it
 for production use with sane defaults. Be sure to use a different DB
 thank you use for ECE.
 
-** NFS server
+** <<<fai_nfs_server_install>>>
 Will install an NFS server.
 
-** NFS client
+** <<<fai_nfs_client_install>>>
 Will install an NFS client, create all the mountpoints and mount these
 on the host.
 
@@ -610,7 +610,7 @@ fai_nfs_server_address=192.168.1.200
 fai_nfs_export_list="/var/exports/multimedia"  
 #+END_SRC
 
-** VIP provider
+** <<<fai_vip_install>>>
 [[file:images/nfs-vip.png]]
 
 This profile will make the host capable of serving a certain virtual
