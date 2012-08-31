@@ -338,7 +338,7 @@ one of the following parameters in =ece-install.conf=:
 There are a number of common components that are included in all or
 most of the profiles. These are described below.
 
-** <<<=fai_editor_install=>>>
+** <<<fai_editor_install>>>
 To use this profile add =fai_editor_install=1= to your
 =ece-install.conf= file.
 
@@ -347,7 +347,7 @@ create an Escenic *editorial server*. An editorial server (sometimes
 also called a publication server) hosts a Content Engine used for editorial
 purposes (primarily Content Studio sessions).
 
-** <<<=fai_presentation_install=>>>
+** <<<fai_presentation_install>>>
 To use this profile, add =fai_presentation_install=1= to your
 =ece-install.conf= file.
 
@@ -361,7 +361,7 @@ users. Differences between this and an editorial server include:
    required.
  * Memcached, the distributed memory cache is installed.
 
-** <<<=fai_wf_install=>>>
+** <<<fai_wf_install>>>
 To use this profile, add the following settings:
 #+BEGIN_SRC text
 fai_wf_install=1
@@ -381,7 +381,7 @@ installed on a machine where you have already installed either an
 editorial or presentation profile. Exactly which machines you install
 the Widget Framework on depends on your deployment strategy.
 
-** <<<=fai_db_install=>>>
+** <<<fai_db_install>>>
 To use this profile, add =fai_db_install=1= to your
 =ece-install.conf= file.
 
@@ -456,7 +456,7 @@ fai_db_master_log_position=106
 credentials. You can override these defaults by setting additional
 parameters in =ece-install.conf=. For details, see ??.
 
-** <<<=fai_cache_install=>>>
+** <<<fai_cache_install>>>
 To use this profile, add =fai_cache_install=1= to your
 =ece-install.conf= file.
 
@@ -491,20 +491,20 @@ TBD:
   to be in the staff network ACL, defined in the Varnish
   configuration. 
 
-** <<<=fai_search_install=>>>
+** <<<fai_search_install>>>
 To use this profile, add =fai_search_install=1= to your
 =ece-install.conf= file.
 
 This profile installs search components (Apache Solr plus the Escenic
 =indexer= web app.
 
-** <<<=fai_rmi_install=>>>
+** <<<fai_rmi_install>>>
 To use this profile, add =fai_rmi_install=1= to your
 =ece-install.conf= file.
 
 This profile installs an RMI hub.
 
-** <<<=fai_monitoring_install=>>>
+** <<<fai_monitoring_install>>>
 To use this profile, add =fai_monitoring_install=1= to your
 =ece-install.conf= file.
 
@@ -514,7 +514,7 @@ access to the reports Munin generates.
 TBD: This profile will also install the Nagios interface for
 monitoring the different nodes. 
 
-** <<<=fai_publication_create=>>>
+** <<<fai_publication_create>>>
 To use this profile, add =fai_publication_create=1= to your
 =ece-install.conf= file.
 
@@ -526,7 +526,7 @@ If the Widget Framework is installed on the machine, then the
 create publication is based on the Widget Framework. Otherwise the
 publication is based on the clean demo WAR supplied with the Content Engine.
 
-** <<<=fai_all_install=>>>
+** <<<fai_all_install>>>
 To use this profile, add =fai_all_install=1= to your
 =ece-install.conf= file.
 
@@ -537,7 +537,7 @@ server, application server, Escenic Content Engine, assembly host,
 database and Widget Framework is installed. In addition, a publication
 is created.
 
-** <<<=fai_restore_from_backup=>>>
+** <<<fai_restore_from_backup>>
 To use this profile, add =fai_restore_from_backup=1= to your
 =ece-install.conf= file.
 
@@ -624,7 +624,7 @@ ERROR 1050 (42S01) at line 25: Table '`ece5db`.`AccessControlList`' already exis
 [ece-install-24] See /var/log/ece-install.log for further details.
 #+END_SRC
 
-** <<<=fai_analysis_install=>>>
+** <<<fai_analysis_install>>>
 To use this profile, add =fai_analysis_install=1= to your
 =ece-install.conf= file.
 
@@ -635,13 +635,13 @@ The Analysis Engine uses a database to store statistics. You must not
 use the same database as is used by the Content Engine for storing
 publication contents.
 
-** <<<=fai_nfs_server_install=>>>
+** <<<fai_nfs_server_install>>>
 To use this profile, add =fai_nfs_server_install=1= to your
 =ece-install.conf= file.
 
 This profile installs an NFS server.
 
-** <<<=fai_nfs_client_install=>>>
+** <<<fai_nfs_client_install>>>
 To use this profile, add =fai_nfs_client_install=1= to your
 =ece-install.conf= file.
 
@@ -657,7 +657,7 @@ fai_nfs_server_address=192.168.1.200
 fai_nfs_export_list="/var/exports/multimedia"  
 #+END_SRC
 
-** <<<=fai_vip_install=>>>
+** <<<fai_vip_install>>>
 [[file:images/nfs-vip.png]]
 
 To use this profile, add =fai_vip_install=1= to your
