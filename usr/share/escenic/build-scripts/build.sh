@@ -20,7 +20,7 @@ svn_src_dir=~/src
 maven_conf_file=~/.m2/settings.xml
 project_assembly_dir=$svn_src_dir/project-assembly
 project_assembly_target_dir=$project_assembly_dir/target
-escenic_indentifiers="engine
+escenic_identifiers="engine
 community-engine
 forum
 geocode
@@ -35,6 +35,7 @@ widget-framework-core
 widget-framework-common
 widget-framework-mobile
 widget-framework-community
+widget-framework-syndication
 mobile-expansion
 "
 release_dir=~/releases
@@ -259,7 +260,7 @@ function svn_verify_assembly
 ##
 function symlink_ece_components
 {
-  for f in $escenic_indentifiers
+  for f in $escenic_identifiers
   do
     version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
     if [[ ! $version = "" ]]; then
