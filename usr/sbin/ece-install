@@ -373,6 +373,10 @@ function check_for_required_downloads()
   
   print_and_log "Asserting that required downloads succeeded ..."
   local required_escenic_packages="engine assemblytool"
+  if [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
+    required_escenic_packages="analysis-engine"
+  fi
+  
   local some_is_missing=0
   
   for el in $required_escenic_packages; do
