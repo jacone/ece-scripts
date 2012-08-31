@@ -62,5 +62,23 @@ function install_analysis_server() {
   # touching web.xml to trigger a re-deploy of the EAE Reports
   # application.
   run touch ${tomcat_base}/webapps/analysis-reports/WEB-INF/web.xml
+
+  set_up_analysis_plugin_nursery_conf
+  
   run_hook install_analysis_server.postinst
 }
+
+function set_up_analysis_plugin_nursery_conf() {
+  local file=$common_nursery_dir/com/escenic/analysis/EaePluginConfig.properties
+  make_dir $(dirname $file)
+  cat > $file <<EOF
+eaeQsUrl=http://${appserver_host}:${appserver_port}/analysis-qs/QueryService
+earUrl=http://${appserver_host}:${appserver_port}/analysis-reports
+cacheSize=1000
+cacheElementTimeout=2
+distinctMetaCountEnabled=false
+EOF
+
+  print_and_log "EAE Nursery component configured in $file"
+}
+
