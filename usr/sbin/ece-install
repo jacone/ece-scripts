@@ -1059,6 +1059,11 @@ if [ $fai_enabled -eq 1 ]; then
         no_fai_profile=0
     fi
 
+    # Important that the EAE is installed after all, editor and
+    # presentation in case it's running on the same host as any of
+    # them. This because it configures the EAE ECE plugin, which the
+    # ECE profiles also will copy out if EAE is listed in the
+    # technet_download_list.
     if [ $(get_boolean_conf_value fai_analysis_install) -eq 1 ]; then
         install_profile_number=$PROFILE_ANALYSIS_SERVER
         install_analysis_server
