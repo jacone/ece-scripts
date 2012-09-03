@@ -4,16 +4,34 @@ if [[ $(uname -m) == "x86_64" ]]; then
 fi
   
 function create_java_deb_packages_and_repo() {
-  print $(lsb_release -i | cut -d':' -f2) \
+  print_and_log $(lsb_release -i | cut -d':' -f2) \
     $(lsb_release -r | cut -d':' -f2) \
-    "doesn't have official Sun/Oracle Java packages,"
-  print "creating packages & local repo for you ..."
+    "doesn't have official Oracle/Sun Java packages,"
+  print_and_log "creating packages & local repo for you ..."
   
   local tmp_dir=$(mktemp -d)
   run cd $tmp_dir
   run git clone https://github.com/flexiondotorg/oab-java6.git
   run cd oab-java6
-  run bash oab-java.sh
+
+  # oab fails regularly, every 2-3 months or so, so we must take extra
+  # heed here.
+  bash oab-java.sh 1>> $log 2>> $log
+  if [ $? -gt 0 ]; then
+    local oab_pkg_dir=/var/local/oab/pkg
+    local oab_pkg_list="
+      jce_policy-6.zip
+      jdk-6u34-linux-i586.bin
+      jdk-6u34-linux-x64.bin"
+    print_and_log "Creating Oracle/Sun Java packages failed. Probably it was"
+    print_and_log "the downloading of the software binaries that failed."
+    print_and_log "Download the following files to $oab_pkg_dir and try"
+    print_and_log "again:"
+    for el in $oab_pkg_list; do
+      print_and_log "  - $el"
+    done
+    remove_pid_and_exit_in_error
+  fi
   run rm -rf $tmp_dir
     
   add_next_step "Local APT repository with Sun/Oracle Java packages"
