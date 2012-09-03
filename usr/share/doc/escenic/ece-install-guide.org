@@ -1006,8 +1006,9 @@ pre-requisite 3rd party libraries and only if any are missing will it
 ask the package manager to fetch it.
 
 Likewise, ece-install will see if the Escenic artifacts or application
-server that you need are already present in the /tmp/ece-downloads
-folder, and only download the missing ones (if any).
+server that you need are already present in the
+=/var/cache/ece-install= folder, and only download the missing ones
+(if any).
 
 To get a list of the artifacts it'll pull from
 http://technet.escenic.com and http://tomcat.apache.org search for the

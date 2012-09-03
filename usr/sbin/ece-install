@@ -48,7 +48,7 @@ java_home=/usr/lib/jvm/java-6-sun
 
 pid_file=/var/run/$(basename $0).pid
 lock_file=/var/lock/$(basename $0).lock
-download_dir=/tmp/ece-downloads
+download_dir=/var/cache/$(basename $0)
 log=/var/log/$(basename $0).log
 conf_file=$HOME/ece-install.conf
 ece_scripts_git_source=https://github.com/skybert/ece-scripts.git
