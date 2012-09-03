@@ -508,8 +508,8 @@ Description: Server configuration for ${machine}
 EOF
 
     if [ ! -x /usr/bin/dpkg-deb ]; then
-      print_and_log "You must have dpkg-deb installed :-("
-      remove_pid_and_exit_in_error
+      print_and_log "You must have dpkg-deb installed to create packages :-("
+      return
     fi
     
     run dpkg-deb --build $target_dir
