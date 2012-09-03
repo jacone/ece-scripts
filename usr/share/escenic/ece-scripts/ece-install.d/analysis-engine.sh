@@ -72,6 +72,7 @@ function set_up_analysis_plugin_nursery_conf() {
   local file=$common_nursery_dir/com/escenic/analysis/EaePluginConfig.properties
   make_dir $(dirname $file)
   cat > $file <<EOF
+\$class=com.escenic.ece.plugin.eae.EaePluginConfig
 eaeQsUrl=http://${appserver_host}:${appserver_port}/analysis-qs/QueryService
 earUrl=http://${appserver_host}:${appserver_port}/analysis-reports
 cacheSize=1000
