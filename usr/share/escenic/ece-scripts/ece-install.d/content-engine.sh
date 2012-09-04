@@ -478,6 +478,12 @@ log4j.appender.ECELOG.File=$escenic_log_dir/\${escenic.server}-messages
 log4j.appender.ECELOG.layout=org.apache.log4j.PatternLayout
 log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
 
+# Get rid of the browser log which for some reason wanderse into the
+# standard log4j log
+log4j.appender.NOLOGGING=org.apache.log4j.varia.NullAppender
+log4j.additivity.browser=false
+log4j.category.browser=FATAL, NOLOGGING
+
 # Get rid of serialization errors to memcached.
 log4j.category.com.danga.MemCached.MemCachedClient=FATAL
 EOF
