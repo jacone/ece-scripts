@@ -25,7 +25,8 @@ function create_java_deb_packages_and_repo() {
       jdk-6u34-linux-x64.bin"
     print_and_log "Creating Oracle/Sun Java packages failed. Probably it was"
     print_and_log "the downloading of the software binaries that failed."
-    print_and_log "Download the following files to $oab_pkg_dir and try"
+    print_and_log "Go to http://www.oracle.com/technetwork/java/javase/downloads"
+    print_and_log "and download the following files to $oab_pkg_dir and try"
     print_and_log "again:"
     for el in $oab_pkg_list; do
       print_and_log "  - $el"
