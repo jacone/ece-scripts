@@ -477,6 +477,9 @@ log4j.appender.ECELOG=org.apache.log4j.DailyRollingFileAppender
 log4j.appender.ECELOG.File=$escenic_log_dir/\${escenic.server}-messages
 log4j.appender.ECELOG.layout=org.apache.log4j.PatternLayout
 log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
+
+# Get rid of serialization errors to memcached.
+log4j.category.com.danga.MemCached.MemCachedClient=FATAL
 EOF
   cd $tomcat_base/lib/
   make_ln $common_nursery_dir/trace.properties
