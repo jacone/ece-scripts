@@ -127,6 +127,16 @@ EOF
     i=$(( $i+1 ))
   done
 
+  if [ -n "${fai_analysis_host}" ]; then
+    cat >> /etc/varnish/default.vcl <<EOF
+backend analysis {
+  .host = "${fai_analysis_host}";
+  .port = "${fai_analysis_port-${default_app_server_port}}";
+}
+
+EOF
+  fi
+
   cat >> /etc/varnish/default.vcl <<EOF
 /* The client director gives us session stickiness based on client
  * IP. */
@@ -168,6 +178,16 @@ sub vcl_recv {
     set req.url = regsub(req.url, "^/munin", "/");
     set req.backend = static;
   }
+EOF
+  if [ -n "${fai_analysis_host}" ]; then
+    cat >> /etc/varnish/default.vcl <<EOF
+  else if (req.url ~ "^/analysis-logger/") {
+    set req.backend = analysis;
+  }
+EOF
+  fi
+  
+  cat >> /etc/varnish/default.vcl <<EOF
   else {
     set req.backend = webdirector;
   }
