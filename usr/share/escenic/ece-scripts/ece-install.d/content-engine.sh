@@ -703,20 +703,20 @@ function set_up_engine_directories() {
 
 function leave_content_engine_trails() {
   if [ ${fai_editor_install-0} -eq 1 ]; then
-    leave_trail "trail_editor_port=${fai_editor_port-8080}"
-    leave_trail "trail_editor_shutdown=${fai_editor_shutdown-8005}"
+    leave_trail "trail_editor_port=${fai_editor_port-${default_app_server_port}}"
+    leave_trail "trail_editor_shutdown=${fai_editor_shutdown-${default_app_server_shutdown}}"
   fi
   if [ ${fai_presentation_install-0} -eq 1 ]; then
-    leave_trail "trail_presentation_port=${fai_presentation_port-8080}"
-    leave_trail "trail_presentation_shutdown=${fai_presentation_shutdown-8005}"
+    leave_trail "trail_presentation_port=${fai_presentation_port-${default_app_server_port}}"
+    leave_trail "trail_presentation_shutdown=${fai_presentation_shutdown-${default_app_server_shutdown}}"
   fi
   if [ ${fai_analysis_install-0} -eq 1 ]; then
-    leave_trail "trail_analysis_port=${fai_analysis_port-8080}"
-    leave_trail "trail_analysis_shutdown=${fai_analysis_shutdown-8005}"
+    leave_trail "trail_analysis_port=${fai_analysis_port-${default_app_server_port}}"
+    leave_trail "trail_analysis_shutdown=${fai_analysis_shutdown-${default_app_server_shutdown}}"
   fi
   if [ ${fai_all_install-0} -eq 1 ]; then
-    leave_trail "trail_all_port=8080"
-    leave_trail "trail_all_shutdown=8005"
+    leave_trail "trail_all_port=${default_app_server_port}"
+    leave_trail "trail_all_shutdown=${default_app_server_shutdown}"
   fi
   
   leave_trail "trail_public_host_name=${public_host_name}"
