@@ -37,6 +37,9 @@ function set_up_app_server()
       redirect_port=${fai_analysis_redirect-${default_app_server_redirect}}
       leave_trail "trail_analysis_host=${HOSTNAME}"
       leave_trail "trail_analysis_port=${fai_analysis_port-${default_app_server_port}}"
+    elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+      leave_trail "trail_all_port=${default_app_server_port}"
+      leave_trail "trail_all_shutdown=${default_app_server_shutdown}"
     fi
   fi
 
