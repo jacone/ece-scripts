@@ -134,15 +134,15 @@ function print_tomcat_resources() {
       $file
     )"
 
-    if [ $(echo "$virtual_hosts" | wc -c) -gt 1 ]; then                                                                                                                        |
-      print "Virtual hosts:"                                                                                                                                                   |
+    if [ $(echo "$virtual_hosts" | wc -c) -gt 1 ]; then
+      print "Virtual hosts:"
     fi
 
     echo "$virtual_hosts" | \
       sed 's#><#>\n<#g' | \
       sed 's#<Alias>\(.*\)</Alias>#\1#g' | while read line; do
-      if [ -z "$line" ]; then                                                                                                                                                  |
-        continue                                                                                                                                                               |
+      if [ -z "$line" ]; then
+        continue
       fi
       print "|-> http://${line}"
     done
