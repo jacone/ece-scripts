@@ -11,7 +11,13 @@ function create_java_deb_packages_and_repo() {
   
   local tmp_dir=$(mktemp -d)
   run cd $tmp_dir
-  run git clone https://github.com/flexiondotorg/oab-java6.git
+  # TODO 2012-09-10 At the moment, this fork fixes a problem that
+  # https://github.com/flexiondotorg/oab-java6.git doesn't.
+  #
+  # Once this issue has been closed,
+  # https://github.com/flexiondotorg/oab-java6/issues/55, revert to
+  # using the upstream flexiondotorg repository.
+  run git clone https://github.com/madkinder/oab-java6.git
   run cd oab-java6
 
   # oab fails regularly, every 2-3 months or so, so we must take extra
