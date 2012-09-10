@@ -6,7 +6,7 @@ file=/etc/escenic/ece.conf
 if [ -r $file ]; then
   # don't like sourcing ece.conf, so getting it from grep instead.
   the_java_home=$(grep ^java_home $file | cut -d'=' -f2)
-  if [ -n "$the_java_home" && -d "$the_java_home" ]; then
+  if [[ -n "$the_java_home" && -d "$the_java_home" ]]; then
     java_bin=$the_java_home/bin/java
   fi
 fi
