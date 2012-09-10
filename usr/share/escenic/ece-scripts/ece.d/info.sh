@@ -2,7 +2,7 @@ function get_info_for_type() {
   print "Current instance:    ${instance}"
   print "Instances available on $HOSTNAME: $(get_instance_list)"
   print "Conf files parsed: ${ece_conf_files_read[@]}"
-  
+
   if [ -n "${ece_home}" ]; then
     print "ECE location: $ece_home"
   fi
@@ -12,13 +12,13 @@ function get_info_for_type() {
   if [ -n "${java_home}" ]; then
     print "Java location: $java_home"
   fi
-  
+
   print "Log files:"
   print "|-> System out log:" $log
   print "|-> App server log:" $(get_app_log)
   print "|-> Log4j log:     " $(get_log4j_log)
   print "|-> GC log:        " $(get_gc_log)
-  
+
   if [ -n "${appserver}" ]; then
     print "Application server:"
     set_type_port
@@ -30,9 +30,9 @@ function get_info_for_type() {
       print "|-> PID:" $type_pid
       print "|-> Memory usage:" $(get_memory_summary_of_pid $type_pid)
     fi
-    
+
     print "|-> Type: " $appserver
-    
+
     case "$appserver" in
       tomcat)
         if [ -n "${tomcat_home}" ]; then
@@ -126,7 +126,6 @@ function print_tomcat_resources() {
         done
       done
 
-    print "Virtual hosts:"
     file=$tomcat_base/conf/server.xml
     local virtual_hosts="$(
       xml_grep \
@@ -134,12 +133,20 @@ function print_tomcat_resources() {
       --cond 'Server/Service/Engine/Host/Alias' \
       $file
     )"
+
+    if [ $(echo "$virtual_hosts" | wc -c) -gt 1 ]; then
+      print "Virtual hosts:"
+    fi
+
     echo "$virtual_hosts" | \
       sed 's#><#>\n<#g' | \
       sed 's#<Alias>\(.*\)</Alias>#\1#g' | while read line; do
+      if [ -z "$line" ]; then
+        continue
+      fi
       print "|-> http://${line}"
     done
-    
+
   else
     print "|-> user $USER cannot read $file"
   fi
@@ -159,4 +166,3 @@ function visualise_known_ports() {
     -e 's/11211/memcached/g')
   echo ${the_host}:${nice_port}
 }
-

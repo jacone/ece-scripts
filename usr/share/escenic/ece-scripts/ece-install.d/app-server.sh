@@ -450,6 +450,8 @@ function set_http_auth_credentials_if_needed() {
   if [[ -n "$fai_builder_http_user" && -n "$fai_builder_http_password" ]]; then
     set_ece_instance_conf builder_http_user "$fai_builder_http_user"
     set_ece_instance_conf builder_http_password "$fai_builder_http_password"
+    leave_trail trail_builder_http_user="$fai_builder_http_user"
+    leave_trail trail_builder_http_password="$fai_builder_http_password"
   fi
 
   local http_user=""

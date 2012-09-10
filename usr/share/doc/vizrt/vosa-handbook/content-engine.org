@@ -1,6 +1,6 @@
 * Content Engine
-We different Escenic Content Engines that are presentation servers
-and the ones that are publication servers.
+We differentiate between Escenic Content Engines that are presentation
+servers and the ones that are publication servers.
 
 Architecturally, these look the same (strictly speaking, the
 publication servers don't need the memory cache, but for simplicity of

@@ -94,6 +94,7 @@ function set_defaults_if_the_trails_are_not_set() {
   trail_presentation_host=${trail_presentation_host-pres1}
   trail_presentation_host_list=${trail_presentation_host_list-${trail_presentation_host}}
   trail_today_date=${trail_today_date-$(date --iso)}
+  trail_today_date_full=${trail_today_full-$(date)}
 }
 
 function expand_all_variables_in_org_files() {
