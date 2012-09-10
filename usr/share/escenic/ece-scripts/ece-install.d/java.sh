@@ -24,19 +24,12 @@ function create_java_deb_packages_and_repo() {
   # heed here.
   bash oab-java.sh 1>> $log 2>> $log
   if [ $? -gt 0 ]; then
-    local oab_pkg_dir=/var/local/oab/pkg
-    local oab_pkg_list="
-      jce_policy-6.zip
-      jdk-6u34-linux-i586.bin
-      jdk-6u34-linux-x64.bin"
-    print_and_log "Creating Oracle/Sun Java packages failed. Probably it was"
-    print_and_log "the downloading of the software binaries that failed."
-    print_and_log "Go to http://www.oracle.com/technetwork/java/javase/downloads"
-    print_and_log "and download the following files to $oab_pkg_dir and try"
-    print_and_log "again:"
-    for el in $oab_pkg_list; do
-      print_and_log "  - $el"
-    done
+    print_and_log "Creating Oracle/Sun Java packages failed. This is probably"
+    print_and_log "because of a 3rd party script, oab-java6, which fails"
+    print_and_log "whenever Oracle changes their website. To continue, please" 
+    print_and_log "go to http://www.oracle.com/technetwork/java/javase/downloads"
+    print_and_log "and download the full Java 6 JDK and be sure to add it first"
+    print_and_log "in PATH. Then re-run $(basename $0)."
     remove_pid_and_exit_in_error
   fi
   run rm -rf $tmp_dir
