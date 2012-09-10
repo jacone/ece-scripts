@@ -119,8 +119,7 @@ function deploy() {
         deploy_this_war=0
         message="Deployment white list active, only deploying: "
         message=$message"$deploy_webapp_white_list"
-        print $message
-        log $message
+        print_and_log $message
       fi
       
       for war in $dir/*.war ; do
