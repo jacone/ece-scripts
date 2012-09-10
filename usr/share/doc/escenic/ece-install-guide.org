@@ -884,6 +884,7 @@ $HOME/ece-install.conf file of the root user:
 | =fai_db_port=                         | 3306                                                         | Useful for editor & presentation profiles                                                                |
 | =fai_db_schema=                       | ece5db                                                       | Useful for DB installation profile                                                                       |
 | =fai_db_user=                         | ece5user                                                     | Useful for DB installation profile                                                                       |
+| =fai_dry_run=                         | 0                                                            | ece-install will download Escenic archives and install OS packages, but will not configure anything.     |
 | =fai_editor_conf_archive=             | ""                                                           | conf.tar.gz to use for Nursery & JAAS configuration                                                      |
 | =fai_editor_deploy_white_list=        | "escenic-admin escenic studio indexer-webservice webservice" | The list of WARs to be deployed on this instance.                                                        |
 | =fai_editor_ear=                      | ""                                                           | EAR to use instead of the Escenic binaries                                                               |

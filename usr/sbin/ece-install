@@ -102,6 +102,11 @@ http://technet.escenic.com/downloads/widget-framework/widget-framework-community
 # sources.list used by ece-install
 escenic_sources=/etc/apt/sources.list.d/escenic.list
 
+# if set to 1, ece-install will try do as much dry running as
+# possible. I.e. not actually install things, but only download and
+# prepare the pre-requisites.
+dry_run=0
+
 ## Bootstrapping, load files from /usr/share/escenic/ece-scripts The
 ## method will first try to be smart, in case the user has copied the
 ## ece-scripts somewhere else., e.g.: moved everything to ~/ece-scrpts
@@ -974,7 +979,8 @@ if [ $fai_enabled -eq 1 ]; then
     print_and_log "All user input will be read from $conf_file"
     
     common_pre_install
-
+    perform_dry_run_if_applicable
+    
     no_fai_profile=1
 
     if [ ${fai_un_install_everything-0} -eq 1 ]; then

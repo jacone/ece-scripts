@@ -2,10 +2,7 @@
 
 varnish_redhat_rpm_url=http://repo.varnish-cache.org/redhat/varnish-3.0/el5/noarch/varnish-release-3.0-1.noarch.rpm
 
-function install_cache_server()
-{
-  print_and_log "Installing a caching server on $HOSTNAME ..."
-
+function install_varnish_software() {
   if [[ $on_debian_or_derivative -eq 1 &&
         $(apt-key list | grep varnish-software.com | wc -l) -eq 0 ]]; then
     curl ${curl_opts} \
@@ -37,9 +34,15 @@ function install_cache_server()
     print "Installing the Varnish repository RPM"
     run rpm --nosignature -i $varnish_redhat_rpm_url
   fi
-
+  
   install_packages_if_missing varnish
   assert_pre_requisite varnishd
+}
+
+function install_cache_server() {
+  print_and_log "Installing a caching server on $HOSTNAME ..."
+
+  install_varnish_software
   
   if [ $fai_enabled -eq 0 ]; then
     print "You must now list your backend servers."

@@ -165,13 +165,9 @@ function get_total_memory_in_mega_bytes() {
 }
 
 function add_apt_source() {
-  if [[ ! -e $escenic_sources &&
-        $(grep "$@" /etc/apt/sources.list | wc -l) -lt 1 ]]; then
+  if [ $(grep -r "$@" /etc/apt/sources.list* | wc -l) -lt 1 ]; then
+    echo "# added by $(basename $0) @ $(date)" >> $escenic_sources
     echo "$@" >> $escenic_sources
-    run apt-get update
-  elif [ $(grep "$@" $escenic_sources | wc -l) -lt 1 ]; then
-    echo "$@" >> $escenic_sources
-    run apt-get update
   fi
 }
 
