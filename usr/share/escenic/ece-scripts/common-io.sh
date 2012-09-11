@@ -115,6 +115,28 @@ function download_uri_target_to_dir() {
   echo $file
 }
 
+## Will verify that the archive passed to the function is ok. If it's
+## not, the function will terminate the calling script, exiting in
+## error.
+##
+## $1 :: the archive to test, supported archives are: .zip, .tar.gz, .tgz
+function verify_that_archive_is_ok() {
+  if [ -z $1 -o ! -e $1 ]; then
+    return
+  fi
+
+  if [[ $1 == *.zip ]]; then
+    unzip -t $1 > /dev/null 2>&1
+  elif [[ $1 == *.tar.gz || $1 == *.tgz ]]; then
+    tar tzf $1 > /dev/null 2>&1
+  fi
+  
+  if [ $? -gt 0 ]; then
+    print_and_log $1 "is a corrupt archive :-("
+    remove_pid_and_exit_in_error
+  fi
+}
+
 # verifies that the passed file(s) exist and are readable, depends on
 # set_archive_files_depending_on_profile
 function verify_that_files_exist_and_are_readable()

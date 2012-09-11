@@ -124,6 +124,8 @@ function set_up_engine_and_plugins() {
   run cd $escenic_root_dir/
 
   for el in $technet_download_list; do
+    verify_that_archive_is_ok $download_dir/$(basename $el)
+
     if [ $(basename $el | \
       grep -E "^engine-[0-9]|^engine-trunk-SNAPSHOT|^engine-dist" | \
       wc -l) -gt 0 ]; then
