@@ -316,21 +316,21 @@ EOF
     local line=""
     text=""
     
-    for el in "$@"; do
-      line="${line}${el} "
-      
+    for el in $@; do
+      local tmp_line="${line} ${el}"
       # wrap the line when it becomes too long
-      if [ ${#line} -gt $LINE_WRAP ]; then
-        line="$(get_indent)${line}\n"
-        text="${text}${line}"
+      if [ ${#tmp_line} -gt $LINE_WRAP ]; then
+        text="${text}\n$(get_indent)${el}"
         line=""
+      else
+        line="${line} ${el}"
       fi
     done
 
     # adding the last line line here. For one liners, text will be
     # empty here, so the indent is straght on. For multi line input,
     # the text variable already contains a new line at this point.
-    text="${text}$(get_indent)${line}"
+    text="${text}\n$(get_indent)${line}"
     echo -e "$text"
   fi
 }
