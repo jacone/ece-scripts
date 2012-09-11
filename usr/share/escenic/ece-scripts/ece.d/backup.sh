@@ -1,8 +1,10 @@
 function clear_generated_files() {
   if [ -d ${assemblytool_home} ]; then
-    print "Cleaning up generated files in $assemblytool_home ..." 
-    run cd $assemblytool_home
-    run ant clean
+    if [ -r ${assemblytool_home}/build.xml ] ; then
+      print "Cleaning up generated files in $assemblytool_home ..." 
+      run cd $assemblytool_home
+      run ant clean
+    fi
   fi
 
   if [[ $appserver == "tomcat" ]]; then
