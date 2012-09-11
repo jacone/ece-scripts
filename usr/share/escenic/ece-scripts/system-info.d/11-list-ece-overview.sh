@@ -99,9 +99,8 @@ function check_picture_file() {
   local dir=$(dirname "$1")
   local file_name=$(basename "$1")
 
-  if [ ! -d $dir ]; then
-    print_p_text "Directory doesn't exist: $dir" \
-      "It's referenced via the image: $1"
+  if [ ! -e $1 ]; then
+    print_p_text "Picture file doesn't exist: $1"
     return 
   fi
   
@@ -109,7 +108,7 @@ function check_picture_file() {
 
   # first check if the image is size=0
   if [ $(find $dir -name $file_name -maxdepth 1 -type f -size 0 | wc -l) -gt 0 ]; then
-    print_pre_text "The file $1 is empty (size = 0 bytes)"
+    print_p_text "The file $1 is empty (size = 0 bytes)"
     return
   fi
 
