@@ -437,7 +437,7 @@ function set_appropriate_jvm_heap_sizes() {
     print_and_log "$warning $HOSTNAME only has $total_size MBs of memory, I will"
     print_and_log "$warning use ${percent}% of this for the JVM heap sizes, but you"
     print_and_log "$warning should really consider adding more RAM so that"
-    print_and_log "$warning the $instance_name instance gets 2GBs"
+    print_and_log "$warning the $instance_name instance gets at least 2GBs"
 
     heap_size=$(echo "$total_size * 0.${percent}" | bc | cut -d'.' -f1)
   fi
