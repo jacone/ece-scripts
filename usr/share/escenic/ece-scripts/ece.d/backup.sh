@@ -168,7 +168,7 @@ function backup_db() {
     db_backup_file=$backup_dir/${db}-$(date --iso).sql.gz
     
     # check DB credentials first.
-    mysqldump -u ${db_user} \
+    mysql -u ${db_user} \
       -p${db_password} \
       -h ${db_host} \
       -P ${db_port} ${db} \
