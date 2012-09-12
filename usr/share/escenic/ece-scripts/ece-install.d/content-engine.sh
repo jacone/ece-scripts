@@ -56,13 +56,13 @@ function install_ece_instance() {
 
   set_archive_files_depending_on_profile
   
+  download_escenic_components
+  check_for_required_downloads
+  set_up_engine_and_plugins
+
   # most likely, the user is _not_ installing from archives (EAR +
   # configuration bundle), hence the false test goes first.
   if [ $(is_installing_from_ear) -eq 0 ]; then
-    download_escenic_components
-    check_for_required_downloads
-    set_up_engine_and_plugins
-
     if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
       set_up_assembly_tool
     fi
