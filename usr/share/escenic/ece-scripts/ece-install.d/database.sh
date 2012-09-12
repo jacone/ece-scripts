@@ -58,10 +58,10 @@ function set_up_percona_repository_if_possible() {
             1>>$log 2>>$log
         fi
 
-        run apt-get update
       fi
 
       add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
+      run apt-get update
       mysql_server_packages="percona-server-server"
       mysql_client_packages="percona-server-client"
       
