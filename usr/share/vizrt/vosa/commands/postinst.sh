@@ -68,7 +68,9 @@ parse_config_file $config/install.conf install_config_
 function postinstall() {
   for o in "${install_config_postinstall[@]}" ; do
     echo "Executing postinstall $o"
-    if [ "${o:0:1}" == "/" ] ; then
+    if [ "${o:0:2}" == "./" ] ; then
+      local cmd="${config}/${o:2}"
+    elif [ "${o:0:1}" == "/" ] ; then
       local cmd=$o
     else
       local cmd="$(dirname $0)/../post-install-hooks/$o"
