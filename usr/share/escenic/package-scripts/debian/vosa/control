@@ -1,5 +1,6 @@
 Package: vosa
 Version: VERSION
+Depends: gawk
 Section: base
 Priority: optional
 Architecture: all
