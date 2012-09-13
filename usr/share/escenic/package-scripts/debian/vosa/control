@@ -1,6 +1,7 @@
 Package: vosa
 Version: VERSION
 Depends: gawk
+Suggests: ec2-api-tools
 Section: base
 Priority: optional
 Architecture: all
