@@ -323,7 +323,8 @@ function verify_maven_proxy
 ## 
 function svn_checkout
 {
-  run svn update --non-interactive --set-depth infinity $svn_src_dir
+  #run svn update --non-interactive --set-depth infinity $svn_src_dir
+  run svn checkout --non-interactive --depth infinity --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
   revision=`svn info $svn_src_dir | grep -i Revision | awk '{print $2}'`
   if [[ $revision = "" ]]; then    
     print_and_log "Failed to fetch current revision number, exiting!"
