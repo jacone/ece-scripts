@@ -121,8 +121,13 @@ function download_uri_target_to_dir() {
 ##
 ## $1 :: the archive to test, supported archives are: .zip, .tar.gz, .tgz
 function verify_that_archive_is_ok() {
-  if [ -z $1 -o ! -e $1 ]; then
+  if [ -z $1 ]; then
     return
+  fi
+
+  if [ ! -e $1 ]; then
+    print_and_log "$1 doesn't exist :-("
+    remove_pid_and_exit_in_error
   fi
 
   if [[ $1 == *.zip ]]; then
