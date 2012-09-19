@@ -656,7 +656,7 @@ done
 # using any brain power.
 (
   cd ${escenic_backups_dir}
-  ln -sf \${fn} latest-\${db_schema}-backup.sql.gz
+  ln -sf \${fn} latest-\${HOSTNAME}-\${db_schema}-backup.sql.gz
 )
 EOF
 

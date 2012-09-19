@@ -487,7 +487,7 @@ function create_machine_conf_packages() {
     local conffiles_file=$target_dir/DEBIAN/conffiles
     run mkdir -p $(dirname $conffiles_file)
     find $target_dir -type f | \
-      egrep "etc|conf" | \"
+      egrep "etc|conf" | \
       egrep -v DEBIAN | \
       sed "s#$target_dir##" \
       > $conffiles_file
