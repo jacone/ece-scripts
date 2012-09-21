@@ -10,7 +10,7 @@ and tools to install puppets that do what that puppet master says.
 
 All of this is possible manually by apt-get'ing and configuring
 manualy; the value of these scripts is that all of this is
-made possible without intervention.
+made possible without intervention..
 
 There are various post-installation hooks available which perform
 various tasks, for simple things like creating an /etc/motd file,
