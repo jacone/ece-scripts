@@ -166,38 +166,12 @@ function set_ecedb_conf() {
   ece_home=${escenic_root_dir}/engine
 }
 
-function set_up_ecedb()
-{
+function set_up_ecedb() {
   print_and_log "Setting up the ECE database schema ..."
-
-  make_dir $escenic_root_dir/engine/plugins
-  run cd $escenic_root_dir/engine/plugins
-
-  find ../../ -maxdepth 1 -type d | \
-    grep -v assemblytool | \
-    while read directory; do
-    if [ $directory = "../../" ]; then
-      continue
-    fi
-
-          # nuisance to get the community engine, but not the engine
-    if [ $(echo $directory | grep engine | wc -l) -gt 0 ]; then
-      if [ $(echo $directory | grep community | wc -l) -lt 1 ]; then
-        continue
-      fi
-    fi
-
-    if [ ! -h $(basename $directory) ]; then
-      run ln -s $directory
-    fi
-  done
 
   set_ecedb_conf
   pre_install_new_ecedb
   create_ecedb
-
-  run cd ~/
-  run rm -rf $escenic_root_dir/engine/plugins
 
   add_next_step "DB is now set up on ${db_host}:${db_port}"
 }
@@ -558,13 +532,32 @@ function create_ecedb() {
     return
   fi
 
+  # first the ECE SQL ...
   run_db_scripts $ece_home/database/$db_product
+  
+  # ... then, find the plugins and run their SQL scripts
+  for archive in $technet_download_list; do
+    # don't re-run the engine scripts
+    if [[ $(basename ${archive}) == engine* ]]; then
+      continue
+    fi
+    
+    # find the top directory inside the archive
+    local dir=$(
+      unzip -t ${download_dir}/$(basename ${archive}) | \
+        head -2 | \
+        awk '{print $2}' | \
+        tail -1 | \
+        cut -d'/' -f1      
+    )
 
-  if [ -e $ece_home/plugins ]; then
-    for el in `find -L $ece_home/plugins -name $db_product`; do
-      run_db_scripts $el
-    done
-  fi
+    # should always be one
+    local archive_sql_dir=$(find $dir -name $db_product | head -1)
+    if [ -z $archive_sql_dir ]; then
+      continue
+    fi
+    run_db_scripts ${escenic_root_dir}/${archive_sql_dir}
+  done
 
   run_eae_scripts_if_available
 
@@ -573,7 +566,6 @@ function create_ecedb() {
 
 ## will run the EAE scripts if they are availabe.
 function run_eae_scripts_if_available() {
-      
   for el in $(find $escenic_root_dir -name eae-${db_product}.sql | \
     grep -v upgrade | \
     sort -r | \
