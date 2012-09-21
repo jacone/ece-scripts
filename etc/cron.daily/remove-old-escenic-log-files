@@ -12,7 +12,9 @@ function remove_old_escenic_log_files() {
   /etc/init.d/ece remove-old-log-files
 }
 
-## Uncomment the following line to have daily removal of old log
-## files.
-# remove_old_escenic_log_files
-
+if [ -r /etc/default/ece ]; then
+  source /etc/default/ece
+  if [ ${remove_old_log_files-0} -eq 1 ]; then
+    remove_old_escenic_log_files
+  fi
+fi
