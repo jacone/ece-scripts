@@ -5,11 +5,6 @@ function clean_up() {
     run ant clean
   fi
 
-  if [ -d "${cache_dir}" ]; then
-    print "Cleaning up ear, deb and rpm files in ${cache_dir} ..." 
-    run rm -rf ${cache_dir}/*.{rpm,deb,ear}
-  fi
-
   if [[ $appserver == "tomcat" ]]; then
     local dir_list="
       $tomcat_base/work
