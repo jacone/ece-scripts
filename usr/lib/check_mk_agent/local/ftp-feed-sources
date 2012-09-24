@@ -25,7 +25,12 @@ function check_ftp_feed_sources() {
     local password=$(grep ^ftp_password $file | cut -d'=' -f2 | sed 's#"##g')
     local url=$(grep ^ftp_url $file | cut -d'=' -f2 | sed 's#"##g')
 
-    local headers=$(wget -O /dev/null --ftp-user $user --ftp-password $password $url 2>&1 >/dev/null)
+    local headers=$(
+      wget -O /dev/null \
+        --ftp-user $user \
+        --ftp-password $password \
+        $url 2>&1 >/dev/null
+    )
     local login_ok=$(echo "$headers" | grep 'Logged in' | wc -l)
     local dir_ok=$(echo "$headers" | grep '==> LIST ... done.' | wc -l)
     
