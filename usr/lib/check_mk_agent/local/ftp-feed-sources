@@ -28,13 +28,15 @@ function check_ftp_feed_sources() {
     local headers=$(wget -O /dev/null --ftp-user $user --ftp-password $password $url 2>&1 >/dev/null)
     local login_ok=$(echo "$headers" | grep 'Logged in' | wc -l)
     local dir_ok=$(echo "$headers" | grep '==> LIST ... done.' | wc -l)
-
+    
+    local key="import_ftp_source_${el}"
+    
     if [ ${login_ok} -eq 1 -a ${dir_ok} -eq 1 ];  then
-      echo 0 "${el}_import_ftp_source" "-" "The $el FTP import source is OK"
+      echo 0 ${key} "-" "The $el FTP import source is OK"
     elif [ ${login_ok} -eq 1 -a ${dir_ok} -eq 0 ];  then
-      echo 2 "${el}_import_ftp_source" "-" "Could not access the directory on ${url}"
+      echo 2 ${key} "-" "Could not access the directory on ${url}"
     elif [ ${login_ok} -eq 0 ]; then
-      echo 2 "${el}_import_ftp_source" "-" "Could not log into ${url}"
+      echo 2 ${key} "-" "Could not log into ${url}"
     fi
   done
 }
