@@ -1,0 +1,44 @@
+#! /usr/bin/env bash
+
+## check_mk plugin which checks all FTP servers which are set up to
+## provie a feed of external data to be imported into ECE.
+##
+## The script looks in the trail fails left by the ece-install script
+## to determine which FTP feeds to check the health of.
+
+function read_trails() {
+  for el in /var/lib/ece-install/*.trail 2>/dev/null; do
+    source $el
+  done
+}
+
+function exit_if_no_trails() {
+  if [ -z "${trail_ftp_feed_list}" ]; then
+    exit 0
+  fi
+}
+
+function check_ftp_feed_sources() {
+  for el in $trail_ftp_feed_list; do
+    local file=/etc/cron.hourly/${el}-import
+    local user=$(grep ^ftp_user $file | cut -d'=' -f2 | sed 's#"##g')
+    local password=$(grep ^ftp_password $file | cut -d'=' -f2 | sed 's#"##g')
+    local url=$(grep ^ftp_url $file | cut -d'=' -f2 | sed 's#"##g')
+
+    local headers=$(wget -O /dev/null --ftp-user $user --ftp-password $password $url 2>&1 >/dev/null)
+    local login_ok=$(echo "$headers" | grep 'Logged in' | wc -l)
+    local dir_ok=$(echo "$headers" | grep '==> LIST ... done.' | wc -l)
+
+    if [ ${login_ok} -eq 1 -a ${dir_ok} -eq 1 ];  then
+      echo 0 "${el}_import_ftp_source" "-" "The $el FTP import source is OK"
+    elif [ ${login_ok} -eq 1 -a ${dir_ok} -eq 0 ];  then
+      echo 2 "${el}_import_ftp_source" "-" "Could not access the directory on ${url}"
+    elif [ ${login_ok} -eq 0 ]; then
+      echo 2 "${el}_import_ftp_source" "-" "Could not log into ${url}"
+    fi
+  done
+}
+
+read_trails
+exit_if_no_trails
+check_ftp_feed_sources
