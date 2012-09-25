@@ -44,11 +44,12 @@ function debug() {
 
 function print() {
   if [[ "$quiet" == 1 ]]; then
-    echo $@
+    echo $@ | fmt
     return
   fi
-  
-  echo $(get_id) $@
+
+  # we break the text at 64 characters to have space for the ID.
+  echo $@ | fmt --width 64 | sed "s#^#$(get_id) #g"
 }
 
 function printne() {
@@ -272,7 +273,7 @@ function print_next_step_list() {
 ## $2 pass
 ## $3 URL
 function is_unauthorized_to_access_url() {
-  curl -s  -I  -u ${1}:${2} ${3} | \
+  curl --silent --connect-timeout 20 --head  --user ${1}:${2} ${3} | \
     head -1 | \
     grep "401 Unauthorized" | \
     wc -l
@@ -283,7 +284,7 @@ function is_unauthorized_to_access_url() {
 ## $2 pass
 ## $3 URL
 function is_authorized_to_access_url() {
-  curl -s  -I  -u ${1}:${2} ${3} | \
+  curl --silent --connect-timeout 20 --head --user ${1}:${2} ${3} | \
     head -1 | \
     grep "200 OK" | \
     wc -l
