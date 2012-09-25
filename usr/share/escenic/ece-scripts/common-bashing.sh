@@ -48,8 +48,8 @@ function print() {
     return
   fi
 
-  # we break the text at 64 characters to have space for the ID.
-  echo $@ | fmt --width 64 | sed "s#^#$(get_id) #g"
+  # we break the text early to have space for the ID.
+  echo $@ | fmt --width 70 | sed "s#^#$(get_id) #g"
 }
 
 function printne() {
