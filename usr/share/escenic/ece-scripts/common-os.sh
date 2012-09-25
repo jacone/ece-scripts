@@ -165,6 +165,28 @@ function get_total_memory_in_mega_bytes() {
 }
 
 function add_apt_source() {
+  # first, check that the base URL in the sources list returns 200,
+  # only allow 20 seconds for this test. If the URL doesn't return
+  # 200, the sources list is not added.
+  local url=$(echo $@ | cut -d' ' -f2)
+  local repo_ok=$(
+    curl \
+      --silent \
+      --head \
+      --connect-timeout 20 \
+      $url | \
+      egrep " 200 OK| 301 Moved Permanently" | \
+      wc -l
+  )
+
+  if [ $repo_ok -eq 0 ]; then
+    print_and_log "$(yellow WARNING)" \
+      "The APT repo $url is not OK, not adding it."
+    return
+  else
+    print_and_log "The APT repo $url is reachable, adding it."
+  fi
+
   if [ $(grep -r "$@" /etc/apt/sources.list* | wc -l) -lt 1 ]; then
     echo "# added by $(basename $0) @ $(date)" >> $escenic_sources
     echo "$@" >> $escenic_sources
