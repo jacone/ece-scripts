@@ -528,6 +528,11 @@ function create_ecedb() {
     return
   fi
 
+  if [ $install_profile_number -eq $PROFILE_ANALYSIS_DB_SERVER ]; then
+    run_eae_scripts_if_available
+    return
+  fi
+  
   # first the ECE SQL ...
   run_db_scripts $ece_home/database/$db_product
   
@@ -554,8 +559,6 @@ function create_ecedb() {
     fi
     run_db_scripts ${escenic_root_dir}/${archive_sql_dir}
   done
-
-  run_eae_scripts_if_available
 
   log "${id} ${db_product}://${db_host}/${db_schema} is now ready for ${db_user}/${db_password}"
 }
