@@ -20,6 +20,7 @@ svn_src_dir=~/src
 maven_conf_file=~/.m2/settings.xml
 maven_build_offline=0
 maven_opts="clean install"
+skip_ear=0
 project_assembly_dir=$svn_src_dir/project-assembly
 project_assembly_target_dir=$project_assembly_dir/target
 escenic_identifiers="engine
@@ -142,7 +143,7 @@ function verify_configuration {
 ##
 function get_user_options
 {
-  while getopts ":b:t:o" opt; do
+  while getopts ":b:t:os" opt; do
     case $opt in
       b)
         svn_path=branches/${OPTARG}
@@ -156,6 +157,10 @@ function get_user_options
         maven_build_offline=1
         maven_opts="-o $maven_opts"
         print_and_log "Maven offline mode in effect!"
+        ;;
+      s)
+        skip_ear=1
+        print_and_log "Skip .ear mode in effect!"
         ;;
       \?)
         print "Invalid option: -$OPTARG" >&2
@@ -409,7 +414,11 @@ function publish_ear
 function print_result
 {
   print_and_log "BUILD SUCCESSFUL! @ $(date)"
-  print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
+  if [ $skip_ear -eq 1 ]; then
+    print_and_log "Only configuration packages has been created in this release!"
+  else
+    print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
+  fi
 }
 
 ##
@@ -604,11 +613,15 @@ EOF
 function phase_release
 {
   svn_checkout
-  maven_build
-  symlink_project_assembly
-  generate_publication_properties
-  ant_build
-  publish_ear
+  if [ $skip_ear -eq 0 ]; then
+    maven_build
+    symlink_project_assembly
+    generate_publication_properties
+    ant_build
+    publish_ear
+  else
+    print_and_log "Creation of .ear file skipped as requested!"    
+  fi
   create_machine_conf_packages
   print_result
 }
