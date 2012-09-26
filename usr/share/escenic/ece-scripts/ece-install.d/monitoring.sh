@@ -198,8 +198,8 @@ function install_nagios_node()
       print_and_log "check_mk might not start automatically, as xinetd.d/check_mk is missing"
     fi
   else
-    print_and_log "Nagios node installation not supported on your system"
-    print_and_log "You will have to install it manually."
+    print_and_log "Nagios node installation not supported on your system," \
+      "you will have to install it manually."
     return
   fi
 
@@ -217,8 +217,8 @@ function install_nagios_node()
   run touch /var/run/nagios/nrpe.pid
   run /etc/init.d/nagios-nrpe-server restart
 
-  add_next_step "A Nagios NRPE node and check_mk has been installed"
-  add_next_step "on ${HOSTNAME}"
+  add_next_step "A Nagios NRPE node and check_mk has been installed" \
+    "on ${HOSTNAME}"
 }
 
 function install_munin_node()
@@ -250,8 +250,8 @@ function install_munin_node()
     packages="munin-node munin-plugins-extra"
     install_packages_if_missing $packages
   else
-    print_and_log "Munin node installation not supported on your system"
-    print_and_log "You will have to install it manually."
+    print_and_log "Munin node installation not supported on your system," \
+      "you will have to install it manually."
     return
   fi
 
@@ -343,14 +343,14 @@ function install_munin_gatherer()
     packages="munin"
     install_packages_if_missing $packages
   else
-    print_and_log "Munin gatherer installation not supported on your"
-    print_and_log "system :-( You will have to install it manually."
+    print_and_log "Munin gatherer installation not supported on your" \
+      "system :-( You will have to install it manually."
     return
   fi
 
   if [ $fai_enabled -eq 0 ]; then
-    print "Which nodes shall this Munin monitor gather from?"
-    print "Separate your hosts with a space, e.g.: 'editor01 db01 web01'"
+    print "Which nodes shall this Munin monitor gather from?" \
+      "Separate your hosts with a space, e.g.: 'editor01 db01 web01'"
     echo -n "Your choice> "
     read user_munin_nodes
 
@@ -394,8 +394,8 @@ EOF
     run /etc/init.d/apache2 reload
   fi
 
-  add_next_step "Munin gatherer admin interface: http://${HOSTNAME}/munin"
-  add_next_step "Make sure all nodes allows its IP to connect to them."
+  add_next_step "Munin gatherer admin interface: http://${HOSTNAME}/munin" \
+    "Make sure all nodes allows its IP to connect to them."
 }
 
 ## $1 nagios vendor
@@ -579,6 +579,6 @@ function install_system_info() {
     done
   fi
 
-  add_next_step "Always up to date system info: http://$HOSTNAME:$port/"
-  add_next_step "you can also see system-info in the shell, type: system-info"
+  add_next_step "Always up to date system info: http://$HOSTNAME:$port/" \
+    "you can also see system-info in the shell, type: system-info"
 }

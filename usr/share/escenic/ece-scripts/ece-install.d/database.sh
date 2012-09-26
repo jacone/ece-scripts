@@ -33,7 +33,7 @@ function set_up_percona_repository_if_possible() {
     fi
 
     if [ $supported_code_name -eq 1 ]; then
-      print_and_log "Setting Up the Percona repository ..."
+      print_and_log "Setting Up the Percona Repository ..."
 
       if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
         # this CANNOT be run in the run wrapper since it often fails,
@@ -118,7 +118,7 @@ function install_mysql_client_software() {
 ## $1: optional parameter, binaries_only. If passed, $1=binaries_only,
 ##     the ECE DB schema is not set up.
 function install_database_server() {
-  print_and_log "Installing database server on $HOSTNAME ..."
+  print_and_log "Installing a database server on $HOSTNAME ..."
 
   if [ ${fai_db_sql_only-0} -eq 0 ]; then
     install_mysql_server_software
@@ -173,7 +173,7 @@ function set_up_ecedb() {
   pre_install_new_ecedb
   create_ecedb
 
-  add_next_step "DB is now set up on ${db_host}:${db_port}"
+  add_next_step "DB ${db_schema} is now set up on ${db_host}:${db_port}"
 }
 
 function set_db_settings_from_fai_conf()
@@ -181,22 +181,18 @@ function set_db_settings_from_fai_conf()
   # Note: the port isn't fully supported. The user must himself
   # update the mysql configuration to run it on a non standard port.
 
-  # if either the profile=analysis or the profile=db &&
-  # fai_analysis_db_install is set, we try first to use the
-  # fai_analysis_db_* variables.
-  if [[ ( $install_profile_number -eq $PROFILE_DB_SERVER &&
-          $(get_boolean_conf_value fai_analysis_db_install) -eq 1 ) ||
-        $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]]; then
-
+  # if the analysis or analysis DB profile is selected, these are the
+  # only ones that care about analysis specific DB settings.
+  if [[ $install_profile_number -eq $PROFILE_ANALYSIS_DB_SERVER ||
+        $install_analysis_server -eq $PROFILE_ANALYSIS_SERVER ]]; then
     # order of precedence:
     # 1) fai_analysis_db_*
-    # 2) fai_db_*
-    # 3) default_db_*
-    db_port=${fai_analysis_db_port-${fai_db_port-${default_db_port}}}
-    db_host=${fai_analysis_db_host-${fai_db_host-${default_db_host}}}
-    db_user=${fai_analysis_db_user-${fai_db_user-${default_db_user}}}
-    db_password=${fai_analysis_db_password-${fai_db_password-${default_db_password}}}
-    db_schema=${fai_analysis_db_schema-${fai_db_schema-${default_db_schema}}}
+    # 2) default_db_*
+    db_port=${fai_analysis_db_port-${default_db_port}}
+    db_host=${fai_analysis_db_host-${default_db_host}}
+    db_user=${fai_analysis_db_user-${default_db_user}}
+    db_password=${fai_analysis_db_password-${default_db_password}}
+    db_schema=${fai_analysis_db_schema-${default_db_schema}}
   else
     db_port=${fai_db_port-${default_db_port}}
     db_host=${fai_db_host-${default_db_host}}

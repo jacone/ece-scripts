@@ -1070,6 +1070,13 @@ if [ $fai_enabled -eq 1 ]; then
         no_fai_profile=0
     fi
 
+
+    if [ ${fai_analysis_db_install-0} -eq 1 ]; then
+      install_profile_number=$PROFILE_ANALYSIS_DB_SERVER
+      install_database_server
+      no_fai_profile=0
+    fi
+    
     # Important that the EAE is installed after all, editor and
     # presentation in case it's running on the same host as any of
     # them. This because it configures the EAE ECE plugin, which the
