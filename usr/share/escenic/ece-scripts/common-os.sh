@@ -183,8 +183,6 @@ function add_apt_source() {
     print_and_log "$(yellow WARNING)" \
       "The APT repo $url is not OK, not adding it."
     return
-  else
-    print_and_log "The APT repo $url is reachable, adding it."
   fi
 
   if [ $(grep -r "$@" /etc/apt/sources.list* | wc -l) -lt 1 ]; then
