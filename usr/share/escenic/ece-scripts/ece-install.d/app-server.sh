@@ -8,7 +8,7 @@ function set_up_app_server()
     print "or enter: <port> <shutdown port> <redirect port>:"
     echo -n "Your choice [${default_app_server_port} ${default_app_server_shutdown} ${default_app_server_redirect}]> "
     read user_ports
-    
+
     if [ -n "$user_ports" ]; then
       read appserver_port shutdown_port redirect_port <<< $user_ports
     fi
@@ -52,7 +52,7 @@ function set_up_app_server()
   if [ -z "$redirect_port" ]; then
     redirect_port=${default_app_server_redirect}
   fi
-  
+
   if [ $fai_enabled -eq 0 ]; then
     print "Another question: Where does the database run?"
     print "Press ENTER to accept the default " \
@@ -85,9 +85,9 @@ function set_up_app_server()
   else
     indexer_ws_uri=http://${HOSTNAME}:${appserver_port}/indexer-webservice/index/
   fi
-  
+
   leave_trail "trail_indexer_ws_uri=${indexer_ws_uri}"
-  
+
   if [ $fai_enabled -eq 0 ]; then
     print "Last question, I promise!: Where does the search instance run?"
     print "Press ENTER to accept the default ($HOSTNAME:${default_app_server_port})"
@@ -95,7 +95,7 @@ function set_up_app_server()
     print "If you're in doubt, just press ENTER :-)"
     echo -n "Your choice [$HOSTNAME:${default_app_server_port}]> "
     read user_search
-    
+
     if [ -z "$user_search" ]; then
       search_host=$HOSTNAME
       search_port=${default_app_server_port}
@@ -115,7 +115,7 @@ function set_up_app_server()
       tail -1
   )
   tomcat_dir=$(get_base_dir_from_bundle $tomcat_archive)
-  
+
   run cd $appserver_parent_dir
   run tar xzf $download_dir/${tomcat_dir}.tar.gz
 
@@ -123,8 +123,8 @@ function set_up_app_server()
     run rm tomcat
   fi
   run ln -sf ${tomcat_dir} tomcat
-  
-  tomcat_home=${appserver_parent_dir}/tomcat   
+
+  tomcat_home=${appserver_parent_dir}/tomcat
   tomcat_base=${appserver_parent_dir}/tomcat-${instance_name}
   make_dir $tomcat_base
 
@@ -133,12 +133,12 @@ function set_up_app_server()
     make_dir $tomcat_base/$el
   done
 
-  set_ece_instance_conf tomcat_base $tomcat_base   
+  set_ece_instance_conf tomcat_base $tomcat_base
   set_ece_instance_conf tomcat_home $tomcat_home
   set_ece_instance_conf appserver_port $appserver_port
   set_appropriate_jvm_heap_sizes
   set_http_auth_credentials_if_needed
-  
+
   run cd $tomcat_base/lib
   make_ln $jdbc_driver
 
@@ -151,8 +151,8 @@ function set_up_app_server()
   escenic_loader=",$\{catalina.base\}/escenic/lib/*.jar"
   old=$(get_escaped_bash_string ${common_loader})
   new=${escaped_common_loader}$(get_escaped_bash_string ${escenic_loader})
-  run sed -i "s#${old}#${new}#g" $file 
-  
+  run sed -i "s#${old}#${new}#g" $file
+
   cat > $tomcat_base/conf/server.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
 <Server port="$shutdown_port" shutdown="SHUTDOWN">
@@ -271,17 +271,24 @@ EOF
     />
 EOF
   fi
-  
+
   cat >> $tomcat_base/conf/server.xml <<EOF
   </GlobalNamingResources>
 
   <Service name="Catalina">
     <Connector port="${appserver_port}"
-               protocol="HTTP/1.1" 
-               connectionTimeout="20000" 
+               protocol="HTTP/1.1"
+               connectionTimeout="20000"
                URIEncoding="UTF-8"
                compression="on"
                redirectPort="${redirect_port}"
+    />
+    <Connector port="${redirect_port}"
+               protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               URIEncoding="UTF-8"
+               proxyPort="443"
+               scheme="https"
     />
     <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
       <Valve className="org.apache.catalina.valves.AccessLogValve"
@@ -314,7 +321,7 @@ EOF
       ensure_domain_is_known_to_local_host ${domain}
 
       local file=$tomcat_base/conf/server.xml
-      
+
       cat >> $file <<EOF
       <Host name="${domain}" appBase="webapps" autoDeploy="false">
 EOF
@@ -325,7 +332,7 @@ EOF
         <Alias>$ele</Alias>
 EOF
       done
-      
+
       cat >> $file <<EOF
         <Context displayName="${domain}"
                  docBase="${publication}"
@@ -336,7 +343,7 @@ EOF
       leave_trail "trail_virtual_host_${publication}=${domain}:${appserver_port}"
     done
   fi
-  
+
   cat >> $tomcat_base/conf/server.xml <<EOF
     </Engine>
   </Service>
@@ -419,7 +426,7 @@ EOF
   />
 </Context>
 EOF
-  else 
+  else
     cat >> $tomcat_base/conf/context.xml <<EOF
 </Context>
 EOF
@@ -431,17 +438,16 @@ function set_appropriate_jvm_heap_sizes() {
   local heap_size=2048
   local percent=70
   local total_size=$(get_total_memory_in_mega_bytes)
-  
+
   if [ $total_size -lt $heap_size ]; then
-    local warning="$(yellow WARNING)"
-    print_and_log "$warning $HOSTNAME only has $total_size MBs of memory, I will"
-    print_and_log "$warning use ${percent}% of this for the JVM heap sizes, but you"
-    print_and_log "$warning should really consider adding more RAM so that"
-    print_and_log "$warning the $instance_name instance gets at least 2GBs"
+    print_and_log "$(yellow WARNING) $HOSTNAME only has $total_size MBs of" \
+      "memory, I will use ${percent}% of this for the JVM heap sizes, but you" \
+      "should really consider adding more RAM so that" \
+      "the $instance_name instance gets at least 2GBs"
 
     heap_size=$(echo "$total_size * 0.${percent}" | bc | cut -d'.' -f1)
   fi
-  
+
   set_ece_instance_conf min_heap_size "${heap_size}m"
   set_ece_instance_conf max_heap_size "${heap_size}m"
 }
@@ -464,7 +470,7 @@ function set_http_auth_credentials_if_needed() {
     http_user=${fai_presentation_escenic_admin_http_user}
     http_password=${fai_presentation_escenic_admin_http_password}
   fi
-  
+
   if [[ -n "$http_user" && -n "$http_password" ]]; then
     set_ece_instance_conf escenic_admin_http_user "$http_user"
     set_ece_instance_conf escenic_admin_http_password "$http_password"
