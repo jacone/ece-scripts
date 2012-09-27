@@ -61,7 +61,8 @@ function print_import_files_affected() {
   for dir in $(find /var/spool/escenic/import -type d -name error); do
     print $(
       find $dir -type f -name "*.xml" | \
-        xargs grep $last_dir/$(basename $1)
+        xargs grep $last_dir/$(basename $1) | \
+        cut -d':' -f1
     )
   done
 }
