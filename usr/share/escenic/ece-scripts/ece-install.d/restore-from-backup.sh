@@ -127,8 +127,8 @@ function restore_from_backup()
   fi
 
   if [ ! -r "$backup_file" ]; then
-    print_and_log "$backup_file either doesn't exist or cannot be read."
-    print_and_log "I cannot restore from it :-("
+    print_and_log "$backup_file either doesn't exist or cannot be read." \
+      "I cannot restore from it :-("
     remove_pid_and_exit_in_error
   fi
   
@@ -158,27 +158,27 @@ function restore_from_backup()
     print_and_log "Restoring the Solr & ECE data files on $HOSTNAME ..."
     run cd $dir
     run tar -C / -xf $backup_file var/lib/escenic
-    add_next_step "$(green Successfully) restored Solr & ECE data files"
-    add_next_step "Backup file used:  $(basename $backup_file)"
-    add_next_step "Check $escenic_data_dir to verify they're all there."
+    add_next_step "$(green Successfully) restored Solr & ECE data files" \
+      "Backup file used:  $(basename $backup_file)" \
+      "Check $escenic_data_dir to verify they're all there."
   fi
   
   if [ $restore_conf -eq 1 -o $restore_all -eq 1 ]; then
     print_and_log "Restoring the ECE configuration files on $HOSTNAME ..."
     run cd $dir
     run tar -C / -xf $backup_file etc
-    add_next_step "$(green Successfully) restored ECE configuration files"
-    add_next_step "Backup file used: $(basename $backup_file)"
-    add_next_step "Check /etc to verify that they're all there."
+    add_next_step "$(green Successfully) restored ECE configuration files" \
+      "Backup file used: $(basename $backup_file)" \
+      "Check /etc to verify that they're all there."
   fi
   
   if [ $restore_binaries -eq 1 -o $restore_all -eq 1 ]; then
     print_and_log "Restoring the Escenic & Tomcat binaries on $HOSTNAME ..."
     run cd $dir
     run tar -C / -xf $backup_file opt
-    add_next_step "$(green Successfully) restored Escenic & Tomcat binaries"
-    add_next_step "Backup file used: $(basename $backup_file)"
-    add_next_step "Check ${appserver_parent_dir} to verify that they're all there".
+    add_next_step "$(green Successfully) restored Escenic & Tomcat binaries" \
+      "Backup file used: $(basename $backup_file)" \
+      "Check ${appserver_parent_dir} to verify that they're all there".
     install_ece_third_party_packages
     set_up_engine_directories
 

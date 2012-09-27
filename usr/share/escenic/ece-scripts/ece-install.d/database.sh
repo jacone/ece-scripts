@@ -47,8 +47,8 @@ function set_up_percona_repository_if_possible() {
         # we're checking if it failed and if yes, force the package
         # installation.
         if [ $? -gt 0 ]; then
-          print_and_log "Failed retrieving the Percona key from keys.gnupg.net"
-          print_and_log "Will install the Percona packages without the GPG key"
+          print_and_log "Failed retrieving the Percona key from keys.gnupg.net" \
+            "Will install the Percona packages without the GPG key"
           force_packages=1
         else
           gpg --armor \
@@ -67,10 +67,10 @@ function set_up_percona_repository_if_possible() {
       
       leave_trail "trail_db_vendor=percona"
     else
-      print_and_log "The Percona APT repsository doesn't have packages"
-      print_and_log "for your Debian (or derivative) version with code"
-      print_and_log "name $code_name. "
-      print_and_log "I will use vanilla MySQL instead."
+      print_and_log "The Percona APT repsository doesn't have packages" \
+        "for your Debian (or derivative) version with code" \
+        "name $code_name. " \
+        "I will use vanilla MySQL instead."
 
       mysql_server_packages="mysql-server libmysqlclient16"
       mysql_client_packages="mysql-client libmysqlclient16"
@@ -204,8 +204,8 @@ function set_db_settings_from_fai_conf()
   if [ -n "${fai_db_drop_old_db_first}" ]; then
     drop_db_first=${fai_db_drop_old_db_first}
     if [ $fai_db_drop_old_db_first -eq 1 ]; then
-      print_and_log "$(yellow WARNING): I hope you know what you're doing!"
-      print_and_log "$(yellow WARNING): fai_db_drop_old_db_first is 1 (true)"
+      print_and_log "$(yellow WARNING): I hope you know what you're doing!" \
+        "fai_db_drop_old_db_first is 1 (true)"
     fi
   fi
 

@@ -28,7 +28,8 @@ function warn_about_duplicate_jars() {
     )
     
     if [ $a_class_count -gt 1 ]; then
-      print_and_log $(yellow WARNING) "These JARs contain (at least some) of the same files:"
+      print_and_log $(yellow WARNING) \
+        "These JARs contain (at least some) of the same files:"
       grep $el $assemblytool_home/dist/.work/ear/lib/*.jar | \
         egrep -v "$jar_white_list" | \
         cut -d' ' -f3 | while read f; do

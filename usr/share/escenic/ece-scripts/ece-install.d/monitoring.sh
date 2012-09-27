@@ -32,7 +32,8 @@ function install_nagios_monitoring_server()
       # see http://lists.mathias-kettner.de/pipermail/checkmk-en/2009-November/000808.html
       run chmod u+s /usr/lib/nagios/plugins/check_icmp
     else
-      print_and_log "Unable to setuid root on check_icmp, needed by check_mk's host checks."
+      print_and_log "Unable to setuid root on check_icmp, " \
+        "needed by check_mk's host checks."
     fi
 
   fi
@@ -195,7 +196,8 @@ function install_nagios_node()
       fi
       run /etc/init.d/xinetd reload
     else
-      print_and_log "check_mk might not start automatically, as xinetd.d/check_mk is missing"
+      print_and_log "check_mk might not start automatically, " \
+        "as xinetd.d/check_mk is missing"
     fi
   else
     print_and_log "Nagios node installation not supported on your system," \
@@ -289,8 +291,8 @@ function install_escenic_munin_plugins() {
 
   local instance_list=$(get_instance_list)
   if [ -z "${instance_list}" ]; then
-    print_and_log "No ECE instances found on $HOSTNAME, so I'm not adding"
-    print_and_log "additional Munin configuration"
+    print_and_log "No ECE instances found on $HOSTNAME, so I'm not adding" \
+      "additional Munin configuration"
 
     if [ $on_debian_or_derivative -eq 1 ]; then
       run service munin-node restart

@@ -52,15 +52,15 @@ function deploy() {
     ear=$(download_uri_target_to_dir $file $cache_dir)
     
     if [ ! -e "$ear" ]; then
-      print_and_log "The EAR $ear_uri specified in $file could"
-      print_and_log "not be retrieved. I will exit now. :-("
+      print_and_log "The EAR $ear_uri specified in $file could" \
+        "not be retrieved. I will exit now. :-("
       exit 1
     fi
   fi
   
   if [ ! -e "$ear" ]; then
-    print_and_log "$ear does not exist. "
-    print_and_log "Did you run '"`basename $0`" -i" $instance "assemble'?"
+    print_and_log "$ear does not exist. " \
+      "Did you run '"`basename $0`" -i" $instance "assemble'?"
     exit 1
   fi
 

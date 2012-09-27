@@ -288,8 +288,8 @@ EOF
       )
       
       if [ ! -e $(basename $el) ]; then
-        print_and_log "Failed to get user publication $el."
-        print_and_log "I will skip it and continue to the next one."
+        print_and_log "Failed to get user publication $el." \
+          "I will skip it and continue to the next one."
         continue
       fi
 
@@ -318,8 +318,8 @@ function set_up_basic_nursery_configuration() {
   # Then we see if we're using configuration archives, if yes, use the
   # JAAS and Nursery configuraiton from here.
   if [ $(is_using_conf_archive) -eq 1 ]; then
-    print_and_log "Using the supplied Nursery & JAAS configuration from" 
-    print_and_log "bundle: $ece_instance_conf_archive"
+    print_and_log "Using the supplied Nursery & JAAS configuration from" \
+      "bundle: $ece_instance_conf_archive"
 
     # the conf archive typically resides on the build server, hence we
     # set its authentication credentials here.
@@ -386,11 +386,11 @@ EOF
     sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
     exit_on_error "sed on $file"
   elif [ ! -e ${file} ]; then
-    print_and_log "I Could not find an ECOME configuration file,"
-    print_and_log "I assume you have not installed Community Engine."
+    print_and_log "I Could not find an ECOME configuration file," \
+      "I assume you have not installed Community Engine."
   else
-    print_and_log "Could not write to ${file},"
-    print_and_log "Community Engine might not work because of this. "
+    print_and_log "Could not write to ${file}," \
+      "Community Engine might not work because of this. "
     remove_pid_and_exit_in_error
   fi
 
@@ -687,8 +687,8 @@ function assemble_deploy_and_restart_type()
       -t $type \
       deploy --uri $ece_instance_ear_file \
       restart"
-    print_and_log "Deploying the $ece_instance_ear_file on "
-    print_and_log "instance $instance_name and restarting it ..."
+    print_and_log "Deploying the $ece_instance_ear_file on" \
+      "instance $instance_name and restarting it ..."
   else
     print_and_log "Assembling, deploying & starting $instance_name ..."
   fi

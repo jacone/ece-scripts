@@ -3,8 +3,8 @@
 function create_packages() {
   local ear=$cache_dir/engine.ear
   if [ ! -e $ear ]; then
-    print_and_log "$ear does not exist. "
-    print_and_log "Did you run '"`basename $0`" -i" $instance "assemble'?"
+    print_and_log "$ear does not exist." \
+      "Did you run '"`basename $0`" -i" $instance "assemble'?"
     exit 1
   fi
 

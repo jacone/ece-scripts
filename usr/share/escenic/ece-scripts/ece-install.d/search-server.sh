@@ -16,8 +16,8 @@ function set_up_solr() {
   print_and_log "Setting up Solr ..."
   if [ ! -d $escenic_conf_dir/solr ]; then
     if [ $(is_using_conf_archive) -eq 1 ]; then
-      print_and_log "Using the supplied Solr configuration from" 
-      print_and_log "bundle: $ece_instance_conf_archive"
+      print_and_log "Using the supplied Solr configuration from" \
+        "bundle: $ece_instance_conf_archive"
       
       # the conf archive typically resides on the build server, hence
       # we set its authentication credentials here.

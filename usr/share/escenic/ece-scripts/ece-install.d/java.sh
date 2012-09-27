@@ -24,19 +24,19 @@ function create_java_deb_packages_and_repo() {
   # heed here.
   bash oab-java.sh 1>> $log 2>> $log
   if [ $? -gt 0 ]; then
-    print_and_log "Creating Oracle/Sun Java packages failed. This is probably"
-    print_and_log "because of a 3rd party script, oab-java6, which fails"
-    print_and_log "whenever Oracle changes their website. To continue, please" 
-    print_and_log "go to http://www.oracle.com/technetwork/java/javase/downloads"
-    print_and_log "and download the full Java 6 JDK and be sure to add it first"
-    print_and_log "in PATH. Then re-run $(basename $0)."
+    print_and_log "Creating Oracle/Sun Java packages failed. This is probably" \
+      "because of a 3rd party script, oab-java6, which fails" \
+      "whenever Oracle changes their website. To continue, please" \
+      "go to http://www.oracle.com/technetwork/java/javase/downloads" \
+      "and download the full Java 6 JDK and be sure to add it first" \
+      "in PATH. Then re-run $(basename $0)."
     remove_pid_and_exit_in_error
   fi
   run rm -rf $tmp_dir
     
-  add_next_step "Local APT repository with Sun/Oracle Java packages"
-  add_next_step "has been installed at /var/local/oab/deb and added"
-  add_next_step "to your APT system with /etc/apt/sources.list.d/oab.list"
+  add_next_step "Local APT repository with Sun/Oracle Java packages" \
+    "has been installed at /var/local/oab/deb and added" \
+    "to your APT system with /etc/apt/sources.list.d/oab.list"
 }
 
 
@@ -90,8 +90,8 @@ function install_sun_java_on_redhat() {
   local version=$(java -version 2>&1 | grep version | cut -d'"' -f2)
   print_and_log "Sun Java $version is now installed in /opt/jdk"
 
-  add_next_step "By using Sun Java, you must accept this license: "
-  add_next_step "http://www.oracle.com/technetwork/java/javase/terms/license/"
+  add_next_step "By using Sun Java, you must accept this license: " \
+    "http://www.oracle.com/technetwork/java/javase/terms/license/"
 }
 
 

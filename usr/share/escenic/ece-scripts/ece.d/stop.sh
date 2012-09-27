@@ -34,8 +34,8 @@ function stop_type() {
 
     set_type_pid
     if [ -n "$type_pid" ]; then
-      print_and_log "I could not stop $type instance $instance gracefully,"
-      print_and_log "I will now use force."
+      print_and_log "I could not stop $type instance $instance gracefully," \
+        "I will now use force."
       run kill -9 $type_pid
     fi
 
@@ -67,8 +67,8 @@ function hang_around_to_see_that_forceful_kill_succeeded() {
   
   set_type_pid
   if [ -n "$type_pid" ]; then
-    print_and_log "I was not able to forcefully kill PID $type_pid"
-    print_and_log "something is very wrong here :-("
+    print_and_log "I was not able to forcefully kill PID $type_pid" \
+      "something is very wrong here :-("
     return
   fi
 }  

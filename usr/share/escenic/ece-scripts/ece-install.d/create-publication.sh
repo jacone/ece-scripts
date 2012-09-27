@@ -1,8 +1,8 @@
 function create_publication() {
   if [ ! -e $escenic_root_dir/engine -o \
     ! -e $escenic_root_dir/assemblytool ]; then
-    print_and_log "Please install ECE and an assembly environment before"
-    print_and_log "running this installation profile again."
+    print_and_log "Please install ECE and an assembly environment before" \
+      "running this installation profile again."
     remove_pid_and_exit_in_error
   fi
 
