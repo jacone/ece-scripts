@@ -55,7 +55,7 @@ your XML files, perhaps you meant this one?
 
    $alternative
 Suggested command to fix this:
-   mv "$alternative" \\
+   cp "$alternative" \\
       "$1"
 ====
 EOF
