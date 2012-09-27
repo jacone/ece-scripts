@@ -46,12 +46,23 @@ function check_picture_file() {
     echo "   \$" cd $(dirname "$1") \&\& convert "$file" -colorspace rgb "$file"
   else
       print The XML refered to ${1} which exists. This probably means that \
-          "the file wasn't there before when the import failed, but is now there, in" \
-          "which case you can just re-run the import. Another option is that" \
-          " the file is corrupt."
+        "the file wasn't there before when the import failed, but is now " \
+        "there, in which case you can just re-run the import. Another option" \
+        "is that the file is corrupt."
   fi
+
+  print "Because of this error, the following file(s) (probably) failed " \
+    "o import:" 
+  $(print_import_files_affected $1)
 }
 
+function print_import_files_affected() {
+  local last_dir=$(basename $(dirname $1))
+  for dir in $(find /var/spool/escenic/import -type d -name error); do
+    find $dir -type f -name "*.xml" | \
+      xargs grep $last_dir/$(basename $1)
+  done
+}
 
 function list_sax_errors() {
   local xml_parse_errors="$(grep ^'Caused by: org.xml.sax.SAXParseException:' $1 | sort | uniq)"
