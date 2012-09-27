@@ -52,15 +52,17 @@ function check_picture_file() {
   fi
 
   print "Because of this error, the following file(s) (probably) failed " \
-    "o import:" 
-  $(print_import_files_affected $1)
+    "to import:" 
+  print_import_files_affected $1
 }
 
 function print_import_files_affected() {
   local last_dir=$(basename $(dirname $1))
   for dir in $(find /var/spool/escenic/import -type d -name error); do
-    find $dir -type f -name "*.xml" | \
-      xargs grep $last_dir/$(basename $1)
+    print $(
+      find $dir -type f -name "*.xml" | \
+        xargs grep $last_dir/$(basename $1)
+    )
   done
 }
 
