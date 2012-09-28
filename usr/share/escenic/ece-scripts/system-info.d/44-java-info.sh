@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-java_bin=$(which java)
+java_bin=$(which java 2>/dev/null)
 file=/etc/escenic/ece.conf
 
 if [ -r $file ]; then
@@ -11,7 +11,7 @@ if [ -r $file ]; then
   fi
 fi
 
-if [ $(ls $java_bin 2>/dev/null | wc -l) -gt 0 ]; then
+if [ $(echo $java_bin | wc -c) -gt 1 ]; then
   print_h2_header "Java information"
   print_pre_text $(${java_bin} -version 2>&1)
   print_section_end
