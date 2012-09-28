@@ -66,7 +66,7 @@ function create_diagram_if_possible() {
     fi
   fi
 
-  which blockdiag 2>/dev/null
+  which blockdiag 1>/dev/null 2>/dev/null
   if [ $? -eq 0 ]; then
     blockdiag_src=$(create_blockdiag_src "$outbound_connections")
     generate_blockdiag "$blockdiag_src"
