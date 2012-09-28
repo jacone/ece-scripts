@@ -38,14 +38,13 @@ function print_my_ip_to_the_world() {
         local restore=1
       fi
       if [[ $restore -eq 1 ]] ; then
-        local tmpfile=$(mktemp ${file}.XXXXXXX)
-        echo $old_value > $tmpfile
         value=$old_value
-        mv $tmpfile $file
       fi
+
     fi
-    # touch the file to indicate that it's now up-to-date.
-    touch $file
+    local tmpfile=$(mktemp ${file}.XXXXXXX)
+    echo $value > $tmpfile
+    mv $tmpfile $file
   fi
 
   echo $value
