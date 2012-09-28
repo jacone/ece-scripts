@@ -51,7 +51,7 @@ function print() {
   # we break the text early to have space for the ID.
   local id="$(get_id) "
   local text_width=$(( 80 - $(echo $id | wc -c) ))
-  echo $@ | fmt --width $text_width | sed "s#^#${id}#g"
+  echo $@ | fmt --width $text_width | sed "s~^~${id}~g"
 }
 
 function printne() {
