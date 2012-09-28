@@ -8,8 +8,11 @@ print_h3_header "Kernel"
 print_pre_text $(uname -a)
 
 print_h3_header "Distribution"
-print_pre_text "$(lsb_release -a 2>/dev/null)" \
-  $(cat /etc/redhat-release 2>/dev/null)
+if [[ -n $(which lsb_release 2>/dev/null) ]]; then
+  print_pre_text "$(lsb_release -a)"
+elif [ -e /etc/redhat-release ]; then
+  print_pre_text "$(cat /etc/redhat-release)"
+fi
 
 if [ $verbose -eq 1 ]; then
   print_h3_header "Installed packages"
