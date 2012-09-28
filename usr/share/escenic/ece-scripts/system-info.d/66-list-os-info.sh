@@ -22,12 +22,15 @@ fi
 
 print_h3_header "Timezone"
 print_un_ordered_list_start
-time_zone_file_list="/etc/timezone /etc/sysconfig/clock"
-for el in $time_zone_file_list; do
-  if [ -r $el ]; then
-    print_list_item "$(cat $el) (from $el)"
-  fi
-done
+
+file=/etc/timezone
+if [ -r $file ]; then
+  print_list_item "$(cat $file) (from $file)"
+fi
+file=/etc/sysconfig/clock
+if [ -r $file ]; then
+  print_list_item "$(cat $file | cut -d'=' -f2 | sed 's/\"//g') (from $file)"
+fi
 
 if [ -n "$TZ" ]; then
   print_list_item "$(echo $TZ) (from ${USER}'s environment variable)"
