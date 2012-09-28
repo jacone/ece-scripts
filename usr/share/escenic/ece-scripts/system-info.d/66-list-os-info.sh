@@ -8,7 +8,8 @@ print_h3_header "Kernel"
 print_pre_text $(uname -a)
 
 print_h3_header "Distribution"
-print_pre_text "$(lsb_release  -a 2>/dev/null)"
+print_pre_text "$(lsb_release -a 2>/dev/null)" \
+  $(cat /etc/redhat-release 2>/dev/null)
 
 if [ $verbose -eq 1 ]; then
   print_h3_header "Installed packages"
