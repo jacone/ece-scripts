@@ -421,7 +421,7 @@ function get_editor_host_overview() {
   [[$(get_link ${1}):5678/][system-info]] \
   [[${ece_url}:${2-8080}/escenic-admin/][escenic-admin]] \
   [[${ece_url}:${2-8080}/escenic-admin/top][top]] \
-  [[${ece_url}:${2-8081}/solr/admin/][solr]] \
+  [[${ece_url}:8081/solr/admin/][solr]] \
   [[${ece_url}:${2-8080}/studio/][studio]] \
   [[${ece_url}:${2-8080}/escenic/][escenic]] \
   [[${ece_url}:${2-8080}/webservice/][webservice]] \
