@@ -1,6 +1,7 @@
 #+TITLE: Welcome to the VOSA Handbook
 #+AUTHOR: Vizrt Online / The SaaS Team
 #+OPTIONS: toc:2 
+#+DRAWERS: PLANTUML PROPERTIES
 
 #+INCLUDE: "overview.org"
 #+INCLUDE: "operating-system-maintenance.org" 
