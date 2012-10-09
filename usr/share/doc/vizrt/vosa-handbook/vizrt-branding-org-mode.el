@@ -117,31 +117,21 @@ a:hover {
   text-decoration: underline;
 }
 
-ul {
+dl {
   margin: 0;
   padding: 0;
-  list-style: none;
+}
+dt {
+  font-weight: bold;
+  margin: 15px 0 10px 0;
+  padding: 0;
 }
 
-li {
-  margin: 15px 0 0 0;
-  font-weight: normal;
-  font-style:italic;
-}
-
-ul li p {
-  font-weight: normal;
-  font-style:normal;
-}
-
-li ul {
-  margin: 10px 0 0 0;
-}
-
-li ul li {
+dd {
   margin: 0 0 0 30px;
   padding: 0;
 }
+
 
 p {
   margin-top: 0.2em;
