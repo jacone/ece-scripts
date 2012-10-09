@@ -125,8 +125,13 @@ ul {
 
 li {
   margin: 15px 0 0 0;
-  font-weight: bold;
+  font-weight: normal;
+  font-style:italic;
+}
 
+ul li p {
+  font-weight: normal;
+  font-style:normal;
 }
 
 li ul {
