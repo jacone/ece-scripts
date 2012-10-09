@@ -50,8 +50,15 @@ function install_varnish_software() {
     print "Installing the Varnish repository RPM"
     run rpm --nosignature -i $varnish_redhat_rpm_url
   fi
-  
-  install_packages_if_missing varnish
+
+  if [[ ${code_name} == "precise" ]]; then
+    # currently, 2012-10-09, the precise packages are not signed by
+    # the Varnish key.
+    local old_force_packages=${force_packages-0}
+    force_packages=1
+    install_packages_if_missing varnish
+    force_packages=${old_force_packages}
+  fi
   assert_pre_requisite varnishd
 }
 
