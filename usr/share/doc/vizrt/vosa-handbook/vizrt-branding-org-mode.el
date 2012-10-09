@@ -62,18 +62,25 @@
   Date: %d
 </p>")))
       org-export-html-style "<style type=\"text/css\">
+.title  { text-align: left; }
+
 body {
-  background-color: #FFFFFF;
-  border: 1px solid #818A71;
   font-family: Lucida Sans Unicode, sans-serif;
+  font-size: 0.80em;
   line-height: 1.3em;
+  background-color: #D1D4D3;
   margin: 0 auto;
   margin: 15px 15px;
-  padding: 60px;
-  width: 760px;
 }
 
-.toc {
+#content {
+  padding: 60px;
+  margin: 0 auto;
+  max-width: 760px;
+  border: 1px solid #818A71;
+  background-color: white;
+}
+#table-of-contents {
   margin-top: 50px;
 }
 
@@ -110,17 +117,23 @@ a:hover {
   text-decoration: underline;
 }
 
-dl {
+ul {
   margin: 0;
   padding: 0;
-}
-dt {
-  font-weight: bold;
-  margin: 15px 0 10px 0;
-  padding: 0;
+  list-style: none;
 }
 
-dd {
+li {
+  margin: 15px 0 0 0;
+  font-weight: bold;
+
+}
+
+li ul {
+  margin: 10px 0 0 0;
+}
+
+li ul li {
   margin: 0 0 0 30px;
   padding: 0;
 }
@@ -165,6 +178,11 @@ div.note {
   display: block;
   overflow: auto;
 }
+
+#postamble {
+  margin-top: 50px;
+}
+
 </style>
 "
       )
