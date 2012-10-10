@@ -1,4 +1,4 @@
-#+TITLE: <%=trail_customer_shortname%> Vizrt Guide
+#+TITLE: <%=trail_customer_shortname%> Vosa Guide
 #+AUTHOR: Vizrt Online / The SaaS Team
 #+OPTIONS: toc:2 
 #+DRAWERS: PLANTUML PROPERTIES
