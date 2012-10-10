@@ -9,7 +9,7 @@
 
 ;; These two settings make exported HTML look like our Vizrt branded
 ; release notes.
-(setq org-export-html-preamble "<svg
+(setq org-export-html-preamble "<div id='page'><svg
         id=\"vizrt-logo\"
         version=\"1.1\"
         width=\"138\"
@@ -60,7 +60,8 @@
 <p class=\"author\">
   Author: %a (%e)
   Date: %d
-</p>")))
+</p>
+<!-- close #page from preamble --></div>")))
       org-export-html-style "<style type=\"text/css\">
 .title  { text-align: left; }
 
@@ -73,7 +74,8 @@ body {
   margin: 15px 15px;
 }
 
-#content {
+
+#page {
   padding: 60px;
   margin: 0 auto;
   max-width: 760px;
