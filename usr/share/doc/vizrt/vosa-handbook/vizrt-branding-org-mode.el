@@ -52,7 +52,7 @@
  
     </g> 
   </g> 
-</svg><div><!-- opening a div to counter the close of #preamble>
+</svg><div><!-- opening a div to counter the close of #preamble-->
 "
 
       org-export-html-postamble t
