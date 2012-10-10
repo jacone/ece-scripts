@@ -9,7 +9,7 @@
 
 ;; These two settings make exported HTML look like our Vizrt branded
 ; release notes.
-(setq org-export-html-preamble "<script>document.write('<div id=\'page\'>')</script><svg
+(setq org-export-html-preamble "<script>document.write('<div id=\\'page\\'>')</script><svg
         id=\"vizrt-logo\"
         version=\"1.1\"
         width=\"138\"
