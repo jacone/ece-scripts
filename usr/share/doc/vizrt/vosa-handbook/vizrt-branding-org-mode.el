@@ -75,15 +75,38 @@ body {
 }
 
 
+#text-table-of-contents ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#table-of-contents {
+  margin-top: 50px;
+}
+
+#text-table-of-contents li {
+  margin: 15px 0 0 0;
+  font-weight: bold;
+
+}
+
+#text-table-of-contents li ul {
+  margin: 10px 0 0 0;
+}
+
+#text-table-of-contents li ul li {
+  margin: 0 0 0 30px;
+  padding: 0;
+}
+
+
 #preamble {
   padding: 60px;
   margin: 0 auto;
   max-width: 760px;
   border: 1px solid #818A71;
   background-color: white;
-}
-#table-of-contents {
-  margin-top: 50px;
 }
 
 h1, h2 {
