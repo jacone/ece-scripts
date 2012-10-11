@@ -61,7 +61,16 @@
   Author: %a (%e)
   Date: %d
 </p>
-<!-- close #preamble --></div>")))
+<!-- close #postamble --></div>
+<!-- find all links containing tcl.nie.cust.vizrtsaas and add the special class.-->
+<script type="text/javascript">
+  var intLinks = document.links;
+  for(var i = 0; i < intLinks.length; i++){
+    if(intLinks[i].href.indexOf("tcl.nie.cust.vizrtsaas") > -1) {
+      intLinks[i].className += 'special';
+    }
+  }
+</script><!--preamble is closed by emacs-->")))
       org-export-html-style "<style type=\"text/css\">
 .title  { text-align: left; }
 
