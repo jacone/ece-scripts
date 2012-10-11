@@ -63,10 +63,10 @@
 </p>
 <!-- close #postamble --></div>
 <!-- find all links containing tcl.nie.cust.vizrtsaas and add the special class.-->
-<script type="text/javascript">
+<script type='text/javascript'>
   var intLinks = document.links;
   for(var i = 0; i < intLinks.length; i++){
-    if(intLinks[i].href.indexOf("tcl.nie.cust.vizrtsaas") > -1) {
+    if(intLinks[i].href.indexOf('tcl.nie.cust.vizrtsaas') > -1) {
       intLinks[i].className += 'special';
     }
   }
