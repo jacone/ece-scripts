@@ -44,7 +44,7 @@ The address to your Munin instance is is:
 ** Icinga (enhanced Nagios)
 Icinga gives a good overview of the current health of the
 habitat. Head over to
- http://<%= trail_monitoring_host %><%= trail_dot_network_name %>/icinga/ 
+ http://<%= trail_monitoring_host %><%= trail_network_name %>/icinga/ 
 to get updates on host & service uptimes and disk fill rates. This is
 also the place were you'll schedule any maintenance work you do to
 prevent unnecessary alerts filling up your mobile phone and email
