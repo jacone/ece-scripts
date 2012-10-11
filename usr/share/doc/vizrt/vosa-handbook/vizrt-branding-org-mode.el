@@ -70,8 +70,7 @@ body {
   font-size: 0.80em;
   line-height: 1.3em;
   background-color: #D1D4D3;
-  margin: 0 auto;
-  margin: 15px 15px;
+  margin: 15px 0;
 }
 
 
@@ -85,17 +84,28 @@ body {
   margin-top: 50px;
 }
 
-#text-table-of-contents li {
+#table-of-contents a {
+  color: #666666;
+  text-decoration: none;
+}
+
+#table-of-contents ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#table-of-contents li {
   margin: 15px 0 0 0;
   font-weight: bold;
 
 }
 
-#text-table-of-contents li ul {
+#table-of-contents li ul {
   margin: 10px 0 0 0;
 }
 
-#text-table-of-contents li ul li {
+#table-of-contents li ul li {
   margin: 0 0 0 30px;
   padding: 0;
 }
@@ -115,10 +125,12 @@ h1, h2 {
 }
 
 h1 {
+  font-size: 1.8em;
   margin: 40px 0 20px 0;
 }
 
 h2 {
+  font-size: 1.4em;
   margin: 30px 0 10px 0;
 }
 
@@ -134,9 +146,20 @@ h6 {
 }
 
 a {
-  color: #666;
+  color: #3366cc;
   text-decoration: none;
 }
+
+a.special {
+  display: inline-block;
+  color: #36C;
+  background-color: #DDD;
+  text-decoration: none;
+  border-radius: 5px;
+  padding: 1px 5px;
+  margin-bottom: 1px;
+}
+
 
 a:hover {
   text-decoration: underline;
@@ -202,6 +225,13 @@ div.note {
 #postamble {
   margin-top: 50px;
 }
+
+@media screen and (max-width : 600px) {
+  #page {
+    padding: 5px;
+  }
+}
+
 
 </style>
 "
