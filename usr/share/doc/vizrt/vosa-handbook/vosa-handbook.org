@@ -2,7 +2,7 @@
 #+AUTHOR: Vizrt Online / The SaaS Team
 #+OPTIONS: toc:2 
 #+DRAWERS: PLANTUML PROPERTIES
-#+STYLE: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+#+STYLE: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
 
 #+INCLUDE: "overview.org"
 #+INCLUDE: "operating-system-maintenance.org" 
