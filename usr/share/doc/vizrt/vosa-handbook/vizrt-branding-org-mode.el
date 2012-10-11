@@ -162,9 +162,10 @@ a {
 a.special {
   display: inline-block;
   color: #36C;
-  background-color: #DDD;
+  background-color: #EEE;
   text-decoration: none;
   border-radius: 5px;
+  border: 1px solid #CFD8F6;
   padding: 1px 5px;
   margin-bottom: 1px;
 }
