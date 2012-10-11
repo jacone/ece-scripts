@@ -237,7 +237,7 @@ div.note {
 }
 
 @media screen and (max-width : 600px) {
-  #page {
+  #preamble {
     padding: 5px;
   }
 }
