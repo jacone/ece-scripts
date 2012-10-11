@@ -27,7 +27,7 @@ produce a system-info report in YAML and check the files into a
 version repository.
 
 When browsing the Hugin web interface at
-http://<%= trail_control_host %><%= trail_dot_network_name %>:5679/ you can quickly 
+http://<%= trail_control_host %><%= trail_network_name %>:5679/ you can quickly 
 see all changes on the various servers. A change could be a new
 service which is all of a sudden listening on a new port or that the
 version of a installed package has changed. Nothing escapes Hugin's
@@ -39,7 +39,7 @@ trending of your site. I.e. how it has been behaving the last days,
 weeks and months.
 
 The address to your Munin instance is is:
- http://<%= trail_monitoring_host %><%= trail_dot_network_name %>/munin/
+ http://<%= trail_monitoring_host %><%= trail_network_name %>/munin/
 
 ** Icinga (enhanced Nagios)
 Icinga gives a good overview of the current health of the
