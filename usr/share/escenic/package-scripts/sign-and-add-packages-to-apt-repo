@@ -7,7 +7,7 @@ dir=$1
 suite=${2-stable}
 log=/tmp/$(basename $0).log
 apt_repo_dir=/var/www/apt
-gpg_key=69D63D24
+gpg_key=8267B8FD
 
 if [[ ${dir}x == "x" || ! -d $dir ]]; then
   echo "You must pass a valid directory to $(basename $0)"
