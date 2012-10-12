@@ -737,7 +737,7 @@ EOF
   cat >> $file <<EOF
 |-----------------------------|
 
-[[https://solartv.signin.aws.amazon.com/console][AWS Management Console $trail_customer_shortname]]
+[[https://${trail_aws_account_alias}.signin.aws.amazon.com/console][AWS Management Console $trail_customer_shortname]]
 
 EOF
 
