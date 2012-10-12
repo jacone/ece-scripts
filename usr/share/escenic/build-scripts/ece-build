@@ -237,13 +237,18 @@ function add_global_libs
     print_and_log "The global library $builder_root_dir/lib/java_memcached-release_2.0.1.jar is missing, exiting!"
     remove_pid_and_exit_in_error
   fi
-  if [ -e $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar ]; then
-    run ln -s $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
-  else
-    print_and_log "The global library $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar is missing, exiting!"
-    remove_pid_and_exit_in_error
+  local engine_version=`readlink $engine_root_dir`
+  echo "$engine_version" | grep "engine-5.3"
+  if [ $? = 0 ]; then
+    if [ -e $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar ]; then
+      run ln -s $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
+    else
+      print_and_log "The global library $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar is missing, exiting!"
+      remove_pid_and_exit_in_error
+    fi
   fi
 }
+
 
 ##
 function svn_fail_early
@@ -458,11 +463,10 @@ function phase_clean_up
 function phase_verify_project
 {
   svn_fail_early
-  add_global_libs
   svn_verify_assembly
   symlink_ece_components
   verify_requested_versions
-  
+  add_global_libs
 }
 
 ## creates DEB and RPM packages with the server configuration for all
