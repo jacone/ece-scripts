@@ -66,7 +66,7 @@
 <script type='text/javascript'>
   var intLinks = document.links;
   for(var i = 0; i < intLinks.length; i++){
-    if(intLinks[i].href.indexOf('tcl.nie.cust.vizrtsaas') > -1) {
+    if(intLinks[i].href.indexOf('cust.vizrtsaas') > -1) {
       intLinks[i].className += 'special';
     }
   }
