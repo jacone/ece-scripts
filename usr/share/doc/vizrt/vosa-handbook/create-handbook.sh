@@ -716,18 +716,18 @@ function generate_aws_overview_org() {
   local file=$target_dir/aws-overview-generated.org
   cat > $file <<EOF
 ** Amazon Overview
-Here's an overview of your AWS availability zones & their instances:
+Here's an overview of your AWS Region, availability zones and  instances:
 
-|-------------------------------------------|
-| Virtualization host | Vpc-subnet  | Instance  |
-|-------------------------------------------|
+|----------------------------|
+| Zone | Subnet  | Instance  |
+|----------------------------|
 EOF
   for el in $trail_aws_map; do
     local old_ifs=$IFS
     IFS='#'
-    read host subnet instances <<< "$el"
+    read az subnet instances <<< "$el"
     IFS=$old_ifs
-    echo -n "| $(get_fqdn $host) | $subnet | " >> $file
+    echo -n "| $az | $subnet | " >> $file
     for ele in $(echo "$instances" | sed 's/,/ /g'); do
       echo -n " [[$(get_link $ele):5678][$(get_fqdn $ele)]] " >> $file
     done
@@ -735,9 +735,9 @@ EOF
   done
 
   cat >> $file <<EOF
-|-------------------------------------------|
+|-----------------------------|
 
-[[AWS Management Console $trail_customer_shortname][https://solartv.signin.aws.amazon.com/console]]
+[[https://solartv.signin.aws.amazon.com/console][AWS Management Console $trail_customer_shortname]]
 
 EOF
 
