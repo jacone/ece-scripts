@@ -719,7 +719,7 @@ function generate_aws_overview_org() {
 Here's an overview of your AWS Region, availability zones and  instances:
 
 |----------------------------|
-| Zone | Subnet  | Instance  |
+| Zone | Subnet  | Instances  |
 |----------------------------|
 EOF
   for el in $trail_aws_map; do
