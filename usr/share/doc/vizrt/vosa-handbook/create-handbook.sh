@@ -708,6 +708,41 @@ EOF
 
   cat $file >> $target_dir/overview-generated.org
 }
+function generate_aws_overview_org() {
+  if [ -z "$trail_aws_map" ]; then
+    return
+  fi
+
+  local file=$target_dir/aws-overview-generated.org
+  cat > $file <<EOF
+** Amazon Overview
+Here's an overview of your AWS availability zones & their instances:
+
+|-------------------------------------------|
+| Virtualization host | Vpc-subnet  | Instance  |
+|-------------------------------------------|
+EOF
+  for el in $trail_aws_map; do
+    local old_ifs=$IFS
+    IFS='#'
+    read host subnet instances <<< "$el"
+    IFS=$old_ifs
+    echo -n "| $(get_fqdn $host) | $subnet | " >> $file
+    for ele in $(echo "$instances" | sed 's/,/ /g'); do
+      echo -n " [[$(get_link $ele):5678][$(get_fqdn $ele)]] " >> $file
+    done
+    echo "|" >> $file
+  done
+
+  cat >> $file <<EOF
+|-------------------------------------------|
+
+[[AWS Management Console $trail_customer_shortname][https://solartv.signin.aws.amazon.com/console]]
+
+EOF
+
+  cat $file >> $target_dir/overview-generated.org
+}
 
 function get_user_input() {
   local customer_doc_dir_is_next=0
@@ -741,6 +776,7 @@ generate_db_org
 generate_nfs_org
 generate_backup_org
 generate_virtualization_overview_org
+generate_aws_overview_org
 add_customer_chapters
 generate_html_from_org
 generate_svg_from_blockdiag
