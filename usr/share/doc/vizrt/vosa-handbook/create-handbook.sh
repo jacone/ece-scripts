@@ -765,6 +765,7 @@ function get_user_input() {
   done
 }
 
+print "building $trail_customer_shortname VOSA Guide"
 get_user_input $@
 set_up_build_directory
 set_customer_specific_variables
@@ -780,4 +781,5 @@ generate_aws_overview_org
 add_customer_chapters
 generate_html_from_org
 generate_svg_from_blockdiag
+print "done: http://start.vizrtsaas.com/${trail_customer_acronym}/" 
 
