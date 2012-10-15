@@ -106,7 +106,7 @@ function create_publication_in_db() {
   run curl ${curl_opts}  \
     -F "name=${publication_name}" \
     -F "publisherName=Escenic" \
-    -F "adminPassword=${publication_name}" \
+    -F "adminPassword=admin" \
     -F "adminPasswordConfirm=${publication_name}" \
     --cookie JSESSIONID="$cookie" \
     "${ece_admin_uri}/do/publication/insert"
