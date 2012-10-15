@@ -35,7 +35,7 @@ function get_user_home_directory() {
   if [ $(uname -s) = "Darwin" ]; then
     echo /Users/$1
   elif [ $(grep ^$1 /etc/passwd | wc -l) -gt 0 ]; then
-    grep $1 /etc/passwd | cut -d':' -f6
+    grep ^$1 /etc/passwd | cut -d':' -f6
   elif [ -r /etc/adduser.conf ]; then
     local dir=$(grep DHOME /etc/adduser.conf | grep -v ^# | cut -d'=' -f2)
     echo $dir/$1
