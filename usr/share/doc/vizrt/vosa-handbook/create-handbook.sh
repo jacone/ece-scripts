@@ -456,18 +456,18 @@ function get_presentation_host_overview() {
   [[$(get_link ${1}):${trail_search_port-8081}/solr/admin/][solr]] \
 |
 EOF
-for ep in nop $trail_publication_list; do
-  if [[ $ep == "nop" ]]; then
-    continue
-  fi
-  cat <<EOF
-  [[$ep.$(get_link ${1})/][pub:$ep]]
-  EOF  
-done
-
-cat <<EOF
-  |
-EOF  
+#for ep in nop $trail_publication_list; do
+#  if [[ $ep == "nop" ]]; then
+#    continue
+#  fi
+#  cat <<EOF
+#  [[$ep.$(get_link ${1})/][pub:$ep]]
+#EOF  
+#done
+#
+#cat <<EOF
+#  |
+#EOF  
   
 }
 
