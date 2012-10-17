@@ -476,7 +476,7 @@ function set_up_proper_logging_configuration() {
   cat > $common_nursery_dir/trace.properties <<EOF
 log4j.rootLogger=ERROR, ECELOG
 log4j.appender.ECELOG=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.ECELOG.File=$escenic_log_dir/\${escenic.server}-messages
+log4j.appender.ECELOG.File=$escenic_log_dir/\${instance_name}-messages
 log4j.appender.ECELOG.layout=org.apache.log4j.PatternLayout
 log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
 
