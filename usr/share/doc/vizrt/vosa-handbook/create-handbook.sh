@@ -465,9 +465,18 @@ function get_publication_links_for_presentation_host() {
 	return ""
     fi
 
-    for ep in $trail_publication_list; do
-	echo "[[$(get_link ${ep}.${1})/][site:$ep]]"
-    done
+#    for ep in $trail_publication_list; do
+#	echo "[[$(get_link ${ep}.${1})/][site:$ep]]"
+#    done
+
+  for el in $trail_publication_domain_mapping_list; do
+    local old_ifs=$IFS
+    IFS='#'
+    read ece_pub fqdn domain_prefix <<< "$el"
+    IFS=$old_ifs
+    echo "[[$(get_link ${domain_prefix}.${1})/][${fxdn}@${1}]]"
+  done
+
 }
 
 ## $1 :: host
