@@ -454,21 +454,20 @@ function get_presentation_host_overview() {
   [[$(get_link ${1}):${2-8080}/escenic-admin/][escenic-admin]] \
   [[$(get_link ${1}):${2-8080}/escenic-admin/top][top]] \
   [[$(get_link ${1}):${trail_search_port-8081}/solr/admin/][solr]] \
+  $(get_publication_links_for_presentation_host $1) \
 |
 EOF
-#for ep in nop $trail_publication_list; do
-#  if [[ $ep == "nop" ]]; then
-#    continue
-#  fi
-#  cat <<EOF
-#  [[$ep.$(get_link ${1})/][pub:$ep]]
-#EOF  
-#done
-#
-#cat <<EOF
-#  |
-#EOF  
   
+}
+
+function get_publication_links_for_presentation_host() {
+    if [ -z $trail_publication_list ] ; then
+	return ""
+    fi
+
+    for ep in $trail_publication_list; do
+	echo "[[$(get_link ${ep}.${1})/][site:$ep]]"
+    done
 }
 
 ## $1 :: host
