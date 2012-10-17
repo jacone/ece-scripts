@@ -107,7 +107,7 @@ function create_publication_in_db() {
     -F "name=${publication_name}" \
     -F "publisherName=Escenic" \
     -F "adminPassword=admin" \
-    -F "adminPasswordConfirm=${publication_name}" \
+    -F "adminPasswordConfirm=admin" \
     --cookie JSESSIONID="$cookie" \
     "${ece_admin_uri}/do/publication/insert"
 }
