@@ -461,7 +461,7 @@ EOF
 }
 
 function get_publication_links_for_presentation_host() {
-    if [ -z $trail_publication_list ] ; then
+    if [ -z $trail_publication_domain_mapping_list ] ; then
 	return ""
     fi
 
