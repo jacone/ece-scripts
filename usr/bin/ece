@@ -244,7 +244,7 @@ function set_type_port() {
     else
         if [ -r $tomcat_base/logs/catalina.out ]; then
             # for tomcat6-user packaged tomcats (and perhaps others)
-            out_log=$tomcat_base/logs/catalina.out
+            out_log=$log_dir/${instance_name}-tomcat-catalina.out
         else
             out_log=$log
         fi
