@@ -474,9 +474,8 @@ function get_publication_links_for_presentation_host() {
     IFS='#'
     read ece_pub fqdn domain_prefix <<< "$el"
     IFS=$old_ifs
-    echo "[[$(get_link ${domain_prefix}.${1})/][{1} as ${fqdn} backend]]"
+    echo "[[$(get_link ${domain_prefix}.${1})/][${1} as ${fqdn} backend]]"
   done
-
 }
 
 ## $1 :: host
