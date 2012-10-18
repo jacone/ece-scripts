@@ -80,7 +80,7 @@ or Mac OS X]] section to generate and use your SSH key.
 ** Log on to the gatekeeper
 On your local machine, do:
 #+BEGIN_SRC text
-$ ssh <%= trail_control_host %>
+$ ssh <gatekeeper host> 
 #+END_SRC
 
 ** Log on to the control server
