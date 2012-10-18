@@ -73,7 +73,6 @@ function install_ece_instance() {
   fi
 
   set_up_app_server
-  set_up_proper_logging_configuration
 
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
     set_up_basic_nursery_configuration
@@ -467,64 +466,6 @@ function set_up_instance_specific_nursery_configuration() {
   # we don't touch it if the file already exists.
   if [ ! -e $file ]; then
     run echo "hostname=$HOSTNAME" >> $file
-  fi
-}
-
-function set_up_proper_logging_configuration() {
-  print_and_log "Setting up proper log4j & Java logging configuration ..."
-  
-  cat > $common_nursery_dir/trace.properties <<EOF
-log4j.rootLogger=ERROR, ECELOG
-log4j.appender.ECELOG=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.ECELOG.File=$escenic_log_dir/\${instance_name}-messages
-log4j.appender.ECELOG.layout=org.apache.log4j.PatternLayout
-log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
-
-# Get rid of the browser log which for some reason wanderse into the
-# standard log4j log
-log4j.appender.NOLOGGING=org.apache.log4j.varia.NullAppender
-log4j.additivity.browser=false
-log4j.category.browser=FATAL, NOLOGGING
-
-# Get rid of serialization errors to memcached.
-log4j.category.com.danga.MemCached.MemCachedClient=FATAL
-EOF
-  cd $tomcat_base/lib/
-  make_ln $common_nursery_dir/trace.properties
-  run ln -sf trace.properties log4j.properies
-
-  # since the solr webapp otherwise will pollute our logs, we ask
-  # Tomcat specifically to make it log to dedicated logger.
-  if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
-    $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
-    cat > $tomcat_base/conf/logging.properties <<EOF
-handlers = 1catalina.org.apache.juli.FileHandler, 2localhost.org.apache.juli.FileHandler, java.util.logging.ConsoleHandler, 6localhost.org.apache.juli.FileHandler
-
-.handlers = 1catalina.org.apache.juli.FileHandler
-
-1catalina.org.apache.juli.FileHandler.level = FINE
-1catalina.org.apache.juli.FileHandler.directory = \$\{catalina.base\}/logs
-1catalina.org.apache.juli.FileHandler.prefix = catalina.
-
-2localhost.org.apache.juli.FileHandler.level = FINE
-2localhost.org.apache.juli.FileHandler.directory = \$\{catalina.base\}/logs
-2localhost.org.apache.juli.FileHandler.prefix = localhost.
-
-java.util.logging.ConsoleHandler.level = FINE
-java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
-
-6localhost.org.apache.juli.FileHandler.level = FINE
-6localhost.org.apache.juli.FileHandler.directory = $escenic_log_dir
-6localhost.org.apache.juli.FileHandler.prefix = solr.
-
-org.apache.solr.level=WARNING
-org.apache.solr.handlers=6localhost.org.apache.juli.FileHandler
-
-org.apache.catalina.core.ContainerBase.[Catalina].[localhost].level = INFO
-org.apache.catalina.core.ContainerBase.[Catalina].[localhost].handlers = 2localhost.org.apache.juli.FileHandler
-EOF
-  else
-    run cp $tomcat_home/conf/logging.properties $tomcat_base/conf
   fi
 }
 
