@@ -30,5 +30,14 @@ to
 http://<%= trail_import_host %>:8081/solr/select	  
 #+END_SRC
 
-** TODO Changing the search server used by the website.
+** Changing the search server used by the website.
+The following configuration points influence the search behavior in the website:
+- Site Search (Widget Framework): com.escenic.framework.search.solr.SolrHttpClient
+- Site Search (Widget Framework): com.escenic.framework.search.solr.SolrSearchEngine
+- Site Search (DEPRECATED): com.escenic.lucy.LucySearchEngine  
+
+** Changing the search server used for web studio person search 
+For some strange reason the web studio person search has a unique configuration for the search server:
+- escenic/solr-base-uri environment variable in context.xml (also used by indexer webapp)
+
 
