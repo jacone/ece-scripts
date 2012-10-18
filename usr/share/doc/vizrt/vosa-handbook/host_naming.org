@@ -1,0 +1,36 @@
+* Host naming conventions
+Host names play a role in the Internet wide DNS system. Host names to find ip addresses. A host name can identify 0 or more ip addresses. Valid ip addresses might vary depending on the client network.
+
+This document assumes that you know how the global DNS system works.
+
+** What we use host names for
+
+We identify ip addresses with hostnames. So the real question is: 
+
+/what do we use ip addresses for?/
+
+*** TODO Virtual IP's
+
+** Machine roles
+
+The follwing roles are common in VOSA clusters:
+- Control :: (control) Ssh entrypoint operators
+- Monitoring :: (mon) Presenting operational performance trends and sending out events when performance or capacity limits are exceded.
+- Vme online control :: (vmeoc) VME Admin web interface (Diactus), All automatic workflows of VME are initiated and monitored from here.
+- Vme online delivery :: (vmeod*) Presenting video's to visitors
+- Vme online transcoder :: (vmeot*) Transcoding video's from one format to another, either live or as a batch process. 
+- Escenic Presentation :: (pres*) Generating webpages by merging content from a database with html from JSP files.
+- Escenic Editorial :: (edit*) Content Studio webservice, Imports
+- Escenic Analysis :: (analysis) Counting pageimpressions for use by the webpages to present lists that depend on performance of specific content items.
+
+** Virtual roles
+
+- analysis :: the analysis webservices that are currently in production
+- edit :: Content Studio webservice and Indexer Webservice that are currently in production
+- import :: All periodic downloads of external content currently going on.
+- nfs-master :: The filesharing server that is curently in production.
+- nfs-slave :: The filesharing server that is curently in production.
+- pres* :: The presentation hosts currently configured on the loadbalancer
+- control :: The control service currently in production
+- mon :: The monitoring service currently in production
+
