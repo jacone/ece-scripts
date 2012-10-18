@@ -5,14 +5,14 @@ these web applications on a dedicated JVM as their behaviour with
 regards to object creation, connections and garbage collection is
 highly different from that of a publication or presentation server.
 
-** Updating the Search Server
+** Changing the search server used by Content Studio.
 
 When updating the search server, you might want to reconfigure the
-ECE instance(s) that use the search server you're updating. To do
+ECE instance(s) that use the search server you're updating to allow Content Studio instances to search. To do
 this, you can use the Component Browser in the escenic-admin
 interface.
 
-For instance, let's say you're upgrading the search server for
+For instance, let's say you're upgrading the Content Studio search server for
 <%= trail_editor_host %> and want it to temporarily use
 <%= trail_import_host %>'s search instance.
 
@@ -29,3 +29,6 @@ to
 #+BEGIN_SRC conf
 http://<%= trail_import_host %>:8081/solr/select	  
 #+END_SRC
+
+** TODO Changing the search server used by the website.
+
