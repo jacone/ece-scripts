@@ -1,18 +1,28 @@
-Slow Query Logging on Amazon RDS - a HOWTO Save
-Mar 2, 2011 threetee.posterous.com
-Slow Query Logging on Amazon RDS - a HOWTO
-Amazon RDS instances have slow query logging disabled by default. Here is how to enable slow query logging and access the slow query data on your RDS instance using the RDS command-line tools:
+* Amazon RDS-Mysql
+** TODO something in general about RDS
+** TODO restore and backup of RDS
+** Slow Query Logging on Amazon RDS - a HOWTO
+Amazon RDS-Mysql instances have slow query logging disabled by default. Here is how to enable slow query logging and access the slow query data on your RDS instance using the RDS command-line tools:
 
-Install the Amazon RDS command-line tools and configure your environment according to the documentation: http://aws.amazon.com/developertools/2928
-Create a parameter group:
+- Install the Amazon RDS command-line tools and configure your environment according to the documentation: [[http://aws.amazon.com/developertools/2928]] 
+- Create a parameter group:
+#+BEGIN_SRC sh
 $ rds-create-db-parameter-group sweet-parameter-group -f mysql5.1 -d "This is a totally sweet database parameter group"
-Place your DB instance in that parameter group:
+#+END_SRC
+- Place your DB instance in that parameter group:
+#+BEGIN_SRC sh
 $ rds-modify-db-instance my-instance --db-parameter-group-name sweet-parameter-group --apply-immediately
-Modify the parameter group to turn on slow query logging:
+#+END_SRC
+- Modify the parameter group to turn on slow query logging:
+#+BEGIN_SRC sh
 $ rds-modify-db-parameter-group sweet-parameter-group --parameters "name=slow_query_log, value=ON, method=immediate" --parameters "name=long_query_time, value=1, method=immediate" --parameters "name=min_examined_row_limit, value=100, method=immediate"
-If you like, you can verify that your settings were made properly:
+#+END_SRC
+- If you like, you can verify that your settings were made properly:
+#+BEGIN_SRC sh
 $ rds-describe-db-parameters sweet-parameter-group
-
-Reboot your DB instance:
+#+END_SRC
+- Reboot your DB instance:
+#+BEGIN_SRC sh
 $ rds-reboot-db-instance my-instance
+#+END_SRC
 After following the above steps, you will be able to access the slow query log by querying the mysql.slow_log table.
