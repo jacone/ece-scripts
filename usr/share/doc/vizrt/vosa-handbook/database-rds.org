@@ -1,30 +1,36 @@
 * Amazon Web services RDS
 RDS is the Amazon Web services Product line for Database as a service. As of this writing they have the following database products available:
-- Mysql
+- MySQL
 - Oracle
 - Microsoft SQL
-As of writing we have only used Mysql for Escenic.
-** RDS/Mysql flavors
+
+As of writing we have only used MySQL for Escenic Content Engine and
+Escenic Analysis Engine.
+
+** RDS/MySQL flavors
 The database sizes and pricing are comparable to equivalent EC2 instances. We have good experience running Escenic in the following RDS configuration:
-- Extra Large Mysql DB Instance 
+- Extra Large MySQL DB Instance 
 - 15 Million PI 
-- 2 minutes full page ttl on Varnish
+- 2 minutes full page TTL on Varnish
 - 2 presentation engines, No memcached
 - 20.000 presentation article cache.
 We will share more experience as it becomes available.
+
 ** RDS Availability
 RDS goes down like any other Amazon resource but it is a bit more resilient than EBS in our experience.
-Like any Amazon resource, redundancy over avaialability zones is needed. For this, Amazon provides the multi-az option. Our experience with RDS+Multi-az availability is good. Our experience with RDS without multi-az is horrible. Do your backups often and practice the restores because you will need it.
-** RDS/Mysql limitations
+
+Like any Amazon resource, redundancy over availability zones is needed. For this, Amazon provides the multi-az option. Our experience with RDS+Multi-az availability is good. Our experience with RDS without multi-az is horrible. Do your backups often and practice the restores because you will need it.
+
+** RDS/MySQL limitations
 - No shell access :: Has not been been a problem for Escenic so far.
-- No triggers :: Minor upgrades of Escenic sometimes need triggers to run the databse migrations. This is a minor problem as the database migration is never done in production anyway. Just remember to do the migration of databases in a restore on a normal Mysql installation in an OS that you _can_ login to.
-- Different slow query log :: The slow query log is an important tool to understand database overload problems. You need to be able to investgate these problems in cases where template developers make inefficient templates or in cases where Escenic has bugs that cause it to overload the database. How to set up a slow query log on RDS/mysql is explained later in this document.
+- No triggers :: Minor upgrades of Escenic sometimes need triggers to run the database migrations. This is a minor problem as the database migration is never done in production anyway. Just remember to do the migration of databases in a restore on a normal MySQL installation in an OS that you _can_ login to.
+- Different slow query log :: The slow query log is an important tool to understand database overload problems. You need to be able to investigate these problems in cases where template developers make inefficient templates or in cases where Escenic has bugs that cause it to overload the database. How to set up a slow query log on RDS/MySQL is explained later in this document.
 - This is it so far :: More learnings should be added here.
 
 ** Restore and backup of RDS
 Automated Backups – Turned on by default, the automated backup feature of Amazon RDS enables point-in-time recovery for your DB Instance. Amazon RDS will backup your database and transaction logs and store both for a user-specified retention period. This allows you to restore your DB Instance to any second during your retention period, up to the last five minutes. Your automatic backup retention period can be configured to up to thirty five days.
 
-It is reccommended to set the retnetion period to at least 7 days.
+It is rec commended to set the retention period to at least 7 days.
 
 The retention period of the RDS instance at <%= trail_customer_shortname %> is <%= trail_rds_backup_retention_days %> days.
 
@@ -34,7 +40,7 @@ The retention period of the RDS instance at <%= trail_customer_shortname %> is <
 
 [fn:1] Slow query log text from an [[http://www.memonic.com/user/chris/id/1pwgo][Article]] by [[http://www.memonic.com/user/chris/profile][Chris Hauzenberger]] on emonic.com
 
-Amazon RDS-Mysql instances have slow query logging disabled by default. Here is how to enable slow query logging and access the slow query data on your RDS instance using the RDS command-line tools:
+Amazon RDS-MySQL instances have slow query logging disabled by default. Here is how to enable slow query logging and access the slow query data on your RDS instance using the RDS command-line tools:
 
 - Install the Amazon RDS command-line tools and configure your environment according to the documentation: [[http://aws.amazon.com/developertools/2928]] 
 - Create a parameter group:
@@ -43,11 +49,16 @@ $ rds-create-db-parameter-group sweet-parameter-group -f mysql5.1 -d "This is a 
 #+END_SRC
 - Place your DB instance in that parameter group:
 #+BEGIN_SRC sh
-$ rds-modify-db-instance my-instance --db-parameter-group-name sweet-parameter-group --apply-immediately
+$ rds-modify-db-instance my-instance \
+    --db-parameter-group-name sweet-parameter-group \
+    --apply-immediately
 #+END_SRC
 - Modify the parameter group to turn on slow query logging:
 #+BEGIN_SRC sh
-$ rds-modify-db-parameter-group sweet-parameter-group --parameters "name=slow_query_log, value=ON, method=immediate" --parameters "name=long_query_time, value=1, method=immediate" --parameters "name=min_examined_row_limit, value=100, method=immediate"
+$ rds-modify-db-parameter-group sweet-parameter-group \
+    --parameters "name=slow_query_log, value=ON, method=immediate" \
+    --parameters "name=long_query_time, value=1, method=immediate" \
+    --parameters "name=min_examined_row_limit, value=100, method=immediate"
 #+END_SRC
 - If you like, you can verify that your settings were made properly:
 #+BEGIN_SRC sh
@@ -57,4 +68,4 @@ $ rds-describe-db-parameters sweet-parameter-group
 #+BEGIN_SRC sh
 $ rds-reboot-db-instance my-instance
 #+END_SRC
-After following the above steps, you will be able to access the slow query log by querying the mysql.slow\_log table.
+After following the above steps, you will be able to access the slow query log by querying the =mysql.slow\_log= table.
