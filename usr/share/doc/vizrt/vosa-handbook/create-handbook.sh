@@ -15,6 +15,10 @@ EOF
   exit 1
 }
 
+DB_VENDOR_AMAZON_RDS=rds
+DB_VENDOR_MYSQL=mysql
+DB_VENDOR_PERCONA=percona
+
 function run() {
   "$@"
   if [ $? -ne 0 ]; then
@@ -587,6 +591,12 @@ function generate_db_org() {
         -n "${trail_db_master_host}" && \
         -n "${trail_db_slave_host}" ]]; then
     run cat $target_dir/database-changing-vip.org >> $target_dir/database.org
+  fi
+  if [ $(echo "${trail_db_vendor}" | \
+    tr [A-Z] [a-z] | \
+    grep ${DB_VENDOR_AMAZON_RDS} | \
+    wc -l) -gt 0 ]; then
+    run cat $target_dir/database-rds.org >> $target_dir/database.org
   fi
 }
 
