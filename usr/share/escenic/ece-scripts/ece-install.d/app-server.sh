@@ -509,7 +509,7 @@ log4j.appender.MANAGER.layout = org.apache.log4j.PatternLayout
 log4j.appender.MANAGER.layout.ConversionPattern = %d [%t] %-5p %c- %m%n
 
 log4j.appender.HOST-MANAGER=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.HOST-MANAGER.File=${escenic_log_dir}/\${com.escenic.instance}-tomcat-host-manager.
+log4j.appender.HOST-MANAGER.File=${escenic_log_dir}/\${com.escenic.instance}-tomcat-host-manager
 log4j.appender.HOST-MANAGER.layout = org.apache.log4j.PatternLayout
 log4j.appender.HOST-MANAGER.layout.ConversionPattern = %d [%t] %-5p %c- %m%n
 
@@ -571,7 +571,7 @@ java.util.logging.ConsoleHandler.formatter = java.util.logging.SimpleFormatter
 
 6localhost.org.apache.juli.FileHandler.level = FINE
 6localhost.org.apache.juli.FileHandler.directory = $escenic_log_dir
-6localhost.org.apache.juli.FileHandler.prefix = solr.
+6localhost.org.apache.juli.FileHandler.prefix = \${com.escenic.instance}-solr.
 
 org.apache.solr.level=WARNING
 org.apache.solr.handlers=6localhost.org.apache.juli.FileHandler
