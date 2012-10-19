@@ -1,4 +1,5 @@
 ** The Amazon Relational Database Service (Amazon RDS)
+
 <%= trail_customer_shortname %> uses Amazon RDS for MySQL for the production database.
 - Database hostname :: <%= trail_db_master_host %>
 - Database instance class :: <%= trail_rds_instance_class %>
