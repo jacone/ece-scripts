@@ -1,6 +1,28 @@
-* Amazon RDS-Mysql
-** TODO something in general about RDS
+* Amazon Webservices RDS
+RDS is the Amazon Webservices Product line for Database as a service. As of this writing they have the following database products available:
+- Mysql
+- Oracle
+- Microsoft SQL
+As of writing we have only used Mysql for Escenic.
+** RDS/Mysql flavors
+The database sizes and pricing are comparable to equivalent EC2 instances. We have good experience running Escenic in the following RDS configuration:
+- Extra Large Mysql DB Instance 
+- 15 Million PI 
+- 2 minutes full page ttl on Varnish
+- 2 presentation engines, No memcached
+- 20.000 presentatino article cache.
+We will share more experience as it becomes avaialable.
+** RDS Avaialability
+RDS goes down like any other Amazon resource but it is a bit more resilliant than EBS in our experience.
+Like any Amazon resource, redundancy over avaialability zones is needed and for this Amazon provides the multi-az option. Our experience with RDS+Multi-az availability is good. Our experience with RDS without multi-az is horrible. Do your backups often and practice the restores because you will need it.
+** RDS/Mysql limitations
+- No shell access :: Has not been been a problem for Escenic so far.
+- No triggers :: Minor upgrades of Escenic sometimes need triggers to run the databse migrations. This is a minor problem as the database migration is never done in production anyway. Just remember to do the migration of databases in a restore on a normal Mysql installation in an OS that you _can_ login to.
+- Different slow query log :: The slow query log is an important tool to understand database overload problems. You need to be able to investgate these problems in cases where template developers make inefficient templates or in cases where Escenic has bugs that cause it to overload the database. How to set up a slow query log on RDS/mysql is explained later in this document.
+- This it so far. More learnings should be added here.
+
 ** TODO restore and backup of RDS
+
 ** Slow Query Logging on Amazon RDS - a HOWTO
 Amazon RDS-Mysql instances have slow query logging disabled by default. Here is how to enable slow query logging and access the slow query data on your RDS instance using the RDS command-line tools:
 
