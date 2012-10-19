@@ -321,6 +321,9 @@ function set_instance_settings() {
       ece_args=$ece_args" "$jvm_gc_settings
     fi
     
+    if [ "$jvm_proxy_settings" ]; then
+      ece_args=$ece_args" "$jvm_proxy_settings
+    fi
 
     if [ "$instance" != "default" ]; then
         ece_args=$ece_args" -Dcom.escenic.instance=$instance"
