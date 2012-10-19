@@ -1,19 +1,17 @@
-** The Amazon Relational Database Service (Amazon RDS)
-
 <%= trail_customer_shortname %> uses Amazon RDS for MySQL for the production database.
+
 | Database hostname       | <%= trail_db_master_host %>     |
 | Database instance class | <%= trail_rds_instance_class %> |
 | Multi-AZ Deployment     | <%= trail_rds_multiaz %>        |
 | Zone                    | <%= trail_rds_zone %>           |
-
-*** General information about Amazon RDS
+** General information about Amazon RDS
 [[http://aws.amazon.com/rds/][RDS]] is the Amazon Web Services database as a service product. As of this writing they have the following database products available:
 - [[http://aws.amazon.com/rds/mysql/][MySQL]]
 - [[http://aws.amazon.com/rds/oracle/][Oracle]]
 - [[http://aws.amazon.com/rds/mysql/][Microsoft SQL Server]]
 As of writing we have only used MySQL for Escenic Content Engine and
 Escenic Analysis Engine.
-**** Amazon RDS for MySql flavors
+*** Amazon RDS for MySql flavors
 The database sizes and pricing are comparable to equivalent EC2 instances. We have good experience running Escenic in the following RDS configuration:
 - Extra Large MySQL DB Instance 
 - 15 Million PI 
@@ -22,25 +20,25 @@ The database sizes and pricing are comparable to equivalent EC2 instances. We ha
 - 20.000 presentation article cache.
 We will share more experience as it becomes available.
 
-**** Amazon RDS for MySQL availability 
+*** Amazon RDS for MySQL availability 
 RDS goes down like any other Amazon resource but it is a bit more resilient than EBS in our experience.
 
 Like any Amazon resource, redundancy over availability zones is needed. For this, Amazon provides the multi-az option. Our experience with RDS+Multi-az availability is good. Our experience with RDS without multi-az is horrible. Do your backups often and practice the restores because you will need it.
 
-**** Amazon RDS for MySQL limitations
+*** Amazon RDS for MySQL limitations
 - No shell access :: Has not been been a problem for Escenic so far.
 - No triggers :: Minor upgrades of Escenic sometimes need triggers to run the database migrations. This is a minor problem as the database migration is never done in production anyway. Just remember to do the migration of databases in a restore on a normal MySQL installation in an OS that you _can_ login to.
 - Different slow query log :: The slow query log is an important tool to understand database overload problems. You need to be able to investigate these problems in cases where template developers make inefficient templates or in cases where Escenic has bugs that cause it to overload the database. How to set up a slow query log on RDS/MySQL is explained later in this document.
 - This is it so far :: More learnings should be added here.
 
-**** Restore and backup of Amazon RDS for MySql 
+*** Restore and backup of Amazon RDS for MySql 
 Automated Backups – Turned on by default, the automated backup feature of Amazon RDS enables point-in-time recovery for your DB Instance. Amazon RDS will backup your database and transaction logs and store both for a user-specified retention period. This allows you to restore your DB Instance to any second during your retention period, up to the last five minutes. Your automatic backup retention period can be configured to up to thirty five days.
 
 It is rec commended to set the retention period to at least 7 days.
 
 The retention period of the RDS instance at <%= trail_customer_shortname %> is <%= trail_rds_backup_retention_days %> days.
 
-**** Slow Query Logging on Amazon RDS for MySql - a HOWTO
+*** Slow Query Logging on Amazon RDS for MySql - a HOWTO
 
 /This is borrowed text[fn:1] that still needs validation and verification/
 
