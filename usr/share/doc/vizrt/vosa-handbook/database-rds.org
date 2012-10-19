@@ -21,7 +21,7 @@ Like any Amazon resource, redundancy over avaialability zones is needed. For thi
 - Different slow query log :: The slow query log is an important tool to understand database overload problems. You need to be able to investgate these problems in cases where template developers make inefficient templates or in cases where Escenic has bugs that cause it to overload the database. How to set up a slow query log on RDS/mysql is explained later in this document.
 - This is it so far :: More learnings should be added here.
 
-** restore and backup of RDS
+** Restore and backup of RDS
 Automated Backups – Turned on by default, the automated backup feature of Amazon RDS enables point-in-time recovery for your DB Instance. Amazon RDS will backup your database and transaction logs and store both for a user-specified retention period. This allows you to restore your DB Instance to any second during your retention period, up to the last five minutes. Your automatic backup retention period can be configured to up to thirty five days.
 
 It is reccommended to set the retnetion period to at least 7 days.
