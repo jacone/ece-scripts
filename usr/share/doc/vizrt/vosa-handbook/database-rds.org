@@ -1,5 +1,5 @@
-* Amazon Webservices RDS
-RDS is the Amazon Webservices Product line for Database as a service. As of this writing they have the following database products available:
+* Amazon Web services RDS
+RDS is the Amazon Web services Product line for Database as a service. As of this writing they have the following database products available:
 - Mysql
 - Oracle
 - Microsoft SQL
@@ -10,10 +10,10 @@ The database sizes and pricing are comparable to equivalent EC2 instances. We ha
 - 15 Million PI 
 - 2 minutes full page ttl on Varnish
 - 2 presentation engines, No memcached
-- 20.000 presentatino article cache.
-We will share more experience as it becomes avaialable.
-** RDS Avaialability
-RDS goes down like any other Amazon resource but it is a bit more resilliant than EBS in our experience.
+- 20.000 presentation article cache.
+We will share more experience as it becomes available.
+** RDS Availability
+RDS goes down like any other Amazon resource but it is a bit more resilient than EBS in our experience.
 Like any Amazon resource, redundancy over avaialability zones is needed and for this Amazon provides the multi-az option. Our experience with RDS+Multi-az availability is good. Our experience with RDS without multi-az is horrible. Do your backups often and practice the restores because you will need it.
 ** RDS/Mysql limitations
 - No shell access :: Has not been been a problem for Escenic so far.
