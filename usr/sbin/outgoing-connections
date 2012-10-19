@@ -1,0 +1,40 @@
+#! /usr/bin/env bash
+
+## Does analysis of iptables logging outgoing connections. Here's an
+## example iptables rule that logs all newly created outgoing
+## connections:
+##
+## iptables \
+##     --append OUTPUT \
+##     --match state \
+##     --protocol tcp \
+##     --state NEW \
+##     -j LOG \
+##     --log-uid
+
+log=/var/log/syslog
+
+function resolve_ip() {
+  nslookup $1 | \
+    grep 'name =' | \
+    sed 's/^.*name = //g' | \
+    sed 's/\.$//g'
+}
+
+function analyze_log() {
+  echo 'Count IP Hostname'
+  grep DST= $log | \
+    sed 's/.*DST=//g' | \
+    cut -d' ' -f1 | \
+    sort | \
+    uniq -c | \
+    sort -r -n | \
+    sed 's/^[ ]*//g' | \
+    while read line; do
+    read count ip <<< $line;
+    echo "${count} $ip $(resolve_ip $ip)"
+  done
+}
+
+analyze_log | column -t
+
