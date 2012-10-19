@@ -19,11 +19,14 @@ Like any Amazon resource, redundancy over avaialability zones is needed and for 
 - No shell access :: Has not been been a problem for Escenic so far.
 - No triggers :: Minor upgrades of Escenic sometimes need triggers to run the databse migrations. This is a minor problem as the database migration is never done in production anyway. Just remember to do the migration of databases in a restore on a normal Mysql installation in an OS that you _can_ login to.
 - Different slow query log :: The slow query log is an important tool to understand database overload problems. You need to be able to investgate these problems in cases where template developers make inefficient templates or in cases where Escenic has bugs that cause it to overload the database. How to set up a slow query log on RDS/mysql is explained later in this document.
-- This it so far. More learnings should be added here.
+- This it so far :: More learnings should be added here.
 
 ** TODO restore and backup of RDS
 
 ** Slow Query Logging on Amazon RDS - a HOWTO
+
+/(This is borrowed text from an [[http://www.memonic.com/user/chris/id/1pwgo][Article]] by [[http://www.memonic.com/user/chris/profile][Chris Hauzenberger]] on emonic.com)/
+
 Amazon RDS-Mysql instances have slow query logging disabled by default. Here is how to enable slow query logging and access the slow query data on your RDS instance using the RDS command-line tools:
 
 - Install the Amazon RDS command-line tools and configure your environment according to the documentation: [[http://aws.amazon.com/developertools/2928]] 
