@@ -30,7 +30,7 @@ The retention period of the RDS instance at <%= trail_customer_shortname %> is <
 
 ** Slow Query Logging on Amazon RDS - a HOWTO
 
-/This is borrowed text[fn:1]/
+/This is borrowed text[fn:1] that still needs validation and verification/
 
 [fn:1] Slow query log text from an [[http://www.memonic.com/user/chris/id/1pwgo][Article]] by [[http://www.memonic.com/user/chris/profile][Chris Hauzenberger]] on emonic.com
 
