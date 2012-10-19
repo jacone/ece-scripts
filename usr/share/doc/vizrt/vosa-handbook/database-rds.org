@@ -1,10 +1,10 @@
 ** The Amazon Relational Database Service (Amazon RDS)
 
 <%= trail_customer_shortname %> uses Amazon RDS for MySQL for the production database.
-- Database hostname :: <%= trail_db_master_host %>
-- Database instance class :: <%= trail_rds_instance_class %>
-- Multi-AZ Deployment :: <%= trail_rds_multiaz %>
-- Zone :: <%= trail_rds_zone %>
+| Database hostname       | <%= trail_db_master_host %>     |
+| Database instance class | <%= trail_rds_instance_class %> |
+| Multi-AZ Deployment     | <%= trail_rds_multiaz %>        |
+| Zone                    | <%= trail_rds_zone %>           |
 
 *** General information about Amazon RDS
 [[http://aws.amazon.com/rds/][RDS]] is the Amazon Web Services database as a service product. As of this writing they have the following database products available:
