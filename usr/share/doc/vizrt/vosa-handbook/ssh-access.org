@@ -61,6 +61,19 @@ $ ssh-add -l
 
 
 ** Generate an SSH key on Windows
+
+*** Generating an SSH key Using Putty for Windows
+
+- Install the full Putty package including puttygen by using the Windows Installaller that is downloadable [[http://putty][here]]
+- Run puttygen
+- Choose to generate an RSA key
+  - *Add a passphrase* before saving
+- Save the key both as a .ppk and as a .des file
+*** TODO finish this 
+
+
+*** Using Cygwin
+
 Install [[http://cygwin.com][Cygwin]] and be sure to check for the =openssh-client= package
 when running =setup.exe=:
 
@@ -76,6 +89,7 @@ In the Cygwin shell, you now run the same =ssh= command that you'd
 have on Linux. This command is what you can see being used and
 you can use the instructions above in the [[Generate an SSH key on Linux
 or Mac OS X]] section to generate and use your SSH key.
+
 
 ** Log on to the gatekeeper
 On your local machine, do:
