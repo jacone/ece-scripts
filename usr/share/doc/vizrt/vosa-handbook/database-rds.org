@@ -32,7 +32,7 @@ Like any Amazon resource, redundancy over availability zones is needed. For this
 - This is it so far :: More learnings should be added here.
 
 *** Restore and backup of Amazon RDS for MySql 
-Automated Backups – Turned on by default, the automated backup feature of Amazon RDS enables point-in-time recovery for your DB Instance. Amazon RDS will backup your database and transaction logs and store both for a user-specified retention period. This allows you to restore your DB Instance to any second during your retention period, up to the last five minutes. Your automatic backup retention period can be configured to up to thirty five days.
+Automated Backups are urned on by default, the automated backup feature of Amazon RDS enables point-in-time recovery for your DB Instance. Amazon RDS will backup your database and transaction logs and store both for a user-specified retention period. This allows you to restore your DB Instance to any second during your retention period, up to the last five minutes. Your automatic backup retention period can be configured to up to thirty five days.
 
 It is rec commended to set the retention period to at least 7 days.
 
