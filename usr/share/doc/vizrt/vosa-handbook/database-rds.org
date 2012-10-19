@@ -26,7 +26,8 @@ Automated Backups – Turned on by default, the automated backup feature of Amaz
 
 It is reccommended to set the retnetion period to at least 7 days.
 
-The retention period of the RDS instance at <%= trail_customer_shortname %> is <%= trail_rds_backup_retention_days %> days.
+The retention period of the RDS instance at <%= trail_customer_shortname %> is <%= trail_rds_backup_retention_days
+ %> days.
 
 ** Slow Query Logging on Amazon RDS - a HOWTO
 
