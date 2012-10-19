@@ -25,7 +25,8 @@ Like any Amazon resource, redundancy over avaialability zones is needed and for 
 
 ** Slow Query Logging on Amazon RDS - a HOWTO
 
-/(This is borrowed text from an [[http://www.memonic.com/user/chris/id/1pwgo][Article]] by [[http://www.memonic.com/user/chris/profile][Chris Hauzenberger]] on emonic.com)/
+/This is borrowed text[fn:1]/
+[fn:1] Slow query log text from an [[http://www.memonic.com/user/chris/id/1pwgo][Article]] by [[http://www.memonic.com/user/chris/profile][Chris Hauzenberger]] on emonic.com
 
 Amazon RDS-Mysql instances have slow query logging disabled by default. Here is how to enable slow query logging and access the slow query data on your RDS instance using the RDS command-line tools:
 
