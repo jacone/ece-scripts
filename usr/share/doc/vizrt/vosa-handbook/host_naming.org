@@ -5,32 +5,43 @@ This document assumes that you know how the global DNS system works.
 
 ** What we use host names for
 
-We identify ip addresses with hostnames. So the real question is: 
-
-/what do we use ip addresses for?/
-
-*** TODO Virtual IP's
+Paractical networking requires operators and machines to know about the ip addresses of the  machines in the network. IP adresses are not very descriptive so it is a good practice to use hostnames to refer to IP addresses. 
 
 ** Machine roles
 
-The follwing roles are common in VOSA clusters:
+The follwing machine roles are common in VOSA clusters:
+
+/General:/
 - Control :: (control) Ssh entrypoint operators
 - Monitoring :: (mon) Presenting operational performance trends and sending out events when performance or capacity limits are exceded.
-- Vme online control :: (vmeoc) VME Admin web interface (Diactus), All automatic workflows of VME are initiated and monitored from here.
-- Vme online delivery :: (vmeod*) Presenting video's to visitors
-- Vme online transcoder :: (vmeot*) Transcoding video's from one format to another, either live or as a batch process. 
+
+/VME Online:/
+- Controller :: (vmeoc) VME Admin web interface (Diactus), All automatic workflows of VME are initiated and monitored from here. Usually a VMEO control server can perform all roles in a VMEO service but delegates to other VMEO machines in order to scale for required transcoding capacity and delivery capacity.
+- Delivery :: (vmeod*) Presenting video's to visitors either by streaming protocols or file transfer protocols.
+- Transcoder :: (vmeot*) Transcoding video's from one format to another, either live or as a batch process. 
+
+/Escenic:/
 - Escenic Presentation :: (pres*) Generating webpages by merging content from a database with html from JSP files.
 - Escenic Editorial :: (edit*) Content Studio webservice, Imports
 - Escenic Analysis :: (analysis) Counting pageimpressions for use by the webpages to present lists that depend on performance of specific content items.
 
-** Virtual roles
+** Virtual roles and IP addresses
+We use virtual roles for internal services. Internal services have a danger to be a single point of failure so we must distribute the capability to perform an internal service over multiple machines. Many machines should have the ability to perform a server role but only one server should actually play the role at any time.
 
-- analysis :: the analysis webservices that are currently in production
-- edit :: Content Studio webservice and Indexer Webservice that are currently in production
-- import :: All periodic downloads of external content currently going on.
-- nfs-master :: The filesharing server that is curently in production.
-- nfs-slave :: The filesharing server that is curently in production.
-- pres* :: The presentation hosts currently configured on the loadbalancer
-- control :: The control service currently in production
-- mon :: The monitoring service currently in production
+When a machine assumes a role it often claims the corresponding [[http://en.wikipedia.org/wiki/Virtual_IP_address][virtual IP address]] (VIP). A VIP can sometimes be claimed automatically if a [[http://en.wikipedia.org/wiki/Heartbeat_(program)][Linux-HA setup]] is installed.
+
+/General:/
+- Control :: (control) The control service currently in production
+- Monitoring :: (mon) The monitoring service currently in production
+
+/VME-online:/
+- Controller :: The server that happens to run the database and the JBOSS server containing the Diactus Web Application.
+
+/Escenic:/
+- Analysis :: (analysis) the analysis webservices that are currently in production
+- Editorial :: (edit) Content Studio webservice and Indexer Webservice that are currently in production
+- Import jobs :: (import) All periodic downloads of external content currently going on.
+- NFS master :: (nfs-master) The filesharing server that is curently in production.
+- NFS slave :: (nfs-slave) The filesharing server that is curently in production.
+- Presentation :: (pres*) The presentation hosts currently configured on the loadbalancer
 
