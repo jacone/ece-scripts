@@ -62,15 +62,28 @@ $ ssh-add -l
 
 ** Generate an SSH key on Windows
 
-*** Generating an SSH key Using Putty for Windows
+*** Using Putty
 
-- Install the full Putty package including puttygen by using the Windows Installaller that is downloadable [[http://putty][here]]
-- Run puttygen
-- Choose to generate an RSA key
-  - *Add a passphrase* before saving
-- Save the key both as a .ppk and as a .des file
-*** TODO finish this 
+1. Install the full Putty package including puttygen by using the Windows Installaller that is downloadable [[http://putty][here]]
+2. Run puttygen
+3. Generate your personal key (It wants you to move your mouse around a bit)
+[[./graphics/puttygen1.png]]
+4. Give your key a name and enter a passphrase. We use keys for better security. Choosing a weak password will not help. It is called a [[http://en.wikipedia.org/wiki/Passphrase][passphrase]] because your are expected to enter a sentence and not just a word.
+[[./graphics/puttygen2.png]]
 
+/Storing your key:/
+Make a directory like C:\Users\thv.VIZRTINT\.ssh. Do not spread your key around further. If you loose your key because your laptop crashes, you can allways create a new one. Save your key as .pkk and as .pem
+- Save your key in and Privacy-enhanced Electronic Mail format(.pem)
+[[./graphics/puttygen3.png]]
+
+- Save your key in a Putty Private Key File(.pkk) 
+[[./graphics/puttygen4.png]]
+
+****Using Pagent
+Pagent is Putties [[http://en.wikipedia.org/wiki/Ssh-agent][SSH agent]]. Using am SSH agent makes the use of keys a lot easier. An SSH agent runs in the background to supply a key to any putty-ssh login you might perform during the day without retyping your passphrase.
+
+Pagent lets you load keys interactively or on the command line.
+[[./graphics/pagent.png]]
 
 *** Using Cygwin
 
