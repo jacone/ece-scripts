@@ -1,26 +1,24 @@
 * Host naming conventions
-Host names play a role in the Internet wide DNS system. Host names to find ip addresses. A host name can identify 0 or more ip addresses. Valid ip addresses might vary depending on the client network.
-
 This document assumes that you know how the global DNS system works.
 
-** What we use host names for
+Using hostnames to reach a service is preferred over using IP addresses directly because it gives us more routing flexibility. We can for instance change the IP address of a service without changing the client configuration.
 
-Paractical networking requires operators and machines to know about the ip addresses of the  machines in the network. IP adresses are not very descriptive so it is a good practice to use hostnames to refer to IP addresses. 
+We have a standard for naming hosts and the following text describes it.
 
 ** Machine roles
 
 The follwing machine roles are common in VOSA clusters:
 
-/General:/
+*** General
 - Control :: (control) Ssh entrypoint operators
 - Monitoring :: (mon) Presenting operational performance trends and sending out events when performance or capacity limits are exceded.
 
-/VME Online:/
+*** VME Online
 - Controller :: (vmeoc) VME Admin web interface (Diactus), All automatic workflows of VME are initiated and monitored from here. Usually a VMEO control server can perform all roles in a VMEO service but delegates to other VMEO machines in order to scale for required transcoding capacity and delivery capacity.
 - Delivery :: (vmeod*) Presenting video's to visitors either by streaming protocols or file transfer protocols.
 - Transcoder :: (vmeot*) Transcoding video's from one format to another, either live or as a batch process. 
 
-/Escenic:/
+*** Escenic
 - Escenic Presentation :: (pres*) Generating webpages by merging content from a database with html from JSP files.
 - Escenic Editorial :: (edit*) Content Studio webservice, Imports
 - Escenic Analysis :: (analysis) Counting pageimpressions for use by the webpages to present lists that depend on performance of specific content items.
@@ -30,16 +28,16 @@ We use virtual roles for internal services. Internal services are often a single
 
 When a machine assumes a role it often claims the corresponding [[http://en.wikipedia.org/wiki/Virtual_IP_address][virtual IP address]] (VIP). A VIP can sometimes be claimed automatically if a [[http://en.wikipedia.org/wiki/Heartbeat_(program)][Linux-HA setup]] is installed.
 
-/General:/
+*** General
 
 - Control :: (control) The control service currently in production
 - Monitoring :: (mon) The monitoring service currently in production
 
-/VME-online:/
+*** VME-online
 
 - Controller :: The server that happens to run the database and the JBOSS server containing the Diactus Web Application.
 
-/Escenic:/
+*** Escenic
 
 - Analysis :: (analysis) the analysis webservices that are currently in production
 - Editorial :: (edit) Content Studio webservice and Indexer Webservice that are currently in production
@@ -53,6 +51,8 @@ We have use a standard nameing scheme for all machines and virtual roles that we
 
 /We use the following syntax:/
 <machine role>.<network name>.<customercode>.cust.vizrtsaas.com
+
+*** <%= trail_customer_shortname %> naming scheme
 
 | <%= trail_customer_shortname %> customer code     | <%= trail_customer_acronym %>                                                            |
 | <%= trail_customer_shortname %> remote datacentre | <%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
