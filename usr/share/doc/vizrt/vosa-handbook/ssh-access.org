@@ -64,11 +64,12 @@ $ ssh-add -l
 
 *** Using Putty
 
-1. Install the full Putty package including puttygen by using the Windows Installaller that is downloadable [[http://putty][here]]
-2. Run puttygen
-3. Generate your personal key (It wants you to move your mouse around a bit)
+/Generating your key:/
+- Install the full Putty package including puttygen by using the Windows Installaller that is downloadable [[http://putty][here]]
+- Run puttygen
+- Generate your personal key (It wants you to move your mouse around a bit)
 [[./graphics/puttygen1.png]]
-4. Give your key a name and enter a passphrase. We use keys for better security. Choosing a weak password will not help. It is called a [[http://en.wikipedia.org/wiki/Passphrase][passphrase]] because your are expected to enter a sentence and not just a word.
+- Give your key a name and enter a passphrase. We use keys for better security. Choosing a weak password will not help. It is called a [[http://en.wikipedia.org/wiki/Passphrase][passphrase]] because your are expected to enter a sentence and not just a word.
 [[./graphics/puttygen2.png]]
 
 /Storing your key:/
