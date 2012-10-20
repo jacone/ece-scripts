@@ -45,3 +45,14 @@ When a machine assumes a role it often claims the corresponding [[http://en.wiki
 - NFS slave :: (nfs-slave) The filesharing server that is curently in production.
 - Presentation :: (pres*) The presentation hosts currently configured on the loadbalancer
 
+** VOSA standard Network naming
+We have use a standard nameing scheme for all machines and virtual roles that we control.
+
+/We use the following syntax:/
+<machine role>.<network name>.<customercode>.cust.vizrtsaas.com
+
+| <%= trail_customer_shortname %> customer code     | <%= trail_customer_acronym %>           |
+| <%= trail_customer_shortname %> remote datacentre | <%= trail_customer_remote_datacentre %> |
+| <%= trail_customer_shortname %> office network    | <%= trail_customer_office_network %>    |
+
+
