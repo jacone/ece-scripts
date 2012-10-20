@@ -73,6 +73,7 @@ $ ssh-add -l
 [[./graphics/puttygen2.png]]
 
 /Storing your key:/
+
 Make a directory like C:\Users\thv.VIZRTINT\.ssh. Do not spread your key around further. If you loose your key because your laptop crashes, you can allways create a new one. Save your key as .pkk and as .pem
 - Save your key in and Privacy-enhanced Electronic Mail format(.pem)
 [[./graphics/puttygen3.png]]
