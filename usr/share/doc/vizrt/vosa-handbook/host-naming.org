@@ -54,7 +54,7 @@ When a machine assumes a virtual role it often claims the corresponding [[http:/
 
 - Monitoring :: (mon.<ou>.cust.vizrtsaas.com) The monitoring role
 - Control :: (control.<ou>.cust.vizrtsaas.com) The control role 
-- Proxy Gateway :: (httpproxy.<network>.<ou>.vizrtsaas.com)
+- Proxy Gateway :: (proxy-<network>.<ou>.vizrtsaas.com)
 
 *** VME-online
 
