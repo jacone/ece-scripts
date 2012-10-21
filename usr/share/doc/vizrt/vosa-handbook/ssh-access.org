@@ -81,7 +81,7 @@ Make a directory like C:\Users\thv.VIZRTINT\.ssh. Do not spread your key around 
 - Save your key in a Putty Private Key File(.pkk) 
 [[./graphics/puttygen4.png]]
 
-****Using Pagent
+**** Using Pagent
 Pagent is Putties [[http://en.wikipedia.org/wiki/Ssh-agent][SSH agent]]. Using am SSH agent makes the use of keys a lot easier. An SSH agent runs in the background to supply a key to any putty-ssh login you might perform during the day without retyping your passphrase.
 
 Pagent lets you load keys interactively or on the command line.
