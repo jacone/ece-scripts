@@ -11,11 +11,12 @@ We use a standard naming scheme for all machines and virtual roles that we contr
 - <network name> :: Often named after a location or a datacenter provider.
 - <machine role> :: A name that reflects the capabilities of the machine. It might not perform all of those capabilities at all times.
 - <virtual role> :: A name that reflects a specific role that is performed. One machine can have more than one virtual role. 
+- <ou> :: The lowercase name that represents an organizational unit often referred to as a customer or company.
 
 Applying the above to make full names:
 
-- Machine roles :: <machine role>.<network name>.<customercode>.cust.vizrtsaas.com
-- Virtual roles :: <virtual role>.<customercode>.cust.vizrtsaas.com
+- Machine roles :: <machine role>.<network name>.<ou>.cust.vizrtsaas.com
+- Virtual roles :: <virtual role>.<ou>.cust.vizrtsaas.com
 
 ** <%= trail_customer_shortname %> Network naming
 
@@ -50,22 +51,22 @@ When a machine assumes a virtual role it often claims the corresponding [[http:/
 
 *** Virtual role names
 
-- Control :: (control.<customer_acronym>.cust.vizrtsaas.com) The control role 
-- Monitoring :: (mon.<customer_acronym>.cust.vizrtsaas.com) The monitoring role
+- Control :: (control.<ou>.cust.vizrtsaas.com) The control role 
+- Monitoring :: (mon.<ou>.cust.vizrtsaas.com) The monitoring role
 
 *** VME-online
 
-- Controller :: (vmeoc.<customer_acronym>.cust.vizrtsaas.com) The virtual role of runing the database and the JBOSS server containing the Diactus Web Application. VMEO machines are all installed with all VMEO capabilities (Escenic migrating to the same policy but is not quite there yet)
-- Transcoder :: (vmeot*.<customer_acronym>.cust.vizrtsaas.com) Providing transcoding capacity to the controller.
-- Delivery :: (vmeod*.<customer_acronym>.cust.vizrtsaas.com) Endpoint for publishing video on demand and live video streaming.
+- Controller :: (vmeoc.<ou>.cust.vizrtsaas.com) The virtual role of runing the database and the JBOSS server containing the Diactus Web Application. VMEO machines are all installed with all VMEO capabilities (Escenic migrating to the same policy but is not quite there yet)
+- Transcoder :: (vmeot*.<ou>.cust.vizrtsaas.com) Providing transcoding capacity to the controller.
+- Delivery :: (vmeod*.<ou>.cust.vizrtsaas.com) Endpoint for publishing video on demand and live video streaming.
 
 *** Escenic
 
-- Analysis :: (analysis.<customer_acronym>.cust.vizrtsaas.com) the analysis webservices
-- Editorial :: (edit.<customer_acronym>.cust.vizrtsaas.com) Content Studio webservice and Indexer Webservice. Currently ther can only be one.
-- Import jobs :: (import.<customer_acronym>.cust.vizrtsaas.com) All periodic downloads of external content currently going on.
-- NFS master :: (nfs.<customer_acronym>.cust.vizrtsaas.com) The nfs server
-- Presentation :: (pres*.<customer_acronym>.cust.vizrtsaas.com) The presentation hosts currently configured on the loadbalancer.
+- Analysis :: (analysis.<ou>.cust.vizrtsaas.com) the analysis webservices
+- Editorial :: (edit.<ou>.cust.vizrtsaas.com) Content Studio webservice and Indexer Webservice. Currently ther can only be one.
+- Import jobs :: (import.<ou>.cust.vizrtsaas.com) All periodic downloads of external content currently going on.
+- NFS master :: (nfs.<ou>.cust.vizrtsaas.com) The nfs server
+- Presentation :: (pres*.<ou>.cust.vizrtsaas.com) The presentation hosts currently configured on the loadbalancer.
 
 
 
