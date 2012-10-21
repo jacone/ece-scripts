@@ -43,19 +43,20 @@ When a machine assumes a role it often claims the corresponding [[http://en.wiki
 - Editorial :: (edit) Content Studio webservice and Indexer Webservice that are currently in production
 - Import jobs :: (import) All periodic downloads of external content currently going on.
 - NFS master :: (nfs-master) The filesharing server that is curently in production.
-- NFS slave :: (nfs-slave) The filesharing server that is curently in production.
+- NFS slave :: (nfs-slave) The backup filesharing server that is curently in production and should represent the exact same content as the master with a slight.
 - Presentation :: (pres*) The presentation hosts currently configured on the loadbalancer
 
-** VOSA Network naming
-We have use a standard nameing scheme for all machines and virtual roles that we control.
+** VOSA standard network naming
+We use a standard naming scheme for all machines and virtual roles that we control.
 
-/We use the following syntax:/
 <machine role>.<network name>.<customercode>.cust.vizrtsaas.com
+<virtual role>.<customercode>.cust.vizrtsaas.com
 
-*** <%= trail_customer_shortname %> naming scheme
+** <%= trail_customer_shortname %> Network naming
 
-| <%= trail_customer_shortname %> customer code     | <%= trail_customer_acronym %>                                                            |
-| <%= trail_customer_shortname %> remote datacentre | <%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
-| <%= trail_customer_shortname %> office network    | <%= trail_customer_office_network %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com    |
+| <%= trail_customer_shortname %> customer network  | <%= trail_customer_acronym %>                                                            |
+| <%= trail_customer_shortname %> remote virtual roles     | <vrtual role><%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
+| <%= trail_customer_shortname %> remote datacentre assets | <machine role><%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
+| <%= trail_customer_shortname %> office network assets | <machine role><%= trail_customer_office_network %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
 
 
