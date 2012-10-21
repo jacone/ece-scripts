@@ -1,5 +1,5 @@
-* Host naming conventions
-This document assumes that you know how the global DNS system works.
+* VOSA DNS naming conventions  
+This document assumes knowledge of the [[http://en.wikipedia.org/wiki/Domain_Name_System][global DNS system]].
 
 Using hostnames to reach a service is preferred over using IP addresses directly because it gives us more routing flexibility. We can for instance change the IP address of a service without changing the client configuration.
 
@@ -20,24 +20,24 @@ Applying the above to make full names:
 
 ** <%= trail_customer_shortname %> Network naming
 
-| <%= trail_customer_shortname %> customer domain name         | <%= trail_customer_acronym %>.cuts.vizrtsaas.com                                                       |
+| <%= trail_customer_shortname %> customer domain name         | <%= trail_customer_acronym %>.cust.vizrtsaas.com                                                       |
 | <%= trail_customer_shortname %> virtual role names        | <vrtual role>.<%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
 | <%= trail_customer_shortname %> remote datacentre assets | <machine role>.<%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
 | <%= trail_customer_shortname %> office network assets    | <machine role>.<%= trail_customer_office_network %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com   |
 
 
-** Machine role names
+** Machine names
 
-The names of machine roles should reflect their capabilities to perform specific virtual roles. It is our goal to install machines in ways that allow to perform as many virtual roles as possible. However we are not quite there yet so many standard machine names resemble virtual role names.
+The names of machine should reflect their capabilities to perform specific virtual roles. It is our goal to install machines in ways that allow to perform as many virtual roles as possible. However we are not quite there yet so many standard machine names resemble virtual role names.
 
-The follwing machine roles are common in VOSA clusters:
+The follwing machine names are common in VOSA clusters:
 
 *** General
-- Control :: (control) Dedicated machine to perform as an  Ssh entrypoint operators. 
-- Monitoring :: (mon) Dedicated machine that harvests samples of performance metrics from all the VOSA cluster machines and sending out events when performance or capacity limits are exceded.
+- Control :: (control) Dedicated machine to perform as an SSH entrypoint for operators. 
+- Monitoring :: (mon) Dedicated machine that harvest samples of performance metrics from all the machines and sending out events when performance or capacity limits are exceded.
 
 *** VME Online
-- Controller :: (vmeo*) All VME-online machines are able to perform all possible VME-online virtual roles. They are simply numbered. 
+- VME-Online :: (vmeo*) All VME-online machines are able to perform all possible VME-online virtual roles. They are simply numbered. 
 
 *** Escenic
 - Escenic Presentation :: (pres*) Dedicated machine for generating webpages by merging content from a database with html from JSP files.
