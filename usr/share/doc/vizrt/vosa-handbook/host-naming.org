@@ -21,7 +21,7 @@ Applying the above to make full names:
 ** <%= trail_customer_shortname %> Network naming
 
 | <%= trail_customer_shortname %> customer domain name         | <%= trail_customer_acronym %>.cust.vizrtsaas.com                                                       |
-| <%= trail_customer_shortname %> virtual role names        | <vrtual role>.<%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
+| <%= trail_customer_shortname %> virtual role names        | <vrtual role>.<%= trail_customer_acronym %>.cust.vizrtsaas.com                                         |
 | <%= trail_customer_shortname %> remote datacentre assets | <machine>.<%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com      |
 | <%= trail_customer_shortname %> office network assets    | <machine>.<%= trail_customer_office_network %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com        |
 
