@@ -16,7 +16,8 @@ We use a standard naming scheme for all machines and virtual roles that we contr
 Applying the above to make full names:
 
 - Machine roles :: <machine>.<network>.<ou>.cust.vizrtsaas.com
-- Virtual roles :: <virtual role>.<ou>.cust.vizrtsaas.com
+- Global virtual roles :: <virtual role>.<ou>.cust.vizrtsaas.com
+- Local virtual roles :: <virtual role>.<network>.<ou>.cust.vizrtsaas.com 
 
 ** <%= trail_customer_shortname %> Network naming
 
@@ -51,8 +52,9 @@ When a machine assumes a virtual role it often claims the corresponding [[http:/
 
 *** Virtual role names
 
-- Control :: (control.<ou>.cust.vizrtsaas.com) The control role 
 - Monitoring :: (mon.<ou>.cust.vizrtsaas.com) The monitoring role
+- Control :: (control.<ou>.cust.vizrtsaas.com) The control role 
+- Proxy Gateway :: (httpproxy.<network>.<ou>.vizrtsaas.com)
 
 *** VME-online
 
