@@ -8,14 +8,14 @@ We have a standard for naming policy for machines and their roles. The following
 ** VOSA standard network naming
 We use a standard naming scheme for all machines and virtual roles that we control. These names are built up out of the following name components: 
 
-- <network name> :: Often named after a location or a datacenter provider.
-- <machine role> :: A name that reflects the capabilities of the machine. It might not perform all of those capabilities at all times.
+- <network> :: Often named after a location or a datacenter provider.
+- <machine> :: A name that reflects the capabilities of the machine. It might not perform all of those capabilities at all times.
 - <virtual role> :: A name that reflects a specific role that is performed. One machine can have more than one virtual role. 
 - <ou> :: The lowercase name that represents an organizational unit often referred to as a customer or company.
 
 Applying the above to make full names:
 
-- Machine roles :: <machine role>.<network name>.<ou>.cust.vizrtsaas.com
+- Machine roles :: <machine>.<network>.<ou>.cust.vizrtsaas.com
 - Virtual roles :: <virtual role>.<ou>.cust.vizrtsaas.com
 
 ** <%= trail_customer_shortname %> Network naming
