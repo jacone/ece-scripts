@@ -3,60 +3,69 @@ This document assumes that you know how the global DNS system works.
 
 Using hostnames to reach a service is preferred over using IP addresses directly because it gives us more routing flexibility. We can for instance change the IP address of a service without changing the client configuration.
 
-We have a standard for naming hosts and the following text describes it.
+We have a standard for naming policy for machines and their roles. The following paragraphs describes it.
 
-** Machine roles
+** VOSA standard network naming
+We use a standard naming scheme for all machines and virtual roles that we control. These names are built up out of the following name components: 
+
+- <network name> :: Often named after a location or a datacenter provider.
+- <machine role> :: A name that reflects the capabilities of the machine. It might not perform all of those capabilities at all times.
+- <virtual role> :: A name that reflects a specific role that is performed. One machine can have more than one virtual role. 
+
+Applying the above to make full names:
+
+- Machine roles :: <machine role>.<network name>.<customercode>.cust.vizrtsaas.com
+- Virtual roles :: <virtual role>.<customercode>.cust.vizrtsaas.com
+
+** <%= trail_customer_shortname %> Network naming
+
+| <%= trail_customer_shortname %> customer domain name         | <%= trail_customer_acronym %>.cuts.vizrtsaas.com                                                       |
+| <%= trail_customer_shortname %> virtual role names        | <vrtual role>.<%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
+| <%= trail_customer_shortname %> remote datacentre assets | <machine role>.<%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
+| <%= trail_customer_shortname %> office network assets    | <machine role>.<%= trail_customer_office_network %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com   |
+
+
+** Machine role names
+
+The names of machine roles should reflect their capabilities to perform specific virtual roles. It is our goal to install machines in ways that allow to perform as many virtual roles as possible. However we are not quite there yet so many standard machine names resemble virtual role names.
 
 The follwing machine roles are common in VOSA clusters:
 
 *** General
-- Control :: (control) Ssh entrypoint operators
-- Monitoring :: (mon) Presenting operational performance trends and sending out events when performance or capacity limits are exceded.
+- Control :: (control) Dedicated machine to perform as an  Ssh entrypoint operators. 
+- Monitoring :: (mon) Dedicated machine that harvests samples of performance metrics from all the VOSA cluster machines and sending out events when performance or capacity limits are exceded.
 
 *** VME Online
-- Controller :: (vmeoc) VME Admin web interface (Diactus), All automatic workflows of VME are initiated and monitored from here. Usually a VMEO control server can perform all roles in a VMEO service but delegates to other VMEO machines in order to scale for required transcoding capacity and delivery capacity.
-- Delivery :: (vmeod*) Presenting video's to visitors either by streaming protocols or file transfer protocols.
-- Transcoder :: (vmeot*) Transcoding video's from one format to another, either live or as a batch process. 
+- Controller :: (vmeo*) All VME-online machines are able to perform all possible VME-online virtual roles. They are simply numbered. 
 
 *** Escenic
-- Escenic Presentation :: (pres*) Generating webpages by merging content from a database with html from JSP files.
-- Escenic Editorial :: (edit*) Content Studio webservice, Imports
-- Escenic Analysis :: (analysis) Counting pageimpressions for use by the webpages to present lists that depend on performance of specific content items.
+- Escenic Presentation :: (pres*) Dedicated machine for generating webpages by merging content from a database with html from JSP files.
+- Escenic Editorial :: (edit*) Dedicated machine for Content Studio webservice, Imports
+- Escenic Analysis :: (analysis) Dedicated machine for counting pageimpressions for use by the webpages to present lists that depend on performance of specific content items.
 
 ** Virtual roles and IP addresses
-We use virtual roles for internal services. Internal services are often a single point of failure so we must distribute the capability to perform internal services over multiple machines. Many machines should have the ability to perform any vrtual role but only one machine should actually play the role at any time.
+Virtual roles are often a single point of failure so we must distribute the capability to perform any virual role over multiple machines or privide very easy restore from a backup. Many machines should have the ability to perform a virtual role but at least one machine should actually play the virtual role at any time. If a virtual role  is clustered, the virtual role hostname might resolve to several ip addresses or the virtual role hostnames might be numbered.
 
-When a machine assumes a role it often claims the corresponding [[http://en.wikipedia.org/wiki/Virtual_IP_address][virtual IP address]] (VIP). A VIP can sometimes be claimed automatically if a [[http://en.wikipedia.org/wiki/Heartbeat_(program)][Linux-HA setup]] is installed.
+When a machine assumes a virtual role it often claims the corresponding [[http://en.wikipedia.org/wiki/Virtual_IP_address][virtual IP address]] (VIP). A VIP can sometimes be claimed automatically if a [[http://en.wikipedia.org/wiki/Heartbeat_(program)][Linux-HA setup]] is installed.
 
-*** General
+*** Virtual role names
 
-- Control :: (control) The control service currently in production
-- Monitoring :: (mon) The monitoring service currently in production
+- Control :: (control.<customer_acronym>.cust.vizrtsaas.com) The control role 
+- Monitoring :: (mon.<customer_acronym>.cust.vizrtsaas.com) The monitoring role
 
 *** VME-online
 
-- Controller :: The server that happens to run the database and the JBOSS server containing the Diactus Web Application.
+- Controller :: (vmeoc.<customer_acronym>.cust.vizrtsaas.com) The virtual role of runing the database and the JBOSS server containing the Diactus Web Application. VMEO machines are all installed with all VMEO capabilities (Escenic migrating to the same policy but is not quite there yet)
+- Transcoder :: (vmeot*.<customer_acronym>.cust.vizrtsaas.com) Providing transcoding capacity to the controller.
+- Delivery :: (vmeod*.<customer_acronym>.cust.vizrtsaas.com) Endpoint for publishing video on demand and live video streaming.
 
 *** Escenic
 
-- Analysis :: (analysis) the analysis webservices that are currently in production
-- Editorial :: (edit) Content Studio webservice and Indexer Webservice that are currently in production
-- Import jobs :: (import) All periodic downloads of external content currently going on.
-- NFS master :: (nfs-master) The filesharing server that is curently in production.
-- NFS slave :: (nfs-slave) The backup filesharing server that is curently in production and should represent the exact same content as the master with a slight.
-- Presentation :: (pres*) The presentation hosts currently configured on the loadbalancer
+- Analysis :: (analysis.<customer_acronym>.cust.vizrtsaas.com) the analysis webservices
+- Editorial :: (edit.<customer_acronym>.cust.vizrtsaas.com) Content Studio webservice and Indexer Webservice. Currently ther can only be one.
+- Import jobs :: (import.<customer_acronym>.cust.vizrtsaas.com) All periodic downloads of external content currently going on.
+- NFS master :: (nfs.<customer_acronym>.cust.vizrtsaas.com) The nfs server
+- Presentation :: (pres*.<customer_acronym>.cust.vizrtsaas.com) The presentation hosts currently configured on the loadbalancer.
 
-** VOSA standard network naming
-We use a standard naming scheme for all machines and virtual roles that we control.
-
-<machine role>.<network name>.<customercode>.cust.vizrtsaas.com
-<virtual role>.<customercode>.cust.vizrtsaas.com
-
-** <%= trail_customer_shortname %> Network naming
-
-| <%= trail_customer_shortname %> customer network  | <%= trail_customer_acronym %>                                                            |
-| <%= trail_customer_shortname %> remote virtual roles     | <vrtual role><%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
-| <%= trail_customer_shortname %> remote datacentre assets | <machine role><%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
-| <%= trail_customer_shortname %> office network assets | <machine role><%= trail_customer_office_network %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com |
 
 
