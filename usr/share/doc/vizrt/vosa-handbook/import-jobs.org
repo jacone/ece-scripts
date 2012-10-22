@@ -36,7 +36,7 @@ Engine.
 
 *** Pulling content from an FTP server
 We have ready made BASH libraries to do this. You only need to put a
-file in =moo/cron.hourly/get-files-from-moo-ftp= like:
+file in =mybub/moo/cron.hourly/get-files-from-moo-ftp= like:
 
 #+BEGIN_SRC text
 #! /usr/bin/env bash
@@ -59,6 +59,18 @@ fix_ownership_of_download_files
 echo $0 "finished @ $(date)" >> $log
 #+END_SRC
 
+The only values you need to touch is are:
+- =ftp_user=
+- =ftp_password=
+- =ftp_url= :: full URL to the directory on the FTP server.
+- =download_dir= :: it's really just the =/mypub/moo= part of the
+                    above example you'd  have to change.
+
+The rest of the options should do just fine. If you really want to
+tweak, you can of course decide how far back you want each run of the
+job to look for files (it will only download each file once) by
+setting =max_file_age_in_hours=.
+
 This will give you many features including:
 - lock file support :: only one instance of your cron FTP script will
   run at any given point in time.
@@ -70,15 +82,16 @@ This will give you many features including:
 When an import job has been deployed by VOSA, it will be put into the
 these directories.
 
-|--------------------------------------------------+--------------------------------------|
-| Path                                             | Description                          |
-|--------------------------------------------------+--------------------------------------|
-| =/usr/share/escenic/engine/import/<pub>/<job>=   | The transformers, such as XSLs       |
-| =/var/spool/escenic/import//<pub>/<job>/new=     | The 3rd party data (XML) feed        |
-| =/var/spool/escenic/import//<pub>/<job>/error=   | Failed 3rd party XML files           |
-| =/var/spool/escenic/import//<pub>/<job>/archive= | Successful 3rd party XML files       |
-| =/etc/cron.hourly/get-files-from-moo-ftp=        | Hourly cron job to get files via FTP |
-|--------------------------------------------------+--------------------------------------|
+|-------------------------------------------------+--------------------------------------|
+| Path                                            | Description                          |
+|-------------------------------------------------+--------------------------------------|
+| =/usr/share/escenic/engine/import/<pub>/<job>=  | The transformers, such as XSLs       |
+| =/var/spool/escenic/import/<pub>/<job>/new=     | The 3rd party data (XML) feed        |
+| =/var/spool/escenic/import/<pub>/<job>/error=   | Failed 3rd party XML files           |
+| =/var/spool/escenic/import/<pub>/<job>/archive= | Successful 3rd party XML files       |
+| =/etc/cron.hourly/<your cron script>=           | Hourly cron job to get files via FTP |
+|-------------------------------------------------+--------------------------------------|
+
 
 
 
