@@ -8,12 +8,13 @@ between sub words.
 When creating a new import job for your project, the following
 structure is required. We're calling the import job =moo= since we're
 setting up an import feed from our imaginary content provider, "Moo
-Cool Videos".
+Cool Videos" and our publication is the ubiquitous =mypub=.
 
 #+BEGIN_SRC text
-moo/xsl/01-convert-all-cows-to-ducks.xsl
-moo/xsl/02-convert-duck-to-escenic-xml.xsl
-moo/cron.hourly/get-files-from-moo-ftp
+$ unzip -timport-jobs.zip
+mypub/moo/xsl/01-convert-all-cows-to-ducks.xsl
+mypub/moo/xsl/02-convert-duck-to-escenic-xml.xsl
+mypub/moo/cron.hourly/get-files-from-moo-ftp
 #+END_SRC
 
 As you can guess from the file names, the
