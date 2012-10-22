@@ -3,9 +3,24 @@
 Log on to the build server as the user for the given habitat and run
 the build script:
 
+To log onto the builder:
 #+BEGIN_SRC sh
 $ ssh <%= trail_builder_user %>@<%= trail_builder_host %>
+#+END_SRC
+
+To build trunk:
+#+BEGIN_SRC sh
 $ ece-build
+#+END_SRC
+
+To build from a tag in subversion:
+#+BEGIN_SRC sh
+$ ece-build -t <tagname>
+#+END_SRC
+
+To build trunk:
+#+BEGIN_SRC sh
+$ ece-build -b <branchname>
 #+END_SRC
 
 Once the build is done, the URI of the finished EAR file is printed in
