@@ -1,5 +1,27 @@
 * Deployment
 ** Building a new EAR file
+*** Build from from your Hipchat room
+You can start a build right from your chatroom!
+
+Go to the <%= trail_customer_shortname %> Hipchat room named: <%= trail_customer_hipchat_room_name %> or goto Hipchat in your [[https://vizrtcustomers.hipchat.com/chat][browser]].
+
+when you are in the chatroom type:
+#+BEGIN_SRC sh
+guru: build trunk
+#+END_SRC
+(As of this writing it was not possible to build from a tag or a branch yet)
+
+The chatroom will report on the progress of your build but if you are impatient you can type:
+#+BEGIN_SRC sh
+guru: jobs
+#+END_SRC
+
+Once the build is done, the URI of the finished EAR file is printed in
+the chat room. This is the URI you use for the 'ece deploy' command below.
+
+In future you will also be able to deploy an ear to staging in the chatroom.
+
+*** Build from the command line on your builder
 Log on to the build server as the user for the given habitat and run
 the build script:
 
