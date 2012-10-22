@@ -11,10 +11,11 @@ setting up an import feed from our imaginary content provider, "Moo
 Cool Videos" and our publication is the ubiquitous =mypub=.
 
 #+BEGIN_SRC text
-$ unzip -timport-jobs.zip
+$ unzip -t import-jobs.zip
 mypub/moo/xsl/01-convert-all-cows-to-ducks.xsl
 mypub/moo/xsl/02-convert-duck-to-escenic-xml.xsl
 mypub/moo/cron.hourly/get-files-from-moo-ftp
+otherpub/foo/xsl/01-convert-from-foo-to-escenic-xml.xsl
 #+END_SRC
 
 As you can guess from the file names, the
