@@ -4,6 +4,9 @@
 All file and directory names are to be lower cased with hyphens
 between sub words.
 
+All import jobs delivered to the VOSA operators is a =zip=
+archive with a strict structure, as defined in [[Specifying an import job]]
+
 ** Specifying an import job
 When creating a new import job for your project, the following
 structure is required. We're calling the import job =moo= since we're
