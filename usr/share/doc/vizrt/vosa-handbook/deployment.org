@@ -55,16 +55,31 @@ the shell. This is the URI you use for the 'ece deploy' command below.
 In the examples here, we have a build server on <%= trail_builder_host %>
 where we build EARs for the the <%= trail_builder_user %> website.
 
-** Deploying to a production system
+*** Preparing to deploy to production
+If you have changes to be deployed to production you should follow the next checklist:
+1. Find out whitch EAR is running in production today.
+2. Ensure that your EAR is running on staging and a smoketest has been performed.
+2. Make release notes:
+  1. Collect all subversion changes that have made it into the EAR that you want to deploy by reviewing all Subversion commits since the last deploy.
+  2. List all the Jira from those Subversion commits.
+  3. Ensure that all those Jira issues are tested on staging and closed. If you cannot close one, make a new issue for the resulting work and close it anyway.
+3. Copy and paste the list of Jira issues in a support case (by email or otherwise) and make sure that the subject contains the name of the EAR file.
+4. Expect the support team to perform the deploy within 24 hours or call the support phonnumber ask ask them to do it earlier.
+5. If you are a support engineer yourself ask one of your colleagues to deploy to production and follow the checklist there. You shoud not prepare a deploy and than go ahead and deploy it yourself :-).
+
+*** Deploying to a production system
 Deployments to production are only done by operators in the Support group of Vizrt Online in Dhaka or Oslo.
-If you are getting ready to depoy to a production system you have to check the following prerequisites:
-1. Has the EAR been properly tested?
+If you are getting ready to depoy to a production system you have to follow the next checklist:
+0. Verify that you are not the same person who did the changes to the codes :-)
+1. Has the EAR been properly release tested?
+1. Has the EAR been properly smoke tested?
 2. Do the release notes match the changes made to the codes and do they make sense?
 3. Are the changes in the EAR causing you to feel that the service will fail after deploy?
 4. Is there a valid rollback scenario after deploying the change?
 5. Is someone you trust available to help you if you run into trouble rolling back?
 6. Does the site on staging show the differences expected when reading the release notes?
 If any of these prerequisites is not in place you should refuse the deploy request and notify the user how they can convince you to perform the deploy.
+
 
 ** Make sure you can roll back
 Before deploying a new EAR, take note of the previously deployed EAR
@@ -83,7 +98,7 @@ If anything goes wrong in [[Deploying%20a%20new%20EAR%20file%20for%20an%20ECE%0A
 instance]], you can just repeat the deployment steps with the URL of the
 previous EAR.
 
-*** Deploying a new EAR file for an ECE instance
+** Deploying a new EAR file for an ECE instance
 All the commands in this section is written to be executed on
 <%= trail_control_host %> (but you could of course also first log on to each
 of the servers and run the commands locally there).
@@ -114,7 +129,7 @@ $ sudo ssh root@<%= trail_presentation_host %> /etc/init.d/ece status
 [ece#search-search1] UP 0d 0h 11m 42s
 #+END_SRC
 
-*** Deploying a new EAR file for a search instance
+** Deploying a new EAR file for a search instance
 The search instance is special in that you have to specify the type
 parameter. Apart from this, the command is identical. You'll see that
 the search instance has a different deployment white list than that of
