@@ -9,7 +9,27 @@ archive with a strict structure, as defined in [[Specifying an import job]]
 
 ** Specifying an import job
 When creating a new import job for your project, the following
-structure is required. We're calling the import job =moo= since we're
+structure is required:
+
+#+BEGIN_SRC text
+<publication>/<import name>
+<publication>/<import name>/xsl/<number>-<transformer task>.xsl
+<publication>/<import name>/cron.hourly/<cron job script>
+#+END_SRC
+
+- publication name :: the name of the publication for which the import
+     job(s) are defined. You can have more than one publication in
+     each =zip= archive.
+- import job name :: lowercase with hyphens between words (if more
+     than one)
+- xsl :: directory with files prefixed with =<number>-=, indicating
+         the order of transformation to apply to your import job. 
+- cron.hourly :: scripts to be run every our. These will be put in
+                 =/etc/cron.hourly= on the import server. Be sure to
+                 set the execute bit on the file and note that as with
+                 all cron jobs, the file cannot have a file suffix.
+
+We're calling the import job =moo= since we're
 setting up an import feed from our imaginary content provider, "Moo
 Cool Videos" and our publication is the ubiquitous =mypub=.
 
@@ -27,24 +47,6 @@ the incoming data (normally XML) and the
 =02-convert-duck-to-escenic-xml.xsl= will be applied next before the
 resulting Escenic XML will be imported into the Escenic Content
 Engine.
-
-#+BEGIN_SRC text
-<publication>/<import name>
-<publication>/<import name>/xsl
-<publication>/<import name>/cron.hourly
-#+END_SRC
-
-- publication name :: the name of the publication for which the import
-     job(s) are defined. You can have more than one publication in
-     each =zip= archive.
-- import job name :: lowercase with hyphens between words (if more
-     than one)
-- xsl :: directory with files prefixed with =<number>-=, indicating
-         the order of transformation to apply to your import job. 
-- cron.hourly :: scripts to be run every our. These will be put in
-                 =/etc/cron.hourly= on the import server. Be sure to
-                 set the execute bit on the file and note that as with
-                 all cron jobs, the file cannot have a file suffix.
 
 *** Pulling content from an FTP server
 We have ready made BASH libraries to do this. You only need to put a
