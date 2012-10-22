@@ -1,5 +1,8 @@
 * Deployment
 ** Building a new EAR file
+In the examples here, we have a build server on <%= trail_builder_host %>
+where we build EARs for the the <%= trail_builder_user %> website.
+
 *** Build from from your Hipchat room
 You can start a build right from your chatroom!
 
@@ -52,6 +55,17 @@ the shell. This is the URI you use for the 'ece deploy' command below.
 In the examples here, we have a build server on <%= trail_builder_host %>
 where we build EARs for the the <%= trail_builder_user %> website.
 
+** Deploying to a production system
+Deployments to production are only done by operators in the Support group of Vizrt Online in Dhaka or Oslo.
+If you are getting ready to depoy to a production system you have to check the following prerequisites:
+1. Has the EAR been properly tested?
+2. Do the release notes match the changes made to the codes and do they make sense?
+3. Are the changes in the EAR causing you to feel that the service will fail after deploy?
+4. Is there a valid rollback scenario after deploying the change?
+5. Is someone you trust available to help you if you run into trouble rolling back?
+6. Does the site on staging show the differences expected when reading the release notes?
+If any of these prerequisites is not in place you should refuse the deploy request and notify the user how they can convince you to perform the deploy.
+
 ** Make sure you can roll back
 Before deploying a new EAR, take note of the previously deployed EAR
 so that you can easily roll back:
@@ -64,7 +78,8 @@ $ sudo ssh escenic@<%= trail_presentation_host %> ece -i engine1 info
 [ece#engine-engine1] |-> MD5 sum: 58638b16efc7f4cebd8d0acb4eecfb40
 #+END_SRC
 
-If anything goes wrong in [[Deploying a new EAR file for an ECE
+
+If anything goes wrong in [[Deploying%20a%20new%20EAR%20file%20for%20an%20ECE%0Ainstance][Deploying a new EAR file for an ECE
 instance]], you can just repeat the deployment steps with the URL of the
 previous EAR.
 
@@ -116,7 +131,7 @@ torstein@control:~$ sudo ssh escenic@<%= trail_presentation_host %> ece
 
 
 ** Updating Publication Resources
-This document describes how you update publication resources. Here, we
+This section describes how you update publication resources. Here, we
 use content-type as an example.
 
 The content type publication resource is special because it's merged
