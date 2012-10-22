@@ -1,0 +1,107 @@
+* Import Jobs
+
+** Conventions
+All file and directory names are to be lower cased with hyphens
+between sub words.
+
+All import jobs delivered to the VOSA operators is a =zip=
+archive with a strict structure, as defined in [[Specifying an import job]]
+
+** Specifying an import job
+When creating a new import job for your project, the following
+structure is required. We're calling the import job =moo= since we're
+setting up an import feed from our imaginary content provider, "Moo
+Cool Videos" and our publication is the ubiquitous =mypub=.
+
+#+BEGIN_SRC text
+$ unzip -t import-jobs.zip
+mypub/moo/xsl/01-convert-all-cows-to-ducks.xsl
+mypub/moo/xsl/02-convert-duck-to-escenic-xml.xsl
+mypub/moo/cron.hourly/get-files-from-moo-ftp
+otherpub/foo/xsl/01-convert-from-foo-to-escenic-xml.xsl
+#+END_SRC
+
+As you can guess from the file names, the
+=01-convert-all-cows-to-ducks.xsl= stylesheet will be first applied to
+the incoming data (normally XML) and the
+=02-convert-duck-to-escenic-xml.xsl= will be applied next before the
+resulting Escenic XML will be imported into the Escenic Content
+Engine.
+
+- import job name :: lowercase with hyphens between words (if more
+     than one)
+- xsl :: directory with files prefixed with =<number>-=, indicating
+         the order of transformation to apply to your import job. 
+- cron.hourly :: scripts to be run every our. These will be put in
+                 =/etc/cron.hourly= on the import server. Be sure to
+                 set the execute bit on the file and note that as with
+                 all cron jobs, the file cannot have a file suffix.
+
+*** Pulling content from an FTP server
+We have ready made BASH libraries to do this. You only need to put a
+file in =mybub/moo/cron.hourly/get-files-from-moo-ftp= like:
+
+#+BEGIN_SRC text
+#! /usr/bin/env bash
+source /usr/share/escenic/engine/import/common-import-functions.sh
+
+ftp_user="user@server.com"
+ftp_password="foobar"
+ftp_url=ftp://ftp.server.com/myfeed/
+download_dir=/var/spool/escenic/import/mypub/moo/new
+log=/var/log/escenic/cron.$(basename $0 .sh).log
+ftp_download_history=/var/lib/escenic/ftp-history-cron.$(basename $0 .sh)
+lock_file=/var/lock/$(basename $0 .sh).lock
+
+now=$(date +%s)
+max_file_age_in_hours=2000
+
+echo $0 "called @ $(date)" >> $log
+download_latest_ftp_files
+fix_ownership_of_download_files
+echo $0 "finished @ $(date)" >> $log
+#+END_SRC
+
+The only values you need to touch is are:
+- =ftp_user=
+- =ftp_password=
+- =ftp_url= :: full URL to the directory on the FTP server.
+- =download_dir= :: it's really just the =/mypub/moo= part of the
+                    above example you'd  have to change.
+
+The rest of the options should do just fine. If you really want to
+tweak, you can of course decide how far back you want each run of the
+job to look for files (it will only download each file once) by
+setting =max_file_age_in_hours=.
+
+This will give you many features including:
+- lock file support :: only one instance of your cron FTP script will
+  run at any given point in time.
+- state :: only files that previously haven't been downloaded will be
+           downloaded with a new run of the cron job.
+- log files :: logging of your cron script in a dedicated file
+
+** Import jobs deployed by VOSA
+When an import job has been deployed by VOSA, it will be put into the
+these directories.
+
+|-------------------------------------------------------------------------------+-------------------------------------------|
+| Path                                                                          | Description                               |
+|-------------------------------------------------------------------------------+-------------------------------------------|
+| =/usr/share/escenic/engine/import/<pub>/<job>=                                | The transformers, such as XSLs            |
+| =/usr/share/escenic/engine/import/mypub/moo/01-convert-all-cows-to-ducks.xsl= |                                           |
+| =/var/spool/escenic/import/<pub>/<job>/new=                                   | Input folder for the 3rd party (XML) data |
+| =/var/spool/escenic/import/mypub/moo/new=                                     |                                           |
+| =/var/spool/escenic/import/<pub>/<job>/error=                                 | Failed 3rd party XML files                |
+| =/var/spool/escenic/import/mypub/moo/error=                                   |                                           |
+| =/var/spool/escenic/import/<pub>/<job>/archive=                               | Successful imports of 3rd party files     |
+| =/var/spool/escenic/import/mypub/moo/archive=                                 |                                           |
+| =/etc/cron.hourly/<your cron script>=                                         | Cron script running every hour            |
+| =/etc/cron.hourly/get-files-from-moo-ftp=                                     |                                           |
+| =/var/log/escenic/cron.<your coron script>.log=                               | The log for your cron script              |
+| =/var/log/escenic/cron.get-files-from-moo-ftp.log=                            |                                           |
+|-------------------------------------------------------------------------------+-------------------------------------------|
+
+
+
+
