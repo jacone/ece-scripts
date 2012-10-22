@@ -28,6 +28,15 @@ the incoming data (normally XML) and the
 resulting Escenic XML will be imported into the Escenic Content
 Engine.
 
+#+BEGIN_SRC text
+<publication>/<import name>
+<publication>/<import name>/xsl
+<publication>/<import name>/cron.hourly
+#+END_SRC
+
+- publication name :: the name of the publication for which the import
+     job(s) are defined. You can have more than one publication in
+     each =zip= archive.
 - import job name :: lowercase with hyphens between words (if more
      than one)
 - xsl :: directory with files prefixed with =<number>-=, indicating
