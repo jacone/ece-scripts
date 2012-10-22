@@ -82,15 +82,16 @@ This will give you many features including:
 When an import job has been deployed by VOSA, it will be put into the
 these directories.
 
-|-------------------------------------------------+--------------------------------------|
-| Path                                            | Description                          |
-|-------------------------------------------------+--------------------------------------|
-| =/usr/share/escenic/engine/import/<pub>/<job>=  | The transformers, such as XSLs       |
-| =/var/spool/escenic/import/<pub>/<job>/new=     | The 3rd party data (XML) feed        |
-| =/var/spool/escenic/import/<pub>/<job>/error=   | Failed 3rd party XML files           |
-| =/var/spool/escenic/import/<pub>/<job>/archive= | Successful 3rd party XML files       |
-| =/etc/cron.hourly/<your cron script>=           | Hourly cron job to get files via FTP |
-|-------------------------------------------------+--------------------------------------|
+|-------------------------------------------------+-------------------------------------------------------------------------------+--------------------------------------|
+| Path                                            | Example                                                                       | Description                          |
+|-------------------------------------------------+-------------------------------------------------------------------------------+--------------------------------------|
+| =/usr/share/escenic/engine/import/<pub>/<job>=  | =/usr/share/escenic/engine/import/mypub/moo/01-convert-all-cows-to-ducks.xsl= | The transformers, such as XSLs       |
+| =/var/spool/escenic/import/<pub>/<job>/new=     | =/var/spool/escenic/import/mypub/moo/new=                                     | The 3rd party data (XML) feed        |
+| =/var/spool/escenic/import/<pub>/<job>/error=   | =/var/spool/escenic/import/mypub/moo/error=                                   | Failed 3rd party XML files           |
+| =/var/spool/escenic/import/<pub>/<job>/archive= | =/var/spool/escenic/import/mypub/moo/archive=                                 | Successful 3rd party XML files       |
+| =/etc/cron.hourly/<your cron script>=           | =/etc/cron.hourly/get-files-from-moo-ftp=                                     | Hourly cron job to get files via FTP |
+| =/var/log/escenic/cron.<your coron script>.log= | =/var/log/escenic/cron.get-files-from-moo-ftp.log=                            | Log for your cron job                |
+|-------------------------------------------------+-------------------------------------------------------------------------------+--------------------------------------|
 
 
 
