@@ -5,7 +5,7 @@ the build script:
 
 #+BEGIN_SRC sh
 $ ssh <%= trail_builder_user %>@<%= trail_builder_host %>
-$ ./build.sh release
+$ ece-build
 #+END_SRC
 
 Once the build is done, the URI of the finished EAR file is printed in
