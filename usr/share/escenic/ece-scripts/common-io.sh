@@ -202,3 +202,32 @@ function get_file_age_in_seconds() {
   
   echo $(( now - changed ))
 }
+
+## Verifies that the passed list of directories exist and are
+## writeable by $USER. If not, the program will exit.
+##
+## $@ : a list of directories
+function verify_writable_dir_list() {
+  for dir in "$@"; do
+    if [ ! -w $dir ]; then
+      print_and_log "The directory $dir must exist and be writable by" \
+        "by $USER for $(basename $0) to work" 
+      remove_pid_and_exit_in_error
+    fi
+  done
+}
+
+## Verifies that the passed list of directories exist and are
+## readable by $USER. If not, the program will exit.
+##
+## $@ : a list of directories
+function verify_readable_dir_list() {
+  for dir in "$@"; do
+    if [ ! -r $dir ]; then
+      print_and_log "The directory $dir must exist and be readable by" \
+        "by $USER for $(basename $0) to work" 
+      remove_pid_and_exit_in_error
+    fi
+  done
+}
+
