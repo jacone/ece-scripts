@@ -1,0 +1,167 @@
+#! /usr/bin/env bash
+
+## Runs one VOSA import job one time. The output is XML suitable for
+## the standard Escenic Syndication XML import job.
+##
+## The script can also create an import job from an import job archive
+
+common_libraries="
+  /usr/share/escenic/ece-scripts/common-bashing.sh
+  /usr/share/escenic/ece-scripts/common-io.sh
+"
+
+for el in $common_libraries; do
+  source $el || {
+    echo "$(basename $0): Could not load the library $el," \
+      "and I can't live without it :-(" | fmt
+    exit 1
+  }
+done
+
+
+pid_file=/var/run/escenic/$(basename $0).pid
+log=/var/log/escenic/$(basename $0).log
+
+job_name=""
+publication_name=""
+transformers_base_dir=/usr/share/escenic/import
+raw_spool_base_dir=/var/spool/escenic/raw
+escenic_spool_base_dir=/var/spool/escenic/import
+
+COMMAND_IMPORT=1
+COMMAND_CRETAE_IMPORT_CONFIGURATION=1
+command=COMMAND_IMPORT
+
+function get_user_input() {
+  local next_is_name=0
+  local next_is_publication=0
+  
+  for el in $@; do
+    if [[ "$el" == "-n" || "$el" == "--name" ]]; then
+      next_is_name=1
+    elif [[ "$el" == "-p" || "$el" == "--publication" ]]; then
+      next_is_publication=1
+    elif [ $next_is_name -eq 1 ]; then
+      job_name=$el
+      next_is_name=0
+    elif [ $next_is_publication -eq 1 ]; then
+      publication_name=$el
+      next_is_publication=0
+    else
+      if [[ "$el" == "create" ]]; then
+        command=COMMAND_CRETAE_IMPORT_CONFIGURATION
+      fi
+    fi
+  done
+
+  if [ -z $job_name ]; then
+    print_and_log "You must specify which import job to run"
+    print_and_log "E.g.: $(basename $0) --name video"
+    remove_pid_and_exit_in_error
+  fi
+
+  print_and_log "Running the import job $job_name"
+}
+
+function check_pre_requisites() {
+  local required_dir_list="
+    $(dirname $pid_file)
+    $(dirname $log)
+    ${raw_spool_base_dir}
+    ${escenic_spool_base_dir}
+    ${transformers_base_dir}
+  "
+  for dir in $required_dir_list; do
+    if [ ! -w $dir ]; then
+      echo "The directory $dir must exist and be writable by user $USER" \
+        " for $(basename $0) to work" | fmt
+      exit 1
+    fi
+  done
+
+  local required_command_list="
+    xsltproc
+  "
+  
+  for el in $required_command_list; do
+    which $el > /dev/null 2>/dev/null
+    if [ $? -gt 0 ]; then
+      print_and_log "$(basename $0) needs the command $el to be installed"
+      remove_pid_and_exit_in_error
+    fi
+  done
+
+  if [ ! -d $transformers_base_dir/$job_name ]; then
+    print_and_log $transformers_base_dir/$job_name "doesn't exist :-("
+    remove_pid_and_exit_in_error
+  fi
+
+  for el in new archive error; do
+    local dir=$escenic_spool_base_dir/$job_name/$el
+    if [ ! -d ${dir} ]; then
+      print_and_log ${dir} "doesn't exist, I will try to create it."
+      make_dir ${dir}
+    fi
+  done
+
+}
+
+function perform_transformations() {
+  find $raw_spool_base_dir/$job_name -type f | while read f; do
+    print_and_log "Importing raw XML $f ..."
+    local i=0
+    for el in $transformers_base_dir/$job_name/[0-9]*; do
+      if [[ "$el" == *".sh" ]]; then
+        log "Applying transformation $(basename $el) to $f"
+        echo bash $el $f
+      elif [[ "$el" == *".xsl" ]]; then
+        log "Applying transformation $(basename $el) to $f"
+        echo xsltproc --output $(basename $f).tmp $el $f 
+        echo run mv $(basename $f).tmp $(basename $f)
+      elif [[ "$el" == *".pl" ]]; then
+        log "Applying transformation $(basename $el) to $f"
+        echo perl $el $f
+      elif [[ "$el" == *".py" ]]; then
+        log "Applying transformation $(basename $el) $f"
+        echo python $el $f
+      fi
+      i=$(( i + 1 ))
+    done
+
+    log "Applied $i transformations to $f, moving it to " \
+      $escenic_spool_base_dir/$job_name/new
+    echo run mv $f $escenic_spool_base_dir/$job_name/new
+  done
+}
+
+function verify_import_job_configuration() {
+  verify_writable_dir_list \
+    $raw_spool_base_dir/$job_name \
+    $escenic_spool_base_dir/$job_name/new \
+    $escenic_spool_base_dir/$job_name/archive \
+    $escenic_spool_base_dir/$job_name/error
+  verify_readable_dir_list $transformers_base_dir/$job_name
+
+  local tranformation_count=$(
+    ls $transformers_base_dir/$job_name | \
+    grep ^[0-9] | \
+    egrep ".sh$|.pl|.py" | \
+    wc -l
+  )
+  
+  if [ $tranformation_count -lt 1 ]; then
+    print_and_log "$(yellow WARNING) No transformers found in" \
+      "$transformers_base_dir/${job_name}, I'm assuming the incoming" \
+      "data is already tranformed into Escenic Syndication XML"
+  fi
+}
+
+check_pre_requisites
+create_pid_if_doesnt_exist $pid_file
+print_and_log "Started @ $(date)"
+print "I'm logging to $log"
+get_user_input "$@"
+verify_import_job_configuration
+perform_transformations
+print_and_log "Finished @ $(date)"
+remove_pid_if_exists $pid_file
