@@ -13,10 +13,8 @@ structure is required:
 
 #+BEGIN_SRC text
 <publication>/<import name>
-<publication>/<import name>/xsl/<number>-<transformer task>.xsl
+<publication>/<import name>/transformers/<number>-<transformer task>.xsl
 <publication>/<import name>/cron.hourly/<cron job script>
-<publication>/<import name>/cron.every.<number>.minutes/<cron job script>
-<publication>/<import name>/cron.every.<number>.hours/<cron job script>
 #+END_SRC
 
 - publication name :: the name of the publication for which the import
@@ -24,8 +22,11 @@ structure is required:
      each =zip= archive.
 - import job name :: lowercase with hyphens between words (if more
      than one)
-- xsl :: directory with files prefixed with =<number>-=, indicating
-         the order of transformation to apply to your import job. 
+- transformers :: directory with files prefixed with =<number>-=, indicating
+                  the order of transformation to apply to your import job. If
+                  this is a =xsl= file, the escenic importer will run
+                  =xsltproc= on the file, whereas =.sh= files will be
+                  run in a =bash= wrapper.
 - cron.hourly :: scripts to be run every our. These will be put in
                  =/etc/cron.hourly= on the import server. Be sure to
                  set the execute bit on the file and note that as with
@@ -37,14 +38,15 @@ Cool Videos" and our publication is the ubiquitous =mypub=.
 
 #+BEGIN_SRC text
 $ unzip -t import-jobs.zip
-mypub/moo/xsl/01-convert-all-cows-to-ducks.xsl
-mypub/moo/xsl/02-convert-duck-to-escenic-xml.xsl
+mypub/moo/transformers/01-fix-encoding.sh
+mypub/moo/transformers/02-convert-all-cows-to-ducks.xsl
+mypub/moo/transformers/02-convert-duck-to-escenic-xml.xsl
 mypub/moo/cron.hourly/get-files-from-moo-ftp
-otherpub/foo/xsl/01-convert-from-foo-to-escenic-xml.xsl
+otherpub/foo/transformers/01-convert-from-foo-to-escenic-xml.xsl
 #+END_SRC
 
 As you can guess from the file names, the
-=01-convert-all-cows-to-ducks.xsl= stylesheet will be first applied to
+=02-convert-all-cows-to-ducks.xsl= stylesheet will be first applied to
 the incoming data (normally XML) and the
 =02-convert-duck-to-escenic-xml.xsl= will be applied next before the
 resulting Escenic XML will be imported into the Escenic Content
@@ -102,7 +104,7 @@ these directories.
 | Path                                                                          | Description                               |
 |-------------------------------------------------------------------------------+-------------------------------------------|
 | =/usr/share/escenic/engine/import/<pub>/<job>=                                | The transformers, such as XSLs            |
-| =/usr/share/escenic/engine/import/mypub/moo/01-convert-all-cows-to-ducks.xsl= |                                           |
+| =/usr/share/escenic/engine/import/mypub/moo/02-convert-all-cows-to-ducks.xsl= |                                           |
 | =/var/spool/escenic/import/<pub>/<job>/new=                                   | Input folder for the 3rd party (XML) data |
 | =/var/spool/escenic/import/mypub/moo/new=                                     |                                           |
 | =/var/spool/escenic/import/<pub>/<job>/error=                                 | Failed 3rd party XML files                |
