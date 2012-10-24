@@ -4,7 +4,7 @@
 ## the standard Escenic Syndication XML import job.
 ##
 ## The script can also create an import job from an import job archive
-## 
+##
 ##  See /usr/share/doc/vizrt/vosa-handbook/import-jobs.org for more
 ##  details on the structures this command operates on.
 
@@ -21,7 +21,6 @@ for el in $common_libraries; do
   }
 done
 
-
 pid_file=/var/run/escenic/$(basename $0).pid
 log=/var/log/escenic/$(basename $0).log
 
@@ -30,35 +29,42 @@ publication_name=""
 transformers_base_dir=/usr/share/escenic/import
 raw_spool_base_dir=/var/spool/escenic/raw
 escenic_spool_base_dir=/var/spool/escenic/import
+nursery_base_dir=/etc/escenic/engine/common
 
 COMMAND_IMPORT=1
-COMMAND_CRETAE_IMPORT_CONFIGURATION=1
+COMMAND_CRETAE_IMPORT_CONFIGURATION=2
 command=COMMAND_IMPORT
 
 function get_user_input() {
   local next_is_name=0
   local next_is_publication=0
-  local next_is_conf_file=0
-  
+  local next_is_import_archive=0
+  local next_is_nursery_base_dir=0
+
   for el in $@; do
     if [[ "$el" == "-n" || "$el" == "--name" ]]; then
       next_is_name=1
     elif [[ "$el" == "-p" || "$el" == "--publication" ]]; then
       next_is_publication=1
-    elif [[ "$el" == "-f" || "$el" == "--conf-file" ]]; then
-      next_is_conf_file=1
+    elif [[ "$el" == "-f" || "$el" == "--import-archive" ]]; then
+      next_is_import_archive=1
+    elif [[ "$el" == "--nursery-base-dir" ]]; then
+      next_is_nursery_base_dir=1
     elif [ $next_is_name -eq 1 ]; then
       job_name=$el
       next_is_name=0
     elif [ $next_is_publication -eq 1 ]; then
       publication_name=$el
       next_is_publication=0
-    elif [ $next_is_conf_file -eq 1 ]; then
-      conf_file=$el
-      next_is_conf_file=0
+    elif [ $next_is_import_archive -eq 1 ]; then
+      import_archive=$el
+      next_is_import_archive=0
+    elif [ $next_is_nursery_base_dir -eq 1 ]; then
+      nursery_base_dir=$el
+      next_is_nursery_base_dir=0
     else
       if [[ "$el" == "create" ]]; then
-        command=COMMAND_CRETAE_IMPORT_CONFIGURATION
+        command=$COMMAND_CRETAE_IMPORT_CONFIGURATION
       fi
     fi
   done
@@ -74,9 +80,9 @@ function get_user_input() {
     print_and_log "E.g.: $(basename $0) --publication mypub"
     errors=1
   fi
-  if [ -n "${conf_file}" -a ! -r "${conf_file}" ]; then
-    print_and_log "You have specified a print job conf file" \
-      "but it doesn't exist :-()"
+  if [ -n "${import_archive}" -a ! -r "${import_archive}" ]; then
+    print_and_log "You have specified an import job archive file" \
+      "but it doesn't exist :-("
     remove_pid_and_exit_in_error
   fi
   if [ $errors -eq 1 ]; then
@@ -106,7 +112,7 @@ function check_pre_requisites() {
     xsltproc
     xmllint
   "
-  
+
   for el in $required_command_list; do
     which $el > /dev/null 2>/dev/null
     if [ $? -gt 0 ]; then
@@ -116,63 +122,85 @@ function check_pre_requisites() {
   done
 }
 
+## $1 :: the transformer (file name, relative or absoulte)
+function is_trannsformer_supported() {
+  if [ -z $1 ]; then
+    return
+  fi
+
+  local supported_transformer_list="pl py sh xsl"
+  for el in $supported_transformer_list; do
+    if [[ "$1" == *"${el}" ]]; then
+      echo 1
+      return
+    fi
+  done
+
+  echo 0
+}
+
 ## $1 :: file
 function perform_transformations() {
-  local i=0
   for el in $transformers_base_dir/$publication_name/$job_name/[0-9]*; do
+    if [ $(is_trannsformer_supported $el) -eq 0 ]; then
+      log "$(yellow WARNING) The transformer $el isn't supported by $(basename $0)"
+      continue
+    fi
+
+    log "Applying transformation $(basename $el) to $1"
+
     if [[ "$el" == *".sh" ]]; then
-      log "Applying transformation $(basename $el) to $1"
       bash $el $1 >> $log 2>> $log
-      
+
       if [ $? -gt 0 ]; then
-        log "$(red FAILED) The transformation $el on file $1" \
-          "moving $1 to the error directory and skipping to next import XML"
-        run mv $1 $escenic_spool_base_dir/$publication_name/$job_name/error
+        handle_transformation_error $el $1
         return
       fi
     elif [[ "$el" == *".xsl" ]]; then
-      log "Applying transformation $(basename $el) to $1"
       xsltproc --output ${1}.tmp ${el} ${1} >> $log 2>> $log
-      
+
       if [ $? -gt 0 ]; then
-        log "$(red FAILED) The transformation $el on file $1" \
-          "moving $1 to the error directory and skipping to next import XML"
-        run mv $1 $escenic_spool_base_dir/$publication_name/$job_name/error
+        handle_transformation_error $el $1
         return
       else
         run mv ${1}.tmp ${1}
       fi
     elif [[ "$el" == *".pl" ]]; then
-      log "Applying transformation $(basename $el) to $1"
       perl $el $1 >> $log 2>> $log
       if [ $? -gt 0 ]; then
-        log "$(red FAILED) The transformation $el on file $1" \
-          "moving $f to the error directory and skipping to next import XML"
-        run mv $1 $escenic_spool_base_dir/$publication_name/$job_name/error
+        handle_transformation_error $el $1
         return
       fi
     elif [[ "$el" == *".py" ]]; then
-      log "Applying transformation $(basename $el) $1"
       python $el $f >> $log 2>> $log
       if [ $? -gt 0 ]; then
-        log "$(red FAILED) The transformation $el on file $1" \
-          "moving $1 to the error directory and skipping to next import XML"
-        run mv $1 $escenic_spool_base_dir/$publication_name/$job_name/error
+        handle_transformation_error $el $1
         return
       fi
     fi
-    i=$(( i + 1 ))
+    transformation_count=$(( transformation_count + 1 ))
   done
+}
+
+## Will log the transformer error and move it to the error archive.
+##
+## $1 :: transformer
+## $2 :: the raw/input file
+function handle_transformation_error() {
+  log "$(red FAILED) The transformation $1 on file $2" \
+    "moving $2 to the error directory and skipping to next import XML"
+  run mv $1 $escenic_spool_base_dir/$publication_name/$job_name/error
 }
 
 function import_raw_files() {
   raw_file_count=0
   for f in $(find $raw_spool_base_dir/$publication_name/$job_name -type f); do
     raw_file_count=$(( raw_file_count + 1 ))
+    transformation_count=0
     print_and_log "Importing raw XML #${raw_file_count}: $(basename $f) ..."
     perform_transformations $f
 
-    log "Applied $i transformations to $f"
+    log "Applied $transformation_count transformations to $f"
     if [ $(check_escenic_xml $f) -eq 0 ]; then
       log "Moving $f to" \
         $escenic_spool_base_dir/$publication_name/$job_name/new/$(basename $f)
@@ -187,7 +215,7 @@ function check_escenic_xml() {
     echo 1
     return
   fi
-  
+
   xmllint --format $1 > /dev/null 2>&1
   if [ $? -gt 0 ]; then
     log $(yellow WARNING) "XML #${raw_file_count} after transformations," \
@@ -216,7 +244,7 @@ function verify_import_job_configuration() {
       egrep ".sh$|.pl|.py" | \
       wc -l
   )
-  
+
   if [ $tranformation_count -lt 1 ]; then
     print_and_log "$(yellow WARNING) No transformers found in" \
       "$transformers_base_dir/${job_name}, I'm assuming the incoming" \
@@ -224,12 +252,111 @@ function verify_import_job_configuration() {
   fi
 }
 
+function create_import_configuration() {
+  print_and_log "Creating import job configuration '${job_name}' for" \
+    "publication '${publication_name}' ..."
+
+  local job_nursery_fragment=imports/$publication_name/${job_name}
+  local file=$nursery_base_dir/${job_nursery_fragment}.properties
+  make_dir $(dirname $file)
+  cat > $file <<EOF
+## Import configuration generated by $(basename $0) @ $(date)
+\$class=com.escenic.syndication.xml.XMLImportConfiguration
+
+archiveDirectory=${escenic_spool_base_dir}/${publication_name}/${job_name}/archive
+defaultSectionName=${import_section_name-ece_incoming}
+defaultUserName=${import_user_name-${publication_name}_admin}
+errorDirectory=${escenic_spool_base_dir}/${publication_name}/${job_name}/error
+fileNames=*.xml
+importDirectory=${escenic_spool_base_dir}/${publication_name}/${job_name}/new
+importReporter=/com/escenic/syndication/xml/ImportReporter
+publicationName=${publication_name}
+EOF
+
+  print_and_log "Escenic Content Engine import job created for you in ${file}" \
+    "You must now do two steps manually:"
+  print_and_log "(1) Add '/${job_nursery_fragment}' to the 'importConfigurations' list" \
+    "inside your ECE instance's" \
+    "/com/escenic/syndication/xml/XMLImportService e.g.:" \
+    /etc/escenic/engine/server/edit2-engine1/com/escenic/syndication/xml/XMLImportService.properties
+  
+  print_and_log "(2) Add this Nursery service " \
+    service.9.9-xml-import-service=/com/escenic/syndication/xml/XMLImportSchedule \
+    "to your instance's Initial component, e.g.:" \
+    /etc/escenic/engine/server/edit2-engine1/Initial.properties
+}
+
+function apply_import_archive_if_present() {
+  if [ -z $import_archive ]; then
+    return
+  fi
+  
+  local tmp_dir=$(mktemp -d)
+  extract_archive $import_archive $tmp_dir
+
+  local publication_list=$(
+    find $tmp_dir/ -maxdepth 1 -type d | sed "s#${tmp_dir}/##g"
+  )
+  if [ -z "$publication_list" ]; then
+    print_and_log "$(red ERROR) No publications were found inside" \
+      "$import_archive please re-read the import job specification" \
+      "and fix your archive structure"
+    remove_pid_and_exit_in_error
+  fi
+  
+  for el in $publication_list; do
+    local import_job_list=$(
+      find $tmp_dir/$el -maxdepth 1 -type d | sed "s#${tmp_dir}/$el##g" | \
+        sed 's#^/##g'
+    )
+    if [ -z "$import_job_list" ]; then
+      print_and_log "$(red ERROR) No import jobs were defined for publication" \
+        "$el. The import archive isn't in accordance with the import archive" \
+        "specification, so I'll exit :-('"
+      remove_pid_and_exit_in_error
+    fi
+    for ele in $import_job_list; do
+      print_and_log "Setting up import job '$ele' for publication '$el' ..."
+      local src_dir=$tmp_dir/$el/$ele/transformers
+      local target_dir=$transformers_base_dir/$el/$ele
+      if [ -d $src_dir ]; then
+        print_and_log "Copying transformers to $target_dir"
+        make_dir $target_dir
+        run cp $src_dir/[0-9]* $target_dir
+      fi
+
+      src_dir=$tmp_dir/$el/$ele/cron.hourly
+      if [ -d $src_dir ]; then
+        print_and_log "Installing cron.hourly scripts for $ele"
+        run chmod +x $src_dir/*
+        for elem in $(find $src_dir -maxdepth 1 -type f); do
+          local cron_base=$(basename $elem)
+          run cp $elem /etc/cron.hourly/import-${el}-${ele}-${cron_base}
+        done
+      fi
+
+      # support for cron.every.<number>.minutes
+    done
+  done
+
+
+  run rm -rf ${tmp_dir}
+}
+
+
 check_pre_requisites
 create_pid_if_doesnt_exist $pid_file
 print_and_log "Started @ $(date)"
 print "I'm logging to $log"
 get_user_input "$@"
-verify_import_job_configuration
-import_raw_files
+
+if [[ "$command" == $COMMAND_IMPORT ]]; then
+  verify_import_job_configuration
+  import_raw_files
+elif [[ "$command" == $COMMAND_CRETAE_IMPORT_CONFIGURATION ]]; then
+  apply_import_archive_if_present
+  create_import_configuration
+fi
+
 print_and_log "Finished @ $(date)"
 remove_pid_if_exists $pid_file
