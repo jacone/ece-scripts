@@ -235,14 +235,27 @@ function is_archive_healthy() {
   fi
 }
 
-## $1 : the archive
+## $1 :: the archive
+## $2 :: optionally, the target directory
 function extract_archive() {
   if [[ "$1" == *".tar.gz" || "$1" == *".tgz" ]]; then
-    run tar xzf $1
+    if [[ -n "$2" && -d "$2" ]]; then
+      run tar xzf $1 -C $2
+    else
+      run tar xzf $1
+    fi
   elif [[ "$1" == *".tar.bz2" ]]; then
-    run tar xjf $1
+    if [[ -n "$2" && -d "$2" ]]; then
+      run tar xjf $1 -C $2
+    else
+      run tar xjf $1
+    fi
   elif [[ "$1" == *".zip" ]]; then
-    run unzip -q $1
+    if [[ -n "$2" && -d "$2" ]]; then
+      run unzip -q $1 -d $2
+    else
+      run unzip -q $1
+    fi
   fi
 }
 
