@@ -329,3 +329,29 @@ function split_string() {
 
   echo $splitted_string
 }
+
+## Creates $1 PID file if possible
+function create_pid_if_doesnt_exist() {
+  if [ -z $1 ]; then
+    return
+  elif [ -e $1 ]; then
+    return
+  fi    
+  
+  local dir=$(dirname $1)
+  if [ ! -w $dir ]; then
+    print_and_log "The PID file couldn't be created because" \
+      $dir "either didn't exist or wasn't writable"
+    return
+  fi
+  
+  touch $1
+}
+
+function remove_pid_if_exists() {
+  if [ -z $1 ]; then
+    return
+  elif [ ! -e $1 ]; then
+    return
+  fi
+}
