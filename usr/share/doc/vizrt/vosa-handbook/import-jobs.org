@@ -15,6 +15,7 @@ structure is required:
 <publication>/<import name>
 <publication>/<import name>/transformers/<number>-<transformer task>.xsl
 <publication>/<import name>/cron.hourly/<cron job script>
+<publication>/<import name>/cron.every.<number>.minutes/<cron job script>
 #+END_SRC
 
 - publication name :: the name of the publication for which the import
@@ -27,10 +28,16 @@ structure is required:
                   this is a =xsl= file, the escenic importer will run
                   =xsltproc= on the file, whereas =.sh= files will be
                   run in a =bash= wrapper.
+
+                  Each of the transformers will be called with one
+                  argument, namely the input XML data. Each
+                  transformer is responsible to write changes back to
+                  the file.
 - cron.hourly :: scripts to be run every our. These will be put in
                  =/etc/cron.hourly= on the import server. Be sure to
                  set the execute bit on the file and note that as with
                  all cron jobs, the file cannot have a file suffix.
+- cron.every.<number>.minutes :: scripts to run every =<number>= minutes.
 
 We're calling the import job =moo= since we're
 setting up an import feed from our imaginary content provider, "Moo
@@ -42,6 +49,7 @@ mypub/moo/transformers/01-fix-encoding.sh
 mypub/moo/transformers/02-convert-all-cows-to-ducks.xsl
 mypub/moo/transformers/02-convert-duck-to-escenic-xml.xsl
 mypub/moo/cron.hourly/get-files-from-moo-ftp
+mypub/moo/cron.every.10.minutes/ask-for-public-ip
 otherpub/foo/transformers/01-convert-from-foo-to-escenic-xml.xsl
 #+END_SRC
 
@@ -97,25 +105,51 @@ This will give you many features including:
 - log files :: logging of your cron script in a dedicated file
 
 ** Import jobs deployed by VOSA
+
+*** Setting up a new import job
+When an import archive is gotten from a developer, the VOSA operator
+will create the import job harness, infrastructure as with the
+=ece-import= command as follows:
+#+BEGIN_SRC text
+$ ece-import \
+  --publication-name mypub \
+  --name video \
+  --import-archive /tmp/my-great-import-archive.zip \
+  create
+#+END_SRC
+
+The =ece-import= script will take care of putting transformers in the
+right place, create spool directories and create the Nursery
+configuration needed for the import job.
+
+The =ece-import= will with the above command create an import job
+with sensible defaults, the operator may override a few import
+settings with these parameters:
+- =--import-user= :: (the ECE user which will be the author of the
+     imported contents). Default is =<publication name>=_admin
+- =--import-section-name= :: the default, fallback section of imported
+     content. Default is =ece_incoming=
+
+*** Directories and Files
 When an import job has been deployed by VOSA, it will be put into the
 these directories.
 
-|-------------------------------------------------------------------------------+-------------------------------------------|
-| Path                                                                          | Description                               |
-|-------------------------------------------------------------------------------+-------------------------------------------|
-| =/usr/share/escenic/engine/import/<pub>/<job>=                                | The transformers, such as XSLs            |
-| =/usr/share/escenic/engine/import/mypub/moo/02-convert-all-cows-to-ducks.xsl= |                                           |
-| =/var/spool/escenic/import/<pub>/<job>/new=                                   | Input folder for the 3rd party (XML) data |
-| =/var/spool/escenic/import/mypub/moo/new=                                     |                                           |
-| =/var/spool/escenic/import/<pub>/<job>/error=                                 | Failed 3rd party XML files                |
-| =/var/spool/escenic/import/mypub/moo/error=                                   |                                           |
-| =/var/spool/escenic/import/<pub>/<job>/archive=                               | Successful imports of 3rd party files     |
-| =/var/spool/escenic/import/mypub/moo/archive=                                 |                                           |
-| =/etc/cron.hourly/<your cron script>=                                         | Cron script running every hour            |
-| =/etc/cron.hourly/get-files-from-moo-ftp=                                     |                                           |
-| =/var/log/escenic/cron.<your coron script>.log=                               | The log for your cron script              |
-| =/var/log/escenic/cron.get-files-from-moo-ftp.log=                            |                                           |
-|-------------------------------------------------------------------------------+-------------------------------------------|
+|--------------------------------------------------------------------------------------------+-------------------------------------------|
+| Path                                                                                       | Description                               |
+|--------------------------------------------------------------------------------------------+-------------------------------------------|
+| =/usr/share/escenic/engine/import/<pub>/<job>/transformers=                                | The transformers, such as XSLs            |
+| =/usr/share/escenic/engine/import/mypub/moo/transformers/02-convert-all-cows-to-ducks.xsl= |                                           |
+| =/var/spool/escenic/import/<pub>/<job>/new=                                                | Input folder for the 3rd party (XML) data |
+| =/var/spool/escenic/import/mypub/moo/new=                                                  |                                           |
+| =/var/spool/escenic/import/<pub>/<job>/error=                                              | Failed 3rd party XML files                |
+| =/var/spool/escenic/import/mypub/moo/error=                                                |                                           |
+| =/var/spool/escenic/import/<pub>/<job>/archive=                                            | Successful imports of 3rd party files     |
+| =/var/spool/escenic/import/mypub/moo/archive=                                              |                                           |
+| =/etc/cron.hourly/<your cron script>=                                                      | Cron script running every hour            |
+| =/etc/cron.hourly/get-files-from-moo-ftp=                                                  |                                           |
+| =/var/log/escenic/cron.<your coron script>.log=                                            | The log for your cron script              |
+| =/var/log/escenic/cron.get-files-from-moo-ftp.log=                                         |                                           |
+|--------------------------------------------------------------------------------------------+-------------------------------------------|
 
 
 
