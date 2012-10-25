@@ -8,29 +8,39 @@
 ##  See /usr/share/doc/vizrt/vosa-handbook/import-jobs.org for more
 ##  details on the structures this command operates on.
 
-common_libraries="
-  /usr/share/escenic/ece-scripts/common-bashing.sh
-  /usr/share/escenic/ece-scripts/common-io.sh
-"
+function bootstrap_thyself() {
+  common_libraries="
+    /usr/share/escenic/ece-scripts/common-bashing.sh
+    /usr/share/escenic/ece-scripts/common-io.sh
+  "
 
-for el in $common_libraries; do
-  source $el || {
-    echo "$(basename $0): Could not load the library $el," \
-      "and I can't live without it :-(" | fmt
-    exit 1
-  }
-done
+  for el in $common_libraries; do
+    source $el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+}
 
-pid_file=/var/run/escenic/$(basename $0).pid
-log=/var/log/escenic/$(basename $0).log
+bootstrap_thyself
 
-job_name=""
-publication_name=""
-transformers_base_dir=/usr/share/escenic/import
-raw_spool_base_dir=/var/spool/escenic/raw
+# internal variables
+escenic_group=escenic
 escenic_spool_base_dir=/var/spool/escenic/import
+escenic_user=escenic
+job_name=""
+# since both regular users and root can use this command, we create
+# user specific log files. We put it in /var/log as it'll regardless
+# of user run as a deamon process.
+log=/var/log/escenic/$(basename $0)-${USER}.log
 nursery_base_dir=/etc/escenic/engine/common
+pid_file=/var/run/escenic/$(basename $0).pid
+publication_name=""
+raw_spool_base_dir=/var/spool/escenic/raw
+transformers_base_dir=/usr/share/escenic/import
 
+# available commands/operations for ece-import
 COMMAND_IMPORT=1
 COMMAND_CRETAE_IMPORT_CONFIGURATION=2
 command=$COMMAND_IMPORT
@@ -40,6 +50,8 @@ function get_user_input() {
   local next_is_publication=0
   local next_is_import_archive=0
   local next_is_nursery_base_dir=0
+  local next_is_escenic_user=0
+  local next_is_escenic_group=0
 
   for el in $@; do
     if [[ "$el" == "-n" || "$el" == "--name" ]]; then
@@ -48,6 +60,10 @@ function get_user_input() {
       next_is_publication=1
     elif [[ "$el" == "-f" || "$el" == "--import-archive" ]]; then
       next_is_import_archive=1
+    elif [[ "$el" == "--escenic-user" ]]; then
+      next_is_escenic_user=1
+    elif [[ "$el" == "--escenic-group" ]]; then
+      next_is_escenic_group=1
     elif [[ "$el" == "--nursery-base-dir" ]]; then
       next_is_nursery_base_dir=1
     elif [ $next_is_name -eq 1 ]; then
@@ -62,6 +78,12 @@ function get_user_input() {
     elif [ $next_is_nursery_base_dir -eq 1 ]; then
       nursery_base_dir=$el
       next_is_nursery_base_dir=0
+    elif [ $next_is_escenic_user -eq 1 ]; then
+      escenic_user=$el
+      next_is_escenic_user=0
+    elif [ $next_is_escenic_group -eq 1 ]; then
+      escenic_group=$el
+      next_is_escenic_group=0
     else
       if [[ "$el" == "create" ]]; then
         command=$COMMAND_CRETAE_IMPORT_CONFIGURATION
@@ -88,26 +110,9 @@ function get_user_input() {
   if [ $errors -eq 1 ]; then
     remove_pid_and_exit_in_error
   fi
-
-  print_and_log "Running the import job $job_name"
 }
 
 function check_pre_requisites() {
-  local required_dir_list="
-    $(dirname $pid_file)
-    $(dirname $log)
-    ${raw_spool_base_dir}
-    ${escenic_spool_base_dir}
-    ${transformers_base_dir}
-  "
-  for dir in $required_dir_list; do
-    if [ ! -w $dir ]; then
-      echo "The directory $dir must exist and be writable by user $USER" \
-        " for $(basename $0) to work" | fmt
-      exit 1
-    fi
-  done
-
   local required_command_list="
     xsltproc
     xmllint
@@ -254,6 +259,9 @@ function verify_import_job_configuration() {
 }
 
 function create_import_configuration() {
+  local job_name=$1
+  local publication_name=$2
+  
   print_and_log "Creating import job configuration '${job_name}' for" \
     "publication '${publication_name}' ..."
 
@@ -274,24 +282,16 @@ importReporter=/com/escenic/syndication/xml/ImportReporter
 publicationName=${publication_name}
 EOF
 
-  print_and_log "Escenic Content Engine import job created for you in ${file}" \
-    "You must now do two steps manually:"
-  print_and_log "(1) Add '/${job_nursery_fragment}' to the 'importConfigurations' list" \
-    "inside your ECE instance's" \
-    "/com/escenic/syndication/xml/XMLImportService e.g.:" \
-    /etc/escenic/engine/server/edit2-engine1/com/escenic/syndication/xml/XMLImportService.properties
-  
-  print_and_log "(2) Add this Nursery service " \
-    service.9.9-xml-import-service=/com/escenic/syndication/xml/XMLImportSchedule \
-    "to your instance's Initial component, e.g.:" \
-    /etc/escenic/engine/server/edit2-engine1/Initial.properties
+  print_and_log $(green NEW) \
+    "Import Nursery component created for you in ${file}"
+
+  import_configuration_list="
+    ${job_nursery_fragment}
+    ${import_configuration_list}
+  "
 }
 
-function apply_import_archive_if_present() {
-  if [ -z $import_archive ]; then
-    return
-  fi
-  
+function apply_import_archive() {
   local tmp_dir=$(mktemp -d)
   extract_archive $import_archive $tmp_dir
 
@@ -316,8 +316,11 @@ function apply_import_archive_if_present() {
         "specification, so I'll exit :-('"
       remove_pid_and_exit_in_error
     fi
+    
     for ele in $import_job_list; do
       print_and_log "Setting up import job '$ele' for publication '$el' ..."
+      create_import_configuration $ele $el
+
       local src_dir=$tmp_dir/$el/$ele/transformers
       local target_dir=$transformers_base_dir/$el/$ele
       if [ -d $src_dir ]; then
@@ -346,30 +349,54 @@ function apply_import_archive_if_present() {
         $escenic_spool_base_dir/$el/$ele/error
       "
       for dir in $dir_list; do
+        log "Creating spool directory" $dir
         make_dir $dir
-        run chown ${escenic_user-escenic}:${escenic_group-escenic} $dir
+        run chown ${escenic_user}:${escenic_group} $dir
       done
     done
   done
 
-
   run rm -rf ${tmp_dir}
 }
 
+function print_manual_steps() {
+  if [ -z "${import_configuration_list}" ]; then
+    return
+  fi
+    
+  print_and_log "You must now add your new Nursery components: " \
 
-check_pre_requisites
+  for el in $import_configuration_list; do
+    print_and_log "$(green ADD) /${el}"
+  done
+  
+  print_and_log "to the $(blue importConfigurations) variable in " \
+    "your ECE instance's" \
+    "/com/escenic/syndication/xml/XMLImportService e.g.:" \
+    "/etc/escenic/engine/server/edit2-engine1/com/escenic/syndication/xml/XMLImportService.properties"
+
+  print_and_log "The final step is to add the Nursery service " \
+    "service.9.9-xml-import-service=/com/escenic/syndication/xml/XMLImportSchedule" \
+    "to your instance's Initial component, e.g.:" \
+    /etc/escenic/engine/server/edit2-engine1/Initial.properties
+}
+
 create_pid_if_doesnt_exist $pid_file
-print_and_log "Started @ $(date)"
-print "I'm logging to $log"
-get_user_input "$@"
+check_pre_requisites
+print_and_log "Started @ $(date), I'm logging to $log"
+get_user_input $@
 
 if [[ "$command" == $COMMAND_IMPORT ]]; then
   verify_import_job_configuration
   import_raw_files
 elif [[ "$command" == $COMMAND_CRETAE_IMPORT_CONFIGURATION ]]; then
-  apply_import_archive_if_present
-  create_import_configuration
+  if [ -z $import_archive ]; then
+    create_import_configuration $job_name $publication_name
+  else
+    apply_import_archive
+  fi
 fi
 
-print_and_log "Finished @ $(date)"
+print_manual_steps
+print_and_log "Finished @ $(date), enjoy thyself!"
 remove_pid_if_exists $pid_file
