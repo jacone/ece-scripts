@@ -10,7 +10,8 @@ An import job can be depoloyed to an Escenic Engine machine by adhering to the s
 
 ** Conventions
 All file and directory names are to be lower cased with hyphens
-between sub words.
+between sub words, e.g. =my-import-job= and
+=01-convert-from-atom-to-escenic-xml.xsl=.
 
 All import jobs delivered to the VOSA operators is a =zip=
 archive with a strict structure, as defined in [[Specifying an import job]]
