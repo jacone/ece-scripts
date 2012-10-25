@@ -1,4 +1,4 @@
-* Import Configuration Archive
+* Escenic Import Configuration Archive
 
 An Escenic Import Configuration Archive (EICA) is a collection of files packaged in an archive that can import data into Escenic Engine. It can be deployed to any machine that has Escenic Engine running on it that was installed by ece-install.
 
