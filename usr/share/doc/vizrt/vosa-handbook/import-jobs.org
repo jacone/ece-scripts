@@ -139,15 +139,14 @@ settings with these parameters:
      content. Default is =ece_incoming=
 
 *** Directories and Files
-When an import job has been deployed by VOSA, it will be put into the
-these directories.
+When an import job has been deployed by VOSA, It will use the following locations to read from and write to.
 
 |--------------------------------------------------------------------------------------------+-------------------------------------------|
 | Path                                                                                       | Description                               |
 |--------------------------------------------------------------------------------------------+-------------------------------------------|
+| =/var/spool/escenic/import/<pub>/<job>/new=                                                | Input folder for the 3rd party (XML) data |
 | =/usr/share/escenic/engine/import/<pub>/<job>/transformers=                                | The transformers, such as XSLs            |
 | =/usr/share/escenic/engine/import/mypub/moo/transformers/02-convert-all-cows-to-ducks.xsl= |                                           |
-| =/var/spool/escenic/import/<pub>/<job>/new=                                                | Input folder for the 3rd party (XML) data |
 | =/var/spool/escenic/import/mypub/moo/new=                                                  |                                           |
 | =/var/spool/escenic/import/<pub>/<job>/error=                                              | Failed 3rd party XML files                |
 | =/var/spool/escenic/import/mypub/moo/error=                                                |                                           |
