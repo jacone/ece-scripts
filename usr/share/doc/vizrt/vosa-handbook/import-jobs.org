@@ -1,23 +1,24 @@
-* Import Jobs
+* Import Configuration Archive
 
-An import job is a program that can import data into Escenic Engine. It can be deployed to any machine that has Escenic Engine running on it that was installed by ece-install.
-** Features of import jobs
-- An execution plan :: You can include cron configuration to specify when and how often the import job runs.
+An Import Configuration Archive (ICA) is a collection of files packaged in an archive that can import data into Escenic Engine. It can be deployed to any machine that has Escenic Engine running on it that was installed by ece-install.
+
+** Features of ICA's
+- An execution plan :: You can include cron configuration to specify when and how often the import runs.
 - A transformation plan :: You can specify the transformations that will be applied to the incoming data before it is imported to Escenic Content Engine.
 - Standard locations :: A standard set of file locations to read from and write to.
 - Standard monitoring :: Standard monitoring is available to ensure that performance can be analysed and operators can be  signalled about failures.
-An import job can be depoloyed to an Escenic Engine machine by adhering to the standards discribed in the rest of this document.
+An Import Configuration Archive can be depoloyed to an Escenic Engine machine by adhering to the standards discribed in the rest of this document.
 
 ** Conventions
 All file and directory names are to be lower cased with hyphens
-between sub words, e.g. =my-import-job= and
+between sub words, e.g. =my-import-configuration= and
 =01-convert-from-atom-to-escenic-xml.xsl=.
 
-All import jobs delivered to the VOSA operators is a =zip=
-archive with a strict structure, as defined in [[Specifying an import job]]
+All ICA's delivered to the VOSA operators are =zip=
+archives with a strict structure, as defined in [[Specifying an ICA]]
 
-** Specifying an import job
-When creating a new import job for your project, the following directory
+** Specifying an ICA
+When creating a new ICA for your project, the following directory
 structure is required:
 
 #+BEGIN_SRC text
@@ -48,12 +49,12 @@ structure is required:
                  all cron jobs, the file cannot have a file suffix.
 - cron.every.<number>.minutes :: scripts to run every =<number>= minutes.
 
-We're calling the import job =moo= since we're
+We're calling the import configuration =moo= since we're
 setting up an import feed from our imaginary content provider, "Moo
 Cool Videos" and our publication is the ubiquitous =mypub=.
 
 #+BEGIN_SRC text
-$ unzip -t import-jobs.zip
+$ unzip -t my-great-import-archive.zip.zip
 mypub/moo/transformers/01-fix-encoding.sh
 mypub/moo/transformers/02-convert-all-cows-to-ducks.xsl
 mypub/moo/transformers/02-convert-duck-to-escenic-xml.xsl
@@ -103,7 +104,7 @@ The only values you need to touch is are:
 
 The rest of the options should do just fine. If you really want to
 tweak, you can of course decide how far back you want each run of the
-job to look for files (it will only download each file once) by
+import to look for files (it will only download each file once) by
 setting =max_file_age_in_hours=.
 
 This will give you many features including:
@@ -113,11 +114,11 @@ This will give you many features including:
            downloaded with a new run of the cron job.
 - log files :: logging of your cron script in a dedicated file
 
-** Import jobs deployed by VOSA
+** Import configuration deployed by VOSA
 
-*** Setting up a new import job
-When an import archive is gotten from a developer, the VOSA operator
-will create the import job harness, infrastructure as with the
+*** Setting up a new import configuration
+When an ICA is gotten from a developer, the VOSA operator
+will create the import configuration harness, infrastructure as with the
 =ece-import= command as follows:
 #+BEGIN_SRC text
 $ ece-import \
