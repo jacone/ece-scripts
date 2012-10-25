@@ -139,7 +139,7 @@ settings with these parameters:
      content. Default is =ece_incoming=
 
 *** Directories and Files
-When an import job has been deployed by VOSA, It will use the following locations to read from and write to.
+When an import job has been deployed by VOSA, it will use the following locations to read from and write to.
 
 |--------------------------------------------------------------------------------------------+-------------------------------------------|
 | Path                                                                                       | Description                               |
