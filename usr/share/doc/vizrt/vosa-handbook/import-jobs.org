@@ -33,7 +33,7 @@ structure is required:
      each =zip= archive.
 - import job name :: lowercase with hyphens between words (if more
      than one)
-- transformers :: directory with files prefixed with =<number>-=, indEICAting
+- transformers :: directory with files prefixed with =<number>-=, indicating
                   the order of transformation to apply to your import job. If
                   this is a =xsl= file, the escenic importer will run
                   =xsltproc= on the file, whereas =.sh= files will be
