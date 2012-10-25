@@ -1,8 +1,8 @@
 * Import Configuration Archive
 
-An Import Configuration Archive (ICA) is a collection of files packaged in an archive that can import data into Escenic Engine. It can be deployed to any machine that has Escenic Engine running on it that was installed by ece-install.
+An Escenic Import Configuration Archive (EICA) is a collection of files packaged in an archive that can import data into Escenic Engine. It can be deployed to any machine that has Escenic Engine running on it that was installed by ece-install.
 
-** Features of ICA's
+** Features of EICA's
 - An execution plan :: You can include cron configuration to specify when and how often the import runs.
 - A transformation plan :: You can specify the transformations that will be applied to the incoming data before it is imported to Escenic Content Engine.
 - Standard locations :: A standard set of file locations to read from and write to.
@@ -14,26 +14,26 @@ All file and directory names are to be lower cased with hyphens
 between sub words, e.g. =my-import-configuration= and
 =01-convert-from-atom-to-escenic-xml.xsl=.
 
-All ICA's delivered to the VOSA operators are =zip=
-archives with a strict structure, as defined in [[Specifying an ICA]]
+All EICA's delivered to the VOSA operators are =zip=
+archives with a strict structure, as defined in [[Specifying an EICA]]
 
-** Specifying an ICA
-When creating a new ICA for your project, the following directory
+** Specifying an EICA
+When creating a new EICA for your project, the following directory
 structure is required:
 
 #+BEGIN_SRC text
-<publication>/<import name>
-<publication>/<import name>/transformers/<number>-<transformer task>.xsl
-<publication>/<import name>/cron.hourly/<cron job script>
-<publication>/<import name>/cron.every.<number>.minutes/<cron job script>
+<publEICAtion>/<import name>
+<publEICAtion>/<import name>/transformers/<number>-<transformer task>.xsl
+<publEICAtion>/<import name>/cron.hourly/<cron job script>
+<publEICAtion>/<import name>/cron.every.<number>.minutes/<cron job script>
 #+END_SRC
 
-- publication name :: the name of the publication for which the import
-     job(s) are defined. You can have more than one publication in
+- publEICAtion name :: the name of the publEICAtion for which the import
+     job(s) are defined. You can have more than one publEICAtion in
      each =zip= archive.
 - import job name :: lowercase with hyphens between words (if more
      than one)
-- transformers :: directory with files prefixed with =<number>-=, indicating
+- transformers :: directory with files prefixed with =<number>-=, indEICAting
                   the order of transformation to apply to your import job. If
                   this is a =xsl= file, the escenic importer will run
                   =xsltproc= on the file, whereas =.sh= files will be
@@ -51,7 +51,7 @@ structure is required:
 
 We're calling the import configuration =moo= since we're
 setting up an import feed from our imaginary content provider, "Moo
-Cool Videos" and our publication is the ubiquitous =mypub=.
+Cool Videos" and our publEICAtion is the ubiquitous =mypub=.
 
 #+BEGIN_SRC text
 $ unzip -t my-great-import-archive.zip.zip
@@ -112,17 +112,17 @@ This will give you many features including:
   run at any given point in time.
 - state :: only files that previously haven't been downloaded will be
            downloaded with a new run of the cron job.
-- log files :: logging of your cron script in a dedicated file
+- log files :: logging of your cron script in a dedEICAted file
 
 ** Import configuration deployed by VOSA
 
 *** Setting up a new import configuration
-When an ICA is gotten from a developer, the VOSA operator
+When an EICA is gotten from a developer, the VOSA operator
 will create the import configuration harness, infrastructure as with the
 =ece-import= command as follows:
 #+BEGIN_SRC text
 $ ece-import \
-  --publication-name mypub \
+  --publEICAtion-name mypub \
   --name video \
   --import-archive /tmp/my-great-import-archive.zip \
   create
@@ -136,7 +136,7 @@ The =ece-import= will with the above command create an import job
 with sensible defaults, the operator may override a few import
 settings with these parameters:
 - =--import-user= :: (the ECE user which will be the author of the
-     imported contents). Default is =<publication name>=_admin
+     imported contents). Default is =<publEICAtion name>=_admin
 - =--import-section-name= :: the default, fallback section of imported
      content. Default is =ece_incoming=
 
