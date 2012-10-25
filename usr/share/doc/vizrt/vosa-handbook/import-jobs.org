@@ -8,7 +8,7 @@ All import jobs delivered to the VOSA operators is a =zip=
 archive with a strict structure, as defined in [[Specifying an import job]]
 
 ** Specifying an import job
-When creating a new import job for your project, the following
+When creating a new import job for your project, the following directory
 structure is required:
 
 #+BEGIN_SRC text
