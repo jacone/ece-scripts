@@ -38,6 +38,8 @@ nursery_base_dir=/etc/escenic/engine/common
 pid_file=/var/run/escenic/$(basename $0).pid
 publication_name=""
 raw_spool_base_dir=/var/spool/escenic/raw
+raw_transformation_base_dir=/var/cache/escenic/import
+raw_transformed_base_dir=/var/backups/escenic/import
 transformers_base_dir=/usr/share/escenic/import
 
 # available commands/operations for ece-import
@@ -92,18 +94,17 @@ function get_user_input() {
   done
 
   local errors=0
-  if [ $command -eq $COMMAND_IMPORT ]; then
-    if [ -z $job_name ]; then
-      print_and_log "You must specify which import job to run"
-      print_and_log "E.g.: $(basename $0) --name video"
-      errors=1
-    fi
-    if [ -z $publication_name ]; then
-      print_and_log "You must specify the publication name"
-      print_and_log "E.g.: $(basename $0) --publication mypub"
-      errors=1
-    fi
+  if [ -z "$job_name" -a -z "${import_archive}" ]; then
+    print_and_log "You must specify which import job to run"
+    print_and_log "E.g.: $(basename $0) --name video"
+    errors=1
   fi
+  if [ -z "$publication_name" -a -z "${import_archive}" ]; then
+    print_and_log "You must specify the publication name"
+    print_and_log "E.g.: $(basename $0) --publication mypub"
+    errors=1
+  fi
+  
   if [ -n "${import_archive}" -a ! -r "${import_archive}" ]; then
     print_and_log "You have specified an import job archive file" \
       "but it doesn't exist :-("
@@ -118,15 +119,22 @@ function check_pre_requisites() {
   local required_command_list="
     xsltproc
     xmllint
+    xml_grep
   "
 
+  local some_missing=0
+  
   for el in $required_command_list; do
     which $el > /dev/null 2>/dev/null
     if [ $? -gt 0 ]; then
       print_and_log "$(basename $0) needs the command $el to be installed"
-      remove_pid_and_exit_in_error
+      some_missing=1
     fi
   done
+
+  if [ $some_missing -eq 1 ]; then
+    remove_pid_and_exit_in_error
+  fi
 }
 
 ## $1 :: the transformer (file name, relative or absoulte)
@@ -199,37 +207,59 @@ function handle_transformation_error() {
   run mv $1 $escenic_spool_base_dir/$publication_name/$job_name/error
 }
 
+import_error_count=0
+
 function import_raw_files() {
+  print_and_log "Publication: $publication_name"
+  print_and_log "Import configuration: $job_name"
   raw_file_count=0
   for f in $(find $raw_spool_base_dir/$publication_name/$job_name -type f); do
     raw_file_count=$(( raw_file_count + 1 ))
     transformation_count=0
     print_and_log "Importing raw XML #${raw_file_count}: $(basename $f) ..."
-    perform_transformations $f
+    local file=$raw_transformation_base_dir/$publication_name/$job_name/$(basename $f)
+    run cp $f $file
+    perform_transformations $file
 
-    log "Applied $transformation_count transformations to $f"
-    if [ $(check_escenic_xml $f) -eq 0 ]; then
-      log "Moving $f to" \
-        $escenic_spool_base_dir/$publication_name/$job_name/new/$(basename $f)
-      run mv $f $escenic_spool_base_dir/$publication_name/$job_name/new
+    log "Applied $transformation_count transformations to $file"
+    if [ $(is_escenic_xml_ok $file) -eq 1 ]; then
+      local dir=$escenic_spool_base_dir/$publication_name/$job_name/new
+      log "Transformed XML is OK, moving transformed file to" $dir
+      run mv $file $dir
+      dir=$raw_transformed_base_dir/$publication_name/$job_name/succeeded
+      log "Transformed XML is OK, moving original raw XML to" $dir \
+        "and gzip-ing."
+      run mv $f $dir
+      run gzip $dir/$(basename $f)
+    else
+      local dir=$raw_transformed_base_dir/$publication_name/$job_name/failed
+      log $(red ERROR) "Transformed XML #${raw_file_count}," \
+        $file "isn't valid Escenic Syndication XML, so moving it to" $dir
+      run mv $f $dir
+      import_error_count=$(( import_error_count + 1 ))
     fi
   done
 }
 
 ## $1 :: the XML
-function check_escenic_xml() {
+function is_escenic_xml_ok() {
   if [ ! -e $1 ]; then
-    echo 1
+    echo 0
     return
   fi
 
+  # first, check for well formed-ness
   xmllint --format $1 > /dev/null 2>&1
   if [ $? -gt 0 ]; then
-    log $(yellow WARNING) "XML #${raw_file_count} after transformations," \
-      $f "isn't well formed XML. Importing it into Escenic Content Engine" \
-      " will fail, so I'll move it to" \
-      $escenic_spool_base_dir/$publication_name/$job_name/error
-    run mv $1 $escenic_spool_base_dir/$publication_name/$job_name/error
+    echo 0
+    return
+  fi
+
+  # check for an <escenic/> root element
+  local element_count=$(
+    xml_grep --cond /escenic $1 | wc -l 2>/dev/null
+  )
+  if [ $element_count -gt 0 ]; then
     echo 1
     return
   fi
@@ -240,6 +270,8 @@ function check_escenic_xml() {
 function verify_import_job_configuration() {
   verify_writable_dir_list \
     $raw_spool_base_dir/$publication_name/$job_name \
+    $raw_transformation_base_dir/$publication_name/$job_name \
+    $raw_transformed_base_dir/$publication_name/$job_name \
     $escenic_spool_base_dir/$publication_name/$job_name/new \
     $escenic_spool_base_dir/$publication_name/$job_name/archive \
     $escenic_spool_base_dir/$publication_name/$job_name/error
@@ -261,8 +293,8 @@ function verify_import_job_configuration() {
 }
 
 function create_import_configuration() {
-  local job_name=$1
-  local publication_name=$2
+  local publication_name=$1
+  local job_name=$2
   
   print_and_log "Creating import job configuration '${job_name}' for" \
     "publication '${publication_name}' ..."
@@ -321,7 +353,7 @@ function apply_import_archive() {
     
     for ele in $import_job_list; do
       print_and_log "Setting up import job '$ele' for publication '$el' ..."
-      create_import_configuration $ele $el
+      create_import_configuration $el $ele
 
       local src_dir=$tmp_dir/$el/$ele/transformers
       local target_dir=$transformers_base_dir/$el/$ele
@@ -343,23 +375,37 @@ function apply_import_archive() {
 
       # support for cron.every.<number>.minutes
 
-      # create needed directories
-      local dir_list="
-        $raw_spool_base_dir/$el/$ele
-        $escenic_spool_base_dir/$el/$ele/new 
-        $escenic_spool_base_dir/$el/$ele/archive
-        $escenic_spool_base_dir/$el/$ele/error
-      "
-      for dir in $dir_list; do
-        log "Creating spool directory" $dir
-        make_dir $dir
-        run chown ${escenic_user}:${escenic_group} $dir
-      done
+      create_import_directories $el $ele
     done
   done
 
   run rm -rf ${tmp_dir}
 }
+
+## $1 :: publication
+## $2 :: import name
+function create_import_directories() {
+  # we include log and pid_file's directories here to get the
+  # ownership right.
+  local dir_list="
+    $(dirname $log)
+    $(dirname $pid_file)
+    $escenic_spool_base_dir/$1/$2/archive
+    $escenic_spool_base_dir/$1/$2/error
+    $escenic_spool_base_dir/$1/$2/new 
+    $raw_spool_base_dir/$1/$2
+    $raw_transformation_base_dir/$1/$2 \
+    $raw_transformed_base_dir/$1/$2 \
+    $raw_transformed_base_dir/$1/$2/failed \
+    $raw_transformed_base_dir/$1/$2/succeeded \
+    $transformers_base_dir/$1/$2
+  "
+  for dir in $dir_list; do
+    log "Creating directory" $dir
+    make_dir $dir
+    run chown ${escenic_user}:${escenic_group} $dir
+  done
+}  
 
 function print_manual_steps() {
   if [ -z "${import_configuration_list}" ]; then
@@ -383,6 +429,14 @@ function print_manual_steps() {
     /etc/escenic/engine/server/edit2-engine1/Initial.properties
 }
 
+function print_report() {
+  print_and_log "Number of raw XML files proccessed:" $raw_file_count
+  print_and_log "Number of raw XML successes:" \
+    $(green $(( raw_file_count - import_error_count )))
+  print_and_log "Number of raw XML errors:" $(red $import_error_count)
+  print_and_log "Finished @ $(date), enjoy thyself!"
+}
+
 create_pid_if_doesnt_exist $pid_file
 check_pre_requisites
 print_and_log "Started @ $(date), I'm logging to $log"
@@ -393,12 +447,13 @@ if [[ "$command" == $COMMAND_IMPORT ]]; then
   import_raw_files
 elif [[ "$command" == $COMMAND_CRETAE_IMPORT_CONFIGURATION ]]; then
   if [ -z $import_archive ]; then
-    create_import_configuration $job_name $publication_name
+    create_import_configuration $publication_name $job_name
+    create_import_directories $publication_name $job_name
   else
     apply_import_archive
   fi
 fi
 
 print_manual_steps
-print_and_log "Finished @ $(date), enjoy thyself!"
+print_report
 remove_pid_if_exists $pid_file
