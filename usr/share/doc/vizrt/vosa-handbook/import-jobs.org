@@ -22,14 +22,14 @@ When creating a new EICA for your project, the following directory
 structure is required:
 
 #+BEGIN_SRC text
-<publEICAtion>/<import name>
-<publEICAtion>/<import name>/transformers/<number>-<transformer task>.xsl
-<publEICAtion>/<import name>/cron.hourly/<cron job script>
-<publEICAtion>/<import name>/cron.every.<number>.minutes/<cron job script>
+<publication>/<import name>
+<publication>/<import name>/transformers/<number>-<transformer task>.xsl
+<publication>/<import name>/cron.hourly/<cron job script>
+<publication>/<import name>/cron.every.<number>.minutes/<cron job script>
 #+END_SRC
 
-- publEICAtion name :: the name of the publEICAtion for which the import
-     job(s) are defined. You can have more than one publEICAtion in
+- publication name :: the name of the publication for which the import
+     job(s) are defined. You can have more than one publication in
      each =zip= archive.
 - import job name :: lowercase with hyphens between words (if more
      than one)
@@ -51,7 +51,7 @@ structure is required:
 
 We're calling the import configuration =moo= since we're
 setting up an import feed from our imaginary content provider, "Moo
-Cool Videos" and our publEICAtion is the ubiquitous =mypub=.
+Cool Videos" and our publication is the ubiquitous =mypub=.
 
 #+BEGIN_SRC text
 $ unzip -t my-great-import-archive.zip.zip
@@ -122,7 +122,7 @@ will create the import configuration harness, infrastructure as with the
 =ece-import= command as follows:
 #+BEGIN_SRC text
 $ ece-import \
-  --publEICAtion-name mypub \
+  --publication-name mypub \
   --name video \
   --import-archive /tmp/my-great-import-archive.zip \
   create
@@ -136,7 +136,7 @@ The =ece-import= will with the above command create an import job
 with sensible defaults, the operator may override a few import
 settings with these parameters:
 - =--import-user= :: (the ECE user which will be the author of the
-     imported contents). Default is =<publEICAtion name>=_admin
+     imported contents). Default is =<publication name>=_admin
 - =--import-section-name= :: the default, fallback section of imported
      content. Default is =ece_incoming=
 
