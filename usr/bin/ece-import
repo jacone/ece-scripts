@@ -92,15 +92,17 @@ function get_user_input() {
   done
 
   local errors=0
-  if [ -z $job_name ]; then
-    print_and_log "You must specify which import job to run"
-    print_and_log "E.g.: $(basename $0) --name video"
-    errors=1
-  fi
-  if [ -z $publication_name ]; then
-    print_and_log "You must specify the publication name"
-    print_and_log "E.g.: $(basename $0) --publication mypub"
-    errors=1
+  if [ $command -eq $COMMAND_IMPORT ]; then
+    if [ -z $job_name ]; then
+      print_and_log "You must specify which import job to run"
+      print_and_log "E.g.: $(basename $0) --name video"
+      errors=1
+    fi
+    if [ -z $publication_name ]; then
+      print_and_log "You must specify the publication name"
+      print_and_log "E.g.: $(basename $0) --publication mypub"
+      errors=1
+    fi
   fi
   if [ -n "${import_archive}" -a ! -r "${import_archive}" ]; then
     print_and_log "You have specified an import job archive file" \
