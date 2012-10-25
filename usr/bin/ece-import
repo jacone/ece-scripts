@@ -238,8 +238,9 @@ function verify_import_job_configuration() {
     $escenic_spool_base_dir/$publication_name/$job_name/error
   verify_readable_dir_list $transformers_base_dir/$publication_name/$job_name
 
+  local dir=$transformers_base_dir/$publication_name/$job_name
   local tranformation_count=$(
-    ls $transformers_base_dir/$publication_name/$job_name | \
+    ls $dir | \
       grep ^[0-9] | \
       egrep ".sh$|.pl|.py" | \
       wc -l
@@ -247,7 +248,7 @@ function verify_import_job_configuration() {
 
   if [ $tranformation_count -lt 1 ]; then
     print_and_log "$(yellow WARNING) No transformers found in" \
-      "$transformers_base_dir/${job_name}, I'm assuming the incoming" \
+      "$dir/, I'm assuming the incoming" \
       "data is already tranformed into Escenic Syndication XML"
   fi
 }
