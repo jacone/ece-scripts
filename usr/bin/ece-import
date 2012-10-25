@@ -336,6 +336,18 @@ function apply_import_archive_if_present() {
       fi
 
       # support for cron.every.<number>.minutes
+
+      # create needed directories
+      local dir_list="
+        $raw_spool_base_dir/$el/$ele
+        $escenic_spool_base_dir/$el/$ele/new 
+        $escenic_spool_base_dir/$el/$ele/archive
+        $escenic_spool_base_dir/$el/$ele/error
+      "
+      for dir in $dir_list; do
+        make_dir $dir
+        run chown ${escenic_user-escenic}:${escenic_group-escenic} $dir
+      done
     done
   done
 
