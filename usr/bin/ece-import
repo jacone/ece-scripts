@@ -33,7 +33,7 @@ nursery_base_dir=/etc/escenic/engine/common
 
 COMMAND_IMPORT=1
 COMMAND_CRETAE_IMPORT_CONFIGURATION=2
-command=COMMAND_IMPORT
+command=$COMMAND_IMPORT
 
 function get_user_input() {
   local next_is_name=0
