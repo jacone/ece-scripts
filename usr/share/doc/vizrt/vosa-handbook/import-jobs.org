@@ -4,8 +4,7 @@ An import job is a program that can import data into Escenic Engine. It can be d
 ** An import job has the following features:
 - An execution plan :: You can include cron configuration to specify when and how often the import job runs.
 - A transformation plan :: You can specify the transformations that will be applied to the incoming data before it is imported to Escenic Content Engine.
-- A source configuration :: ?
-- A target configuration :: ?
+- A standard set of file locations to read from and write to.
 An import job can be depoloyed to an Escenic Engine machine by adhering to the standards discribed in the rest of this document.
 
 ** Conventions
