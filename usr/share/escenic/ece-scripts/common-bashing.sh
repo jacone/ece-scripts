@@ -58,7 +58,22 @@ function printne() {
   echo -ne $(get_id) $@
 }
 
+## Will log all messages past to it.
+##
+## - If the parent directory of the log file doesn't exist, the method
+## will try to create it.
+##
+## - If the log file doesn't exist, the method will try to create it.
+##
+## $@ :: list of strings
 function log() {
+  if [ -z $log ]; then
+    return
+  fi
+
+  # cannot use run wrapper her, it'll trigger an eternal loop.
+  fail_safe_run mkdir -p $(dirname $log)
+  fail_safe_run touch $log
   echo $(get_id) $@ >> $log
 }
 
@@ -88,14 +103,21 @@ function remove_pid_and_exit_in_error() {
     rm $pid_file
   fi
 
-  log_call_stack
+  # this method is also used from bootstrapping methods in scripts
+  # where the log file may not yet exist, hence, we test for its
+  # existence here before logging the call/stack trace.
+  if [ -w $log ]; then
+    log_call_stack
+  fi
   
   exit 1
 }
 
 function exit_on_error() {
-  if [ $? -gt 0 ]; then
-    print_and_log "The command [${@}] $(red FAILED) (exit code=$?), exiting :-("
+  local code=$?
+  if [ ${code} -gt 0 ]; then
+    print_and_log "The command [${@}] run as user $USER $(red FAILED)" \
+      "(the command exited with code ${code}), I'll exit now :-("
     print "See $log for further details."
     remove_pid_and_exit_in_error
   fi
@@ -104,6 +126,17 @@ function exit_on_error() {
 function run() {
   "${@}" 1>>$log 2>>$log
   exit_on_error $@
+}
+
+function fail_safe_run() {
+  "${@}"
+  if [ $? -gt 0 ]; then
+    echo $(basename $0) $(red FAILED) "executing the command [$@]" \
+      "as user" ${USER}"." \
+      $(basename $0) "will now exit." | \
+      fmt
+    exit 1
+  fi
 }
 
 ## Returns 1 if the passed argument is a number, 0 if not.
@@ -165,6 +198,9 @@ function yellow() {
   echo -e "\E[37;33m\033[1m${@}\033[0m"
 }
 
+function blue() {
+  echo -e "\E[37;34m\033[1m${@}\033[0m";
+};
 
 ## $1: full path to the file.
 function get_base_dir_from_bundle()
@@ -339,13 +375,11 @@ function create_pid_if_doesnt_exist() {
   fi    
   
   local dir=$(dirname $1)
-  if [ ! -w $dir ]; then
-    print_and_log "The PID file couldn't be created because" \
-      $dir "either didn't exist or wasn't writable"
-    return
-  fi
-  
-  touch $1
+
+  # since this method can be called really early in scripts, we cannot
+  # use the run wrapper here.
+  fail_safe_run mkdir -p $(dirname $1)
+  fail_safe_run touch $1
 }
 
 function remove_pid_if_exists() {
@@ -354,4 +388,6 @@ function remove_pid_if_exists() {
   elif [ ! -e $1 ]; then
     return
   fi
+  
+  fail_safe_run rm $1
 }
