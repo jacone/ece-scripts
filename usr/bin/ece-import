@@ -242,7 +242,7 @@ function verify_import_job_configuration() {
   local tranformation_count=$(
     ls $dir | \
       grep ^[0-9] | \
-      egrep ".sh$|.pl|.py" | \
+      egrep ".sh$|.pl$|.py$|.xsl$" | \
       wc -l
   )
 
