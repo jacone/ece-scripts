@@ -1,11 +1,11 @@
-* Escenic Import Configuration Archive
+* Escenic Import Configuration
 
-An Escenic Import Configuration Archive (EICA) is a collection of
+An Escenic Import Configuration is a collection of
 files packaged in an archive that can import data into the Escenic
 Content Engine. It can be deployed to any machine that has Escenic
 Content Engine running on it that was installed by =ece-install=.
 
-** EICAs have the following features
+** Import configurations have the following features
 - An execution plan :: You can include cron configuration to specify when and how often the import runs.
 - A transformation plan :: You can specify the transformations that
      will be applied to the incoming data before it is imported to the
@@ -19,11 +19,11 @@ All file and directory names are to be lower cased with hyphens
 between sub words, e.g. =my-import-configuration= and
 =01-convert-from-atom-to-escenic-xml.xsl=.
 
-All EICAs delivered to the VOSA operators are =zip=
-archives with a strict structure, as defined in [[Specifying an EICA]]
+All import configurations delivered to the VOSA operators are =zip=
+archives with a strict structure, as defined in [[Specifying an import configuration]]
 
-** Specifying an EICA
-When creating a new EICA for your project, the following directory
+** Specifying an import configuration
+When creating a new import configuration for your project, the following directory
 structure is required:
 
 #+BEGIN_SRC text
@@ -122,7 +122,7 @@ This will give you many features including:
 ** Import configuration deployed by VOSA
 
 *** Setting up a new import configuration
-When an EICA is gotten from a developer, the VOSA operator
+When an import configuration is received from a developer, the VOSA operator
 will create the import configuration harness, infrastructure as with the
 =ece-import= command as follows:
 #+BEGIN_SRC text
