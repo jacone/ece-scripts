@@ -9,12 +9,26 @@
 ##  details on the structures this command operates on.
 
 function bootstrap_thyself() {
-  common_libraries="
-    /usr/share/escenic/ece-scripts/common-bashing.sh
-    /usr/share/escenic/ece-scripts/common-io.sh
+  # first, try to be nice, then check the standard location
+  local dir=$(dirname $0)/../share/escenic/ece-scripts
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
+
+  local common_libraries="
+    common-bashing.sh
+    common-io.sh
   "
 
   for el in $common_libraries; do
+    source $dir/$el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+  
+  for el in $dir/$(basename $0).d/*.sh; do
     source $el 2>/dev/null || {
       echo "$(basename $0): Could not load the library $el," \
         "and I can't live without it :-(" | fmt
@@ -38,13 +52,15 @@ nursery_base_dir=/etc/escenic/engine/common
 pid_file=/var/run/escenic/$(basename $0).pid
 publication_name=""
 raw_spool_base_dir=/var/spool/escenic/raw
+raw_state_base_dir=/var/lib/escenic/raw
 raw_transformation_base_dir=/var/cache/escenic/import
 raw_transformed_base_dir=/var/backups/escenic/import
 transformers_base_dir=/usr/share/escenic/import
 
 # available commands/operations for ece-import
 COMMAND_IMPORT=1
-COMMAND_CRETAE_IMPORT_CONFIGURATION=2
+COMMAND_CREATE_IMPORT_CONFIGURATION=2
+COMMAND_DOWNLOAD_RAW_DATA=3
 command=$COMMAND_IMPORT
 
 function get_user_input() {
@@ -54,6 +70,9 @@ function get_user_input() {
   local next_is_nursery_base_dir=0
   local next_is_escenic_user=0
   local next_is_escenic_group=0
+  local next_is_user=0
+  local next_is_password=0
+  local next_is_uri=0
 
   for el in $@; do
     if [[ "$el" == "-n" || "$el" == "--name" ]]; then
@@ -68,6 +87,12 @@ function get_user_input() {
       next_is_escenic_group=1
     elif [[ "$el" == "--nursery-base-dir" ]]; then
       next_is_nursery_base_dir=1
+    elif [[ "$el" == "--user" ]]; then
+      next_is_user=1
+    elif [[ "$el" == "--password" ]]; then
+      next_is_password=1
+    elif [[ "$el" == "--uri" ]]; then
+      next_is_uri=1
     elif [ $next_is_name -eq 1 ]; then
       job_name=$el
       next_is_name=0
@@ -86,9 +111,20 @@ function get_user_input() {
     elif [ $next_is_escenic_group -eq 1 ]; then
       escenic_group=$el
       next_is_escenic_group=0
+    elif [ $next_is_user -eq 1 ]; then
+      user=$el
+      next_is_user=0
+    elif [ $next_is_password -eq 1 ]; then
+      password=$el
+      next_is_password=0
+    elif [ $next_is_uri -eq 1 ]; then
+      uri=$el
+      next_is_uri=0
     else
       if [[ "$el" == "create" ]]; then
-        command=$COMMAND_CRETAE_IMPORT_CONFIGURATION
+        command=$COMMAND_CREATE_IMPORT_CONFIGURATION
+      elif [[ "$el" == "download-import-data" ]]; then
+        command=$COMMAND_DOWNLOAD_RAW_DATA
       fi
     fi
   done
@@ -108,8 +144,27 @@ function get_user_input() {
   if [ -n "${import_archive}" -a ! -r "${import_archive}" ]; then
     print_and_log "You have specified an import job archive file" \
       "but it doesn't exist :-("
-    remove_pid_and_exit_in_error
+    errors=1
   fi
+  
+  if [ $command -eq $COMMAND_DOWNLOAD_RAW_DATA ]; then
+    if [ -z "$user" ]; then
+      print_and_log "You must specify the the user"
+      print_and_log "E.g.: $(basename $0) --user lisa"
+      errors=1
+    fi
+    if [ -z "$password" ]; then
+      print_and_log "You must specify the the user"
+      print_and_log "E.g.: $(basename $0) --password foo"
+      errors=1
+    fi
+    if [ -z "$uri" ]; then
+      print_and_log "You must specify the the URI"
+      print_and_log "E.g.: $(basename $0) --uri http://feeds.com/myfeed"
+      errors=1
+    fi
+  fi
+  
   if [ $errors -eq 1 ]; then
     remove_pid_and_exit_in_error
   fi
@@ -270,6 +325,7 @@ function is_escenic_xml_ok() {
 function verify_import_job_configuration() {
   verify_writable_dir_list \
     $raw_spool_base_dir/$publication_name/$job_name \
+    $raw_state_base_dir/$publication_name/$job_name \
     $raw_transformation_base_dir/$publication_name/$job_name \
     $raw_transformed_base_dir/$publication_name/$job_name \
     $escenic_spool_base_dir/$publication_name/$job_name/new \
@@ -285,7 +341,7 @@ function verify_import_job_configuration() {
       wc -l
   )
 
-  if [ $tranformation_count -lt 1 ]; then
+  if [ $command -eq $COMMAND_IMPORT -a $tranformation_count -lt 1 ]; then
     print_and_log "$(yellow WARNING) No transformers found in" \
       "$dir/, I'm assuming the incoming" \
       "data is already tranformed into Escenic Syndication XML"
@@ -394,6 +450,7 @@ function create_import_directories() {
     $escenic_spool_base_dir/$1/$2/error
     $escenic_spool_base_dir/$1/$2/new 
     $raw_spool_base_dir/$1/$2
+    $raw_state_base_dir/$1/$2
     $raw_transformation_base_dir/$1/$2 \
     $raw_transformed_base_dir/$1/$2 \
     $raw_transformed_base_dir/$1/$2/failed \
@@ -447,13 +504,16 @@ get_user_input $@
 if [[ "$command" == $COMMAND_IMPORT ]]; then
   verify_import_job_configuration
   import_raw_files
-elif [[ "$command" == $COMMAND_CRETAE_IMPORT_CONFIGURATION ]]; then
+elif [[ "$command" == $COMMAND_CREATE_IMPORT_CONFIGURATION ]]; then
   if [ -z $import_archive ]; then
     create_import_configuration $publication_name $job_name
     create_import_directories $publication_name $job_name
   else
     apply_import_archive
   fi
+elif [[ "$command" == $COMMAND_DOWNLOAD_RAW_DATA  ]]; then
+  verify_import_job_configuration
+  download_latest_files
 fi
 
 print_manual_steps
