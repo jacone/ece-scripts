@@ -430,11 +430,13 @@ function print_manual_steps() {
 }
 
 function print_report() {
-  print_and_log "Number of raw XML files proccessed:" $raw_file_count
-  print_and_log "Number of raw XML successes:" \
-    $(green $(( raw_file_count - import_error_count )))
-  print_and_log "Number of raw XML errors:" $(red $import_error_count)
-  print_and_log "Finished @ $(date), enjoy thyself!"
+  if [ $command -eq $COMMAND_IMPORT ]; then
+    print_and_log "Number of raw XML files proccessed:" $raw_file_count
+    print_and_log "Number of raw XML successes:" \
+      $(green $(( raw_file_count - import_error_count )))
+    print_and_log "Number of raw XML errors:" $(red $import_error_count)
+    print_and_log "Finished @ $(date), enjoy thyself!"
+  fi
 }
 
 create_pid_if_doesnt_exist $pid_file
