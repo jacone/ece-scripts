@@ -230,7 +230,7 @@ function import_raw_files() {
       log "Transformed XML is OK, moving original raw XML to" $dir \
         "and gzip-ing it."
       run mv $f $dir
-      run gzip $dir/$(basename $f)
+      run gzip --force $dir/$(basename $f)
     else
       local dir=$raw_transformed_base_dir/$publication_name/$job_name/failed
       log $(red ERROR) "Transformed XML #${raw_file_count}," \
