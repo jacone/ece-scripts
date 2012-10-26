@@ -1,6 +1,6 @@
 * Escenic Import Configuration
 
-An Escenic Import Configuration is a collection of
+An Escenic import configuration is a collection of
 files packaged in an archive that can import data into the Escenic
 Content Engine. It can be deployed to any machine that has Escenic
 Content Engine running on it that was installed by =ece-install=.
