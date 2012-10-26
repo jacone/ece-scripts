@@ -117,7 +117,7 @@ This will give you many features including:
   run at any given point in time.
 - state :: only files that previously haven't been downloaded will be
            downloaded with a new run of the cron job.
-- log files :: logging of your cron script in a dedEICAted file
+- log files :: logging of your cron scripts dedicated files
 
 ** Import configuration deployed by VOSA
 
