@@ -228,7 +228,7 @@ function import_raw_files() {
       run mv $file $dir
       dir=$raw_transformed_base_dir/$publication_name/$job_name/succeeded
       log "Transformed XML is OK, moving original raw XML to" $dir \
-        "and gzip-ing."
+        "and gzip-ing it."
       run mv $f $dir
       run gzip $dir/$(basename $f)
     else
