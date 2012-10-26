@@ -1,20 +1,25 @@
 * Escenic Import Configuration Archive
 
-An Escenic Import Configuration Archive (EICA) is a collection of files packaged in an archive that can import data into Escenic Engine. It can be deployed to any machine that has Escenic Engine running on it that was installed by ece-install.
+An Escenic Import Configuration Archive (EICA) is a collection of
+files packaged in an archive that can import data into the Escenic
+Content Engine. It can be deployed to any machine that has Escenic
+Content Engine running on it that was installed by =ece-install=.
 
 ** EICAs have the following features
 - An execution plan :: You can include cron configuration to specify when and how often the import runs.
-- A transformation plan :: You can specify the transformations that will be applied to the incoming data before it is imported to Escenic Content Engine.
+- A transformation plan :: You can specify the transformations that
+     will be applied to the incoming data before it is imported to the
+     Escenic Content Engine.
 - Standard locations :: A standard set of file locations to read from and write to.
-- Standard monitoring :: Standard monitoring is available to ensure that performance can be analysed and operators can be  signalled about failures.
-An Import Configuration Archive can be depoloyed to an Escenic Engine machine by adhering to the standards discribed in the rest of this document.
+- Standard monitoring :: Standard monitoring is available to ensure that performance can be analysed and operators can be  notified about failures.
+An Import Configuration Archive can be deployed to an Escenic Content Engine machine by adhering to the standards discribed in the rest of this document.
 
 ** Conventions
 All file and directory names are to be lower cased with hyphens
 between sub words, e.g. =my-import-configuration= and
 =01-convert-from-atom-to-escenic-xml.xsl=.
 
-All EICA's delivered to the VOSA operators are =zip=
+All EICAs delivered to the VOSA operators are =zip=
 archives with a strict structure, as defined in [[Specifying an EICA]]
 
 ** Specifying an EICA
