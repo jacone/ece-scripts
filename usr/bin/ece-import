@@ -490,9 +490,9 @@ function print_manual_steps() {
 ## user/group of the ECE UNIX user.
 function ensure_correct_permissions_on_data_files() {
   local dir_list="
-    $escenic_spool_base_dir/$1/$2/new 
-    $raw_spool_base_dir/$1/$2
-    $raw_state_base_dir/$1/$2
+    $escenic_spool_base_dir/$publication_name/$job_name/new 
+    $raw_spool_base_dir/$publication_name/$job_name
+    $raw_state_base_dir/$publication_name/$job_name
   "
   log "Ensuring correct permissions on all data files in these directories:" \
     $dir_list
