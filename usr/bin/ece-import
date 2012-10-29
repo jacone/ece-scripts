@@ -486,6 +486,22 @@ function print_manual_steps() {
     /etc/escenic/engine/server/edit2-engine1/Initial.properties
 }
 
+## we call this method after each run to ensure that new files get the
+## user/group of the ECE UNIX user.
+function ensure_correct_permissions_on_data_files() {
+  local dir_list="
+    $escenic_spool_base_dir/$1/$2/new 
+    $raw_spool_base_dir/$1/$2
+    $raw_state_base_dir/$1/$2
+  "
+  log "Ensuring correct permissions on all data files in these directories:" \
+    $dir_list
+
+  for dir in $dir_list; do
+    run chown -R ${escenic_user}:${escenic_group} $dir
+  done
+}
+
 function print_report() {
   if [ $command -eq $COMMAND_IMPORT ]; then
     print_and_log "Number of raw XML files proccessed:" $raw_file_count
@@ -516,6 +532,7 @@ elif [[ "$command" == $COMMAND_DOWNLOAD_RAW_DATA  ]]; then
   download_latest_files
 fi
 
+ensure_correct_permissions_on_data_files
 print_manual_steps
 print_report
 print_and_log "Finished @ $(date)"
