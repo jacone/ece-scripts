@@ -18,12 +18,16 @@ function download_latest_files() {
   # long sed from
   # http://stackoverflow.com/questions/1881237/easiest-way-to-extract-the-urls-from-an-html-page-using-sed-or-awk-only
   local list_of_files=$(
-    wget $user_and_password --quiet --output-document - $uri | \
+    wget $user_and_password \
+      --quiet \
+      --output-document \
+      - $uri | \
+      sed -e 's/<a /\n<a /g' | \
       grep ^'<a href' | \
-      sed -e 's/<a /\n<a /g' \
-      -e 's/<a .*href=['"'"'"]//' \
+      sed -e 's/<a .*href=['"'"'"]//' \
       -e 's/["'"'"'].*$//' \
-      -e '/^$/ d'
+      -e '/^$/ d' | \
+      egrep -i '.(xml|jpg|jpeg|gif|pdf)$'
   )
 
   download_files_if_desired $list_of_files
