@@ -518,4 +518,5 @@ fi
 
 print_manual_steps
 print_report
+print_and_log "Finished @ $(date)"
 remove_pid_if_exists $pid_file
