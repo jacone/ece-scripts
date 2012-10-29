@@ -15,6 +15,10 @@ function download_latest_files() {
     "
   fi
 
+  # sets the global wget_opts variable, which
+  # common-io::download_uri_target_to_dir respects.
+  wget_opts="${user_and_password} ${wget_opts}"
+
   # long sed from
   # http://stackoverflow.com/questions/1881237/easiest-way-to-extract-the-urls-from-an-html-page-using-sed-or-awk-only
   local list_of_files=$(
