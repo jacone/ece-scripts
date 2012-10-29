@@ -44,13 +44,16 @@ function download_latest_files() {
 function download_files_if_desired() {
   for el in $list_of_files; do
     if [ $(is_already_downloaded $uri/$el) -eq 1 ]; then
-      print $el has already been downloaded, skipping to the next
+      print_and_log $el "has already been downloaded, skipping to the next one"
       continue
     fi
-    print downloading $uri/$el "..."
-    download_uri_target_to_dir \
+    print_and_log "Downloading" $uri/$el "..."
+    local result=$(
+      download_uri_target_to_dir \
       $uri/$el \
       $raw_spool_base_dir/$publication_name/$job_name/
+    )
+    log "Downloaded" $(basename $el) "to" $result
     echo $uri/$el >> $(get_state_file)
   done
 }
