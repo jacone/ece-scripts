@@ -99,7 +99,7 @@ function log_call_stack() {
 }
 
 function remove_pid_and_exit_in_error() {
-  if [ -e $pid_file ]; then
+  if [[ -z $pid_file && -e $pid_file ]]; then
     rm $pid_file
   fi
 
@@ -119,6 +119,7 @@ function exit_on_error() {
     print_and_log "The command [${@}] run as user $USER $(red FAILED)" \
       "(the command exited with code ${code}), I'll exit now :-("
     print "See $log for further details."
+    remove_file_if_exists $lock_file
     remove_pid_and_exit_in_error
   fi
 }
@@ -366,8 +367,10 @@ function split_string() {
   echo $splitted_string
 }
 
-## Creates $1 PID file if possible
-function create_pid_if_doesnt_exist() {
+## Creates $1 file if possible
+##
+## $1 :: the file, typically a PID or lock file.
+function create_file_if_doesnt_exist() {
   if [ -z $1 ]; then
     return
   elif [ -e $1 ]; then
@@ -382,7 +385,7 @@ function create_pid_if_doesnt_exist() {
   fail_safe_run touch $1
 }
 
-function remove_pid_if_exists() {
+function remove_file_if_exists() {
   if [ -z $1 ]; then
     return
   elif [ ! -e $1 ]; then
@@ -391,3 +394,33 @@ function remove_pid_if_exists() {
   
   fail_safe_run rm $1
 }
+
+## basename $0 will resolve to the file name of the calling script,
+## not common-bashing itself.
+lock_file=/var/run/escenic/$(basename $0 .sh).lock
+
+## Will create a lock (and the lock's directory) for the caller. If
+## the lock already exists, this function will cause your program to
+## fail.
+##
+## $1 :: the lock file
+function create_lock() {
+  if [ -e $lock_file ]; then
+    echo $lock_file "exists, I'll exit"
+    exit 1
+  else
+    fail_safe_run mkdir -p $(dirname $lock_file)
+    fail_safe_run touch $lock_file
+  fi
+}
+
+## $1 :: the lock file
+function remove_lock() {
+  if [ ! -e $lock_file ]; then
+    print "Something is seriously wrong, the lock file ($lock_file) isn't there!"
+    exit 1
+  fi
+
+  fail_safe_run rm $lock_file
+}
+
