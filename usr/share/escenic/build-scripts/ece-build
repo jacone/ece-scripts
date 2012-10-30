@@ -507,6 +507,14 @@ function create_machine_conf_packages() {
     run cp -r $conf_dir/${machine}/* $target_dir/
     find $target_dir -name .svn -type d | xargs rm -rf
 
+    # add the truth
+    local file=$svn_src_dir/doc/vosa-handbook/create-handbook.conf
+    if [ -e $file ]; then
+      local dir=$target_dir/etc/vizrt
+      run mkdir -p $dir
+      run cp $file $dir/truth.conf
+    fi
+    
     # mark all files as conf files
     local conffiles_file=$target_dir/DEBIAN/conffiles
     run mkdir -p $(dirname $conffiles_file)
