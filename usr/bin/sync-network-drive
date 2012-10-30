@@ -5,6 +5,7 @@
 # running and thus that two simultaneous runs it will not cause
 # corruption of data.
 #
+#
 # Example usage with source (-s) and target (-t):
 #
 # $ sync-network-drive \
