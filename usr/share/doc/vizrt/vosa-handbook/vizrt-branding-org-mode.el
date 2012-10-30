@@ -9,7 +9,12 @@
 
 ;; These two settings make exported HTML look like our Vizrt branded
 ; release notes.
-(setq org-export-html-preamble "<svg
+(setq org-export-html-preamble "<script>
+function renderclockiframe(url) {
+  return '<iframe src=\"+url+\" frameborder=\"0\" width=\"191\" height=\"19\"></iframe>
+';
+}
+</script><svg
         id=\"vizrt-logo\"
         version=\"1.1\"
         width=\"138\"
