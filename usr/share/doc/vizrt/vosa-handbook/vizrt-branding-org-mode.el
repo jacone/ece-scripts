@@ -16,7 +16,6 @@ function renderclockiframe(url) {
   val += url;
   val += '\" frameborder=\"0\" width=\"126\" height=\"42\" allowTransparency=\"true\" style=\"float:right\">'
   val += '</iframe>';
-  alert(val);
   return val;
 }
 </script><svg
