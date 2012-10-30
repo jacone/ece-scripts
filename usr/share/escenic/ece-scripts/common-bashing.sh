@@ -424,3 +424,14 @@ function remove_lock() {
   fail_safe_run rm $lock_file
 }
 
+pid_file=/var/run/escenic/$(basename $0 .sh).pid
+function create_pid() {
+  fail_safe_run mkdir -p $(dirname $pid_file)
+  echo $$ > $pid_file
+}
+
+function remove_pid() {
+  if [ -e $pid_file ]; then
+    fail_safe_run rm $pid_file
+  fi
+}
