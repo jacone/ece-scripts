@@ -465,14 +465,10 @@ EOF
 }
 
 function get_publication_links_for_presentation_host() {
-    if [ -z $trail_publication_domain_mapping_list ] ; then
-	return ""
-    fi
-
-#    for ep in $trail_publication_list; do
-#	echo "[[$(get_link ${ep}.${1})/][site:$ep]]"
-#    done
-
+  if [ -z "$trail_publication_domain_mapping_list" ] ; then
+    return ""
+  fi
+  
   for el in $trail_publication_domain_mapping_list; do
     local old_ifs=$IFS
     IFS='#'
