@@ -105,9 +105,12 @@ function set_up_escenic-content-engine-scripts() {
   mkdir -p $target_dir/{etc,usr,/etc/default}
 
   # bin
-  cp -r ../../../bin/ece $target_dir/usr/bin/
-  cp -r ../../escenic/ece-scripts/ece.d/ \
-    $target_dir/usr/share/escenic/ece-scripts/
+  local bin_list='ece ece-import'
+  for el in $bin_list; do
+    cp -r ../../../bin/$el $target_dir/usr/bin/
+    cp -r ../../escenic/ece-scripts/${el}.d/ \
+      $target_dir/usr/share/escenic/ece-scripts/
+  done
 
   # conf
   cp -r ../../../../etc/escenic/ $target_dir/etc/
@@ -164,6 +167,9 @@ function set_up_escenic-common-scripts() {
     $target_dir/usr/share/escenic/ece-scripts/
   cp -r ../../escenic/ece-scripts/*.html \
     $target_dir/usr/share/escenic/ece-scripts/
+
+  # everyone can need some network syncing
+  cp -r ../../../bin/sync-network-drive $target_dir/usr/bin/
 }
 
 function set_up_escenic-check-mk-plugins() {
