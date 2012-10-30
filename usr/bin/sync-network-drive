@@ -60,7 +60,7 @@ rsync_ssh_opts="\
 -o BatchMode=yes \
 -o UserKnownHostsFile=${tmp_known_hosts_file} \
 -o StrictHostKeyChecking=no \
--p 9022 \
+-p 22 \
 "
 
 outgoing=0
