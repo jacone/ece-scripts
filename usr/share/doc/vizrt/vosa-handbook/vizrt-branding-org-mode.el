@@ -9,17 +9,15 @@
 
 ;; These two settings make exported HTML look like our Vizrt branded
 ; release notes.
-;    return '<iframe src=\"'+url+'\" frameborder=\"0\" width=\"170\" height=\"23\" allowTransparency=\"true\"></iframe>';
-; http://free.timeanddate.com/clock/i3cmoi0t/n145/tlph/tct/pct/bas2/bat4/bacf90/pa2/tt0/tw1/tm1/td1/ts1/ta1/tb4
 (setq org-export-html-preamble "<script>
 function renderclockiframe(url) {
-var val='';
-val += '<iframe src=\"';
-val += url;
-val += '\" frameborder=\"0\" width=\"126\" height=\"42\" allowTransparency=\"true\" style=\"float:right\">'
-val += '</iframe>';
-alert(val);
-return val;
+  var val='';
+  val += '<iframe src=\"';
+  val += url;
+  val += '\" frameborder=\"0\" width=\"126\" height=\"42\" allowTransparency=\"true\" style=\"float:right\">'
+  val += '</iframe>';
+  alert(val);
+  return val;
 }
 </script><svg
         id=\"vizrt-logo\"
