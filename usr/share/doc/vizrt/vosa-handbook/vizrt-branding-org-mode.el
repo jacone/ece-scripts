@@ -11,7 +11,8 @@
 ; release notes.
 (setq org-export-html-preamble "<script>
 function renderclockiframe(url) {
-  return '<iframe src=\"http://'+url+'\" frameborder=\"0\" width=\"150\" height=\"10\"></iframe>';
+  return '<iframe src=\"'+url+'\" frameborder=\"0\" width=\"170\" height=\"23\" allowTransparency=\"true\"></iframe>';
+
 }
 </script><svg
         id=\"vizrt-logo\"
