@@ -58,7 +58,22 @@ function printne() {
   echo -ne $(get_id) $@
 }
 
+## Will log all messages past to it.
+##
+## - If the parent directory of the log file doesn't exist, the method
+## will try to create it.
+##
+## - If the log file doesn't exist, the method will try to create it.
+##
+## $@ :: list of strings
 function log() {
+  if [ -z $log ]; then
+    return
+  fi
+
+  # cannot use run wrapper her, it'll trigger an eternal loop.
+  fail_safe_run mkdir -p $(dirname $log)
+  fail_safe_run touch $log
   echo $(get_id) $@ >> $log
 }
 
@@ -84,19 +99,27 @@ function log_call_stack() {
 }
 
 function remove_pid_and_exit_in_error() {
-  if [ -e $pid_file ]; then
+  if [[ -z $pid_file && -e $pid_file ]]; then
     rm $pid_file
   fi
 
-  log_call_stack
+  # this method is also used from bootstrapping methods in scripts
+  # where the log file may not yet exist, hence, we test for its
+  # existence here before logging the call/stack trace.
+  if [ -w $log ]; then
+    log_call_stack
+  fi
   
   exit 1
 }
 
 function exit_on_error() {
-  if [ $? -gt 0 ]; then
-    print_and_log "The command [${@}] $(red FAILED) (exit code=$?), exiting :-("
+  local code=$?
+  if [ ${code} -gt 0 ]; then
+    print_and_log "The command [${@}] run as user $USER $(red FAILED)" \
+      "(the command exited with code ${code}), I'll exit now :-("
     print "See $log for further details."
+    remove_file_if_exists $lock_file
     remove_pid_and_exit_in_error
   fi
 }
@@ -104,6 +127,17 @@ function exit_on_error() {
 function run() {
   "${@}" 1>>$log 2>>$log
   exit_on_error $@
+}
+
+function fail_safe_run() {
+  "${@}"
+  if [ $? -gt 0 ]; then
+    echo $(basename $0) $(red FAILED) "executing the command [$@]" \
+      "as user" ${USER}"." \
+      $(basename $0) "will now exit." | \
+      fmt
+    exit 1
+  fi
 }
 
 ## Returns 1 if the passed argument is a number, 0 if not.
@@ -165,6 +199,9 @@ function yellow() {
   echo -e "\E[37;33m\033[1m${@}\033[0m"
 }
 
+function blue() {
+  echo -e "\E[37;34m\033[1m${@}\033[0m";
+};
 
 ## $1: full path to the file.
 function get_base_dir_from_bundle()
@@ -330,8 +367,10 @@ function split_string() {
   echo $splitted_string
 }
 
-## Creates $1 PID file if possible
-function create_pid_if_doesnt_exist() {
+## Creates $1 file if possible
+##
+## $1 :: the file, typically a PID or lock file.
+function create_file_if_doesnt_exist() {
   if [ -z $1 ]; then
     return
   elif [ -e $1 ]; then
@@ -339,19 +378,60 @@ function create_pid_if_doesnt_exist() {
   fi    
   
   local dir=$(dirname $1)
-  if [ ! -w $dir ]; then
-    print_and_log "The PID file couldn't be created because" \
-      $dir "either didn't exist or wasn't writable"
-    return
-  fi
-  
-  touch $1
+
+  # since this method can be called really early in scripts, we cannot
+  # use the run wrapper here.
+  fail_safe_run mkdir -p $(dirname $1)
+  fail_safe_run touch $1
 }
 
-function remove_pid_if_exists() {
+function remove_file_if_exists() {
   if [ -z $1 ]; then
     return
   elif [ ! -e $1 ]; then
     return
+  fi
+  
+  fail_safe_run rm $1
+}
+
+## basename $0 will resolve to the file name of the calling script,
+## not common-bashing itself.
+lock_file=/var/run/escenic/$(basename $0 .sh).lock
+
+## Will create a lock (and the lock's directory) for the caller. If
+## the lock already exists, this function will cause your program to
+## fail.
+##
+## $1 :: the lock file
+function create_lock() {
+  if [ -e $lock_file ]; then
+    echo $lock_file "exists, I'll exit"
+    exit 1
+  else
+    fail_safe_run mkdir -p $(dirname $lock_file)
+    fail_safe_run touch $lock_file
+  fi
+}
+
+## $1 :: the lock file
+function remove_lock() {
+  if [ ! -e $lock_file ]; then
+    print "Something is seriously wrong, the lock file ($lock_file) isn't there!"
+    exit 1
+  fi
+
+  fail_safe_run rm $lock_file
+}
+
+pid_file=/var/run/escenic/$(basename $0 .sh).pid
+function create_pid() {
+  fail_safe_run mkdir -p $(dirname $pid_file)
+  echo $$ > $pid_file
+}
+
+function remove_pid() {
+  if [ -e $pid_file ]; then
+    fail_safe_run rm $pid_file
   fi
 }

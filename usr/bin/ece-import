@@ -8,31 +8,58 @@
 ##  See /usr/share/doc/vizrt/vosa-handbook/import-jobs.org for more
 ##  details on the structures this command operates on.
 
-common_libraries="
-  /usr/share/escenic/ece-scripts/common-bashing.sh
-  /usr/share/escenic/ece-scripts/common-io.sh
-"
+function bootstrap_thyself() {
+  # first, try to be nice, then check the standard location
+  local dir=$(dirname $0)/../share/escenic/ece-scripts
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
 
-for el in $common_libraries; do
-  source $el || {
-    echo "$(basename $0): Could not load the library $el," \
-      "and I can't live without it :-(" | fmt
-    exit 1
-  }
-done
+  local common_libraries="
+    common-bashing.sh
+    common-io.sh
+  "
 
-pid_file=/var/run/escenic/$(basename $0).pid
-log=/var/log/escenic/$(basename $0).log
+  for el in $common_libraries; do
+    source $dir/$el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+  
+  for el in $dir/$(basename $0).d/*.sh; do
+    source $el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+}
 
-job_name=""
-publication_name=""
-transformers_base_dir=/usr/share/escenic/import
-raw_spool_base_dir=/var/spool/escenic/raw
+bootstrap_thyself
+
+# internal variables
+escenic_group=escenic
 escenic_spool_base_dir=/var/spool/escenic/import
+escenic_user=escenic
+job_name=""
+# since both regular users and root can use this command, we create
+# user specific log files. We put it in /var/log as it'll regardless
+# of user run as a deamon process.
+log=/var/log/escenic/$(basename $0)-${USER}.log
 nursery_base_dir=/etc/escenic/engine/common
+publication_name=""
+raw_spool_base_dir=/var/spool/escenic/raw
+raw_state_base_dir=/var/lib/escenic/raw
+raw_transformation_base_dir=/var/cache/escenic/import
+raw_transformed_base_dir=/var/backups/escenic/import
+transformers_base_dir=/usr/share/escenic/import
 
+# available commands/operations for ece-import
 COMMAND_IMPORT=1
-COMMAND_CRETAE_IMPORT_CONFIGURATION=2
+COMMAND_CREATE_IMPORT_CONFIGURATION=2
+COMMAND_DOWNLOAD_RAW_DATA=3
 command=$COMMAND_IMPORT
 
 function get_user_input() {
@@ -40,6 +67,11 @@ function get_user_input() {
   local next_is_publication=0
   local next_is_import_archive=0
   local next_is_nursery_base_dir=0
+  local next_is_escenic_user=0
+  local next_is_escenic_group=0
+  local next_is_user=0
+  local next_is_password=0
+  local next_is_uri=0
 
   for el in $@; do
     if [[ "$el" == "-n" || "$el" == "--name" ]]; then
@@ -48,8 +80,18 @@ function get_user_input() {
       next_is_publication=1
     elif [[ "$el" == "-f" || "$el" == "--import-archive" ]]; then
       next_is_import_archive=1
+    elif [[ "$el" == "--escenic-user" ]]; then
+      next_is_escenic_user=1
+    elif [[ "$el" == "--escenic-group" ]]; then
+      next_is_escenic_group=1
     elif [[ "$el" == "--nursery-base-dir" ]]; then
       next_is_nursery_base_dir=1
+    elif [[ "$el" == "--user" ]]; then
+      next_is_user=1
+    elif [[ "$el" == "--password" ]]; then
+      next_is_password=1
+    elif [[ "$el" == "--uri" ]]; then
+      next_is_uri=1
     elif [ $next_is_name -eq 1 ]; then
       job_name=$el
       next_is_name=0
@@ -62,64 +104,91 @@ function get_user_input() {
     elif [ $next_is_nursery_base_dir -eq 1 ]; then
       nursery_base_dir=$el
       next_is_nursery_base_dir=0
+    elif [ $next_is_escenic_user -eq 1 ]; then
+      escenic_user=$el
+      next_is_escenic_user=0
+    elif [ $next_is_escenic_group -eq 1 ]; then
+      escenic_group=$el
+      next_is_escenic_group=0
+    elif [ $next_is_user -eq 1 ]; then
+      user=$el
+      next_is_user=0
+    elif [ $next_is_password -eq 1 ]; then
+      password=$el
+      next_is_password=0
+    elif [ $next_is_uri -eq 1 ]; then
+      uri=$el
+      next_is_uri=0
     else
       if [[ "$el" == "create" ]]; then
-        command=$COMMAND_CRETAE_IMPORT_CONFIGURATION
+        command=$COMMAND_CREATE_IMPORT_CONFIGURATION
+      elif [[ "$el" == "download-import-data" ]]; then
+        command=$COMMAND_DOWNLOAD_RAW_DATA
       fi
     fi
   done
 
   local errors=0
-  if [ -z $job_name ]; then
+  if [ -z "$job_name" -a -z "${import_archive}" ]; then
     print_and_log "You must specify which import job to run"
     print_and_log "E.g.: $(basename $0) --name video"
     errors=1
   fi
-  if [ -z $publication_name ]; then
+  if [ -z "$publication_name" -a -z "${import_archive}" ]; then
     print_and_log "You must specify the publication name"
     print_and_log "E.g.: $(basename $0) --publication mypub"
     errors=1
   fi
+  
   if [ -n "${import_archive}" -a ! -r "${import_archive}" ]; then
     print_and_log "You have specified an import job archive file" \
       "but it doesn't exist :-("
-    remove_pid_and_exit_in_error
+    errors=1
   fi
+  
+  if [ $command -eq $COMMAND_DOWNLOAD_RAW_DATA ]; then
+    if [ -z "$user" ]; then
+      print_and_log "You must specify the the user"
+      print_and_log "E.g.: $(basename $0) --user lisa"
+      errors=1
+    fi
+    if [ -z "$password" ]; then
+      print_and_log "You must specify the the user"
+      print_and_log "E.g.: $(basename $0) --password foo"
+      errors=1
+    fi
+    if [ -z "$uri" ]; then
+      print_and_log "You must specify the the URI"
+      print_and_log "E.g.: $(basename $0) --uri http://feeds.com/myfeed"
+      errors=1
+    fi
+  fi
+  
   if [ $errors -eq 1 ]; then
     remove_pid_and_exit_in_error
   fi
-
-  print_and_log "Running the import job $job_name"
 }
 
 function check_pre_requisites() {
-  local required_dir_list="
-    $(dirname $pid_file)
-    $(dirname $log)
-    ${raw_spool_base_dir}
-    ${escenic_spool_base_dir}
-    ${transformers_base_dir}
-  "
-  for dir in $required_dir_list; do
-    if [ ! -w $dir ]; then
-      echo "The directory $dir must exist and be writable by user $USER" \
-        " for $(basename $0) to work" | fmt
-      exit 1
-    fi
-  done
-
   local required_command_list="
     xsltproc
     xmllint
+    xml_grep
   "
 
+  local some_missing=0
+  
   for el in $required_command_list; do
     which $el > /dev/null 2>/dev/null
     if [ $? -gt 0 ]; then
       print_and_log "$(basename $0) needs the command $el to be installed"
-      remove_pid_and_exit_in_error
+      some_missing=1
     fi
   done
+
+  if [ $some_missing -eq 1 ]; then
+    remove_pid_and_exit_in_error
+  fi
 }
 
 ## $1 :: the transformer (file name, relative or absoulte)
@@ -192,37 +261,59 @@ function handle_transformation_error() {
   run mv $1 $escenic_spool_base_dir/$publication_name/$job_name/error
 }
 
+import_error_count=0
+
 function import_raw_files() {
+  print_and_log "Publication: $publication_name"
+  print_and_log "Import configuration: $job_name"
   raw_file_count=0
   for f in $(find $raw_spool_base_dir/$publication_name/$job_name -type f); do
     raw_file_count=$(( raw_file_count + 1 ))
     transformation_count=0
     print_and_log "Importing raw XML #${raw_file_count}: $(basename $f) ..."
-    perform_transformations $f
+    local file=$raw_transformation_base_dir/$publication_name/$job_name/$(basename $f)
+    run cp $f $file
+    perform_transformations $file
 
-    log "Applied $transformation_count transformations to $f"
-    if [ $(check_escenic_xml $f) -eq 0 ]; then
-      log "Moving $f to" \
-        $escenic_spool_base_dir/$publication_name/$job_name/new/$(basename $f)
-      run mv $f $escenic_spool_base_dir/$publication_name/$job_name/new
+    log "Applied $transformation_count transformations to $file"
+    if [ $(is_escenic_xml_ok $file) -eq 1 ]; then
+      local dir=$escenic_spool_base_dir/$publication_name/$job_name/new
+      log "Transformed XML is OK, moving transformed file to" $dir
+      run mv $file $dir
+      dir=$raw_transformed_base_dir/$publication_name/$job_name/succeeded
+      log "Transformed XML is OK, moving original raw XML to" $dir \
+        "and gzip-ing it."
+      run mv $f $dir
+      run gzip --force $dir/$(basename $f)
+    else
+      local dir=$raw_transformed_base_dir/$publication_name/$job_name/failed
+      log $(red ERROR) "Transformed XML #${raw_file_count}," \
+        $file "isn't valid Escenic Syndication XML, so moving it to" $dir
+      run mv $f $dir
+      import_error_count=$(( import_error_count + 1 ))
     fi
   done
 }
 
 ## $1 :: the XML
-function check_escenic_xml() {
+function is_escenic_xml_ok() {
   if [ ! -e $1 ]; then
-    echo 1
+    echo 0
     return
   fi
 
+  # first, check for well formed-ness
   xmllint --format $1 > /dev/null 2>&1
   if [ $? -gt 0 ]; then
-    log $(yellow WARNING) "XML #${raw_file_count} after transformations," \
-      $f "isn't well formed XML. Importing it into Escenic Content Engine" \
-      " will fail, so I'll move it to" \
-      $escenic_spool_base_dir/$publication_name/$job_name/error
-    run mv $1 $escenic_spool_base_dir/$publication_name/$job_name/error
+    echo 0
+    return
+  fi
+
+  # check for an <escenic/> root element
+  local element_count=$(
+    xml_grep --cond /escenic $1 | wc -l 2>/dev/null
+  )
+  if [ $element_count -gt 0 ]; then
     echo 1
     return
   fi
@@ -233,6 +324,9 @@ function check_escenic_xml() {
 function verify_import_job_configuration() {
   verify_writable_dir_list \
     $raw_spool_base_dir/$publication_name/$job_name \
+    $raw_state_base_dir/$publication_name/$job_name \
+    $raw_transformation_base_dir/$publication_name/$job_name \
+    $raw_transformed_base_dir/$publication_name/$job_name \
     $escenic_spool_base_dir/$publication_name/$job_name/new \
     $escenic_spool_base_dir/$publication_name/$job_name/archive \
     $escenic_spool_base_dir/$publication_name/$job_name/error
@@ -246,7 +340,7 @@ function verify_import_job_configuration() {
       wc -l
   )
 
-  if [ $tranformation_count -lt 1 ]; then
+  if [ $command -eq $COMMAND_IMPORT -a $tranformation_count -lt 1 ]; then
     print_and_log "$(yellow WARNING) No transformers found in" \
       "$dir/, I'm assuming the incoming" \
       "data is already tranformed into Escenic Syndication XML"
@@ -254,6 +348,9 @@ function verify_import_job_configuration() {
 }
 
 function create_import_configuration() {
+  local publication_name=$1
+  local job_name=$2
+  
   print_and_log "Creating import job configuration '${job_name}' for" \
     "publication '${publication_name}' ..."
 
@@ -274,24 +371,16 @@ importReporter=/com/escenic/syndication/xml/ImportReporter
 publicationName=${publication_name}
 EOF
 
-  print_and_log "Escenic Content Engine import job created for you in ${file}" \
-    "You must now do two steps manually:"
-  print_and_log "(1) Add '/${job_nursery_fragment}' to the 'importConfigurations' list" \
-    "inside your ECE instance's" \
-    "/com/escenic/syndication/xml/XMLImportService e.g.:" \
-    /etc/escenic/engine/server/edit2-engine1/com/escenic/syndication/xml/XMLImportService.properties
-  
-  print_and_log "(2) Add this Nursery service " \
-    service.9.9-xml-import-service=/com/escenic/syndication/xml/XMLImportSchedule \
-    "to your instance's Initial component, e.g.:" \
-    /etc/escenic/engine/server/edit2-engine1/Initial.properties
+  print_and_log $(green NEW) \
+    "Import Nursery component created for you in ${file}"
+
+  import_configuration_list="
+    ${job_nursery_fragment}
+    ${import_configuration_list}
+  "
 }
 
-function apply_import_archive_if_present() {
-  if [ -z $import_archive ]; then
-    return
-  fi
-  
+function apply_import_archive() {
   local tmp_dir=$(mktemp -d)
   extract_archive $import_archive $tmp_dir
 
@@ -316,8 +405,11 @@ function apply_import_archive_if_present() {
         "specification, so I'll exit :-('"
       remove_pid_and_exit_in_error
     fi
+    
     for ele in $import_job_list; do
       print_and_log "Setting up import job '$ele' for publication '$el' ..."
+      create_import_configuration $el $ele
+
       local src_dir=$tmp_dir/$el/$ele/transformers
       local target_dir=$transformers_base_dir/$el/$ele
       if [ -d $src_dir ]; then
@@ -338,38 +430,115 @@ function apply_import_archive_if_present() {
 
       # support for cron.every.<number>.minutes
 
-      # create needed directories
-      local dir_list="
-        $raw_spool_base_dir/$el/$ele
-        $escenic_spool_base_dir/$el/$ele/new 
-        $escenic_spool_base_dir/$el/$ele/archive
-        $escenic_spool_base_dir/$el/$ele/error
-      "
-      for dir in $dir_list; do
-        make_dir $dir
-        run chown ${escenic_user-escenic}:${escenic_group-escenic} $dir
-      done
+      create_import_directories $el $ele
     done
   done
-
 
   run rm -rf ${tmp_dir}
 }
 
+## $1 :: publication
+## $2 :: import name
+function create_import_directories() {
+  # we include log and pid_file's directories here to get the
+  # ownership right.
+  local dir_list="
+    $(dirname $log)
+    $escenic_spool_base_dir/$1/$2/archive
+    $escenic_spool_base_dir/$1/$2/error
+    $escenic_spool_base_dir/$1/$2/new 
+    $raw_spool_base_dir/$1/$2
+    $raw_state_base_dir/$1/$2
+    $raw_transformation_base_dir/$1/$2 \
+    $raw_transformed_base_dir/$1/$2 \
+    $raw_transformed_base_dir/$1/$2/failed \
+    $raw_transformed_base_dir/$1/$2/succeeded \
+    $transformers_base_dir/$1/$2
+  "
+  for dir in $dir_list; do
+    log "Creating directory" $dir
+    make_dir $dir
+    run chown ${escenic_user}:${escenic_group} $dir
+  done
+}  
 
+function print_manual_steps() {
+  if [ -z "${import_configuration_list}" ]; then
+    return
+  fi
+    
+  print_and_log "You must now add your new Nursery components: " \
+
+  for el in $import_configuration_list; do
+    print_and_log "$(green ADD) /${el}"
+  done
+  
+  print_and_log "to the $(blue importConfigurations) variable in " \
+    "your ECE instance's" \
+    "/com/escenic/syndication/xml/XMLImportService e.g.:" \
+    "/etc/escenic/engine/server/edit2-engine1/com/escenic/syndication/xml/XMLImportService.properties"
+
+  print_and_log "The final step is to add the Nursery service " \
+    "service.9.9-xml-import-service=/com/escenic/syndication/xml/XMLImportSchedule" \
+    "to your instance's Initial component, e.g.:" \
+    /etc/escenic/engine/server/edit2-engine1/Initial.properties
+}
+
+## we call this method after each run to ensure that new files get the
+## user/group of the ECE UNIX user.
+function ensure_correct_permissions_on_data_files() {
+  local dir_list="
+    $escenic_spool_base_dir/$publication_name/$job_name/new 
+    $raw_spool_base_dir/$publication_name/$job_name
+    $raw_state_base_dir/$publication_name/$job_name
+  "
+  log "Ensuring correct permissions on all data files in these directories:" \
+    $dir_list
+
+  for dir in $dir_list; do
+    run chown -R ${escenic_user}:${escenic_group} $dir
+  done
+}
+
+function print_report() {
+  if [ $command -eq $COMMAND_IMPORT ]; then
+    print_and_log "Number of raw XML files proccessed:" $raw_file_count
+    print_and_log "Number of raw XML successes:" \
+      $(green $(( raw_file_count - import_error_count )))
+    print_and_log "Number of raw XML errors:" $(red $import_error_count)
+    print_and_log "Finished @ $(date), enjoy thyself!"
+  fi
+}
+
+function set_up_cron_job() {
+  ## TODO, finish:
+  cat >> /etc/crontab <<EOF
+  */5 * * * * * su - ${escenic_user} -c "ece-import --name ${job_name} --publication ${publication_name} --user ${user} --password ${password} --uri  ${uri} download-import-data"
+EOF
+}
+
+create_pid
 check_pre_requisites
-create_pid_if_doesnt_exist $pid_file
-print_and_log "Started @ $(date)"
-print "I'm logging to $log"
-get_user_input "$@"
+print_and_log "Started @ $(date), I'm logging to $log"
+get_user_input $@
 
 if [[ "$command" == $COMMAND_IMPORT ]]; then
   verify_import_job_configuration
   import_raw_files
-elif [[ "$command" == $COMMAND_CRETAE_IMPORT_CONFIGURATION ]]; then
-  apply_import_archive_if_present
-  create_import_configuration
+elif [[ "$command" == $COMMAND_CREATE_IMPORT_CONFIGURATION ]]; then
+  if [ -z $import_archive ]; then
+    create_import_configuration $publication_name $job_name
+    create_import_directories $publication_name $job_name
+  else
+    apply_import_archive
+  fi
+elif [[ "$command" == $COMMAND_DOWNLOAD_RAW_DATA  ]]; then
+  verify_import_job_configuration
+  download_latest_files
 fi
 
+ensure_correct_permissions_on_data_files
+print_manual_steps
+print_report
 print_and_log "Finished @ $(date)"
-remove_pid_if_exists $pid_file
+remove_pid
