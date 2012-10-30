@@ -3,7 +3,9 @@
 #+OPTIONS: toc:2 
 #+DRAWERS: PLANTUML PROPERTIES
 #+STYLE: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
-
+#+OPTIONS: skip:t
+#+TEXT: <%= trail_service_header_org %>
+#+TEXT: [TABLE-OF-CONTENTS]
 #+INCLUDE: "overview.org"
 #+INCLUDE: "operating-system-maintenance.org" 
 #+INCLUDE: "deployment.org"
