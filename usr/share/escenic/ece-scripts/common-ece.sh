@@ -27,3 +27,27 @@ function get_instance_list() {
 
   echo $instance_list
 }
+
+## Will return the app base for the passwed WAR name.
+## 
+## $1 :: the name of the war file
+function get_app_base() {
+  local war=$(basename $1 .war)
+  local webapps_in_standard_webapps_list="
+    escenic
+    escenic-admin
+    inpage-ws
+    studio
+    webservice
+    dashboard
+  "
+
+  for el in $webapps_in_standard_webapps_list; do
+    if [[ "$el" == "$war" ]]; then
+      echo webapps
+      return
+    fi
+  done
+
+  echo webapps-${war}
+}
