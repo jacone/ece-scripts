@@ -112,18 +112,30 @@ function create_import_cron_jobs() {
       "You need to be root to set up the cron jobs, skipping it."
     return
   fi
+  
   local file=/etc/cron.d/$1-$2-cron
-  print_and_log "Setting up $file for ${1}'s $2 ..."
   echo > $file
   
   find $3 -maxdepth 3 -name "cron*minutes" -type d | while read f; do
     dir=$(basename $f)
     minutes=$(echo $dir | cut -d'.' -f3)
     for el in $(find $3/$dir -type f); do
-      echo "*/${minutes} * * * * $el" >> $file
+      local target_dir=$transformers_base_dir/$1/$2/$dir
+      make_dir $target_dir
+      run cp --force $el $target_dir
+      # it's  important that all cron scripts are executable'
+      run chmod +x $target_dir/*
+      echo "*/${minutes} * * * * $target_dir/$(basename $el) >> $log_base_dir/$1-$2-$(basename $el).log" \
+        >> $file
+      exit 1
     done
   done
 
-  cat $file
 
+  # remove empty cron files
+  if [ $(wc -c $file | cut -d' ' -f1) -lt 2 ]; then
+    run rm $file
+  else
+    print_and_log $(green NEW) "cron job(s) set up in $file"
+  fi
 }
