@@ -103,8 +103,8 @@ function deploy() {
       run rm -rf $tomcat_base/work/*
 
       for war in $dir/*.war ; do
-        if [ -d $tomcat_base/webapps/`basename $war .war` ] ; then
-          run rm -rf $tomcat_base/webapps/`basename $war .war`
+        if [ -d $tomcat_base/$(get_app_base $war)/$(basename $war .war) ] ; then
+          run rm -rf $tomcat_base/$(get_app_base $war)/$(basename $war .war)
         fi
       done
 
@@ -123,16 +123,17 @@ function deploy() {
       fi
       
       for war in $dir/*.war ; do
-        name=`basename $war .war`
+        local app_base=$(get_app_base $war)
+        local name=$(basename $war .war)
 
-        deploy_this_war=1
+        local deploy_this_war=1
         if [ -n "$deploy_webapp_white_list" ]; then
-          deploy_this_war=0
+          local deploy_this_war=0
 
           for el in $deploy_webapp_white_list; do
-            if [ "$el" == $name ]; then
-              debug "found $war in white list, will deploy it"
-              deploy_this_war=1
+            if [[ "$el" == "$name" ]]; then
+              log "found $war in white list, will deploy it"
+              local deploy_this_war=1
             fi
           done
         fi
@@ -140,17 +141,13 @@ function deploy() {
         if [ "$deploy_this_war" -eq 0 ]; then
           continue
         fi
-        
-        (cd $tomcat_base/webapps &&
-          mkdir $name &&
-          cd $name &&
-          jar xf $war \
-            1>>$log \
-            2>>$log)
-        exit_on_error "extracting $war to $tomcat_base/webapps/"
-        
+
+        make_dir $tomcat_base/$app_base/$name
+        run cd $tomcat_base/$app_base/$name
+        run jar xf $war
+
         if [ ${enable_memcached_support-1} -eq 1 ]; then
-          add_memcached_support $tomcat_base/webapps/$name
+          add_memcached_support $tomcat_base/$app_base/$name
         fi
       done
       ;;

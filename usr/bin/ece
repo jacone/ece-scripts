@@ -92,7 +92,7 @@ function init() {
 
   if [ -d $dir ]; then
     # load common libraries
-    common_libraries="common-bashing.sh common-io.sh common-os.sh"
+    common_libraries="common-bashing.sh common-io.sh common-os.sh common-ece.sh"
     for el in $common_libraries; do
       source $dir/${el}
     done
