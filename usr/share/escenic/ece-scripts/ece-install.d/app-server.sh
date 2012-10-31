@@ -322,7 +322,10 @@ EOF
       local file=$tomcat_base/conf/server.xml
 
       cat >> $file <<EOF
-      <Host name="${domain}" appBase="webapps" autoDeploy="false">
+      <Host
+        name="${domain}"
+        appBase="$(get_app_base $publication)"
+        autoDeploy="false">
 EOF
 
       # add the host aliases (if available)
@@ -598,4 +601,3 @@ function log4j_ensure_java_util_logging_is_not_doing_anything() {
     log $file "doesn't exist, strange"
   fi
 }
-

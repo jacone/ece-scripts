@@ -120,14 +120,14 @@ function init() {
 
   if [ -d $dir ]; then
     # load common librariees
-    common_libraries="common-bashing.sh common-pulse.sh common-io.sh common-os.sh"
+    common_libraries="common-ece.sh common-bashing.sh common-io.sh common-os.sh"
     for el in $common_libraries; do
       source $dir/${el}
     done
 
     # load ece-install modules
     for el in $dir/ece-install.d/*.sh; do
-      log "Loading $(basename $0) module:" $el
+      log "Loading $(basename $0) module:" $(basename $el)
       source $el
     done
   else
