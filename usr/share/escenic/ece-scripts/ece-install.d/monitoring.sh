@@ -177,6 +177,7 @@ function install_nagios_node()
   if [[ $(lsb_release -c -s) == "squeeze" ]]; then
     # needed for check-mk
     add_apt_source "deb http://backports.debian.org/debian-backports squeeze-backports main"
+    run apt-get update --quiet
   fi
   
   if [ $on_debian_or_derivative -eq 1 ]; then
