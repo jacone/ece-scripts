@@ -39,7 +39,7 @@ The follwing machine names are common in VOSA clusters:
 
 *** VME Online
 All VME Online machines can be made redundant if there is a stable network connection between them. If a role is only represented once it does not get a number. if there are more, a number is added to the name. 
-**** Controller
+/Controller:/
 (vmeo-controller*) All vmeo clusters need a VME controller. It might do everything or delegate some work to the other vmeo machines.
 
 The following machine roles are controlle by the controller:
