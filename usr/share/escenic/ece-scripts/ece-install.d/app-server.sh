@@ -508,8 +508,8 @@ log4j.appender.ECELOG=org.apache.log4j.DailyRollingFileAppender
 log4j.appender.ECELOG.File=$escenic_log_dir/\${com.escenic.instance}-messages
 log4j.appender.ECELOG.layout=org.apache.log4j.PatternLayout
 log4j.appender.ECELOG.layout.ConversionPattern=%d %5p [%t] %x (%c) %m%n
-log4j.category.com.escenic=INFO, ECELOG
-log4j.category.neo=INFO, ECELOG
+log4j.category.com.escenic=ERROR, ECELOG
+log4j.category.neo=ERROR, ECELOG
 log4j.additivity.neo=false
 log4j.additivity.com.escenic=false
 
