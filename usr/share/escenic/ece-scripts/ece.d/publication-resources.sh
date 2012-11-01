@@ -74,7 +74,7 @@ function update_publication_resources() {
   print "Updating the $(basename $resource) resource for the $publication" \
     "publication ..."
   
-  debug POSTing $resource to $url
+  log POSTing $resource to $url
   if [[ -n "$do_put" && "$do_put" == "true" ]]; then
     curl -T ${resource} \
       ${curl_appserver_auth} \
