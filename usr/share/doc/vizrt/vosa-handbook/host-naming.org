@@ -42,7 +42,7 @@ All VME Online machines can be made redundant if there is a stable network conne
 /Controller:/
 (vmeo-controller*) All vmeo clusters need a VME controller. It might do everything or delegate some work to the other vmeo machines.
 
-The following machine roles are controlle by the controller:
+The following machine roles are controlled by the controller:
 - Transcoder :: (vmeo-transcoder*) transcodes any ingested video to any variant
 - Encoder :: (vmeo-encoder*) can encode an incoming stream or SDI cable to an ipstream that is used for streaming.
 - Delivery :: (vmeo-delivery*) [[http://en.wikipedia.org/wiki/Flash_Video][Flash]] and [[http://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol][RTSP]] 
