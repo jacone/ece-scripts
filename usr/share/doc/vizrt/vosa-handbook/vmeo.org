@@ -28,3 +28,5 @@ VME-O transcodes video's to a set of predefined formats as soon as possible afte
 
 ** Publishing
 Video's are requested by players with a streaming protocol or with HTTP. VME-O can take care of both. 
+
+@Olivier TODO
