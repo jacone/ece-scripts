@@ -126,6 +126,10 @@ function set_up_escenic-content-engine-scripts() {
   # cron
   cp -r ../../../../etc/cron.daily/remove-old-escenic-log-files \
     $target_dir/etc/cron.daily/
+
+  # hugin
+  cp -r ../../../../usr/share/hugin \
+    $target_dir/usr/share/
 }
 
 function set_up_vosa() {
