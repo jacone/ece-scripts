@@ -45,8 +45,8 @@ All VME Online machines can be made redundant if there is a stable network conne
 The following machine roles are controlled by the controller:
 - Transcoder :: (vmeo-transcoder*) transcodes any ingested video to any variant
 - Encoder :: (vmeo-encoder*) can encode an incoming stream or SDI cable to an ipstream that is used for streaming.
-- Delivery :: (vmeo-delivery*) [[http://en.wikipedia.org/wiki/Flash_Video][Flash]] and [[http://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol][RTSP]] 
-- Segmenter :: (vmeo-segmenter*) creates [[http://en.wikipedia.org/wiki/HTTP_Live_Streaming][HLS]]
+- Delivery :: (vmeo-delivery*) Delivers video files over http for video on demand(VOD). It can also take streams from reporter or encoder and deliveres [[http://en.wikipedia.org/wiki/Flash_Video][Flash]] and [[http://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol][RTSP]] 
+- Segmenter :: (vmeo-segmenter*) Takes streams from reporter of encoder and delviers [[http://en.wikipedia.org/wiki/HTTP_Live_Streaming][HLS]]
 - Reporter :: (vmeo-reporter*) receives live streams form the viz reporter app on mobile devices.
 
 *** Escenic
