@@ -38,7 +38,16 @@ The follwing machine names are common in VOSA clusters:
 - Monitoring :: (mon) Dedicated machine that harvest samples of performance metrics from all the machines and sending out events when performance or capacity limits are exceded.
 
 *** VME Online
-- VME-Online :: (vmeo*) All VME-online machines are able to perform all possible VME-online virtual roles. They are simply numbered. 
+All VME Online machines can be made redundant if there is a stable network connection between them. If a role is only represented once it does not get a number. if there are more, a number is added to the name. 
+**** Controller
+(vmeo-controller*) All vmeo clusters need a VME controller. It might do everything or delegate some work to the other vmeo machines.
+
+The following machine roles are controlle by the controller:
+- Transcoder :: (vmeo-transcoder*) transcodes any ingested video to any variant
+- Encoder :: (vmeo-encoder*) can encode an incoming stream or SDI cable to an ipstream that is used for streaming.
+- Delivery :: (vmeo-delivery*) [[http://en.wikipedia.org/wiki/Flash_Video][Flash]] and [[http://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol][RTSP]] 
+- Segmenter :: (vmeo-segmenter*) creates [[http://en.wikipedia.org/wiki/HTTP_Live_Streaming][HLS]]
+- Reporter :: (vmeo-reporter*) receives live streams form the viz reporter app on mobile devices.
 
 *** Escenic
 - Escenic Presentation :: (pres*) Dedicated machine for generating webpages by merging content from a database with html from JSP files.
