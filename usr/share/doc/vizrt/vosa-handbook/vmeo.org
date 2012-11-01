@@ -1,0 +1,30 @@
+* Viz Media Engine - Online (VMEO)
+VME-Online is a content mangement system and online publishing system for Video.
+
+VME-Online gives a strong focus on online and mobile production. Video is transcoded and distributed to multiple mobile devices and web sites, thus ensuring an optimal end user experience. The Viz Media Engine enables customers to publish all of their existing inventory to all devices and is built for scaling. The system is integrated with the Vizrt Online Suite, but can also be integrated to your existing CMS or website using our various APIs. The systems is ready to connect to CDNs and supports easy adjustable profiles for different connection speeds and terminals.
+
+** Video Ingest
+VME-O offers many interfaces to ingest video into the VME-O system.
+After ingest the video's have the following state:
+- The video's are stored in the SOLARtv VME-O house format: MP4.
+- All available meta information is available through the UI and API.
+- All post ingest processes have started.
+
+The following ingest interfaces are used by SOLARtv:
+- file ingest :: A dropfolder can be made available as a fileshare with SMB, NFS or FTP. When a video is uploaded to this fileshare it is automatically imported in VME-Online. If it is accompanied with metainformation in the documented import format, this meta information is added to the content item in the VMEO database.
+- SDI ingest (live) :: An SDI feed can be ingested live.
+
+The following ingest interfaces are available but not used by SOLARtv
+- Mobile ingest (Viz reporter) :: Several apps on iphone and nokia are available to upload video content over slow mobile networks or faster wifi connections when available to the device. 
+- Webservice ingest :: A REST webservice is available to push meta information of video content including a uri that will be ued by VMEO to fetch the video for ingestion.
+- Ingest formats :: VME-O has a long list of video formats it is able to ingest.
+
+** Transcoding
+Many Web browsers on PC's, pads and smartphones are not capable of playing the VME-O house format. It is eather to big or of the wrong binary format. This is why VME-O can be configured to transcode video's to various alternative formats and sizes to allow for a veriety of devices to play them.
+
+Transcoding typically is quite cpu intensive. For this reason it makes no sense to transcode more than the amount of processors in a box in parrallel. VME-O has a queing mechanism to ensure that it is not overloaded. More transcoding power can be added by deploying more transcoding machines to the cluster.
+
+VME-O transcodes video's to a set of predefined formats as soon as possible after ingest.
+
+** Publishing
+Video's are requested by players with a streaming protocol or with HTTP. VME-O can take care of both. 
