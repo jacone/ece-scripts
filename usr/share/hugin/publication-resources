@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Hugin script to tell hugin how to collect publication resources
+
+# xmllint is needed for this
+if ! which xmllint > /dev/null ; then
+  echo 'xmllint not installed'
+  exit 1
+fi
+
+# A vosa system declaration too.
+if [ ! -r /etc/vosa-service-declaration.conf ] ; then
+  echo 'A vosa system declaration is needed'
+  exit 1
+fi
+
+
+xml_resources="
+/escenic/content-type
+/escenic/layout-group
+/escenic/plugin/menu
+"
+
+text_resources="
+/escenic/feature
+"
+
+. /etc/vosa-service-declaration.conf 
+
+pubs=( $trail_publication_domain_mapping_list )
+for pub in "${pubs[@]/\#*/}" ; do
+  for resource in $xml_resources ; do
+    name=${resource//[\/]/-}
+    echo "escenic-publication-${pub}$name" "curl -s http://localhost:8080/escenic-admin/publication-resources/$pub$resource | xmllint --encode UTF-8 --format -"
+  done
+  for resource in $text_resources ; do
+    name=${resource//[\/]/-}
+    echo "escenic-publication-${pub}$name" "curl -s http://localhost:8080/escenic-admin/publication-resources/$pub$resource"
+  done
+  echo "escenic-publication-${pub}-section-parameters" "curl -s http://localhost:8080/escenic-admin/section-parameters/$pub/ | grep -v ^# | sort -n"
+done
+
+

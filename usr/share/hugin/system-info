@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if ! which > /dev/null system-info ; then
+  echo "No system-info..."
+  exit 1
+fi
+
+echo "system-info system-info -f yaml -s"
+
