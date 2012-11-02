@@ -34,12 +34,15 @@ function get_instance_list() {
 function get_app_base() {
   local war=$(basename $1 .war)
   local webapps_in_standard_webapps_list="
+    dashboard
     escenic
     escenic-admin
+    indexer-webapp
+    indexer-webservice
     inpage-ws
+    solr
     studio
     webservice
-    dashboard
   "
 
   for el in $webapps_in_standard_webapps_list; do
