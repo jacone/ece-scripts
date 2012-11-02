@@ -312,10 +312,19 @@ EOF
     for el in ${fai_publication_domain_mapping_list}; do
       local old_ifs=$IFS
       # the entries in the fai_publication_domain_mapping_list are on
-      # the form: <publication>#<domain>#[<alias1>[,<alias2>]]
+      # the form: <publication[,pub.war]>#<domain>[#<alias1>[,<alias2>]]
       IFS='#'
       read publication domain aliases <<< "$el"
+      IFS=','
+      read publication_name publication_war <<< "$publication"
       IFS=$old_ifs
+
+      # normally the WAR is called the same as the publication, in
+      # which case we set the publication_war to the same as the
+      # publication_name.
+      if [ -z "${publication_war}" ]; then
+        publication_war = $publication_name
+      fi
 
       ensure_domain_is_known_to_local_host ${domain}
 
@@ -324,7 +333,7 @@ EOF
       cat >> $file <<EOF
       <Host
         name="${domain}"
-        appBase="$(get_app_base $publication)"
+        appBase="$(get_app_base $publication_war)"
         autoDeploy="false">
 EOF
 
@@ -337,7 +346,7 @@ EOF
 
       cat >> $file <<EOF
         <Context displayName="${domain}"
-                 docBase="${publication}"
+                 docBase="$(basename ${publication_war} .war)"
                  path=""
         />
       </Host>

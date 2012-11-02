@@ -430,7 +430,9 @@ function set_up_publication_nursery_conf() {
     for el in $fai_publication_domain_mapping_list; do
       local old_ifs=$IFS
       IFS='#'
-      read publication_name publication_domain publication_aliases <<< "$el"
+      read publication publication_domain publication_aliases <<< "$el"
+      IFS=','
+      read publication_name publication_war <<< "$publication"
       IFS=$old_ifs
       
       local file=$escenic_conf_dir/engine/environment/${fai_publication_environment-production}/neo/publications/Pub-${publication_name}.properties
