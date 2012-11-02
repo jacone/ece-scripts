@@ -816,13 +816,13 @@ fai_publication_domain_mapping_list="
 This will produce the following stanzas in server.xml:
 
 #+BEGIN_SRC nxml
-<Host name="fire.escenic.com" appBase="webapps" autoDeploy="false">
+<Host name="fire.escenic.com" appBase="webapps-firepub" autoDeploy="false">
   <Context displayName="fire.escenic.com"
            docBase="firepub"
            path=""
   />
 </Host>
-<Host name="ild.escenic.com" appBase="webapps" autoDeploy="false">
+<Host name="ild.escenic.com" appBase="webapps-ildpub" autoDeploy="false">
   <Alias>feuer.escenic.com</Alias>
   <Alias>fuego.escenic.com</Alias>
   <Context displayName="ild.escenic.com"
@@ -832,6 +832,24 @@ This will produce the following stanzas in server.xml:
 </Host>
 #+END_SRC
 
+*** Having WAR files with a different name than the publication
+Nine out of ten times (probably a lot more too), the WAR file matches
+the name of the publication, e.g. if your publication is called
+=sports=, your WAR is called =sports.war=.
+
+However, if you for some reason have a WAR with a different name, you
+can add this as an addition to the first element of the
+=fai_publication_domain_mapping_list= entry:
+#+BEGIN_SRC text
+fai_publication_domain_mapping_list="
+  firepub,fire.war#fire.escenic.com
+"
+#+END_SRC
+
+Now, the =appBase= and =docBase= values will become =webapps-fire= and
+=fire= respectively.
+
+*** Host name aliases
 As you can see, there's a third optional option to the
 =fai_publication_domain_mapping_list= which can be specified as a
 comma separated list of host aliases to be added to the app server host
@@ -918,7 +936,7 @@ $HOME/ece-install.conf file of the root user:
 | =fai_presentation_stop_and_clear=     | 0                                                            | After installation, stop the instances and clear its work & log files                                    |
 | =fai_public_host_name=                | ${HOSTNAME}:8080                                             | The public address for your website                                                                      |
 | =fai_publication_create=              | 0                                                            | Create a new publication                                                                                 |
-| =fai_publication_domain_mapping_list= | ""                                                           | Mapping between publication names and their domains: "one#one.com other#other.com[#<alias1>[,<alias2>]]" |
+| =fai_publication_domain_mapping_list= | ""                                                           | Mapping between publication names and their domains: "one[,other.war]#one.com other#other.com[#<alias1>[,<alias2>]]" |
 | =fai_publication_environment=         | "production"                                                 | The kind of environment/habitat. Typical values are: production, staging, testing, development.          |
 | =fai_publication_name=                | mypub                                                        | Name of the publication                                                                                  |
 | =fai_publication_use_instance=        | dev1                                                         | Name of local instance to use for creation                                                               |
