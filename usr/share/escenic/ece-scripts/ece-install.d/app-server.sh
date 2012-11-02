@@ -542,7 +542,7 @@ log4j.additivity.browser=false
 EOF
   run cd $tomcat_base/lib/
   make_ln $common_nursery_dir/trace.properties
-  run ln --sumbolic --force trace.properties log4j.properties
+  run ln --symbolic --force trace.properties log4j.properties
 
   if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
     $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
