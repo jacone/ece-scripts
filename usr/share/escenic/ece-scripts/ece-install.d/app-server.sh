@@ -121,7 +121,7 @@ function set_up_app_server() {
   if [ -e tomcat ]; then
     run rm tomcat
   fi
-  run ln -sf ${tomcat_dir} tomcat
+  run ln --symbolic --force ${tomcat_dir} tomcat
 
   tomcat_home=${appserver_parent_dir}/tomcat
   tomcat_base=${appserver_parent_dir}/tomcat-${instance_name}
@@ -542,7 +542,7 @@ log4j.additivity.browser=false
 EOF
   run cd $tomcat_base/lib/
   make_ln $common_nursery_dir/trace.properties
-  run ln -s trace.properties log4j.properties
+  run ln --sumbolic --force trace.properties log4j.properties
 
   if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
     $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
