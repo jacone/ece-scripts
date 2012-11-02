@@ -845,7 +845,8 @@ function common_post_install() {
   set_correct_permissions
   
   print_status_and_next_steps
-  run rm $pid_file
+  remove_lock
+  remove_pid
 }
 
 function un_install_everything() {
