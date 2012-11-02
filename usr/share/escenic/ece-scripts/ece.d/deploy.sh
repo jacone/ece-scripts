@@ -117,9 +117,8 @@ function deploy() {
       
       if [ -n "$deploy_webapp_white_list" ]; then
         deploy_this_war=0
-        message="Deployment white list active, only deploying: "
-        message=$message"$deploy_webapp_white_list"
-        print_and_log $message
+        print_and_log "Deployment white list active, only deploying: " \
+          $deploy_webapp_white_list
       fi
       
       for war in $dir/*.war ; do
@@ -183,7 +182,10 @@ function add_memcached_support() {
   fi
 
   local exempt_from_memcached_list="
-      escenic escenic-admin indexer-webservice indexer-webapp studio
+      escenic
+      escenic-admin
+      indexer-webapp studio
+      indexer-webservice
       inpage-ws dashboard
     "
 
