@@ -524,36 +524,13 @@ log4j.additivity.org.apache.solr=false
 
 ######################################################################
 # Tomcat specific logging
-log4j.appender.CATALINA=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.CATALINA.File=${escenic_log_dir}/\${com.escenic.instance}-tomcat-catalina
-log4j.appender.CATALINA.layout = org.apache.log4j.PatternLayout
-log4j.appender.CATALINA.layout.ConversionPattern = %d [%t] %-5p %c- %m%n
+log4j.appender.TOMCAT=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.TOMCAT.File=${escenic_log_dir}/\${com.escenic.instance}-tomcat
+log4j.appender.TOMCAT.layout = org.apache.log4j.PatternLayout
+log4j.appender.TOMCAT.layout.ConversionPattern = %d [%t] %-5p %c- %m%n
 
-log4j.appender.LOCALHOST=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.LOCALHOST.File=${escenic_log_dir}/\${com.escenic.instance}-tomcat-localhost
-log4j.appender.LOCALHOST.layout = org.apache.log4j.PatternLayout
-log4j.appender.LOCALHOST.layout.ConversionPattern = %d [%t] %-5p %c- %m%n
-
-log4j.appender.MANAGER=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.MANAGER.File=${escenic_log_dir}/\${com.escenic.instance}-tomcat-manager
-log4j.appender.MANAGER.layout = org.apache.log4j.PatternLayout
-log4j.appender.MANAGER.layout.ConversionPattern = %d [%t] %-5p %c- %m%n
-
-log4j.appender.HOST-MANAGER=org.apache.log4j.DailyRollingFileAppender
-log4j.appender.HOST-MANAGER.File=${escenic_log_dir}/\${com.escenic.instance}-tomcat-host-manager
-log4j.appender.HOST-MANAGER.layout = org.apache.log4j.PatternLayout
-log4j.appender.HOST-MANAGER.layout.ConversionPattern = %d [%t] %-5p %c- %m%n
-
-log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
-log4j.appender.CONSOLE.layout = org.apache.log4j.PatternLayout
-log4j.appender.CONSOLE.layout.ConversionPattern = %d [%t] %-5p %c- %m%n
-
-log4j.logger.org.apache.catalina.core.ContainerBase.[Catalina].[localhost]=INFO, LOCALHOST
-log4j.logger.org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/manager]=\
-  INFO, MANAGER
-log4j.logger.org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/host-manager]=\
-  INFO, HOST-MANAGER
-log4j.additivity.org.apache.catalina.core.ContainerBase=false
+log4j.category.org.apache.catalina=INFO, TOMCAT
+log4j.additivity.org.apache.catalina=false
 
 ######################################################################
 # Get rid of the browser log which for some reason wanderse into the
@@ -565,6 +542,7 @@ log4j.additivity.browser=false
 EOF
   run cd $tomcat_base/lib/
   make_ln $common_nursery_dir/trace.properties
+  run ln -s trace.properties log4j.properties
 
   if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
     $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
