@@ -33,6 +33,10 @@ function get_instance_list() {
 ## $1 :: the name of the war file
 function get_app_base() {
   local war=$(basename $1 .war)
+
+  # this is a list of web applications that are standard ECE related
+  # web applications which should not live in their own webapp context
+  # (i.e. not a publication).
   local webapps_in_standard_webapps_list="
     dashboard
     escenic
