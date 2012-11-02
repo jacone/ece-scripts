@@ -1,32 +1,60 @@
 * Viz Media Engine - Online (VMEO)
 VME-Online is a content mangement system and online publishing system for Video.
 
-VME-Online gives a strong focus on online and mobile production. Video is transcoded and distributed to multiple mobile devices and web sites, thus ensuring an optimal end user experience. The Viz Media Engine enables customers to publish all of their existing inventory to all devices and is built for scaling. The system is integrated with the Vizrt Online Suite, but can also be integrated to your existing CMS or website using our various APIs. The systems is ready to connect to CDNs and supports easy adjustable profiles for different connection speeds and terminals.
+** TODO Overview
 
-** Video Ingest
+
+** Video file handling
 VME-O offers many interfaces to ingest video into the VME-O system.
 After ingest the video's have the following state:
-- The video's are stored in the SOLARtv VME-O house format: MP4.
+- The video's are stored in their original format.
 - All available meta information is available through the UI and API.
-- All post ingest processes have started.
+- All transcoding to preconfigured target variants is stated.
 
 The following ingest interfaces are used by SOLARtv:
-- file ingest :: A dropfolder can be made available as a fileshare with SMB, NFS or FTP. When a video is uploaded to this fileshare it is automatically imported in VME-Online. If it is accompanied with metainformation in the documented import format, this meta information is added to the content item in the VMEO database.
-- SDI ingest (live) :: An SDI feed can be ingested live.
+- file ingest :: \\vmeo-controller\drop\ is watced by jboss on the controller. If it is accompanied with metainformation in the documented import format, this meta information is added to the content item in the VMEO database.
+- SDI ingest (live) :: An SDI feed can be connected to the vmeo-controller in the offices of SOLARtv
 
 The following ingest interfaces are available but not used by SOLARtv
 - Mobile ingest (Viz reporter) :: Several apps on iphone and nokia are available to upload video content over slow mobile networks or faster wifi connections when available to the device. 
 - Webservice ingest :: A REST webservice is available to push meta information of video content including a uri that will be ued by VMEO to fetch the video for ingestion.
 - Ingest formats :: VME-O has a long list of video formats it is able to ingest.
 
-** Transcoding
+*** Transcoding
 Many Web browsers on PC's, pads and smartphones are not capable of playing the VME-O house format. It is eather to big or of the wrong binary format. This is why VME-O can be configured to transcode video's to various alternative formats and sizes to allow for a veriety of devices to play them.
 
-Transcoding typically is quite cpu intensive. For this reason it makes no sense to transcode more than the amount of processors in a box in parrallel. VME-O has a queing mechanism to ensure that it is not overloaded. More transcoding power can be added by deploying more transcoding machines to the cluster.
+Transcoding typically is quite cpu intensive. For this reason it makes no sense to transcode more than the amount of processors in a box in parrallel. VME-O has a queing mechanism to ensure that it is not overloaded. More transcoding capacty can be added by deploying more transcoding machines to the cluster.
 
-VME-O transcodes video's to a set of predefined formats as soon as possible after ingest.
+At SOLARtv transcoding is done by vmeo-controller
 
-** Publishing
-Video's are requested by players with a streaming protocol or with HTTP. VME-O can take care of both. 
+/Active Target variants at SOLARtv are:/
+- Flash Video Format (.flv)
+- AVI Format (.avi)
+- Quicktime Format (.mov)
+- MP4 Format (.mp4)
+- Mpg Format (.mpg)
 
-@Olivier TODO
+/Other available variants in VMEO are:/
+- Windows Media Video Format (.wmv)
+- GP File Extension (.3gp)
+- Advances Streaming Format (.asf)
+- Real Media Format (.rm)
+- Flash Movie Format (.swf )
+- the RealVideo Format 
+
+*** Publishing
+Video files are most commonly served to clients using the HTTP protocol. The DiRetriever webservice on the controller is available for clients to choose the right variant. HTTP requires no special configuration other than allowing clients to acess the vmeo-delivery server on tcp:80
+
+In cases where the DiRetriever decides to direct a client to a video stream it uses:
+- Real Time Streaming Protocol (RTSP) :: is a network control protocol designed for use in entertainment and communications systems to control streaming media servers. The protocol is used for establishing and controlling media sessions between end points. Clients of media servers issue VCR-like commands, such as play and pause, to facilitate real-time control of playback of media files from the server. The transmission of streaming data itself is not a task of the RTSP protocol. Most RTSP servers use the Real-time Transport Protocol ([[http://en.wikipedia.org/wiki/Real-time_Transport_Protocol][RTP]]) in conjunction with Real-time Control Protocol ([[http://en.wikipedia.org/wiki/RTCP][RTCP]]) for media stream delivery, however some vendors implement proprietary transport protocols. The RTSP server from RealNetworks, for example, also features RealNetworks' proprietary Real Data Transport ([[http://en.wikipedia.org/wiki/Real_Data_Transport][RDT]]). RTSP usually needs TCP:554 to be routed between the clients and the vmeo-delivery server. This port is often opened on corporate firewalls to allow for clients to access RTSP streams.
+- HTTP Live Streaming (HLS) :: is an HTTP-based media streaming communications protocol implemented by Apple Inc. as part of their QuickTime X and iPhone software systems. It works by breaking the overall stream into a sequence of small HTTP-based file downloads, each download loading one short chunk of an overall potentially unbounded transport stream. As the stream is played, the client may select from a number of different alternate streams containing the same material encoded at a variety of data rates, allowing the streaming session to adapt to the available data rate. At the start of the streaming session, it downloads an extended M3U (m3u8) playlist containing the metadata for the various sub-streams which are available. HLS uses plain HTTP and requires no special network configuration.
+
+
+** Live video feeds
+VMEO can handle video feeds from various sources such as SDI or ip feeds.
+
+*** Encoding
+Incoming video feeds are encoded on the fly by vmeo-controller and made available to the various streaming options on vmeo-delivery. The feeds are pushed using the <vmeostreaming protocol> over tcp-i port 234.
+
+
+
