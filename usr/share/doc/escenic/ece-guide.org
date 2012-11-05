@@ -1,4 +1,6 @@
-Guide for the /usr/bin/ece Script
+#+TITLE: User Guide for the ece Script
+#+AUTHOR: Vizrt Online / The SaaS Team
+#+OPTIONS: H:6 num:5 toc:2 
 
 * TAB completion
 The ece script offers TAB completion, given that your version of BASH
