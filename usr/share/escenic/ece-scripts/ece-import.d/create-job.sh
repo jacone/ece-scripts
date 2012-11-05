@@ -105,32 +105,53 @@ function apply_import_archive() {
 
 ## $1 : publication
 ## $2 : job
-## $3 : archive directory of $1 and $2
+## $3 : parent directory of $1/$2 inside the archive
 function create_import_cron_jobs() {
   if [[ $(whoami) != "root" ]]; then
     print_and_log $(red WARN) \
       "You need to be root to set up the cron jobs, skipping it."
     return
   fi
-  
+
   local file=/etc/cron.d/$1-$2-cron
   echo > $file
   
-  find $3 -maxdepth 3 -name "cron*minutes" -type d | while read f; do
-    dir=$(basename $f)
-    minutes=$(echo $dir | cut -d'.' -f3)
-    for el in $(find $3/$dir -type f); do
-      local target_dir=$transformers_base_dir/$1/$2/$dir
-      make_dir $target_dir
-      run cp --force $el $target_dir
-      # it's  important that all cron scripts are executable'
-      run chmod +x $target_dir/*
-      echo "*/${minutes} * * * * $target_dir/$(basename $el) >> $log_base_dir/$1-$2-$(basename $el).log" \
-        >> $file
-      exit 1
+  # first, set up an y cron.hourly
+  find $3 \
+    -maxdepth 1 \
+    -type d | \
+    egrep "cron.(every.five.minutes|hourly|daily|weekly|monthly)" | while read f; do
+    target_dir=$transformers_base_dir/$1/$2
+    make_dir $target_dir
+    run cp -r $f $target_dir
+    
+    
+    for dir in $f; do
+      local type_of_cron=$(basename $dir)
+      print_and_log "Setting up ${type_of_cron} for " \
+        "import job $2 on publication $1"
+      
+      if [[ $type_of_cron == "cron.hourly" ]]; then
+        cron_pattern='0 * * * *'
+      elif [[ $type_of_cron == "cron.daily" ]]; then
+        cron_pattern='0 0 * * *'
+      elif [[ $type_of_cron == "cron.weekly" ]]; then
+        cron_pattern='0 0 * * 0'
+      elif [[ $type_of_cron == "cron.monthly" ]]; then
+        cron_pattern='0 0 1 * *'
+      elif [[ $type_of_cron == "cron.every.five.minutes" ]]; then
+        cron_pattern='*/5 * * * *'
+      fi
+
+      for cron_script in $(find $f -type f); do
+        local the_script=$target_dir/$type_of_cron/$(basename $cron_script)
+        run chmod +x $the_script
+        echo "$cron_pattern" $the_script \
+          '>>' $log_base_dir/$(basename $file).log \
+          >> $file
+      done
     done
   done
-
 
   # remove empty cron files
   if [ $(wc -c $file | cut -d' ' -f1) -lt 2 ]; then
