@@ -139,3 +139,27 @@ function create_import_cron_jobs() {
     print_and_log $(green NEW) "cron job(s) set up in $file"
   fi
 }
+
+function print_manual_steps() {
+  if [ -z "${import_configuration_list}" ]; then
+    return
+  fi
+    
+  print_and_log "You must now add your new Nursery components: " \
+
+  for el in $import_configuration_list; do
+    print_and_log "$(green ADD) /${el}"
+  done
+  
+  print_and_log "to the $(blue importConfigurations) variable in " \
+    "your ECE instance's" \
+    "/com/escenic/syndication/xml/XMLImportService e.g.:" \
+    "/etc/escenic/engine/server/edit2-engine1/com/escenic/syndication/xml/XMLImportService.properties"
+
+  print_and_log "The final step is to add the Nursery service " \
+    "service.9.9-xml-import-service=/com/escenic/syndication/xml/XMLImportSchedule" \
+    "to your instance's Initial component, e.g.:" \
+    /etc/escenic/engine/server/edit2-engine1/Initial.properties
+}
+
+
