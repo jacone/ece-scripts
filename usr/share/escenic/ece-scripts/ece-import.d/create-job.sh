@@ -87,7 +87,7 @@ function apply_import_archive() {
       create_import_configuration $el $ele
 
       local src_dir=$tmp_dir/$el/$ele/transformers
-      local target_dir=$transformers_base_dir/$el/$ele
+      local target_dir=$transformers_base_dir/$el/$ele/transformers
       if [ -d $src_dir ]; then
         print_and_log "Copying transformers to $target_dir"
         make_dir $target_dir

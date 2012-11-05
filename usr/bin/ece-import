@@ -213,7 +213,7 @@ function is_trannsformer_supported() {
 
 ## $1 :: file
 function perform_transformations() {
-  for el in $transformers_base_dir/$publication_name/$job_name/[0-9]*; do
+  for el in $transformers_base_dir/$publication_name/$job_name/transformers/[0-9]*; do
     if [ $(is_trannsformer_supported $el) -eq 0 ]; then
       log "$(yellow WARNING) The transformer $el isn't supported by $(basename $0)"
       continue
@@ -335,7 +335,7 @@ function verify_import_job_configuration() {
     $escenic_spool_base_dir/$publication_name/$job_name/error
   verify_readable_dir_list $transformers_base_dir/$publication_name/$job_name
 
-  local dir=$transformers_base_dir/$publication_name/$job_name
+  local dir=$transformers_base_dir/$publication_name/$job_name/transformers
   local tranformation_count=$(
     ls $dir | \
       grep ^[0-9] | \
