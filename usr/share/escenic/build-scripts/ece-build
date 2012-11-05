@@ -567,8 +567,8 @@ EOF
   done
 
   print_and_log "Configuration packages available here: " \
-    "http://builder.vizrtsaas.com/$customer/releases/${package_name}-${package_version}.deb"
-  print_and_log "Replace '$machine' with any of: [" \
+    "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-\${HOSTNAME}-${package_version}.deb"
+  print_and_log "Replace '\${HOSTNAME}' with any of: [" \
     $machine_list "] for the other machines' conf packages."
 }
 
