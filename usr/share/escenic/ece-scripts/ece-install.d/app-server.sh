@@ -505,7 +505,7 @@ function log4j_create_configuration_file() {
 
 ######################################################################
 # The default logger (this is the catch all logger)
-log4j.rootLogger=ERROR, CATALINA
+log4j.rootLogger=ERROR, TOMCAT
 log4j.additivity.com=false
 log4j.additivity.neo=false
 # Get rid of serialization errors to memcached.
