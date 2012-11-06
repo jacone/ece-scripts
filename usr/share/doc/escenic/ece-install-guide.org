@@ -802,7 +802,8 @@ some things easier, such as ECE plugins which set cookies based on
 information they get from the app server.
 
 ece-install can set up the virtual hosts configuration for Tomcat
-application servers if the profile is editorial, all presentation.
+application servers if the profile is =editor=, =all= or
+=presentation=.
 
 To use this feature, you must define one domain for each publication
 in the following FAI parameter:
@@ -813,16 +814,22 @@ fai_publication_domain_mapping_list="
 "
 #+END_SRC
 
-This will produce the following stanzas in server.xml:
+This will produce the following stanzas in =server.xml=:
 
 #+BEGIN_SRC nxml
-<Host name="fire.escenic.com" appBase="webapps-firepub" autoDeploy="false">
+<Host
+  name="fire.escenic.com"
+  appBase="webapps-fire"
+  autoDeploy="false">
   <Context displayName="fire.escenic.com"
            docBase="firepub"
            path=""
   />
 </Host>
-<Host name="ild.escenic.com" appBase="webapps-ildpub" autoDeploy="false">
+<Host
+  name="ild.escenic.com"
+  appBase="webapps-ildpub"
+  autoDeploy="false">
   <Alias>feuer.escenic.com</Alias>
   <Alias>fuego.escenic.com</Alias>
   <Context displayName="ild.escenic.com"
