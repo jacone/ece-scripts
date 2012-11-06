@@ -279,6 +279,10 @@ EOF
 }
 
 function install_escenic_munin_plugins() {
+  if [ ! -r /etc/munin/plugin-conf.d/escenic-munin-plugins ] ; then
+    (echo '[escenic_*]'; echo 'user escenic') | sudo tee /etc/munin/plugin-conf.d/escenic-munin-plugins
+  fi
+
   if [ $on_debian_or_derivative -eq 1 ]; then
     install_packages_if_missing escenic-munin-plugins
     return
