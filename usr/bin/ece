@@ -19,7 +19,7 @@ escenic_conf_dir=/etc/escenic
 # Dear user, don't touch anyting in this script, especially below this
 # line :-)
 ######################################################################
-ece_script_version="github-2012-07-11 16:37"
+ece_scripts_version="straight-from-github"
 type=engine
 instance=default
 command=""
@@ -663,7 +663,7 @@ function set_type_command_and_instance() {
             backup_exclude_state=1
             continue
         elif [ "$el" == "--version" -o "$el" == "-V" ]; then
-             echo "$(basename $0) version:" $ece_script_version
+             echo "Version:" $ece_scripts_version
              exit 0
         fi
         

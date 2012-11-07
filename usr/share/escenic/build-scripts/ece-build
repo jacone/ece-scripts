@@ -7,6 +7,7 @@
 ################################################################################
 
 # Common variables
+ece_scripts_version="straight-from-github"
 log=~/ece-build.log
 pid_file=~/ece-build.pid
 build_date=`date +%F_%H%M`
@@ -143,7 +144,7 @@ function verify_configuration {
 ##
 function get_user_options
 {
-  while getopts ":b:t:os" opt; do
+  while getopts ":b:t:osV" opt; do
     case $opt in
       b)
         svn_path=branches/${OPTARG}
@@ -161,6 +162,10 @@ function get_user_options
       s)
         skip_ear=1
         print_and_log "Skip .ear mode in effect!"
+        ;;
+      V)
+        echo "Version:" $ece_scripts_version
+        exit 0
         ;;
       \?)
         print "Invalid option: -$OPTARG" >&2

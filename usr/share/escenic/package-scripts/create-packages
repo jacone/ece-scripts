@@ -213,7 +213,11 @@ function create_packages() {
   sed -i "s#VERSION#${package_version}#g" $debian_dir/control
   sed -i "s#MAINTAINER_NAME#$(get_name)#g" $debian_dir/control
   sed -i "s#MAINTAINER_EMAIL#$(get_email)#g" $debian_dir/control
-
+  find ${target_dir}/usr/{bin,sbin}/ -type f | while read f; do
+    sed -i "s#^ece_scripts_version=.*#ece_scripts_version=${package_version}#g" \
+      $f
+  done
+  
   # fix permissions
   if [ -e $debian_dir/postinst ]; then
     chmod 755 $debian_dir/postinst

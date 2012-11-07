@@ -44,6 +44,10 @@ mirror_country_suffix=no
 # you're using a different system or have other preferences, change
 # java_home.
 java_home=/usr/lib/jvm/java-6-sun
+
+# This variable is updated by the package build scripts.
+ece_scripts_version="straight-from-github"
+
 #####################################################################
 
 download_dir=/var/cache/$(basename $0)
@@ -940,6 +944,9 @@ function leave_trail() {
 for el in $@; do
     if [ $el = "-v" -o $el = "--verbose" ]; then
         debug=1
+    elif [ $el = "-V" -o $el = "--version" ]; then
+      echo "Version:" $ece_scripts_version
+      exit 0
     elif [ $el = "-f" -o $el = "--conf-file" ]; then
         next_is_conf_file=1
     elif [[ -n $next_is_conf_file && $next_is_conf_file -eq 1 ]]; then

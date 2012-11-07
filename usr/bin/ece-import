@@ -45,6 +45,8 @@ escenic_spool_base_dir=/var/spool/escenic/import
 escenic_user=escenic
 job_name=""
 log_base_dir=/var/log/escenic
+ece_scripts_version="straight-from-github"
+
 # since both regular users and root can use this command, we create
 # user specific log files. We put it in /var/log as it'll regardless
 # of user run as a deamon process.
@@ -95,6 +97,9 @@ function get_user_input() {
       next_is_uri=1
     elif [[ "$el" == "--directories-only" ]]; then
       directories_only=1
+    elif [ "$el" == "--version" -o "$el" == "-V" ]; then
+      echo "Version:" $ece_scripts_version
+      exit 0
     elif [ $next_is_name -eq 1 ]; then
       job_name=$el
       next_is_name=0
@@ -362,8 +367,8 @@ function print_report() {
 
 create_pid
 check_pre_requisites
-print_and_log "Started @ $(date), I'm logging to $log"
 get_user_input $@
+print_and_log "Started @ $(date), I'm logging to $log"
 
 if [[ "$command" == $COMMAND_IMPORT ]]; then
   verify_import_job_configuration

@@ -6,6 +6,7 @@
 ################################################################################
 
 # Common variables
+ece_scripts_version="straight-from-github"
 ece_scripts_home=/usr/share/escenic/ece-scripts
 log=/var/log/ece-builder.log
 pid_file=/var/run/ece-builder.pid
@@ -119,7 +120,7 @@ function verify_dependencies
 ##
 function get_user_options
 {
-  while getopts ":i:u:a:l:c:s:m:p:" opt; do
+  while getopts ":i:u:a:l:c:s:m:p:V" opt; do
     case $opt in
       i)
         print_and_log "Setting up a new builder under /home/$builder_user_name ..."
@@ -140,6 +141,10 @@ function get_user_options
         print_and_log "Adding list of artifacts ${OPTARG} ..."
         list_path=${OPTARG}
         add_artifact_list=1
+        ;;
+      V)
+        echo "Version:" $ece_scripts_version
+        exit 0
         ;;
       \?)
         print_and_log "Invalid option: -$OPTARG" >&2
@@ -576,9 +581,9 @@ function phase_shutdown
 # Run commands
 #####################################################
 phase_startup
+get_user_options $@
 print_and_log "Starting process @ $(date)"
 print_and_log "Additional output can be found in $log"
-get_user_options $@
 phase_execute
 print_and_log "SUCCESS! @ $(date)"
 phase_shutdown

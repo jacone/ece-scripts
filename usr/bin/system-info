@@ -10,6 +10,7 @@
 ## echo '* *     * * *   root    system-info -f html > /var/www/index.html' >> /etc/crontab
 
 ece_user=""
+ece_scripts_version="straight-from-github"
 
 ## possible values: html, org, confluence, yaml, json (not complete)
 format=yaml
@@ -336,6 +337,14 @@ EOF
 }
 
 function get_user_options() {
+  # starting to add support for --long-version options
+  for el in $@; do
+    if [ $el = "-V" -o $el = "--version" ]; then
+      echo "Version:" $ece_scripts_version
+      exit 0
+    fi
+  done
+  
   while getopts ":d:o:i:f:u:mvst" opt; do
     case $opt in
       i)

@@ -15,11 +15,12 @@
 instance_dir=
 instance_name=
 usage=0
+ece_scripts_version="straight-from-github"
 
 ### To add an option, add it to the optstring, as defined in getopts, in alphabetical order.
 ### Also add a function "option-x" where x is the option. $1 will be the option value, if any.
 ### set any variables needed to default values as globals first.
-OPTSTRING=":i:v:hd"
+OPTSTRING=":i:v:hdV"
 
 function option-h() {
   usage=1
@@ -27,6 +28,11 @@ function option-h() {
 
 function option-d() {
   debug=$((debug + 1))
+}
+
+function option-V() {
+  echo "Version:" $ece_scripts_version
+  exit 0
 }
 
 function option-i() {
