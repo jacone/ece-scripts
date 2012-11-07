@@ -10,14 +10,40 @@ management.
 ** TODO Source code repository
 
 
-** TODO /The builder/
+** TODO The builder
 
 
 ** Development image
 
 The main environment for change is the local development environment 
-a.k.a. #+BEGIN_QUOTEdev image#+END_QUOTE. 
+a.k.a. "dev image". 
+
+*** Download
 
 Your dev image can be found here - [[<%= trail_dev_image_uri %>][Local development environment]].
 
-*** TODO Setup
+*** Setup
+
+After the .ova file has been downloaded it can be imported into VirtualBox or VMWare Player. It works under Windows, OSX and Linux, and provides an Ubuntu image with Escenic Content Engine already installed with a publication and an .ear file from the project.
+
+Just by starting it up, you should be able to see its IP address when it boots. The image does not need a network connection or DHCP server in order to work, and the image is completely shielded from any network you’re connected to.
+
+*** What’s included
+
+- Ubuntu (actually, an Ubuntu Enterprise Cloud Image, modified to boot under almost any hypervisor.)
+- two virtual network cards, one for outbound NAT traffic and the other for inbound traffic.
+- varnish cache (just like in production)
+- memcached (just like in production)
+- separate solr java (just like in production)
+- remote debugging enabled (on port 5005)
+
+/Which publications are available?/
+|-----------------+------------------------------------|
+| Publication     | username / password                |
+|-----------------+------------------------------------|
+| [pubName]       | [pubName]_admin / admin            |
+|-----------------+------------------------------------|
+
+/What are the important credentials?/
+
+Operating system: The usernames ubuntu (with sudo privileges), escenic (runs escenic).
