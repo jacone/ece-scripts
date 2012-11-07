@@ -1,0 +1,23 @@
+* Development Process
+
+The development process consists of a chain of processes and applications
+working together to create an efficient and agile environment for change
+management.  
+
+** TODO Jira
+
+
+** TODO Source code repository
+
+
+** TODO /The builder/
+
+
+** Development image
+
+The main environment for change is the local development environment 
+a.k.a. #+BEGIN_QUOTEdev image#+END_QUOTE. 
+
+Your dev image can be found here - [[<%= trail_dev_image_uri %>][Local development environment]].
+
+*** TODO Setup
