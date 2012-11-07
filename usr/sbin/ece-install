@@ -900,7 +900,7 @@ function un_install_everything() {
 
   if [[ "$answer" != "$pretty_please" ]]; then
     print_and_log "You didn't type the confirmation string correctly."
-    print_and_log "You typed: [ ${answer} ]. I will not Uninstall anything"
+    print_and_log "You typed: [ ${answer} ]. I will not uninstall anything"
     return
   else
     print_and_log "OK, I'll do as you wish:"
