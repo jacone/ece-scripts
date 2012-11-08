@@ -251,7 +251,7 @@ function create_packages() {
     exit 1
   fi
 
-  dpkg-deb --build $target_dir \
+  fakeroot dpkg-deb --build $target_dir \
     2>&1 > /dev/null
   mv ${target_dir}.deb $target_dir/${package_name}-${package_version}.deb
   
