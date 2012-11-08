@@ -271,6 +271,22 @@ function handle_transformation_error() {
 
 import_error_count=0
 
+## $1 :: the directory to check for multimedia files.
+## $2 :: the directory to move any of these multimedia files to
+function move_any_multimedia_files_if_present() {
+  if [ ! -d $1 -o ! -d $2 ]; then
+    return
+  fi
+
+  local multimedia_file_count=$(
+    ls $1 | egrep -i ".(png|gif|jpg|jpeg|pdf)$" | wc -l
+  )
+  if [ $multimedia_file_count -gt 0 ]; then
+    log "Moving ${multimedia_file_count} multimedia files from $1 to $2"
+    mv $1/*.{png,gif,jpg,jpeg,pdf} $2 >> $log 2>/dev/null
+  fi
+}
+
 function import_raw_files() {
   print_and_log "Publication: $publication_name"
   print_and_log "Import configuration: $job_name"
@@ -288,6 +304,7 @@ function import_raw_files() {
       local dir=$escenic_spool_base_dir/$publication_name/$job_name/new
       log "Transformed XML is OK, moving transformed file to" $dir
       run mv $file $dir
+      move_any_multimedia_files_if_present $(dirname $file) $dir
       dir=$raw_transformed_base_dir/$publication_name/$job_name/succeeded
       log "Transformed XML is OK, moving original raw XML to" $dir \
         "and gzip-ing it."
