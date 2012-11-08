@@ -50,7 +50,7 @@ ece_scripts_version="straight-from-github"
 # since both regular users and root can use this command, we create
 # user specific log files. We put it in /var/log as it'll regardless
 # of user run as a deamon process.
-log=$log_base_dir/$(basename $0)-${USER}.log
+log=$log_base_dir/$(basename $0)-${USER-cron}.log
 nursery_base_dir=/etc/escenic/engine/common
 publication_name=""
 raw_spool_base_dir=/var/spool/escenic/raw
