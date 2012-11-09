@@ -288,8 +288,6 @@ function move_any_multimedia_files_if_present() {
 }
 
 function import_raw_files() {
-  print_and_log "Publication: $publication_name"
-  print_and_log "Import configuration: $job_name"
   raw_file_count=0
   for f in $(find $raw_spool_base_dir/$publication_name/$job_name -type f); do
     raw_file_count=$(( raw_file_count + 1 ))
@@ -370,6 +368,9 @@ function verify_import_job_configuration() {
       "$dir/, I'm assuming the incoming" \
       "data is already tranformed into Escenic Syndication XML"
   fi
+
+  print_and_log "Running import configuration" $job_name \
+    "for publication" $publication_name
 }
 
 function print_report() {
@@ -405,5 +406,5 @@ fi
 
 print_manual_steps
 print_report
-remove_pid
 print_and_log "Finished @ $(date), enjoy thyself!"
+remove_pid
