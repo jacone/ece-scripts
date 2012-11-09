@@ -67,8 +67,8 @@ function create_target_directory() {
     set_up_escenic-munin-plugins
   elif [[ $package_name == "escenic-check-mk-plugins" ]]; then
     set_up_escenic-check-mk-plugins
-  elif [[ $package_name == "hugin" ]]; then
-    set_up_hugin
+  elif [[ $package_name == "hugin-node" ]]; then
+    set_up_hugin-node
   fi
 
   debian_dir=$target_dir/DEBIAN
@@ -203,7 +203,7 @@ function set_up_escenic-munin-plugins() {
   rm -rf $dir
 }
 
-function set_up_hugin() {
+function set_up_hugin-node() {
   mkdir -p $target_dir/etc/{hugin.often,hugin.hourly,hugin.daily,hugin.weekly,cron.d}
   mkdir -p $target_dir/usr/{bin,share/doc/hugin,share/hugin}
   mkdir -p $target_dir/var/lib/hugin
