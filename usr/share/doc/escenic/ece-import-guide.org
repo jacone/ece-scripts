@@ -23,6 +23,9 @@ from the web site developers who've created the XSL files and so on.
 # ece-import --import-archive /tmp/import-archive.zip create
 #+END_SRC
 
+See [[Structure of an import archive]] for a detailed specification on how
+to create such an archive yourself.
+
 ** Without an import archive
 #+BEGIN_SRC text
 # ece-import \
@@ -72,9 +75,106 @@ $ ece-import \
 [ece-import-0] Importing raw XML #1: 21.xml ...
 [ece-import-0] Importing raw XML #2: 26.xml ...
 [ece-import-1] Importing raw XML #3: 24.xml ...
-[ece-import-4] Number of raw XML files proccessed: 3
+[ece-import-4] Number of raw XML files processed: 3
 [ece-import-4] Number of raw XML successes: 3
 [ece-import-4] Number of raw XML errors: 0
 [ece-import-4] Finished @ Mon Nov 5 09:36:37 UTC 2012, enjoy thyself!
 #+END_SRC
 
+* Structure of an import archive
+When creating a new import configuration for your project, the
+following directory structure is required:
+
+#+BEGIN_SRC text
+<publication>/<import name>
+<publication>/<import name>/transformers/<number>-<transformer task>.xsl
+<publication>/<import name>/cron.hourly/<cron job script>
+<publication>/<import name>/cron.every.five.minutes/<cron job script>
+#+END_SRC
+
+- publication name :: the name of the publication for which the import
+     job(s) are defined. You can have more than one publication in
+     each =zip= archive.
+- import job name :: lowercase with hyphens between words (if more
+     than one)
+- transformers :: directory with files prefixed with =<number>-=, indicating
+                  the order of transformation to apply to your import job. If
+                  this is a =xsl= file, the escenic importer will run
+                  =xsltproc= on the file, whereas =.sh= files will be
+                  run in a =bash= wrapper.
+
+                  Each of the transformers will be called with one
+                  argument, namely the input XML data. Each
+                  transformer is responsible to write changes back to
+                  the file.
+- cron.hourly :: scripts to be run every our. These will be put in
+                 =/etc/cron.hourly= on the import server. Be sure to
+                 set the execute bit on the file and note that as with
+                 all cron jobs, the file cannot have a file suffix.
+- cron.every.<number>.minutes :: scripts to run every =<number>= minutes.
+
+We're calling the import configuration =moo= since we're
+setting up an import feed from our imaginary content provider, "Moo
+Cool Videos" and our publication is the ubiquitous =mypub=.
+
+#+BEGIN_SRC text
+$ unzip -t my-great-import-archive.zip.zip
+mypub/moo/transformers/01-fix-encoding.sh
+mypub/moo/transformers/02-convert-all-cows-to-ducks.xsl
+mypub/moo/transformers/02-convert-duck-to-escenic-xml.xsl
+mypub/moo/cron.hourly/get-files-from-moo-ftp
+mypub/moo/cron.every.10.minutes/ask-for-public-ip
+otherpub/foo/transformers/01-convert-from-foo-to-escenic-xml.xsl
+#+END_SRC
+
+As you can guess from the file names, the
+=02-convert-all-cows-to-ducks.xsl= stylesheet will be first applied to
+the incoming data (normally XML) and the
+=02-convert-duck-to-escenic-xml.xsl= will be applied next before the
+resulting Escenic XML will be imported into the Escenic Content
+Engine.
+
+
+
+* Creating your own transformers
+You can write a transformer in either XSL, Perl, Python or BASH. You
+put it in =<publication>/<import name>/transformers/<number>-<transformer task>.<{xsl,pl,py,sh}>=
+and specify the order in which it should run by setting the =<number=
+before/after your other transformers (if any, many folks only have one
+transformer which is an XSL file).
+
+All transformers are run by the =ece-import= command and they get one
+argument, namely the raw XML file from the 3rd party system. All
+transformers work on the same XML file, so that changes done in
+e.g. =01-first.sh= are passed on to =02-second.pl=. Each transformer
+must read the file and write to the same file. That's the contract.
+
+Here's an example of a transformer that downloads all the pictures
+mentioned in the raw XML (=ece-import= will copy any multimedia files
+to the ECE import spool for you, so the transformer only needs to
+worry about downloading these to the directory of the incoming XML
+file: 
+
+#+BEGIN_SRC sh
+#! /usr/bin/env bash
+
+# Script which will download all thumbnails listed in the XML exported
+# from VMEO.
+#
+# It is normally called from ece-import, but can also be called
+# directly (when debugging).
+
+xpath_to_get_thumbnail_urls="/didl:DIDL/didl:Item/didl:Component/didl:Descriptor/didl:Statement/mpeg7:Mpeg7/mpeg7:Description/mpeg7:Summarization/mpeg7:Summary/mpeg7:VisualSummaryComponent/mpeg7:ImageLocator/mpeg7:MediaUri"
+
+# $1 is the raw XML
+cat "$1" | \
+  xml_grep --nowrap --cond $xpath_to_get_thumbnail_urls | \
+  sed 's/></>\n</g' | \
+  sed "s#.*>\(.*\)<.*#\1#g" | while read url; do
+  wget \
+    --quiet \
+    --continue \
+    --output-document $(dirname $1)/$(basename $url) \
+    $url;
+done
+#+END_SRC
