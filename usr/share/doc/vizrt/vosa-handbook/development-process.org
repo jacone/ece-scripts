@@ -1,3 +1,5 @@
+  in the VirtualBox Manager.
+the import process will start.
 * Development Process
 
 The development process consists of a chain of processes and applications
@@ -16,17 +18,37 @@ management.
 ** Development image
 
 The main environment for change is the local development environment 
-a.k.a. "dev image". 
+a.k.a. "dev image". The dev image is downloaded as a .ova file that 
+can be imported into VirtualBox or VMWare Player. It works under 
+Windows, OSX and Linux, and provides an Ubuntu image with Escenic 
+Content Engine already installed with a publication and an .ear 
+file from the project.
 
 *** Download
 
-Your dev image can be found here - [[<%= trail_dev_image_uri %>][Local development environment]].
+Your dev image can be downloaded here - [[<%= trail_dev_image_uri %>][Local development environment]].
 
 *** Setup
 
-After the .ova file has been downloaded it can be imported into VirtualBox or VMWare Player. It works under Windows, OSX and Linux, and provides an Ubuntu image with Escenic Content Engine already installed with a publication and an .ear file from the project.
+After you have downloaded the .ova file you can open the file in i.e. VirtualBox.
+[[./graphics/development-process/01-download-image.png]]
 
-Just by starting it up, you should be able to see its IP address when it boots. The image does not need a network connection or DHCP server in order to work, and the image is completely shielded from any network you’re connected to.
+VirtualBox will recognize the format and offer you a dialog for importing the image.
+[[./graphics/development-process/02-import-image.png]]
+
+After klicking "Import" you will be asked to agree to a license agreement and after clicking "Agree" the import process will start.
+[[./graphics/development-process/03-agree-to-license.png]]
+[[./graphics/development-process/04-wait-for-import.png]]
+
+When the import finished the VirtualBox Manager will open and your image will be visible in a list. It's now time to adjust your settings. Unless you have very specific changes you would like to perform for memory, number of CPUs etc... opening the settings dialog and then click "OK" is enough to finish the initial configuration.
+[[./graphics/development-process/05-adjust-settings.png]]
+[[./graphics/development-process/06-apply-settings.png]]
+
+The next step will be to start the image. This is done by selecting the image in the list and then click "Start" in the VirtualBox Manager.
+[[./graphics/development-process/07-power-on.png]]
+
+After the image has started up, you should be able to see its local IP address. This is the IP you need to add to the hosts file on your workstation/laptop.
+[[./graphics/development-process/08-fetch-ip.png]]
 
 *** What’s included
 
@@ -47,3 +69,5 @@ Just by starting it up, you should be able to see its IP address when it boots. 
 /What are the important credentials?/
 
 Operating system: The usernames ubuntu (with sudo privileges), escenic (runs escenic).
+
+
