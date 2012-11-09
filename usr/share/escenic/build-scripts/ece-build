@@ -567,7 +567,11 @@ EOF
 
     # move the machine's DEB and RPM packges to the release directory
     run mv $target_dir/*.{deb,rpm} $release_dir/
-    
+   
+    # adding latest links for conf packages
+    run ln -sf $release_dir/${package_name}-${package_version}.deb $release_dir/${package_name}-latest.deb
+    run ln -sf $release_dir/${package_name}-${package_version}.rpm $release_dir/${package_name}-latest.rpm
+ 
     # remove work directory
     run rm -rf $target_dir
   done
