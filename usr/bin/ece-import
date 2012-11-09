@@ -369,7 +369,7 @@ function verify_import_job_configuration() {
       "data is already tranformed into Escenic Syndication XML"
   fi
 
-  print_and_log "Running import configuration" $job_name \
+  print_and_log "Running import" $job_name \
     "for publication" $publication_name
 }
 
