@@ -303,8 +303,8 @@ function import_raw_files() {
     if [ $(is_escenic_xml_ok $file) -eq 1 ]; then
       local dir=$escenic_spool_base_dir/$publication_name/$job_name/new
       log "Transformed XML is OK, moving transformed file to" $dir
-      run mv $file $dir
       move_any_multimedia_files_if_present $(dirname $file) $dir
+      run mv $file $dir
       dir=$raw_transformed_base_dir/$publication_name/$job_name/succeeded
       log "Transformed XML is OK, moving original raw XML to" $dir \
         "and gzip-ing it."
