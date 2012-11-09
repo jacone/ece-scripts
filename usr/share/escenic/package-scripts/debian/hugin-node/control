@@ -1,4 +1,4 @@
-Package: hugin
+Package: hugin-node
 Version: VERSION
 Depends: mercurial
 Section: base
