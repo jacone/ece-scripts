@@ -24,33 +24,41 @@ Windows, OSX and Linux, and provides an Ubuntu image with Escenic
 Content Engine already installed with a publication and an .ear 
 file from the project.
 
-*** Download
+*** Download .ova file
 
 Your dev image can be downloaded here - [[<%= trail_dev_image_uri %>][Local development environment]].
 
-*** Setup
+*** Import .ova file into VirtualBox
 
-After you have downloaded the .ova file you can open the file in i.e. VirtualBox.
-[[./graphics/development-process/01-download-image.png]]
+1) After you have downloaded the .ova file you can open the file in i.e. VirtualBox.
 
-VirtualBox will recognize the format and offer you a dialog for importing the image.
-[[./graphics/development-process/02-import-image.png]]
+	[[./graphics/development-process/01-download-image.png]]
 
-After klicking "Import" you will be asked to agree to a license agreement and after clicking "Agree" the import process will start.
-[[./graphics/development-process/03-agree-to-license.png]]
-[[./graphics/development-process/04-wait-for-import.png]]
+2) VirtualBox will recognize the format and offer you a dialog for importing the image.
 
-When the import finished the VirtualBox Manager will open and your image will be visible in a list. It's now time to adjust your settings. Unless you have very specific changes you would like to perform for memory, number of CPUs etc... opening the settings dialog and then click "OK" is enough to finish the initial configuration.
-[[./graphics/development-process/05-adjust-settings.png]]
-[[./graphics/development-process/06-apply-settings.png]]
+	[[./graphics/development-process/02-import-image.png]]
 
-The next step will be to start the image. This is done by selecting the image in the list and then click "Start" in the VirtualBox Manager.
-[[./graphics/development-process/07-power-on.png]]
+3) After klicking "Import" you will be asked to agree to a license agreement and after clicking "Agree" the import process will start.
 
-After the image has started up, you should be able to see its local IP address. This is the IP you need to add to the hosts file on your workstation/laptop.
-[[./graphics/development-process/08-fetch-ip.png]]
+	[[./graphics/development-process/03-agree-to-license.png]]
+	
+	[[./graphics/development-process/04-wait-for-import.png]]
 
-*** What’s included
+4) When the import finished the VirtualBox Manager will open and your image will be visible in a list. It's now time to adjust your settings. Unless you have very specific changes you would like to perform for memory, number of CPUs etc... opening the settings dialog and then click "OK" is enough to finish the initial configuration.
+	
+	[[./graphics/development-process/05-adjust-settings.png]]
+
+	[[./graphics/development-process/06-apply-settings.png]]
+
+5) The next step will be to start the image. This is done by selecting the image in the list and then click "Start" in the VirtualBox Manager.
+
+	[[./graphics/development-process/07-power-on.png]]
+
+6) After the image has started up, you should be able to see its local IP address. This is the IP you need to add to the hosts file on your workstation/laptop.
+
+	[[./graphics/development-process/08-fetch-ip.png]]
+
+*** What's included
 
 - Ubuntu (actually, an Ubuntu Enterprise Cloud Image, modified to boot under almost any hypervisor.)
 - two virtual network cards, one for outbound NAT traffic and the other for inbound traffic.
