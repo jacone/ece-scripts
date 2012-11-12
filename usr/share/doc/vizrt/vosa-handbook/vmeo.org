@@ -6,8 +6,8 @@ VME-Online is a content mangement system and online publishing system for Video.
 
 ** Video file handling
 VME-O offers many interfaces to ingest video into the VME-O system.
-After ingest the video's have the following state:
-- The video's are stored in their original format.
+After ingest the videos have the following state:
+- The videos are stored in their original format.
 - All available meta information is available through the UI and API.
 - All transcoding to preconfigured target variants is stated.
 
@@ -17,13 +17,13 @@ The following ingest interfaces are used by SOLARtv:
 
 The following ingest interfaces are available but not used by SOLARtv
 - Mobile ingest (Viz reporter) :: Several apps on iphone and nokia are available to upload video content over slow mobile networks or faster wifi connections when available to the device. 
-- Webservice ingest :: A REST webservice is available to push meta information of video content including a uri that will be ued by VMEO to fetch the video for ingestion.
+- Webservice ingest :: A REST webservice is available to push meta information of video content including a URI that will be ued by VMEO to fetch the video for ingestion.
 - Ingest formats :: VME-O has a long list of video formats it is able to ingest.
 
 *** Transcoding
-Many Web browsers on PC's, pads and smartphones are not capable of playing the VME-O house format. It is eather to big or of the wrong binary format. This is why VME-O can be configured to transcode video's to various alternative formats and sizes to allow for a veriety of devices to play them.
+Many Web browsers on PCs, tablets and smart phones are not capable of playing the VME-O house format. It is either to big or of the wrong binary format. This is why VME-O can be configured to transcode videos to various alternative formats and sizes to allow for a variety of devices to play them.
 
-Transcoding typically is quite cpu intensive. For this reason it makes no sense to transcode more than the amount of processors in a box in parrallel. VME-O has a queing mechanism to ensure that it is not overloaded. More transcoding capacty can be added by deploying more transcoding machines to the cluster.
+Transcoding typically is quite CPU intensive. For this reason it makes no sense to transcode more than the amount of processors in a box in parrallel. VME-O has a queuing mechanism to ensure that it is not overloaded. More transcoding capacty can be added by deploying more transcoding machines to the cluster.
 
 At SOLARtv transcoding is done by vmeo-controller
 
@@ -43,7 +43,11 @@ At SOLARtv transcoding is done by vmeo-controller
 - the RealVideo Format 
 
 *** Publishing
-Video files are most commonly served to clients using the HTTP protocol. The DiRetriever webservice on the controller is available for clients to choose the right variant. HTTP requires no special configuration other than allowing clients to acess the vmeo-delivery server on tcp:80
+Video files are most commonly served to clients using the HTTP
+protocol. The DiRetriever webservice on the controller is available
+for clients to choose the right variant. HTTP requires no special
+configuration other than allowing clients to access the vmeo-delivery
+server on TCP port 80
 
 In cases where the DiRetriever decides to direct a client to a video stream it uses:
 - Real Time Streaming Protocol (RTSP) :: is a network control protocol designed for use in entertainment and communications systems to control streaming media servers. The protocol is used for establishing and controlling media sessions between end points. Clients of media servers issue VCR-like commands, such as play and pause, to facilitate real-time control of playback of media files from the server. The transmission of streaming data itself is not a task of the RTSP protocol. Most RTSP servers use the Real-time Transport Protocol ([[http://en.wikipedia.org/wiki/Real-time_Transport_Protocol][RTP]]) in conjunction with Real-time Control Protocol ([[http://en.wikipedia.org/wiki/RTCP][RTCP]]) for media stream delivery, however some vendors implement proprietary transport protocols. The RTSP server from RealNetworks, for example, also features RealNetworks' proprietary Real Data Transport ([[http://en.wikipedia.org/wiki/Real_Data_Transport][RDT]]). RTSP usually needs TCP:554 to be routed between the clients and the vmeo-delivery server. This port is often opened on corporate firewalls to allow for clients to access RTSP streams.
@@ -51,7 +55,7 @@ In cases where the DiRetriever decides to direct a client to a video stream it u
 
 
 ** Live video feeds
-VMEO can handle video feeds from various sources such as SDI or ip feeds.
+VMEO can handle video feeds from various sources such as SDI or IP feeds.
 
 *** Encoding
 Incoming video feeds are encoded on the fly by vmeo-controller and made available to the various streaming options on vmeo-delivery. The feeds are pushed using the <vmeostreaming protocol> over tcp-i port 234.
