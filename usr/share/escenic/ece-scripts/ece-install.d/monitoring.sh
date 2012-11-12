@@ -220,7 +220,7 @@ function install_nagios_node()
   run touch /var/run/nagios/nrpe.pid
   run /etc/init.d/nagios-nrpe-server restart
 
-  add_next_step "A Nagios NRPE node and check_mk has been installed" \
+  add_next_step "A Nagios NRPE node and check_mk have been installed" \
     "on ${HOSTNAME}"
 }
 
