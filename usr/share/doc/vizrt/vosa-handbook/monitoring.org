@@ -53,7 +53,7 @@ also the place were you'll schedule any maintenance work you do to
 prevent unnecessary alerts filling up your mobile phone and email
 inboxes.
 
-check_mk plugin for nagios does the automated monitoring configuration, which saves a lot of manual configuration effort. If you need to add/edit new nodes to monitor then-
+check_\mk plugin for nagios does the automated monitoring configuration, which saves a lot of manual configuration effort. If you need to add/edit new nodes to monitor then-
 - Add/edit node entry in /etc/check\_mk/main.mk file
 - Create Inventory of the new checks -
 #+BEGIN_SRC text
