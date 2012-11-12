@@ -24,7 +24,6 @@ your habitat:
 | /studio        | Content Studio                     |
 | /webservice    | Escenic Content Engine Web service |
 | /munin         | The Munin overview                 |
-| /binary        | The Adactus access point           |
 |----------------+------------------------------------|
 
 ** Useful features for debugging

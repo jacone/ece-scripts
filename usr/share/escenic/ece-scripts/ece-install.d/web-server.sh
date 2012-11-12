@@ -28,13 +28,6 @@ function install_web_server()
 server {
   listen ${port} default;
   access_log  /var/log/nginx/localhost.access.log;
-
-  # Typical endpoint for Adactus/Mobilize to get the videos to
-  # transcode.
-  location /binary {
-    root $escenic_data_dir;
-    index index.html;
-  }
 }
 EOF
   elif [ $1 -eq 1 ]; then
@@ -61,25 +54,11 @@ server {
     root /var/cache/munin/www;
     index index.html;
   }
-
-  # Typical endpoint for Adactus/Mobilize to get the videos to
-  # transcode.
-  location /binary {
-    root $escenic_data_dir;
-    index index.html;
-  }
 }
 EOF
   fi
   
   run /etc/init.d/nginx restart
 
-  if [ $1 -eq 0 ]; then
-    add_next_step "http://${HOSTNAME}:${port}/binary gives the Adactus endpoint"
-  elif [ $1 -eq 1 ]; then
-    add_next_step "http://${HOSTNAME}:${port}/ gives the Munin interface"
-  elif [ $1 -eq 2 ]; then
-    add_next_step "http://${HOSTNAME}:${port}/       gives the Munin interface"
-    add_next_step "http://${HOSTNAME}:${port}/binary gives the Adactus endpoint"
-  fi
+  add_next_step "http://${HOSTNAME}:${port}/ gives the Munin interface"
 }
