@@ -10,6 +10,13 @@
 
 debug=0
 
+## basename $0 will resolve to the file name of the calling script,
+## not common-bashing itself.
+lock_file=/var/run/escenic/$(basename $0 .sh).lock
+
+## Same comment as for the lock file :-)
+pid_file=/var/run/escenic/$(basename $0 .sh).pid
+
 function common_bashing_is_loaded() {
   echo 1
 }
@@ -395,10 +402,6 @@ function remove_file_if_exists() {
   fail_safe_run rm $1
 }
 
-## basename $0 will resolve to the file name of the calling script,
-## not common-bashing itself.
-lock_file=/var/run/escenic/$(basename $0 .sh).lock
-
 ## Will create a lock (and the lock's directory) for the caller. If
 ## the lock already exists, this function will NOT cause your program
 ## to fail. If you want to it to fail, use create_lock_or_fail
@@ -407,7 +410,7 @@ lock_file=/var/run/escenic/$(basename $0 .sh).lock
 ## $1 :: the lock file
 function create_lock() {
   if [ -e $lock_file ]; then
-    log $lock_file "exists, I'll exit"
+    print_and_log $lock_file "exists, I'll exit"
     exit 0
   else
     fail_safe_run mkdir -p $(dirname $lock_file)
@@ -440,7 +443,6 @@ function remove_lock() {
   fail_safe_run rm $lock_file
 }
 
-pid_file=/var/run/escenic/$(basename $0 .sh).pid
 function create_pid() {
   fail_safe_run mkdir -p $(dirname $pid_file)
   echo $$ > $pid_file
