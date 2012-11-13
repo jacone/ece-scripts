@@ -1095,6 +1095,13 @@ if [ ${fai_enabled-0} -eq 1 ]; then
       install_db_backup_server
       no_fai_profile=0
     fi
+
+    if [ ${fai_monitoring_node_install-0} -eq 1 ]; then
+      install_profile_number=$PROFILE_MONITORING_NODE
+      # no need to call anything specific here as all the work is done
+      # in the common_post_install function.
+      no_fai_profile=0
+    fi
     
     if [ $no_fai_profile -eq 1 ]; then
         print_and_log "No install profile selected, be sure to have one of the "
