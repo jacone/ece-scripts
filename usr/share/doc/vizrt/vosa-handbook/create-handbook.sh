@@ -122,6 +122,11 @@ function expand_all_variables_in_org_files() {
     IFS='='
     read key value <<< "$el"
     IFS=$old_ifs
+    
+    # must read this from the sourced variable and not the declare
+    # registry to get unicode encoded characters right.
+    value=$(eval echo $`echo $key`)
+
     value=$(echo $value | sed -e "s~^'~~" -e "s~'$~~")
     find $target_dir -name "*.org" | while read f; do
       sed -i -e "s~<%=[ ]*${key}[ ]*%>~${value}~g" -e "s~^'~~" ${f}
