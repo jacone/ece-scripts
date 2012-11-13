@@ -101,21 +101,8 @@ function set_defaults_if_the_trails_are_not_set() {
   trail_today_date_full=${trail_today_full-$(date)}
 }
 
-function expand_all_variables_in_org_files_old() {
-  set_defaults_if_the_trails_are_not_set
-
-  declare | grep ^trail_ | while read el; do
-    local old_ifs=$IFS
-    IFS='='
-    read key value <<< "$el"
-    IFS=$old_ifs
-    find $target_dir -name "*.org" | while read f; do
-      sed -i "s~<%=[ ]*${key}[ ]*%>~${value}~g" ${f}
-    done
-  done
-}
-
 function expand_all_variables_in_org_files() {
+  set_defaults_if_the_trails_are_not_set
 
   declare | grep ^trail_ | while read el; do
     local old_ifs=$IFS
@@ -133,8 +120,6 @@ function expand_all_variables_in_org_files() {
     done
   done
 }
-
-
 
 function set_up_build_directory() {
   if [[ -n "$target_dir" && -d $target_dir ]]; then
