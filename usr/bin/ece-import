@@ -47,10 +47,7 @@ job_name=""
 log_base_dir=/var/log/escenic
 ece_scripts_version="straight-from-github"
 
-# since both regular users and root can use this command, we create
-# user specific log files. We put it in /var/log as it'll regardless
-# of user run as a deamon process.
-log=$log_base_dir/$(basename $0)-${USER-cron}.log
+log=$log_base_dir/$(basename $0).log
 nursery_base_dir=/etc/escenic/engine/common
 publication_name=""
 raw_spool_base_dir=/var/spool/escenic/raw
@@ -382,16 +379,24 @@ function print_report() {
   fi
 }
 
-create_lock
-create_pid
 check_pre_requisites
 get_user_input $@
-print_and_log "Started @ $(date), I'm logging to $log"
 
-if [[ "$command" == $COMMAND_IMPORT ]]; then
+function run_import() {
+  pid_file=${pid_file/%.pid/-run-import.pid}
+  lock_file=${lock_file/%.lock/-run-import.lock}
+  common_pre_run
+  
   verify_import_job_configuration
   import_raw_files
-elif [[ "$command" == $COMMAND_CREATE_IMPORT_CONFIGURATION ]]; then
+  common_post_run
+}
+
+function run_create_import_configuration() {
+  pid_file=${pid_file/%.pid/-create.pid}
+  lock_file=${lock_file/%.lock/-create.lock}
+  common_pre_run
+  
   if [ -z $import_archive ]; then
     if [ ${directories_only-0} -eq 0 ]; then
       create_import_configuration $publication_name $job_name
@@ -400,13 +405,40 @@ elif [[ "$command" == $COMMAND_CREATE_IMPORT_CONFIGURATION ]]; then
   else
     apply_import_archive
   fi
-elif [[ "$command" == $COMMAND_DOWNLOAD_RAW_DATA  ]]; then
+
+  common_post_run
+}
+
+function run_download_raw_data() {
+  pid_file=${pid_file/%.pid/-download.pid}
+  lock_file=${lock_file/%.lock/-download.lock}
+
+  common_pre_run
   verify_import_job_configuration
   download_latest_files
+  common_post_run
+}
+
+function common_pre_run() {
+  print_and_log "Started @ $(date), I'm logging to $log"
+  create_pid
+  create_lock_or_fail
+}
+
+function common_post_run() {
+  remove_pid
+  remove_lock
+}
+
+if [[ "$command" == $COMMAND_IMPORT ]]; then
+  run_import
+elif [[ "$command" == $COMMAND_CREATE_IMPORT_CONFIGURATION ]]; then
+  run_create_import_configuration
+elif [[ "$command" == $COMMAND_DOWNLOAD_RAW_DATA  ]]; then
+  run_download_raw_data
 fi
 
 print_manual_steps
 print_report
 print_and_log "Finished @ $(date), enjoy thyself!"
-remove_pid
-remove_lock
+
