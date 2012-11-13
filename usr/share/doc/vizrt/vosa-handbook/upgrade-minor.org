@@ -9,4 +9,4 @@ When an Escenic cluster needs to be upgraded we perform the following steps.
 07. Create a test server so the new stuff can be tried by editorial when the templates are ready.
 08. Start an automatic copy and upgrade of the mm directory and the database.
 09. Create a production platform with full redundancy but small scale that points to it.
-10. tsss
+10. 
