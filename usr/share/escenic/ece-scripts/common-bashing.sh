@@ -400,13 +400,29 @@ function remove_file_if_exists() {
 lock_file=/var/run/escenic/$(basename $0 .sh).lock
 
 ## Will create a lock (and the lock's directory) for the caller. If
-## the lock already exists, this function will cause your program to
-## fail.
+## the lock already exists, this function will NOT cause your program
+## to fail. If you want to it to fail, use create_lock_or_fail
+## instead.
 ##
 ## $1 :: the lock file
 function create_lock() {
   if [ -e $lock_file ]; then
-    echo $lock_file "exists, I'll exit"
+    log $lock_file "exists, I'll exit"
+    exit 0
+  else
+    fail_safe_run mkdir -p $(dirname $lock_file)
+    fail_safe_run touch $lock_file
+  fi
+}
+
+## Does the same as create_lock with the difference that it will make
+## your program fail if the lock already exists and it will print the
+## error to standard out as well as in the log.
+##
+## $1 :: the lock file
+function create_lock_or_fail() {
+  if [ -e $lock_file ]; then
+    print_and_log $lock_file "exists, I'll exit"
     exit 1
   else
     fail_safe_run mkdir -p $(dirname $lock_file)
