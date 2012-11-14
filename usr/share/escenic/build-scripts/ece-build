@@ -35,6 +35,7 @@ section-feed
 dashboard
 poll
 lucy
+reporter
 widget-framework-core
 widget-framework-common
 widget-framework-mobile
