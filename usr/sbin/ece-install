@@ -430,32 +430,6 @@ EOF
   fi
 }
 
-## Returns the privileged hosts. This will include both the IP(s) the
-## logged in user conduction the ece-install is coming from, as well
-## as any IPs defined in fai_privileged_hosts.
-function get_privileged_hosts() {
-  local privileged_hosts=${fai_privileged_hosts}
-
-  for ip in $(
-    w -h  | \
-      grep pts | \
-      grep -v ":0.0" | \
-      sed "s#.*pts/[0-9]*[ ]*\(.*\)#\1#" | \
-      cut -d' ' -f1 | \
-      cut -d':' -f1 | \
-      sort | \
-      uniq
-  ); do
-    # ensure that all privileged_hosts are resolvable, or else
-    # services which uses them, like Varnish, may fail to start.
-    if [ $(host ${ip} | grep "not found" | wc -l) -eq 0 ]; then
-      privileged_hosts=${privileged_hosts}" "${ip}
-    fi
-  done
-
-  echo ${privileged_hosts}
-}
-
 function read_user_input()
 {
     installation_profiles=(

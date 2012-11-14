@@ -58,9 +58,18 @@ function install_nagios_monitoring_server()
 
   if [ $on_debian_or_derivative -eq 1 ]; then
     if [[ $monitoring_vendor == $MONITORING_VENDOR_ICINGA ]]; then
-      # see /usr/share/doc/icinga-common/README.Debian
-      dpkg-statoverride --update --add nagios www-data 2710 /var/lib/icinga/rw
-      dpkg-statoverride --update --add nagios nagios 751 /var/lib/icinga
+      # see /usr/share/doc/icinga-common/README.Debian we use --force
+      # here so that it doesn't fail if we're re-running this profile.
+      run dpkg-statoverride \
+        --force \
+        --update \
+        --add nagios www-data 2710 /var/lib/icinga/rw
+      run dpkg-statoverride \
+        --force \
+        --update \
+        --add nagios \
+        nagios 751 \
+        /var/lib/icinga
     fi
   fi
 
@@ -346,7 +355,7 @@ EOF
 function install_munin_gatherer()
 {
   print_and_log "Installing a Munin gatherer on $HOSTNAME ..."
-
+  
   if [ $on_debian_or_derivative -eq 1 ]; then
     packages="munin"
     install_packages_if_missing $packages
@@ -369,10 +378,6 @@ function install_munin_gatherer()
     node_list=${fai_monitoring_munin_node_list}
   fi
 
-  if [ -z "$node_list" ]; then
-    return
-  fi
-
   for el in $node_list; do
     local file=/etc/munin/munin-conf.d/escenic.conf
     if [[ -e $file &&  $(grep '\['${el}'\]' $file | wc -l) -gt 0 ]]; then
@@ -388,17 +393,17 @@ use_node_name yes
 EOF
   done
 
-  # TODO add the priveleged network to the allowed stanza (i.e. the
+  # TODO add the privileged network to the allowed stanza (i.e. the
   # network wich will do the monitoring of the servers.
   local file=/etc/apache2/conf.d/munin
-  if [ -n "$(get_privileged_hosts)" ]; then
-    local privileged_hosts=$(
-      echo $(get_privileged_hosts) | sed "s#\ #\\\ #g"
-    )
-    sed -i "s#Allow\ from\ localhost#Allow\ from\ ${privileged_hosts}\ localhost#g" \
+  local privileged_hosts=$(get_privileged_hosts)
+
+  if [ -n "${privileged_hosts}" ]; then
+    # local privileged_hosts=$(
+    #   echo $(get_privileged_hosts) | sed "s#\ #\\\ #g"
+    # )
+    run sed -i "s#[ ]*Allow from .*#        Allow from ${privileged_hosts} localhost 127.0.0.0/8 ::1#g" \
       $file
-    exit_on_error "Failed adding ${fai_privileged_hosts} to" \
-      "Munin's allowed addresses."
     run /etc/init.d/apache2 reload
   fi
 
@@ -590,3 +595,30 @@ function install_system_info() {
   add_next_step "Always up to date system info: http://$HOSTNAME:$port/" \
     "you can also see system-info in the shell, type: system-info"
 }
+
+## Returns the privileged hosts. This will include both the IP(s) the
+## logged in user conduction the ece-install is coming from, as well
+## as any IPs defined in fai_monitoring_privileged_hosts.
+function get_privileged_hosts() {
+  local privileged_hosts=${fai_monitoring_privileged_hosts}
+
+  log fai_monitoring_privileged_hosts=$fai_monitoring_privileged_hosts
+  
+  for ip in $(
+    w -h  | \
+      grep pts | \
+      grep -v ":0.0" | \
+      sed "s#.*pts/[0-9]*[ ]*\(.*\)#\1#" | \
+      cut -d' ' -f1 | \
+      cut -d':' -f1 | \
+      sort | \
+      uniq
+  ); do
+    privileged_hosts=${privileged_hosts}" "${ip}
+  done
+
+  log privileged_hosts=$privileged_hosts
+  
+  echo ${privileged_hosts}
+}
+
