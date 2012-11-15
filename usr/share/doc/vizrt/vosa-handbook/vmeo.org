@@ -1,11 +1,79 @@
 * Viz Media Engine - Online (VMEO)
 VME-Online is a content mangement system and online publishing system for Video.
 
-** TODO Overview
+** VMEO & ECE Integration
 
+*** Getting video into VMEO
+[[./graphics/vmeo-mam-to-vmeo.svg]]
+
+Video is normally stored on a MAM, a huge file server onto which the
+users copy their videos. 
+
+VMEO controller watches a folder on the MAM for updates and imports
+new raw video files as soon as they occur. The new video file is then
+transcoded into a number of pre-set formats. Once all the video
+formats and variants are created, the files are uploaded to the
+=vmeo-streamer=.
+
+The VMEO controller also generates a number of pictures of the video
+file at several places in the clip. These snapshots are called key
+frames. 
+
+The last thing VMEO does, is to export an XML file describing the new
+video file available in the VMEO controller.
+
+*** Getting the video (meta data) into ECE
+[[./graphics/vmeo-import-to-ece.svg]]
+
+The Escenic Content Engine downloads the exported video XML, applies a
+number of transformers on it (these can be XSL, BASH, Python or Perl
+files) into ECE Syndication XML and downloads the key frames from the
+VMEO controller.
+
+The ECE syndication XML files is then imported into ECE and the users
+can see the video content item in the Escenic Content Studio with the
+key frame pictures available as related content items on the video
+article.
+
+*** Displaying video in the web browser
+[[./graphics/vmeo-browser-playing-video.svg]]
+
+When one of these video content items is desked on the website, ECE
+will render the video widget. In addition to the markup, the video
+widget will render some JavaScript which will ask ECE to proxy a
+request to =vmeo-controller= for the URL the video stream or file. The
+URL the browser calls via JavaScript looks something like this:
+=/escenic-adactus-proxy/videoId=123=
+
+The response from the =vmeo-controller= is cached in the caching
+server and returned to the JavaScript running in the browser which
+will inject the URL in a player. Normally this is a Flash player like
+Flowplayer or an HTML =<video/>= element.
+
+*** Device specific videos
+Different devices can display different video formats and
+variants. To be able to retain a high cache-ability, we've chosen to
+have the following "buckets" of devices, where all devices in one
+"bucket" get the same video variant.
+
+Also worth nothing here, is that it only makes sense to heed device
+detection for variants that the VMEO can deliver. I.e., if VMEO is set
+up to only deliver to variants of the each video file, being able to
+detect and request 14,000 different variants of the video doesn't make
+any sense. 
+
+Currently, we're using the following "buckets"
+
+- iPhone :: all iPhones get the same video content
+- iPad :: all iPads get the same video.
+- Android :: since there's so many, so different Android devices out
+             there, we're currently dynamically creating one bucket
+             for each new Android device
+- Desktop & the rest :: If the browser is neither of the above, it
+     gets the standard desktop version of the video.
 
 ** Video file handling
-VME-O offers many interfaces to ingest video into the VME-O system.
+VMEO offers many interfaces to ingest video into the VMEO system.
 After ingest the videos have the following state:
 - The videos are stored in their original format.
 - All available meta information is available through the UI and API.
@@ -18,12 +86,12 @@ The following ingest interfaces are used by SOLARtv:
 The following ingest interfaces are available but not used by SOLARtv
 - Mobile ingest (Viz reporter) :: Several apps on iphone and nokia are available to upload video content over slow mobile networks or faster wifi connections when available to the device. 
 - Webservice ingest :: A REST webservice is available to push meta information of video content including a URI that will be ued by VMEO to fetch the video for ingestion.
-- Ingest formats :: VME-O has a long list of video formats it is able to ingest.
+- Ingest formats :: VMEO has a long list of video formats it is able to ingest.
 
 *** Transcoding
-Many Web browsers on PCs, tablets and smart phones are not capable of playing the VME-O house format. It is either to big or of the wrong binary format. This is why VME-O can be configured to transcode videos to various alternative formats and sizes to allow for a variety of devices to play them.
+Many Web browsers on PCs, tablets and smart phones are not capable of playing the VMEO house format. It is either to big or of the wrong binary format. This is why VMEO can be configured to transcode videos to various alternative formats and sizes to allow for a variety of devices to play them.
 
-Transcoding typically is quite CPU intensive. For this reason it makes no sense to transcode more than the amount of processors in a box in parrallel. VME-O has a queuing mechanism to ensure that it is not overloaded. More transcoding capacty can be added by deploying more transcoding machines to the cluster.
+Transcoding typically is quite CPU intensive. For this reason it makes no sense to transcode more than the amount of processors in a box in parrallel. VMEO has a queuing mechanism to ensure that it is not overloaded. More transcoding capacty can be added by deploying more transcoding machines to the cluster.
 
 At SOLARtv transcoding is done by vmeo-controller
 
