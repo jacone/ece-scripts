@@ -1,21 +1,21 @@
 * How to manage your private keys
 Vizrt needs to make it very easy to allow an operator to make changes to the configuration of a system that we maintain for our customers. At the same time we must protect systems against unauthorized access.
-We have chosen to use ssh keys to solve this problem. This means that ssh keys are at the center of our security policy. This document explains how we need people to work with them.
+We have chosen to use SSH keys to solve this problem. This means that ssh keys are at the center of our security policy. This document explains how we need people to work with them.
 
-Read the following rules as if it is about your personal creditcard:
+Read the following rules as if it is about your personal credit card:
 - Never duplicate a private key. Just make a new one if you loose it.
-- Allways put a passphrase on a private key.
-- A passphrase contains at least 3 words. The longer the better.
+- Always put a pass phrase on a private key.
+- A pass phrase contains at least 3 words. The longer the better.
 - Keys are personal. Do not share keys amongst people.
 - Use agent forwarding when ssh hopping. (ssh -A thv@somehost.com)
-- Notify the saas team if you need to block your key immediately.
+- Notify the SaaS team if you need to block your key immediately.
 
 ** Why is it so important?
-Each private key file represents a sucurity threat to our customer or Vizrt. Emagine that we would somehow use physical keys. How secure is a building that can be opened by a key for whitch we have many different copies?
-It is as simple as that. We have many doors. When we enable your key, we ajust all those doors to open with your key. If an unauthorized person can use your key, our customers and Vizrt are in big, big trouble.
+Each private key file represents a security threat to our customer or Vizrt. Imagine that we would somehow use physical keys. How secure is a building that can be opened by a key for which we have many different copies?
+It is as simple as that. We have many doors. When we enable your key, we adjust all those doors to open with your key. If an unauthorized person can use your key, our customers and Vizrt are in big, big trouble.
 
 ** Personal responsibility
-Vizrt and customers are ensured for security incidents. This ensurance does not protect us at all if:
+Vizrt and customers are ensured for security incidents. This insurance does not protect us at all if:
 1. The harm is done to Vizrt by a Vizrt employee or by the customer to the customer.
 2. The harm is caused by a Security Breach that could have been avoided by the design of the software.
 In other words:
@@ -24,4 +24,4 @@ Keep your keys safe and we will be okay even if we make bad mistakes.
 #+END_QUOTE
 
 ** Help others be safe and be safe yourself.
-We use ssh keys to protect our dearest secrets. You are the last line of defense. This is why we have to behave in a way that resembles your behavior around physical safety. What do you do when you boss is about to fall of a ledge? You grab him and drag him to safety. Your boss will be startled at first and thank you afterward. In fact he might accuse you of neglecting to tell you of the danger if you didn't act. That is how you should act when you see others act unresponsible with keys. Even your boss.
+We use SSH keys to protect our dearest secrets. You are the last line of defense. This is why we have to behave in a way that resembles your behavior around physical safety. What do you do when you boss is about to fall of a ledge? You grab him and drag him to safety. Your boss will be startled at first and thank you afterward. In fact he might accuse you of neglecting to tell you of the danger if you didn't act. That is how you should act when you see others act UN responsible with keys. Even your boss.
