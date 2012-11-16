@@ -6,23 +6,23 @@ tools in the environment to carry out everyday development tasks.
 
 The main components of the VOSA development environment are:
 
- * Apache Subversion :: All your project code is stored here, under strict
+ - Apache Subversion :: All your project code is stored here, under strict
                  version control.
- * Apache Maven :: Apache Maven provides dependency management and
+ - Apache Maven :: Apache Maven provides dependency management and
                    controls the SW build process.
- * IntelliJ IDEA Ultimate :: Your editor and coding environment.
- * VirtualBox :: Lets you run a complete
+ - IntelliJ IDEA Ultimate :: Your editor and coding environment.
+ - VirtualBox :: Lets you run a complete
                  copy of your production site in a virtual
                  machine on your PC, making it easy to test your code changes
                  as you make them.
- * HipChat :: A chat room service that you can use to communicate with
+ - HipChat :: A chat room service that you can use to communicate with
               other members of your project, stakeholders in the
               project (customers, users and so on) and Vizrt support
               staff. The chat room for your project also has a special
               member called Guru. Guru is a robot who will do various
               jobs for you such as building and deploying new versions
               of the site.
- * JIRA :: A bug tracking service that is used to track all work done
+ - JIRA :: A bug tracking service that is used to track all work done
            in the project. All changes to be made are registered as
            change requests in JIRA, and Subversion will only allow you
            to check in changes that have a valid JIRA ticket number.
@@ -31,11 +31,11 @@ The main components of the VOSA development environment are:
 
 You need to install the following items on your PC or Mac:
 
- * The Oracle Java Development Kit, version 7 (??). You can get this
+ - The Oracle Java Development Kit, version 7 (??). You can get this
    from [[http://www.oracle.com/technetwork/java/javase/downloads/java-se-jdk-7-download-432154.html]].
- * Apache Subversion client software. You can get this from [[http://subversion.apache.org/packages.html]].
- * Apache Maven version 3. You can get this from [[http://maven.apache.org/download.html]].
- * IntelliJ IDEA Ultimate, version 11.x. You can download this from
+ - Apache Subversion client software. You can get this from [[http://subversion.apache.org/packages.html]].
+ - Apache Maven version 3. You can get this from [[http://maven.apache.org/download.html]].
+ - IntelliJ IDEA Ultimate, version 11.x. You can download this from
    [[http://www.jetbrains.com/idea/download/]]. Be sure to download the
    Ultimate version, which is licensed software. Depending on the
    licensing arrangement at your site you may need to enter a license
@@ -49,9 +49,9 @@ choose which plug-ins to activate. You should activate at least the
 following plug-ins (although you may find you have use for others):
 
 
- * Maven integration plug-in
- * Subversion integration plug-in
- * ??
+ - Maven integration plug-in
+ - Subversion integration plug-in
+ - ??
 
 All of the above products have their own installation
 procedures. Follow the relevant procedures for your operating system,
@@ -197,5 +197,4 @@ Your dev image can be downloaded here - [[<%= trail_dev_image_uri %>][Local deve
 /What are the important credentials?/
 
 Operating system: The usernames ubuntu (with sudo privileges), escenic (runs escenic).
-
 
