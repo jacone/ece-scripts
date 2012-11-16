@@ -98,14 +98,14 @@ to the system.
 In order to be able to use [URL] URLs, you need to add the host name
 [host] to your computer's =hosts= file. To do this:
 
- 1 Open your hosts file in a text editor. On a PC, you will find the
+1. Open your hosts file in a text editor. On a PC, you will find the
    hosts file at =??=. On a Mac or Linux machine you will find it at =/etc/hosts=.
- 2 Add the following line to the file:
+2. Add the following line to the file:
    #+BEGIN_SRC default
    ip-address [host]
    #+END_SRC
    where ip-address is the eth1 IP address listed on the virtual machine's welcome page.
-  3 Save your changes.
+3. Save your changes.
   
 Your test system is now up and running. You should be able to access
 your test site by opening a browser and navigating to [URL].
@@ -114,11 +114,11 @@ your test site by opening a browser and navigating to [URL].
 
 To check out your project:
 
- 1 Start Intellij.
- 2 Click on the "Check out from Version Control" link.
- 3 If a list of version control systems is displayed, select Subversion.
- 4 Click on the + icon to add a new repository.
- 5 Paste this:
+1. Start Intellij.
+2. Click on the "Check out from Version Control" link.
+3. If a list of version control systems is displayed, select Subversion.
+4. Click on the + icon to add a new repository.
+5. Paste this:
    #+BEGIN_SRC default
    [subversion-url]
    #+END_SRC
