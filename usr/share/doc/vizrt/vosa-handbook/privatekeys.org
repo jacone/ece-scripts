@@ -15,9 +15,9 @@ Each private key file represents a sucurity threat to our customer or Vizrt. Ema
 It is as simple as that. We have many doors. When we enable your key, we ajust all those doors to open with your key. If an unauthorized person can use your key, our customers and Vizrt are in big, big trouble.
 
 ** Personal responsibility
-Vizrt is ensured up to 10 million US Dollars per incident when a customer claims that we have caused them harm. We pay a lot of money for this ensurance but it does not protect us at all if:
-1. The harm is done to Vizrt and not to the customer.
-2. The harm is caused by a Security Breach: failure or lack of the Insured's Software Products or the Insured's Electronics Products to prevent unauthorised access to or use of an electronic system or program.
+Vizrt and customers are ensured for security incidents. This ensurance but it does not protect us at all if:
+1. The harm is done to Vizrt by a Vizrt employee or by the customer to the customer.
+2. The harm is caused by a Security Breach that could have been avoided by the design of the software.
 
 ** Help others be safe and be safe yourself.
 We use ssh keys to protect our dearest secrets. You are the last line of defense. This is why we have to behave in a way that resembles your behavior around physical safety. What do you do when you boss is about to fall of a ledge? You grab him and drag him to safety. Your boss will be startled at first and thank you afterward. In fact he might accuse you of neglecting to tell you of the danger if you didn't act. That is how you should act when you see others act unresponsible with keys. Even your boss.
