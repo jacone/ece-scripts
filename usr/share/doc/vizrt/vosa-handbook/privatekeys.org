@@ -1,6 +1,6 @@
 * How to manage your private keys
 Vizrt needs to make it very easy to allow an operator to make changes to the configuration of a system that we maintain for our customers. At the same time we must protect systems against unauthorized access.
-We have chosen to use SSH keys to solve this problem. This means that ssh keys are at the center of our security policy. This document explains how we need people to work with them.
+We have chosen to use SSH keys to solve this problem. This means that ssh keys are at the center of our security policy. This section explains how we need people to work with them.
 
 Read the following rules as if it is about your personal credit card:
 - Never duplicate a private key. Just make a new one if you loose it.
