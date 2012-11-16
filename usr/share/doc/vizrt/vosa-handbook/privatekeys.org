@@ -18,6 +18,10 @@ It is as simple as that. We have many doors. When we enable your key, we ajust a
 Vizrt and customers are ensured for security incidents. This ensurance does not protect us at all if:
 1. The harm is done to Vizrt by a Vizrt employee or by the customer to the customer.
 2. The harm is caused by a Security Breach that could have been avoided by the design of the software.
+In other words:
+#+BEGIN_QUOTE
+Keep your keys safe and we will be okay even if we make bad mistakes.
+#+END_QUOTE
 
 ** Help others be safe and be safe yourself.
 We use ssh keys to protect our dearest secrets. You are the last line of defense. This is why we have to behave in a way that resembles your behavior around physical safety. What do you do when you boss is about to fall of a ledge? You grab him and drag him to safety. Your boss will be startled at first and thank you afterward. In fact he might accuse you of neglecting to tell you of the danger if you didn't act. That is how you should act when you see others act unresponsible with keys. Even your boss.
