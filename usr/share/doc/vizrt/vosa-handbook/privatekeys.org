@@ -15,7 +15,7 @@ Each private key file represents a sucurity threat to our customer or Vizrt. Ema
 It is as simple as that. We have many doors. When we enable your key, we ajust all those doors to open with your key. If an unauthorized person can use your key, our customers and Vizrt are in big, big trouble.
 
 ** Personal responsibility
-Vizrt and customers are ensured for security incidents. This ensurance but it does not protect us at all if:
+Vizrt and customers are ensured for security incidents. This ensurance does not protect us at all if:
 1. The harm is done to Vizrt by a Vizrt employee or by the customer to the customer.
 2. The harm is caused by a Security Breach that could have been avoided by the design of the software.
 
