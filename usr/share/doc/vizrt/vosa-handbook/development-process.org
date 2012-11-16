@@ -33,8 +33,12 @@ You need to install the following items on your PC or Mac:
 
  - The Oracle Java Development Kit, version 7 (??). You can get this
    from [[http://www.oracle.com/technetwork/java/javase/downloads/java-se-jdk-7-download-432154.html]].
- - Apache Subversion client software. You can get this from [[http://subversion.apache.org/packages.html]].
- - Apache Maven version 3. You can get this from [[http://maven.apache.org/download.html]].
+ - Apache Subversion client software. You can get this from
+   [[http://subversion.apache.org/packages.html]] (or on Linux, you can
+   most likely install it using your package manager).
+ - Apache Maven version 3. You can get this from
+   [[http://maven.apache.org/download.html]]  (or on Linux, you can
+   most likely install it using your package manager).
  - IntelliJ IDEA Ultimate, version 11.x. You can download this from
    [[http://www.jetbrains.com/idea/download/]]. Be sure to download the
    Ultimate version, which is licensed software. Depending on the
@@ -48,7 +52,6 @@ During the IntelliJ IDEA installation process you are allowed to
 choose which plug-ins to activate. You should activate at least the
 following plug-ins (although you may find you have use for others):
 
-
  - Maven integration plug-in
  - Subversion integration plug-in
  - ??
@@ -60,9 +63,10 @@ set-up of your development environment.
 
 ** Set-up
 
-Setting up your development environment involves a combination of
-configuring the SW you have installed and obtaining copies of the code
-and systems you are going to work on.
+Setting up your development environment involves:
+
+ - Configuring the SW you have installed
+ - Obtaining copies of the code and systems you are going to work on
 
 *** Set up your local test site
 
@@ -76,12 +80,14 @@ from it. When the virtual machine is ready, a [name] entry will appear
 in the list on the left hand side of the VirtualBox window. 
 
 
-Click on Start to run the machine. A terminal window is displayed,
+Click on *Start* to run the machine. A terminal window is displayed,
 showing the virtual machine boot-up messages. When the boot sequence
 has finished, the terminal window will contain an information page
 starting with the following welcome message:
 
+#+BEGIN_SRC default
 Welcome to [URL]
+#+END_SRC
 
 This is the URL you must use to access your test site.
 
@@ -94,15 +100,11 @@ In order to be able to use [URL] URLs, you need to add the host name
 
  1 Open your hosts file in a text editor. On a PC, you will find the
    hosts file at =??=. On a Mac or Linux machine you will find it at =/etc/hosts=.
-
  2 Add the following line to the file:
- 
-#+BEGIN_SRC default
-ip-address [host]
-#+END_SRC
-
-where ip-address is the eth1 IP address listed on the virtual machine's welcome page.
-
+   #+BEGIN_SRC default
+   ip-address [host]
+   #+END_SRC
+   where ip-address is the eth1 IP address listed on the virtual machine's welcome page.
   3 Save your changes.
   
 Your test system is now up and running. You should be able to access
@@ -110,21 +112,17 @@ your test site by opening a browser and navigating to [URL].
 
 *** Check out your project
 
-Start Intellij.
+To check out your project:
 
-Click on the "Check out from Version Control" link.
-
-If a list of version control systems is displayed, select Subversion.
-
-Click on the + icon to add a new repository.
-
-Paste this:
-
-[subversion-url]
-
-into the displayed dialog, and click on OK.
-
-
+ 1 Start Intellij.
+ 2 Click on the "Check out from Version Control" link.
+ 3 If a list of version control systems is displayed, select Subversion.
+ 4 Click on the + icon to add a new repository.
+ 5 Paste this:
+   #+BEGIN_SRC default
+   [subversion-url]
+   #+END_SRC
+   into the displayed dialog, and click on OK.
 
 ** TODO Jira
 
