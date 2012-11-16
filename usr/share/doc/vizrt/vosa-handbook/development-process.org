@@ -1,10 +1,130 @@
-  in the VirtualBox Manager.
-the import process will start.
 * Development Process
 
-The development process consists of a chain of processes and applications
-working together to create an efficient and agile environment for change
-management.  
+This chapter tells you how to install and set up your development
+environment, and then describes how you can use the
+tools in the environment to carry out everyday development tasks.
+
+The main components of the VOSA development environment are:
+
+ * Apache Subversion :: All your project code is stored here, under strict
+                 version control.
+ * Apache Maven :: Apache Maven provides dependency management and
+                   controls the SW build process.
+ * IntelliJ IDEA Ultimate :: Your editor and coding environment.
+ * VirtualBox :: Lets you run a complete
+                 copy of your production site in a virtual
+                 machine on your PC, making it easy to test your code changes
+                 as you make them.
+ * HipChat :: A chat room service that you can use to communicate with
+              other members of your project, stakeholders in the
+              project (customers, users and so on) and Vizrt support
+              staff. The chat room for your project also has a special
+              member called Guru. Guru is a robot who will do various
+              jobs for you such as building and deploying new versions
+              of the site.
+ * JIRA :: A bug tracking service that is used to track all work done
+           in the project. All changes to be made are registered as
+           change requests in JIRA, and Subversion will only allow you
+           to check in changes that have a valid JIRA ticket number.
+
+** Installation
+
+You need to install the following items on your PC or Mac:
+
+ * The Oracle Java Development Kit, version 7 (??). You can get this
+   from [[http://www.oracle.com/technetwork/java/javase/downloads/java-se-jdk-7-download-432154.html]].
+ * Apache Subversion client software. You can get this from [[http://subversion.apache.org/packages.html]].
+ * Apache Maven version 3. You can get this from [[http://maven.apache.org/download.html]].
+ * IntelliJ IDEA Ultimate, version 11.x. You can download this from
+   [[http://www.jetbrains.com/idea/download/]]. Be sure to download the
+   Ultimate version, which is licensed software. Depending on the
+   licensing arrangement at your site you may need to enter a license
+   number after installation - talk to your project manager for more
+   information. Note that earlier versions of IntelliJ IDEA do not
+   contain all the functions required by the VOSA development process
+   and will not work properly.
+
+During the IntelliJ IDEA installation process you are allowed to
+choose which plug-ins to activate. You should activate at least the
+following plug-ins (although you may find you have use for others):
+
+
+ * Maven integration plug-in
+ * Subversion integration plug-in
+ * ??
+
+All of the above products have their own installation
+procedures. Follow the relevant procedures for your operating system,
+and make sure they are correctly installed before continuing with the
+set-up of your development environment.
+
+** Set-up
+
+Setting up your development environment involves a combination of
+configuring the SW you have installed and obtaining copies of the code
+and systems you are going to work on.
+
+*** Set up your local test site
+
+Download the following virtual machine image:
+
+ [[<%= trail_dev_image_uri %>]]
+
+When the file has finished downloading, double-click on it. This
+starts VirtualBox, which opens the file and creates a virtual machine
+from it. When the virtual machine is ready, a [name] entry will appear
+in the list on the left hand side of the VirtualBox window. 
+
+
+Click on Start to run the machine. A terminal window is displayed,
+showing the virtual machine boot-up messages. When the boot sequence
+has finished, the terminal window will contain an information page
+starting with the following welcome message:
+
+Welcome to [URL]
+
+This is the URL you must use to access your test site.
+
+Below this welcome messages are the IP addresses used by the virtual
+machine and the user name/password combinations you can use to log in
+to the system.
+
+In order to be able to use [URL] URLs, you need to add the host name
+[host] to your computer's =hosts= file. To do this:
+
+ 1 Open your hosts file in a text editor. On a PC, you will find the
+   hosts file at =??=. On a Mac or Linux machine you will find it at =/etc/hosts=.
+
+ 2 Add the following line to the file:
+ 
+#+BEGIN_SRC default
+ip-address [host]
+#+END_SRC
+
+where ip-address is the eth1 IP address listed on the virtual machine's welcome page.
+
+  3 Save your changes.
+  
+Your test system is now up and running. You should be able to access
+your test site by opening a browser and navigating to [URL].
+
+*** Check out your project
+
+Start Intellij.
+
+Click on the "Check out from Version Control" link.
+
+If a list of version control systems is displayed, select Subversion.
+
+Click on the + icon to add a new repository.
+
+Paste this:
+
+[subversion-url]
+
+into the displayed dialog, and click on OK.
+
+
 
 ** TODO Jira
 
