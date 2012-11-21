@@ -427,6 +427,10 @@ function common_pre_run() {
 }
 
 function common_post_run() {
+  print_manual_steps
+  print_report
+  
+  print_and_log "Finished @ $(date), enjoy thyself!"
   remove_pid
   remove_lock
 }
@@ -439,7 +443,4 @@ elif [[ "$command" == $COMMAND_DOWNLOAD_RAW_DATA  ]]; then
   run_download_raw_data
 fi
 
-print_manual_steps
-print_report
-print_and_log "Finished @ $(date), enjoy thyself!"
 
