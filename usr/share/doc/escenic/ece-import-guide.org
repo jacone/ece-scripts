@@ -28,10 +28,15 @@ to create such an archive yourself.
 ** Without an import archive
 #+BEGIN_SRC text
 # ece-import \
-    --name streaming-video \
-    --publication mypub \
-    create
+  --name streaming-video \
+  --publication mypub \
+  create
 #+END_SRC
+
+Here, =ece-import= will set up the file structure for your import job,
+but you'll have to either put your transformers & cron jobs on the
+system yourself, or make sure that the XML you want import already is
+in the [[http://documentation.vizrt.com/ece-syndication-ref/5.4/escenic_syndication.html][Escenic Syndication XML format]].
 
 * Getting raw import data from HTTP or FTP servers
 There's built-in support for this in =ece-import=:
@@ -138,7 +143,7 @@ Engine.
 * Creating your own transformers
 You can write a transformer in either XSL, Perl, Python or BASH. You
 put it in =<publication>/<import name>/transformers/<number>-<transformer task>.<{xsl,pl,py,sh}>=
-and specify the order in which it should run by setting the =<number=
+and specify the order in which it should run by setting the =<number>=
 before/after your other transformers (if any, many folks only have one
 transformer which is an XSL file).
 
@@ -149,7 +154,7 @@ e.g. =01-first.sh= are passed on to =02-second.pl=. Each transformer
 must read the file and write to the same file. That's the contract.
 
 Here's an example of a transformer that downloads all the pictures
-mentioned in the raw XML (=ece-import= will copy any multimedia files
+mentioned in the raw XML. =ece-import= will copy any multimedia files
 to the ECE import spool for you, so the transformer only needs to
 worry about downloading these to the directory of the incoming XML
 file: 
