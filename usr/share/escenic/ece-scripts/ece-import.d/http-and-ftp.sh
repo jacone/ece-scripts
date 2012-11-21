@@ -44,7 +44,8 @@ function download_latest_files() {
 function download_files_if_desired() {
   for el in $list_of_files; do
     if [ $(is_already_downloaded $uri/$el) -eq 1 ]; then
-      print_and_log $el "has already been downloaded, skipping to the next one"
+      # not logging anything here as this will create log files in
+      # production.
       continue
     fi
     print_and_log "Downloading" $uri/$el "..."
