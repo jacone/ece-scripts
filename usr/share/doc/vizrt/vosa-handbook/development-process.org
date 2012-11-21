@@ -111,6 +111,44 @@ In order to be able to use [[<%= trail_dev_host_name %>]] URLs, you need to add 
 Your test system is now up and running. You should be able to access
 your test site by opening a browser and navigating to http://[[<%= trail_dev_host_name %>]].
 
+*** Configure Maven
+
+You need to add a reference to the Vizrt software repository to your
+Maven settings files. To do this:
+
+1. Open the Maven settings file for editing. On Windows you will find
+   it at =??=. On  Mac and Linux you will find it at
+   =/home/<your-user>/.m2/settings.xml=.
+2. Add a repository definition like the one shown below to the file:
+   #+BEGIN_SRC xml
+   <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                         http://maven.apache.org/xsd/settings-1.0.0.xsd">
+     <profiles>
+       <profile>
+         <id>default</id>
+         <activation>
+           <activeByDefault>true</activeByDefault>
+         </activation>
+           <repositories>
+             <repository>
+             <id>escenic-repo</id>
+             <name>Oslo Releases</name>
+             <url>http://repo.dev.escenic.com/content/groups/trunk</url>
+             <layout>default</layout>
+           </repository>
+         </repositories>
+       </profile>
+     </profiles>
+   </settings>
+   #+END_SRC
+   (The above example shows the minimum content required for [[<%= trail_dev_project_name %>]] to 
+   work. Your =settings.xml= may of course contain other settings. For a complete description of 
+   how to use =settings.xml=, see http://maven.apache.org/settings.html.)
+   TODO Is the above example correct?
+3. Save your changes.
+  
 *** Check out your project
 
 To check out your project:
@@ -127,17 +165,42 @@ To check out your project:
 6. Select the repository you have added to the list and select *Checkout*.
 7. Choose/create a destination folder for the project and click *OK* three times.
 8. When asked if you want to create an IntelliJ project for the source files, select 
-   *No* and except the wizard's defaults.
+   *No*.
 
-*** Configure Maven
+*** Set up your project
 
-You need to add a reference to the Vizrt software repository to your
-Maven settings files. To do this:
+To set up your project:
 
-1. Open the Maven settings file for editing. On Windows you will find
-   it at =??=. On  Mac and Linux you will find it at
-   =/home/<your-user>/.m2/settings.xml=.
-2. Add the following 
+1. Click on the *Open project* link.
+2. In the *Open Project* dialog, open the project's =trunk= folder (or one of its =branches/n.n=
+   folders if that is where you are going to work).
+3. Select the =pom.xml= file in the folder and click *OK*.
+4. Select *File* > *Settings...*.
+5. In the displayed *Settings* dialog, select *Maven* > *Importing*.
+6. Make sure that the *Import Maven projects automatically* option is checked and click *OK*.
+7. Select *Tools* > *Deployment* > *Configuration*.
+8. In the displayed *Deployment* dialog, click on the + icon.
+9. Enter a name for your deployment set-up in the *Name* field,  *SFTP* in the *Type* field and 
+   click on *OK*.
+10. On the *Connections* tab of the displayed form, enter *[[<%= trail_dev_host_name %>]]* in 
+    the *SFTP Host* field, *escenic* in the *User name* field and the corresponding password 
+    in the *Password* field.
+11. Click on *Test SFTP Connection...* to check you have entered the correct login credentials.
+12. On the form's *Mappings* tab, enter the following two mappings:
+    | Local path                                                               | Deployment path                                                         |
+    |--------------------------------------------------------------------------+-------------------------------------------------------------------------|
+    | publications/shared-war/src/main/webapp/template/                        | /opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/ |
+    | publications/[[<%= trail_publication_name %>]]/src/main/webapp/template/ | /opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/ |
+13. Click *OK*.
+14. Select *Tools* > *Deployment* > *Automatic upload*.
+
+*** Test automatic deployment
+
+Any changes you make to your project should now be automatically deployed to the correct location 
+on your test server. To test that this is actually the case:
+
+
+
 
 ** TODO Jira
 
