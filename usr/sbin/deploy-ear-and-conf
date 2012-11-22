@@ -1,0 +1,78 @@
+#! /usr/bin/env bash
+
+## Command which deployes an EAR and DEB package by their URIs.
+##
+## The command will deploy the EAR for all Escenic Content Engines and
+## Search servers installed on the given host and will figure out
+## instances and user/passwords by itself. It will also clear the work
+## directory before starting the instances again. The last thing the
+## script does, is to deploy the conf package.
+
+function bootstrap_thyself() {
+  # first, try to be nice, then check the standard location
+  local dir=$(dirname $0)/../share/escenic/ece-scripts
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
+
+  local common_libraries="
+    common-bashing.sh
+    common-io.sh
+  "
+
+  for el in $common_libraries; do
+    source $dir/$el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+}
+
+bootstrap_thyself
+log=/var/log/escenic/$(basename $0).log
+tmp_dir=$(mkdir -p $HOME/$(date --iso))
+run source /etc/default/ece
+
+function deploy_ear() {
+  for el in $engine_instance_list; do
+	  su - $ece_unix_user -c \
+	    "ece -i $el stop deploy clean start --uri $ear_uri"
+  done
+  for el in $search_instance_list; do
+	  su - $ece_unix_user -c \
+	    "ece -i $el -t search stop deploy clean start --uri $ear_uri"
+  done
+}
+
+function deploy_conf() {
+  run source /etc/escenic/ece.conf
+
+  echo "Downloading" $conf_package_uri "..."
+  (
+	  cd $tmp_dir
+	  run wget \
+	    --quiet \
+	    --continue \
+	    --http-user $builder_http_user \
+	    --http-password $builder_http_password \
+	    $conf_package_uri
+  )
+
+  print "Installing" $(basename $conf_package_uri) "..."
+  run dpkg -i $tmp_dir/$(basename $conf_package_uri)
+}
+
+function read_user_input() {
+  if [ $# -ne 2 ]; then
+	  echo "Usage:" $(basename $0) "<URI to EAR file>" "<URI to conf package>"
+	  exit 1
+  fi
+
+  ear_uri=$1
+  conf_package_uri=$2
+}
+
+read_user_input "$@"
+deploy_ear
+deploy_conf
