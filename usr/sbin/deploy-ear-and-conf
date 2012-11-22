@@ -60,7 +60,7 @@ function deploy_conf() {
   )
 
   print "Installing" $(basename $conf_package_uri) "..."
-  run dpkg --force-overwrite -i $tmp_dir/$(basename $conf_package_uri)
+  dpkg --force-overwrite -i $tmp_dir/$(basename $conf_package_uri)
 }
 
 function read_user_input() {
