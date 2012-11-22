@@ -48,7 +48,7 @@ function deploy_ear() {
 function deploy_conf() {
   run source /etc/escenic/ece.conf
 
-  echo "Downloading" $conf_package_uri "..."
+  print "Downloading" $conf_package_uri "..."
   (
 	  cd $tmp_dir
 	  run wget \
