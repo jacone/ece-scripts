@@ -1,0 +1,8 @@
+Package: spore
+Version: VERSION
+Depends: coreutils, passwd
+Section: base
+Priority: optional
+Architecture: all
+Maintainer: Erik Mogensen <mogsie@vizrt.com>
+Description: Creates users and groups and seeds users with public SSH keys
