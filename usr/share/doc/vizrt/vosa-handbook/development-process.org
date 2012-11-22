@@ -76,8 +76,9 @@ Download the following virtual machine image:
 
 When the file has finished downloading, double-click on it. This
 starts VirtualBox, which opens the file and creates a virtual machine
-from it. When the virtual machine is ready, a [[<%= trail_dev_image_name %>]] entry will appear
-in the list on the left hand side of the VirtualBox window. 
+from it. When the virtual machine is ready, a [[<%= trail_dev_image_name
+%>]] entry will appear in the list on the left hand side of the
+VirtualBox window.
 
 
 Click on *Start* to run the machine. A terminal window is displayed,
@@ -187,10 +188,10 @@ To set up your project:
     in the *Password* field.
 11. Click on *Test SFTP Connection...* to check you have entered the correct login credentials.
 12. On the form's *Mappings* tab, enter the following two mappings:
-    | Local path                                                               | Deployment path                                                         |
-    |--------------------------------------------------------------------------+-------------------------------------------------------------------------|
-    | publications/shared-war/src/main/webapp/template/                        | /opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/ |
-    | publications/[[<%= trail_publication_name %>]]/src/main/webapp/template/ | /opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/ |
+    | Local path                                                                                 | Deployment path                                                         |
+    |--------------------------------------------------------------------------------------------+-------------------------------------------------------------------------|
+    | /<path-from-root>/publications/shared-war/src/main/webapp/template/                        | /opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/ |
+    | /<path-from-root>/publications/[[<%= trail_publication_name %>]]/src/main/webapp/template/ | /opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/ |
 13. Click *OK*.
 14. Select *Tools* > *Deployment* > *Automatic upload*.
 
@@ -199,7 +200,71 @@ To set up your project:
 Any changes you make to your project should now be automatically deployed to the correct location 
 on your test server. To test that this is actually the case:
 
+1. Display your test server's file system by selecting *Tools* > *Deployment* > *Browse Remote Host*.
+2. Navigate down the displayed tree to show the contents of the =/opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/widgets= folder.
+   (=/opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/= and all its children should be highlighted in green. If this is not the case,
+   go back and and check that you entered the deployment path correctly in the *Deployment* dialog.)
+3. In your local code tree, navigate to publications/[[<%= trail_publication_name %>]]/src/main/webapp/template/widgets/dummy.
+4. Create a file (any name) in this folder. The dummy folder and the file you have created should immediately be duplicated in the deployment tree.  If this is not the case,
+   go back and and check that you entered the correct local paths in the *Deployment* dialog.
+5. Delete the test file you created. It should also disappear from the deployment tree.
 
+
+** Procedures
+
+*** TODO Communicating with your colleagues
+
+(about using HipChat)
+
+*** TODO Change management
+
+(about using Jira)
+
+*** TODO Version control
+
+(about using Subversion)
+
+*** TODO Development
+
+The [[<%= trail_publication_name %>]] publication is made using the *Escenic Widget Framework*. This means that
+all publication layout and functionality is assembled from *widgets*. A widget is a package of JSP, CSS and graphics files 
+that together provide a web site component. A component may be primarily graphical (such as the =storyContent= widget that 
+governs the layout of a story in a publication), primarily functional (such as the =webAnalytics= widget) or a combination
+of the two (such as the =navigation= widget).
+
+Escenic Widget Framework is supplied with a comprehensive set of ready-made widgets from which web site designers can 
+construct web sites using a point and click interface in *Content Studio*, Vizrt's web site editor. The widgets can also
+be customized using this interface, so a wide range of different web sites can be constructed without ever needing to write
+any JSP, HTML or CSS code.
+
+If the standard widgets do not provide all the functionality you need you can extend the Widget Framework
+in two ways:
+
+ - By adding widgets of your own
+ - By customizing existing widgets
+
+This manual does not cover the details of Widget Framework development, since this is covered elsewhere 
+([[<%= trail_virtual_host_documentation %>]]/widget-framework-2.0.html).
+
+The development environment you have set up is designed to support and simplify the process of extending
+the standard widgets supplied with the Widget Framework. The =publications/[[<%= trail_publication_name %>]]/src/main/webapp/template/= 
+tree is a *customization layer* that you can use to store any modifications you want to make to the standard widgets
+in the =publications/shared-war/src/main/webapp/template/= tree. During the application build process,
+the files in your customization layer are merged with the standard widgets to create a customized widget
+set for deployment.
+
+The deployment mappings you have set up mimic this process: any changes you make in
+=publications/[[<%= trail_publication_name %>]]/src/main/webapp/template/= are instantly copied to your
+test server. This means you can instantly test all changes you make by displaying an appropriate page of 
+your test [[<%= trail_publication_name %>]] publication.
+
+**** TODO Customizing a widget
+
+**** TODO Creating a new widget???
+
+*** TODO Building and deployment
+
+(about using guru to do it for you)
 
 
 ** TODO Jira
