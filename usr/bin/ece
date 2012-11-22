@@ -825,6 +825,9 @@ for el in $command; do
         flush)
             flush_caches
             ;;
+        top)
+            run_ece_top
+            ;;
         help)
             print_help
             ;;

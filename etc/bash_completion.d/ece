@@ -26,6 +26,7 @@ _ece_commands()
       status
       stop
       threaddump
+      top
       update
       versions
     "
