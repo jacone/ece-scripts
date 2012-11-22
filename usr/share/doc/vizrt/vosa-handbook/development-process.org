@@ -34,17 +34,17 @@ You need to install the following items on your PC or Mac:
  - The Oracle Java Development Kit, version 7 (??). You can get this
    from [[http://www.oracle.com/technetwork/java/javase/downloads/java-se-jdk-7-download-432154.html]].
  - Apache Subversion client software. You can get this from
-   [[http://subversion.apache.org/packages.html]] (or on Linux, you can
+   [[http://subversion.apache.org/packages.html]] (or on Linux you can
    most likely install it using your package manager).
  - Apache Maven version 3. You can get this from
-   [[http://maven.apache.org/download.html]]  (or on Linux, you can
+   [[http://maven.apache.org/download.html]]  (or on Linux you can
    most likely install it using your package manager).
  - IntelliJ IDEA Ultimate, version 11.x. You can download this from
    [[http://www.jetbrains.com/idea/download/]]. Be sure to download the
    Ultimate version, which is licensed software. Depending on the
    licensing arrangement at your site you may need to enter a license
    number after installation - talk to your project manager for more
-   information. Note that earlier versions of IntelliJ IDEA do not
+   information. Note that version 11.x is required: earlier versions of IntelliJ IDEA do not
    contain all the functions required by the VOSA development process
    and will not work properly.
 
@@ -67,6 +67,7 @@ Setting up your development environment involves:
 
  - Configuring the SW you have installed
  - Obtaining copies of the code and systems you are going to work on
+ - Getting access to the project infrastructure (HipChat, Jira and so on) 
 
 *** Set up your local test site
 
