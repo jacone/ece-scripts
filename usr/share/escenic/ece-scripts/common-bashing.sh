@@ -117,7 +117,7 @@ function remove_pid_and_exit_in_error() {
     log_call_stack
   fi
   
-  exit 1
+  kill $$
 }
 
 function exit_on_error() {
