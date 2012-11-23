@@ -27,9 +27,18 @@ function bootstrap_thyself() {
       exit 1
     }
   done
+
+  create_pid
+  create_lock
+  
+  # hooks for when the scirpt exits cleanly and when a user or someone
+  # kills the process
+  trap common_bashing_exit_hook EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
 }
 
 bootstrap_thyself
+
 log=/var/log/escenic/$(basename $0).log
 tmp_dir=$(mkdir -p $HOME/$(date --iso))
 run source /etc/default/ece
@@ -42,11 +51,40 @@ function deploy_ear() {
   for el in $search_instance_list; do
 	  su - $ece_unix_user -c \
 	    "ece -i $el -t search stop deploy clean start --uri $ear_uri"
+    exit_on_error "Running ece deploy as $ece_unix_user"
   done
 }
 
-function deploy_conf() {
+function set_builder_user_and_password() {
   run source /etc/escenic/ece.conf
+  for el in $engine_instance_list; do
+    file=/etc/escenic/ece-${el}.conf
+    if [ -e $file ]; then
+      run source $file
+    fi
+  done
+
+  local found=0
+  if [[ -n "$builder_http_user" && -n "$builder_http_password" ]]; then
+    found=1
+  fi
+  
+  if [ $found -eq 0 ]; then
+    local file_list=/etc/escenic/ece.conf
+    for el in $engine_instance_list; do
+      file_list="$file_list /etc/escenic/ece-${el}.conf"
+    done
+    print_and_log \
+      "You need to set builder_http_user & and builder_http_password" \
+      "in one of these files:" \
+      $file_list
+    exit 1
+  fi
+}
+
+
+function deploy_conf() {
+  set_builder_user_and_password
 
   print "Downloading" $conf_package_uri "..."
   (
@@ -64,15 +102,42 @@ function deploy_conf() {
 }
 
 function read_user_input() {
-  if [ $# -ne 2 ]; then
-	  echo "Usage:" $(basename $0) "<URI to EAR file>" "<URI to conf package>"
-	  exit 1
-  fi
+  local next_is_ear_uri=0
+  local next_is_conf_uri=0
+  
+  for el in "$@"; do
+    if [[ $el == "--ear" ]]; then
+      next_is_ear_uri=1
+    elif [[ $el == "--conf" ]]; then
+      next_is_conf_uri=1
+    elif [ $next_is_ear_uri -eq 1 ]; then
+      ear_uri=$el
+      next_is_ear_uri=0
+    elif [ $next_is_conf_uri -eq 1 ]; then
+      conf_package_uri=$el
+      next_is_ear_uri=0
+    fi
+  done
+}
 
-  ear_uri=$1
-  conf_package_uri=$2
+function verify_user_input() {
+  local errors=0
+  if [ -z "$conf_package_uri" ]; then
+    print "You must specify the conf package with --conf :-("
+    errors=1
+  fi
+  if [ -z "$ear_uri" ]; then
+    print "You must specify the URI of the EAR file with --ear :-("
+    errors=1
+  fi
+  if [ $errors -eq 1 ]; then
+    exit 1
+  fi
 }
 
 read_user_input "$@"
+verify_user_input
 deploy_ear
 deploy_conf
+
+
