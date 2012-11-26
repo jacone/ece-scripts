@@ -1,0 +1,373 @@
+#! /usr/bin/env bash
+
+## Command which deployes an EAR and DEB package by their URIs.
+##
+## The command will deploy the EAR for all Escenic Content Engines and
+## Search servers installed on the given host and will figure out
+## instances and user/passwords by itself. It will also clear the work
+## directory before starting the instances again. The last thing the
+## script does, is to deploy the conf package.
+
+data_dir=/var/lib/escenic/$(basename $0)
+
+function bootstrap_thyself() {
+  # first, try to be nice, then check the standard location
+  local dir=$(dirname $0)/../share/escenic/ece-scripts
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
+
+  local common_libraries="
+    common-bashing.sh
+    common-io.sh
+  "
+
+  for el in $common_libraries; do
+    source $dir/$el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+
+  create_pid
+  create_lock
+  
+  # hooks for when the scirpt exits cleanly and when a user or someone
+  # kills the process
+  trap common_bashing_exit_hook EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
+}
+
+bootstrap_thyself
+
+log=/var/log/escenic/$(basename $0).log
+tmp_dir=$(mkdir -p $HOME/$(date --iso))
+run source /etc/default/ece
+
+function deploy_ear() {
+  for el in $engine_instance_list; do
+	  su - $ece_unix_user -c \
+	    "ece -i $el stop deploy clean start --uri $ear_uri"
+  done
+  for el in $search_instance_list; do
+	  su - $ece_unix_user -c \
+	    "ece -i $el -t search stop deploy clean start --uri $ear_uri"
+    exit_on_error "Running ece deploy as $ece_unix_user"
+  done
+}
+
+function set_builder_user_and_password() {
+  run source /etc/escenic/ece.conf
+  for el in $engine_instance_list; do
+    file=/etc/escenic/ece-${el}.conf
+    if [ -e $file ]; then
+      run source $file
+    fi
+  done
+
+  local found=0
+  if [[ -n "$builder_http_user" && -n "$builder_http_password" ]]; then
+    found=1
+  fi
+  
+  if [ $found -eq 0 ]; then
+    local file_list=/etc/escenic/ece.conf
+    for el in $engine_instance_list; do
+      file_list="$file_list /etc/escenic/ece-${el}.conf"
+    done
+    print_and_log \
+      "You need to set builder_http_user & and builder_http_password" \
+      "in one of these files:" \
+      $file_list
+    exit 1
+  fi
+}
+
+
+function deploy_conf() {
+  set_builder_user_and_password
+
+  print "Downloading" $conf_package_uri "..."
+  (
+	  cd $tmp_dir
+	  run wget \
+	    --quiet \
+	    --continue \
+	    --http-user $builder_http_user \
+	    --http-password $builder_http_password \
+	    $conf_package_uri
+  )
+
+  print "Installing" $(basename $conf_package_uri) "..."
+  dpkg --force-overwrite -i $tmp_dir/$(basename $conf_package_uri)
+}
+
+function read_user_input() {
+  local next_is_ear_uri=0
+  local next_is_conf_uri=0
+  
+  for el in "$@"; do
+    if [[ $el == "--ear" ]]; then
+      next_is_ear_uri=1
+    elif [[ $el == "--conf" ]]; then
+      next_is_conf_uri=1
+    elif [[ $el == "--rollback" ]]; then
+      roll_back=1
+      next_is_roll_back_to_version=1
+    elif [[ $el == "--update-publication-resources" ]]; then
+      update_the_publication_resources=1
+    elif [[ $el == "--list-deployments" ]]; then
+      list_the_revious_deployments=1
+    elif [ $next_is_ear_uri -eq 1 ]; then
+      ear_uri=$el
+      next_is_ear_uri=0
+    elif [ $next_is_conf_uri -eq 1 ]; then
+      conf_package_uri=$el
+      next_is_ear_uri=0
+    elif [ ${next_is_roll_back_to_version-0} -eq 1 ]; then
+      roll_back_to_version=$el
+      next_is_roll_back_to_version=0
+    fi
+  done
+}
+
+function verify_user_input() {
+  local errors=0
+  if [ ${roll_back-0} -eq 1 ]; then
+    if [ -z "${roll_back_to_version}" ]; then
+      print  "You must specify which version to roll back to."
+      errors=1
+    fi
+  elif [ ${list_the_revious_deployments-0} -eq 1 ]; then
+    nop=foo
+  else
+    if [ -z "$conf_package_uri" ]; then
+      print "You must specify the conf package with --conf :-("
+      errors=1
+    fi
+    if [ -z "$ear_uri" ]; then
+      print "You must specify the URI of the EAR file with --ear :-("
+      errors=1
+    fi
+  fi
+  
+  if [ $errors -eq 1 ]; then
+    exit 1
+  fi
+}
+
+function list_previous_deployments() {
+  if [ ${list_the_revious_deployments-0} -eq 0 ]; then
+    return
+  fi
+  
+  for el in $(find $data_dir -maxdepth 1 -type d | sed "s#${data_dir}##g" | sort -nr | head -20); do
+    local id=$(basename $el)
+    echo "   - Deployment" ${id} "was made @" $(date --date="@${id}")
+  done
+}
+
+function prepare_rollback() {
+  local publication_resource_list="
+    0/escenic/section-parameter
+    escenic/content-type
+    escenic/feature
+    escenic/image-version
+    escenic/layout
+    escenic/layout-group
+    escenic/plugin/menu
+    escenic/teaser-type
+  "
+  
+  for el in $engine_instance_list; do
+    source /etc/escenic/ece-${el}.conf
+    local publication_list=$(
+      curl -s  http://localhost:${appserver_port}/escenic-admin/pages/publication/list.jsp | \
+        grep '/escenic-admin/pages/publication/view.jsp' | \
+        sed 's/.*name=\(.*\)".*/\1/g'
+    )
+
+    for publication in $publication_list; do
+      local dir=${data_dir}/${deployment_id}/backup/${publication}
+      
+      for publication_resource in $publication_resource_list; do
+        (
+          make_dir $dir/$(dirname $publication_resource)
+          
+          run cd $dir
+          local xml=$(
+            wget --quiet --continue --output-document - \
+              http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/${publication_resource}
+          )
+
+          if [[ -n "${xml}"  && ${xml:0:1} == "<" ]]; then
+            echo "${xml}" | xmllint --format - > ${publication_resource}
+          else
+            echo "${xml}" > ${publication_resource}
+          fi
+        )
+      done
+    done
+
+    # copying the current deployment state, so that we can roll back
+    dir=${data_dir}/${deployment_id}/backup
+    make_dir $dir
+    if [ -e /var/lib/escenic/${el}.state ]; then
+      run cp /var/lib/escenic/${el}.state $dir
+    fi
+
+    # get a hold of the current vosa-conf package, first all packages
+    # to detect if we've got packages intended for other hosts.
+    dpkg -l vosa-conf-* | tail -1 2>/dev/null\
+      > $dir/vosa-conf-package.list
+    dpkg -l vosa-conf-$HOSTNAME 2>/dev/null | tail -1 | awk '{print $3;}' \
+      > $dir/vosa-conf-${HOSTNAME}.version
+  done
+
+  print_and_log "Rollback prepared in" $data_dir/$deployment_id/backup
+}
+
+function looks_like_xml() {
+  local xml=$(cat "$1")
+  if [[ ${xml:0:1} == "<" ]]; then
+    echo 1
+  else
+    echo 0
+  fi
+}
+
+## app server port
+function get_publication_list() {
+  curl -s  http://localhost:${1}/escenic-admin/pages/publication/list.jsp | \
+    grep '/escenic-admin/pages/publication/view.jsp' | \
+    sed 's/.*name=\(.*\)".*/\1/g'
+}
+  
+function update_publication_resources() {
+  if [ ${update_the_publication_resources-0} -eq 0 ]; then
+    return
+  fi
+
+  print_and_log "Updating publication resources ..."
+  for el in $engine_instance_list; do
+    source /etc/escenic/ece-${el}.conf
+    local publication_list=$(get_publication_list ${appserver_port})
+
+    for publication in $publication_list; do
+      local publication_resources_dir=$tomcat_base/webapps-${publication}/${publication}/META-INF/escenic/publication-resources 
+      if [ ! -e $publication_resources_dir ]; then
+        continue
+      fi
+      
+      (
+        cd $publication_resources_dir
+        for ele in $(find -type f | sed 's#^./##g'); do
+            # echo \
+            # http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/${ele}
+
+          dir=$data_dir/$deployment_id/new/$publication/$(dirname $ele)
+          make_dir $dir
+          
+          old_file=$data_dir/$deployment_id/backup/$publication/${ele}
+          
+          if [ $(looks_like_xml $ele) -eq 1 ]; then
+            file=$dir/$(basename $ele)
+            xmllint --format $ele > $file
+          else
+            file=$dir/$(basename $ele)
+            cp $ele $dir/$(basename $ele)
+          fi
+
+          if [ ! -e $old_file ]; then
+            old_file=$(mktemp)
+          fi
+
+          local number_of_lines_changed=$(diff \
+            <(cat $old_file | grep -v '^$') \
+            <(cat $file | grep -v '^$') | \
+            egrep '<|>' | \
+            wc -l
+          )
+          if [ ${number_of_lines_changed} -lt 1 ]; then
+            continue
+          fi
+          
+          print_and_log "Applying" \
+            $number_of_lines_changed \
+            "changes to" $ele \
+            "full diff can be found here: $dir/$(basename $ele).diff"
+          diff $old_file $file > $dir/$(basename $ele).diff
+
+          run curl --silent \
+            -T $ele \
+            http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/$ele
+        done
+      )
+    done
+  done
+}
+
+function generate_deployment_id() {
+  deployment_id=$(date +%s)
+  print_and_log "This deployment has ID" ${deployment_id}
+}
+
+function roll_back_everything_to_version() {
+  if [ ${roll_back-0} -eq 0 ]; then
+    return
+  fi
+  
+  print_and_log "Rolling back to" \
+    ${roll_back_to_version} \
+    "from" $(date --date @${roll_back_to_version}) \
+    "..."
+
+  print_and_log "Rolling back publication resources ..."
+  for el in $engine_instance_list; do
+    source /etc/escenic/ece-${el}.conf
+    for publication in $(get_publication_list ${appserver_port}); do
+      (
+        cd $data_dir/${roll_back_to_version}/backup/${publication}
+        for ele in $(find -type f | sed 's#^./##g'); do
+          run curl --silent \
+            -T $ele \
+            http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/$ele
+        done
+      )
+    done
+  done
+
+  for el in $engine_instance_list; do
+    file=$data_dir/${roll_back_to_version}/backup/${el}.state
+    if [ ! -e $file ]; then
+      continue
+    fi
+
+    # we source the state file to get the 'ear_used' value
+    local old_ear=$(grep ear_used $file | cut -d'=' -f2)
+    print_and_log "Rolling back ${el}'s EAR to ${old_ear} ..."
+	  su - $ece_unix_user -c \
+	    "ece -i $el -t search stop deploy clean start --uri ${old_ear}"
+    exit_on_error "Running ece deploy as $ece_unix_user"
+  done
+
+
+  print_and_log "You must now install the vosa-conf packages of this version(s):"
+  cat $data_dir/${roll_back_to_version}/backup/vosa-conf*
+
+  print_and_log "You have now rolled back to ${roll_back_to_version}"
+}
+
+
+unset http_proxy
+
+read_user_input "$@"
+verify_user_input
+generate_deployment_id
+prepare_rollback
+deploy_ear
+deploy_conf
+update_publication_resources
+list_previous_deployments
+roll_back_everything_to_version
