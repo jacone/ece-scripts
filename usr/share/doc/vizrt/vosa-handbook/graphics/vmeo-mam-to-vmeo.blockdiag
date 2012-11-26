@@ -1,0 +1,14 @@
+blockdiag {
+  orientation = "landscape";
+
+  media-asset-management [label="MAM" color="yellow"];
+  adactus-control [label="vmeo-controller", color="green"];
+  adactus-streaming [label="vmeo-streaming", color="cyan"];
+  
+  video.raw -> media-asset-management [label="copied"];
+  media-asset-management -> adactus-control [label="triggers"];
+  adactus-control -> video.mp4, video.ogg [label="encodes"];
+  video.mp4, video.ogg -> adactus-streaming [label="uploads"];
+  adactus-control -> video.xml [label="exports"];
+  adactus-control -> key-frames [label="creates"];
+}

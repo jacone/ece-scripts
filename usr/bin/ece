@@ -324,6 +324,10 @@ function set_instance_settings() {
     if [ "$jvm_proxy_settings" ]; then
       ece_args=$ece_args" "$jvm_proxy_settings
     fi
+    
+    if [ "$jvm_connection_settings" ]; then
+      ece_args=$ece_args" "$jvm_connection_settings
+    fi
 
     if [ "$instance" != "default" ]; then
         ece_args=$ece_args" -Dcom.escenic.instance=$instance"
@@ -820,6 +824,9 @@ for el in $command; do
             ;;
         flush)
             flush_caches
+            ;;
+        top)
+            run_ece_top
             ;;
         help)
             print_help

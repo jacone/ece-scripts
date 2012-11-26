@@ -69,6 +69,8 @@ function create_target_directory() {
     set_up_escenic-check-mk-plugins
   elif [[ $package_name == "hugin-node" ]]; then
     set_up_hugin-node
+  elif [[ $package_name == "spore" ]]; then
+    set_up_spore
   fi
 
   debian_dir=$target_dir/DEBIAN
@@ -114,11 +116,17 @@ function set_up_escenic-content-engine-scripts() {
       $target_dir/usr/share/escenic/ece-scripts/
   done
 
+  # sbin
+  cp ../../../sbin/deploy-ear-and-conf \
+    $target_dir/usr/sbin/
+
   # conf
   cp -r ../../../../etc/escenic/ $target_dir/etc/
   cp -r ../../../../etc/bash_completion.d/ece \
     $target_dir/etc/bash_completion.d
-  cp -r ../../../../etc/default/ece $target_dir/etc/default/
+  # we don't include /etc/default/ece as this file often is also
+  # included in the conf packages.
+  # cp -r ../../../../etc/default/ece $target_dir/etc/default/
   cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
 
   # doc
@@ -220,6 +228,22 @@ function set_up_hugin-node() {
     cp $dir/mogsie-hugin-*/README.md $target_dir/usr/share/doc/hugin
 
     # chmod 755 $file $target_dir/usr/bin/*
+  )
+  rm -rf $dir
+}
+
+function set_up_spore() {
+  mkdir -p $target_dir/usr/bin \
+           $target_dir/usr/share/doc/spore
+
+  local dir=$(mktemp -d)
+  (
+    cd $dir
+    wget $wget_opts https://github.com/vizrt/spore/archive/master.tar.gz 
+    tar xzf master.tar.gz
+    cp $dir/spore-master/bin/* $target_dir/usr/bin
+    cp $dir/spore-master/README.md $target_dir/usr/share/doc/spore
+    cp -r $dir/spore-master/examples $target_dir/usr/share/doc/spore/examples
   )
   rm -rf $dir
 }

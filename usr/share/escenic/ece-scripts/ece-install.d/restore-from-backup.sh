@@ -55,14 +55,22 @@ function restore_from_backup()
 
     if [ $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
       restore_all=1
-    elif [ $(get_boolean_conf_value fai_restore_db) -eq 1 ]; then
+    fi
+    
+    if [ $(get_boolean_conf_value fai_restore_db) -eq 1 ]; then
       restore_db=1
-    elif [ $(get_boolean_conf_value fai_restore_data_files) -eq 1 ]; then
+    fi
+    
+    if [ $(get_boolean_conf_value fai_restore_data_files) -eq 1 ]; then
       restore_data_files=1
-    elif [ $(get_boolean_conf_value fai_restore_software_binaries) -eq 1 ]
+    fi
+    
+    if [ $(get_boolean_conf_value fai_restore_software_binaries) -eq 1 ]
     then
       restore_binaries=1
-    elif [ $(get_boolean_conf_value fai_restore_configuration) -eq 1 ]; then
+    fi
+    
+    if [ $(get_boolean_conf_value fai_restore_configuration) -eq 1 ]; then
       restore_conf=1
     fi
   elif [ $(get_boolean_conf_value fai_enabled) -eq 0 ]; then

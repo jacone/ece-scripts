@@ -323,7 +323,7 @@ EOF
       # which case we set the publication_war to the same as the
       # publication_name.
       if [ -z "${publication_war}" ]; then
-        publication_war = $publication_name
+        publication_war=$publication_name
       fi
 
       ensure_domain_is_known_to_local_host ${domain}

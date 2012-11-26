@@ -508,30 +508,21 @@ function install_ece_third_party_packages
       local version=$(lsb_release -s -r | sed "s#\.##g")
     fi
 
-    # Debian testing has started to report just testing instead of a
-    # relase number. Assessed 2012-07-05 10:34
-    if [[ $version == "testing" ]]; then
+    if [ $(has_sun_java_installed) -eq 0 ]; then
       create_java_deb_packages_and_repo
-    elif [ $version -ge $version_needs_local_java_deb -a \
-      $(has_sun_java_installed) -eq 0 ]; then
-      create_java_deb_packages_and_repo
+      
+      # Here, we install sun-java6-jdk first so that ant doesn't pull
+      # down OpenJDK.
+      #
+      # This if guard is in palce to not attempt to install the
+      # package if Sun Java already is installed (typically, manually
+      # installed).
+      echo "sun-java6-jdk shared/accepted-sun-dlj-v1-1 boolean true" | \
+        debconf-set-selections
+      install_packages_if_missing sun-java6-jdk
     fi
     
-    echo "sun-java6-jdk shared/accepted-sun-dlj-v1-1 boolean true" | \
-      debconf-set-selections
-
-    # Here, we install sun-java6-jdk first so that ant doesn't pull
-    # down OpenJDK.
-    #
-    # This if guard is in palce to not attempt to install the package
-    # if Sun Java already is installed (typically, manually
-    # installed).
-    local packages="sun-java6-jdk"
-    if [ $(has_sun_java_installed) -eq 0 ]; then
-      install_packages_if_missing $packages
-    fi
-
-    packages="
+    local packages="
       ant
       ant-contrib
       ant-optional

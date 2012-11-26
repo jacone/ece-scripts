@@ -109,6 +109,11 @@ escenic_sources=/etc/apt/sources.list.d/escenic.list
 # prepare the pre-requisites.
 dry_run=0
 
+# hooks for when the scirpt exits cleanly and when a user or someone
+# kills the process
+trap common_bashing_exit_hook EXIT
+trap common_bashing_user_cancelled_hook SIGINT SIGHUP
+
 ## Bootstrapping, load files from /usr/share/escenic/ece-scripts The
 ## method will first try to be smart, in case the user has copied the
 ## ece-scripts somewhere else., e.g.: moved everything to ~/ece-scrpts
@@ -823,8 +828,6 @@ function common_post_install() {
   set_correct_permissions
   
   print_status_and_next_steps
-  remove_lock
-  remove_pid
 }
 
 function un_install_everything() {

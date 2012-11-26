@@ -261,9 +261,10 @@ function perform_transformations() {
 ## $1 :: transformer
 ## $2 :: the raw/input file
 function handle_transformation_error() {
+  local dir=$raw_transformed_base_dir/$publication_name/$job_name/failed
   log "$(red FAILED) The transformation $1 on file $2" \
-    "moving $2 to the error directory and skipping to next import XML"
-  run mv $1 $escenic_spool_base_dir/$publication_name/$job_name/error
+    "moving $2 to $dir and skipping to the next XML file"
+  run mv $2 $dir
 }
 
 import_error_count=0
@@ -426,6 +427,10 @@ function common_pre_run() {
 }
 
 function common_post_run() {
+  print_manual_steps
+  print_report
+  
+  print_and_log "Finished @ $(date), enjoy thyself!"
   remove_pid
   remove_lock
 }
@@ -438,7 +443,4 @@ elif [[ "$command" == $COMMAND_DOWNLOAD_RAW_DATA  ]]; then
   run_download_raw_data
 fi
 
-print_manual_steps
-print_report
-print_and_log "Finished @ $(date), enjoy thyself!"
 

@@ -7,7 +7,7 @@
 ## to determine which FTP feeds to check the health of.
 
 function read_trails() {
-  for el in /var/lib/ece-install/*.trail 2>/dev/null; do
+  for el in $(ls /var/lib/ece-install/*.trail 2>/dev/null); do
     source $el
   done
 }
