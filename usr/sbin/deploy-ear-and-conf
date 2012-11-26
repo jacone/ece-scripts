@@ -110,6 +110,8 @@ function read_user_input() {
       next_is_ear_uri=1
     elif [[ $el == "--conf" ]]; then
       next_is_conf_uri=1
+    elif [[ $el == "--update-publication-resources" ]]; then
+      update_the_publication_resources=1
     elif [ $next_is_ear_uri -eq 1 ]; then
       ear_uri=$el
       next_is_ear_uri=0
@@ -135,9 +137,59 @@ function verify_user_input() {
   fi
 }
 
+function backup_existing_publication_resources() {
+  local publication_resource_list="
+    content-type
+    image-version
+    feature
+    layout
+    layout-group
+    teaser-type
+  "
+  
+  for el in $engine_instance_list; do
+    local publication_list=$(
+      curl -s  http://localhost:8080/escenic-admin/pages/publication/list.jsp | \
+        grep '/escenic-admin/pages/publication/view.jsp' | \
+        sed 's/.*name=\(.*\)".*/\1/g'
+    )
+
+    for publication in $publication_list; do
+      local dir=/tmp/${deployment_id}/${publication}
+      for publication_resource in $publication_resource_list; do
+        (
+          unset http_proxy
+          make_dir $dir
+          cd $dir
+          run wget --quiet --continue \
+            http://localhost:8080/escenic-admin/publication-resources/${publication}/escenic/${publication_resource}
+        )
+      done
+    done
+  done
+}
+
+function update_publication_resources() {
+  if [ ${update_the_publication_resources-0} -eq 0 ]; then
+    return
+  fi
+
+  print_and_log "Updating publication resources ..."
+  backup_existing_publication_resources
+  
+  
+}
+
+function generate_deployment_id() {
+  deployment_id=$(date +%s)
+  print "Deployment ID" ${deployment_id}
+}
+
 read_user_input "$@"
 verify_user_input
+
+generate_deployment_id
 deploy_ear
 deploy_conf
-
+update_publication_resources
 
