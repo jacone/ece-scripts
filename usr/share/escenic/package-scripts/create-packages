@@ -117,8 +117,7 @@ function set_up_escenic-content-engine-scripts() {
   done
 
   # sbin
-  cp ../../../sbin/deploy-ear-and-conf \
-    $target_dir/usr/sbin/
+  cp ../../../sbin/ece-deploy $target_dir/usr/sbin/
 
   # conf
   cp -r ../../../../etc/escenic/ $target_dir/etc/
