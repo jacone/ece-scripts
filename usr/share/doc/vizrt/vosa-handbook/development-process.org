@@ -88,7 +88,7 @@ has finished, the terminal window will contain an information page
 starting with the following welcome message:
 
 #+BEGIN_SRC default
-Welcome to http://[[<%= trail_dev_host_name %>]] development environment
+Welcome to the <%= trail_dev_host_name %> development environment
 #+END_SRC
 
 This is the URL you must use to access your test site.
@@ -97,21 +97,20 @@ Below this welcome messages are the IP addresses used by the virtual
 machine and the user name/password combinations you can use to log in
 to the system.
 
-In order to be able to use [[<%= trail_dev_host_name %>]] URLs, you need to add the host name
-[[<%= trail_dev_host_name %>]] to your computer's =hosts= file. To do this:
+In order to be able to use the <%= trail_dev_host_name %> URLs, you need to add the host name <%= trail_dev_host_name %> to your computer's =hosts= file. To do this:
 
 1. Open your hosts file in a text editor. On a Windows PC, you will find the
    hosts file at =C:\Windows\System32\drivers\etc\hosts=. On a Mac or Linux 
    machine you will find it at =/etc/hosts=.
 2. Add the following line to the file:
    #+BEGIN_SRC default
-   /ip-address/ [[<%= trail_dev_host_name %>]]
+   <ip-address> <%= trail_dev_host_name %>
    #+END_SRC
-   where /ip-address/ is the =eth1= IP address listed on the virtual machine's welcome page.
+   where <ip-address> is the =eth1= IP address listed on the virtual machine's welcome page.
 3. Save your changes.
   
 Your test system is now up and running. You should be able to access
-your test site by opening a browser and navigating to http://[[<%= trail_dev_host_name %>]].
+your test site by opening a browser and navigating to [[http://<%= trail_dev_host_name %>]].
 
 *** Configure Maven
 
@@ -145,7 +144,7 @@ Maven settings files. To do this:
      </profiles>
    </settings>
    #+END_SRC
-   (The above example shows the minimum content required for [[<%= trail_dev_project_name %>]] to 
+   (The above example shows the minimum content required for <%= trail_dev_project_name %> to 
    work. Your =settings.xml= may of course contain other settings. For a complete description of 
    how to use =settings.xml=, see http://maven.apache.org/settings.html.)
    TODO Is the above example correct?
@@ -161,7 +160,7 @@ To check out your project:
 4. Click on the + icon to add a new repository.
 5. Paste this:
    #+BEGIN_SRC default
-   https://vizrtcustomers.jira.com/svn/[[<%= trail_dev_project_name %>]]
+   [[https://vizrtcustomers.jira.com/svn/<%= trail_dev_project_name %>]]
    #+END_SRC
    into the displayed dialog, and click on *OK*.
 6. Select the repository you have added to the list and select *Checkout*.
@@ -192,7 +191,7 @@ To set up your project:
     | Local path                                                                                 | Deployment path                                                         |
     |--------------------------------------------------------------------------------------------+-------------------------------------------------------------------------|
     | /<path-from-root>/publications/shared-war/src/main/webapp/template/                        | /opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/ |
-    | /<path-from-root>/publications/[[<%= trail_publication_name %>]]/src/main/webapp/template/ | /opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/ |
+    | /<path-from-root>/publications/<%= trail_publication_name %>/src/main/webapp/template/ | /opt/tomcat-engine1/webapps/<%= trail_publication_name %>/template/ |
 13. Click *OK*.
 14. Select *Tools* > *Deployment* > *Automatic upload*.
 
