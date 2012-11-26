@@ -18,3 +18,4 @@
 #+INCLUDE: "monitoring.org"
 #+INCLUDE: "ssh-access.org"
 #+INCLUDE: "host-naming.org"
+#+INCLUDE: "development-process.org"
