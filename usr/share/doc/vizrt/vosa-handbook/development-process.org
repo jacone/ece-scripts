@@ -77,8 +77,8 @@ Download the following virtual machine image:
 
 When the file has finished downloading, double-click on it. This
 starts VirtualBox, which opens the file and creates a virtual machine
-from it. When the virtual machine is ready, a [[<%= trail_dev_image_name
-%>]] entry will appear in the list on the left hand side of the
+from it. When the virtual machine is ready, a <%= trail_dev_image_name%>
+entry will appear in the list on the left hand side of the
 VirtualBox window.
 
 
@@ -160,7 +160,7 @@ To check out your project:
 4. Click on the + icon to add a new repository.
 5. Paste this:
    #+BEGIN_SRC default
-   [[https://vizrtcustomers.jira.com/svn/<%= trail_dev_project_name %>]]
+   https://vizrtcustomers.jira.com/svn/<%= trail_dev_project_name %>
    #+END_SRC
    into the displayed dialog, and click on *OK*.
 6. Select the repository you have added to the list and select *Checkout*.
@@ -190,7 +190,7 @@ To set up your project:
 12. On the form's *Mappings* tab, enter the following two mappings:
     | Local path                                                                                 | Deployment path                                                         |
     |--------------------------------------------------------------------------------------------+-------------------------------------------------------------------------|
-    | /<path-from-root>/publications/shared-war/src/main/webapp/template/                        | /opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/ |
+    | /<path-from-root>/publications/shared-war/src/main/webapp/template/                        | /opt/tomcat-engine1/webapps/<%= trail_publication_name %>/template/ |
     | /<path-from-root>/publications/<%= trail_publication_name %>/src/main/webapp/template/ | /opt/tomcat-engine1/webapps/<%= trail_publication_name %>/template/ |
 13. Click *OK*.
 14. Select *Tools* > *Deployment* > *Automatic upload*.
@@ -201,10 +201,10 @@ Any changes you make to your project should now be automatically deployed to the
 on your test server. To test that this is actually the case:
 
 1. Display your test server's file system by selecting *Tools* > *Deployment* > *Browse Remote Host*.
-2. Navigate down the displayed tree to show the contents of the =/opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/widgets= folder.
-   (=/opt/tomcat-engine1/webapps/[[<%= trail_publication_name %>]]/template/= and all its children should be highlighted in green. If this is not the case,
+2. Navigate down the displayed tree to show the contents of the =/opt/tomcat-engine1/webapps/<%= trail_publication_name %>/template/widgets= folder.
+   (=/opt/tomcat-engine1/webapps/<%= trail_publication_name %>/template/= and all its children should be highlighted in green. If this is not the case,
    go back and and check that you entered the deployment path correctly in the *Deployment* dialog.)
-3. In your local code tree, navigate to publications/[[<%= trail_publication_name %>]]/src/main/webapp/template/widgets/dummy.
+3. In your local code tree, navigate to publications/<%= trail_publication_name %>/src/main/webapp/template/widgets/dummy.
 4. Create a file (any name) in this folder. The dummy folder and the file you have created should immediately be duplicated in the deployment tree.  If this is not the case,
    go back and and check that you entered the correct local paths in the *Deployment* dialog.
 5. Delete the test file you created. It should also disappear from the deployment tree.
@@ -244,10 +244,10 @@ in two ways:
  - By customizing existing widgets
 
 This manual does not cover the details of Widget Framework development, since this is covered elsewhere 
-([[<%= trail_virtual_host_documentation %>]]/widget-framework-2.0.html).
+([[<%= trail_virtual_host_documentation %>/widget-framework-2.0.html]]).
 
 The development environment you have set up is designed to support and simplify the process of extending
-the standard widgets supplied with the Widget Framework. The =publications/[[<%= trail_publication_name %>]]/src/main/webapp/template/= 
+the standard widgets supplied with the Widget Framework. The =publications/<%= trail_publication_name %>/src/main/webapp/template/= 
 tree is a *customization layer* that you can use to store any modifications you want to make to the standard widgets
 in the =publications/shared-war/src/main/webapp/template/= tree. During the application build process,
 the files in your customization layer are merged with the standard widgets to create a customized widget
