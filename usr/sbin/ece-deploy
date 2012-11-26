@@ -46,6 +46,10 @@ tmp_dir=$(mkdir -p $HOME/$(date --iso))
 run source /etc/default/ece
 
 function deploy_ear() {
+  if [ ${make_deployment-1} -eq 0 ]; then
+    return
+  fi
+  
   for el in $engine_instance_list; do
 	  su - $ece_unix_user -c \
 	    "ece -i $el stop deploy clean start --uri $ear_uri"
@@ -86,6 +90,10 @@ function set_builder_user_and_password() {
 
 
 function deploy_conf() {
+  if [ ${make_deployment-1} -eq 0 ]; then
+    return
+  fi
+  
   set_builder_user_and_password
 
   print "Downloading" $conf_package_uri "..."
@@ -115,10 +123,12 @@ function read_user_input() {
     elif [[ $el == "--rollback" ]]; then
       roll_back=1
       next_is_roll_back_to_version=1
+      make_deployment=0
     elif [[ $el == "--update-publication-resources" ]]; then
       update_the_publication_resources=1
     elif [[ $el == "--list-deployments" ]]; then
       list_the_revious_deployments=1
+      make_deployment=0
     elif [ $next_is_ear_uri -eq 1 ]; then
       ear_uri=$el
       next_is_ear_uri=0
@@ -327,8 +337,13 @@ function roll_back_everything_to_version() {
   for el in $engine_instance_list; do
     source /etc/escenic/ece-${el}.conf
     for publication in $(get_publication_list ${appserver_port}); do
+      dir=$data_dir/${roll_back_to_version}/backup/${publication}
+      if [ ! -d $dir ]; then
+        continue
+      fi
+      
       (
-        cd $data_dir/${roll_back_to_version}/backup/${publication}
+        run cd $dir
         for ele in $(find -type f | sed 's#^./##g'); do
           run curl --silent \
             -T $ele \
