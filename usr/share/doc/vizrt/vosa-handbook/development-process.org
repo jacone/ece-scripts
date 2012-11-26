@@ -57,6 +57,25 @@ Your dev image can be downloaded here - [[<%= trail_dev_image_uri %>][Local deve
 6) After the image has started up, you should be able to see its local IP address. This is the IP you need to add to the hosts file on your workstation/laptop.
 
 	[[./graphics/development-process/08-fetch-ip.png]]
+	[[./graphics/development-process/09-add-host-entry.png]]
+
+*** Verify available services
+
+1) With the image runing you should now be able to access the following features
+
+|---------------------+---------------------------------------------------------------|
+| Feature             | URL                                                           |
+|---------------------+---------------------------------------------------------------|
+| Escenic Admin       | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
+|---------------------+---------------------------------------------------------------|
+| Web Studio          | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
+|---------------------+---------------------------------------------------------------|
+| Content Studio      | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
+|---------------------+---------------------------------------------------------------|
+| Solr                | http://<%= trail_customer_acronym %>-dev:8180/solr            |
+|---------------------+---------------------------------------------------------------|
+
+
 
 *** What's included
 
