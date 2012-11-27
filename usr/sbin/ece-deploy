@@ -394,7 +394,7 @@ verify_user_input
 generate_deployment_id
 prepare_rollback
 
-if [ ${make_deployment-1} -eq 0 ]; then
+if [ ${make_deployment-1} -eq 1 ]; then
   deploy_ear
   deploy_conf
 fi
