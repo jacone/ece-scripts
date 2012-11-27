@@ -199,7 +199,7 @@ function prepare_rollback() {
     )
 
     for publication in $publication_list; do
-      local dir=${data_dir}/${deployment_id}/backup/${publication}
+      local dir=${data_dir}/${deployment_id}/old/${publication}
       
       for publication_resource in $publication_resource_list; do
         (
@@ -273,13 +273,10 @@ function update_publication_resources() {
       (
         cd $publication_resources_dir
         for ele in $(find -type f | sed 's#^./##g'); do
-            # echo \
-            # http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/${ele}
-
           dir=$data_dir/$deployment_id/new/$publication/$(dirname $ele)
           make_dir $dir
           
-          old_file=$data_dir/$deployment_id/backup/$publication/${ele}
+          old_file=$data_dir/$deployment_id/old/$publication/${ele}
           
           if [ $(looks_like_xml $ele) -eq 1 ]; then
             file=$dir/$(basename $ele)
@@ -337,7 +334,7 @@ function roll_back_everything_to_version() {
   for el in $engine_instance_list; do
     source /etc/escenic/ece-${el}.conf
     for publication in $(get_publication_list ${appserver_port}); do
-      dir=$data_dir/${roll_back_to_version}/backup/${publication}
+      dir=$data_dir/${roll_back_to_version}/old/${publication}
       if [ ! -d $dir ]; then
         continue
       fi
@@ -354,7 +351,7 @@ function roll_back_everything_to_version() {
   done
 
   for el in $engine_instance_list; do
-    file=$data_dir/${roll_back_to_version}/backup/${el}.state
+    file=$data_dir/${roll_back_to_version}/old/${el}.state
     if [ ! -e $file ]; then
       continue
     fi
@@ -369,7 +366,7 @@ function roll_back_everything_to_version() {
 
 
   print_and_log "You must now install the vosa-conf packages of this version(s):"
-  cat $data_dir/${roll_back_to_version}/backup/vosa-conf*
+  cat $data_dir/${roll_back_to_version}/old/vosa-conf*
 
   print_and_log "You have now rolled back to ${roll_back_to_version}"
 }
