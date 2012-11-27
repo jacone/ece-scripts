@@ -42,7 +42,6 @@ function bootstrap_thyself() {
 bootstrap_thyself
 
 log=/var/log/escenic/$(basename $0).log
-tmp_dir=$(mkdir -p $HOME/$(date --iso))
 run source /etc/default/ece
 
 function deploy_ear() {
@@ -90,11 +89,14 @@ function deploy_conf() {
     return
   fi
   
+  local ece_deploy_download_dir=/var/cache/escenic
+  make_dir $ece_deploy_download_dir
+
   set_builder_user_and_password
 
   print "Downloading" $conf_package_uri "..."
   (
-	  cd $tmp_dir
+	  cd $ece_deploy_download_dir
 	  run wget \
 	    --quiet \
 	    --continue \
@@ -104,7 +106,9 @@ function deploy_conf() {
   )
 
   print "Installing" $(basename $conf_package_uri) "..."
-  dpkg --force-overwrite -i $tmp_dir/$(basename $conf_package_uri)
+  dpkg \
+    --force-overwrite \
+    --install $ece_deploy_download_dir/$(basename $conf_package_uri)
 }
 
 function read_user_input() {
@@ -327,6 +331,15 @@ function roll_back_everything_to_version() {
     "from" $(date --date @${roll_back_to_version}) \
     "..."
 
+  local old_data_dir=$data_dir/${roll_back_to_version}/old
+  if [ ! -d $old_data_dir ]; then
+    print_and_log "I cannot find ${roll_back_to_version}'s files," \
+      "they should have been here:" $old_data_dir
+    exit 1
+  else
+    log "Using data in" $old_data_dir "to perform the rollback"
+  fi
+
   print_and_log "Rolling back publication resources ..."
   for el in $engine_instance_list; do
     source /etc/escenic/ece-${el}.conf
@@ -339,7 +352,9 @@ function roll_back_everything_to_version() {
       (
         run cd $dir
         for ele in $(find -type f | sed 's#^./##g'); do
-          run curl --silent \
+          print_and_log "Rolling back publication resource ${ele} ..."
+          run curl \
+            --silent \
             -T $ele \
             http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/$ele
         done
@@ -392,7 +407,10 @@ check_pre_requisites
 read_user_input "$@"
 verify_user_input
 generate_deployment_id
-prepare_rollback
+
+if [ ${list_the_revious_deployments-0} -eq 0 ]; then
+  prepare_rollback
+fi
 
 if [ ${make_deployment-1} -eq 1 ]; then
   deploy_ear
