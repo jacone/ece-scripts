@@ -9,6 +9,7 @@
 ## script does, is to deploy the conf package.
 
 data_dir=/var/lib/escenic/$(basename $0)
+ece_deploy_download_dir=/var/cache/escenic
 
 function bootstrap_thyself() {
   # first, try to be nice, then check the standard location
@@ -89,7 +90,6 @@ function deploy_conf() {
     return
   fi
   
-  local ece_deploy_download_dir=/var/cache/escenic
   make_dir $ece_deploy_download_dir
 
   set_builder_user_and_password
@@ -340,6 +340,24 @@ function roll_back_everything_to_version() {
     log "Using data in" $old_data_dir "to perform the rollback"
   fi
 
+  local package_version_file=$data_dir/${roll_back_to_version}/old/vosa-conf-${HOSTNAME}.version
+  if [ -e $package_version_file ]; then
+    local deb_file=$ece_deploy_download_dir/vosa-conf-$HOSTNAME-$(cat $package_version_file).deb
+    if [ -e $deb_file ]; then
+      print_and_log "Reverting back to version" $(cat $package_version_file) \
+        "vosa-conf-$HOSTNAME ..."
+      dpkg --install --force-overwrite $deb_file
+    else
+      print_and_log "You must now install version" \
+        $(cat $package_version_file) \
+        "of the vosa-conf-$HOSTNAME package" \
+        "I couldn't find it in" $deb_file
+    fi
+  else
+    print_and_log "Couldn't find the previous version for vosa-conf-$HOSTNAME" \
+      "you must get a hold of the latest/approriate one yourself."
+  fi
+
   print_and_log "Rolling back publication resources ..."
   for el in $engine_instance_list; do
     source /etc/escenic/ece-${el}.conf
@@ -376,10 +394,7 @@ function roll_back_everything_to_version() {
   done
 
 
-  print_and_log "You must now install the vosa-conf packages of this version(s):"
-  cat $data_dir/${roll_back_to_version}/old/vosa-conf*
-
-  print_and_log "You have now rolled back to ${roll_back_to_version}"
+  print_and_log "You have now rolled back to deployment ${roll_back_to_version}"
 }
 
 function check_pre_requisites() {
