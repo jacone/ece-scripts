@@ -186,6 +186,7 @@ function prepare_rollback() {
     escenic/image-version
     escenic/layout
     escenic/layout-group
+    escenic/plugin/community/security
     escenic/plugin/menu
     escenic/teaser-type
   "
@@ -371,9 +372,28 @@ function roll_back_everything_to_version() {
   print_and_log "You have now rolled back to ${roll_back_to_version}"
 }
 
+function check_pre_requisites() {
+  local required_command_list="
+    xmllint
+  "
+
+  local some_missing=0
+  
+  for el in $required_command_list; do
+    which $el > /dev/null 2>/dev/null
+    if [ $? -gt 0 ]; then
+      print_and_log "$(basename $0) needs the command $el to be installed"
+      some_missing=1
+    fi
+  done
+
+  if [ $some_missing -eq 1 ]; then
+    exit 1
+  fi
+}
 
 unset http_proxy
-
+check_pre_requisites
 read_user_input "$@"
 verify_user_input
 generate_deployment_id
