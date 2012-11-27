@@ -230,7 +230,7 @@ function prepare_rollback() {
 
     # get a hold of the current vosa-conf package, first all packages
     # to detect if we've got packages intended for other hosts.
-    dpkg -l vosa-conf-* | tail -1 2>/dev/null\
+    dpkg -l "vosa-conf-*" | tail -1 2>/dev/null\
       > $dir/vosa-conf-package.list
     dpkg -l vosa-conf-$HOSTNAME 2>/dev/null | tail -1 | awk '{print $3;}' \
       > $dir/vosa-conf-${HOSTNAME}.version
