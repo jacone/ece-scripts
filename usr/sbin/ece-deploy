@@ -222,7 +222,7 @@ function prepare_rollback() {
     done
 
     # copying the current deployment state, so that we can roll back
-    dir=${data_dir}/${deployment_id}/backup
+    dir=${data_dir}/${deployment_id}/old
     make_dir $dir
     if [ -e /var/lib/escenic/${el}.state ]; then
       run cp /var/lib/escenic/${el}.state $dir
@@ -236,7 +236,7 @@ function prepare_rollback() {
       > $dir/vosa-conf-${HOSTNAME}.version
   done
 
-  print_and_log "Rollback prepared in" $data_dir/$deployment_id/backup
+  print_and_log "Rollback prepared in" $data_dir/$deployment_id/old
 }
 
 function looks_like_xml() {
