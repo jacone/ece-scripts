@@ -46,10 +46,6 @@ tmp_dir=$(mkdir -p $HOME/$(date --iso))
 run source /etc/default/ece
 
 function deploy_ear() {
-  if [ ${make_deployment-1} -eq 0 ]; then
-    return
-  fi
-  
   for el in $engine_instance_list; do
 	  su - $ece_unix_user -c \
 	    "ece -i $el stop deploy clean start --uri $ear_uri"
@@ -360,9 +356,8 @@ function roll_back_everything_to_version() {
     # we source the state file to get the 'ear_used' value
     local old_ear=$(grep ear_used $file | cut -d'=' -f2)
     print_and_log "Rolling back ${el}'s EAR to ${old_ear} ..."
-	  su - $ece_unix_user -c \
-	    "ece -i $el -t search stop deploy clean start --uri ${old_ear}"
-    exit_on_error "Running ece deploy as $ece_unix_user"
+    ear_uri=${old_ear}
+    deploy_ear
   done
 
 
@@ -398,8 +393,12 @@ read_user_input "$@"
 verify_user_input
 generate_deployment_id
 prepare_rollback
-deploy_ear
-deploy_conf
+
+if [ ${make_deployment-1} -eq 0 ]; then
+  deploy_ear
+  deploy_conf
+fi
+
 update_publication_resources
 list_previous_deployments
 roll_back_everything_to_version
