@@ -508,10 +508,11 @@ function create_machine_conf_packages() {
 
     # common files
     run cp -r $conf_dir/common/* $target_dir/
-    find $conf_dir -name .svn -type d | xargs rm -rf
 
     # machine specific files
     run cp -r $conf_dir/${machine}/* $target_dir/
+
+    # delete those pesky .svn folders
     find $target_dir -name .svn -type d | xargs rm -rf
 
     # add the truth
