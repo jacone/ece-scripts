@@ -1,6 +1,6 @@
 function print_my_ip_to_the_world() {
   local file=$HOME/.vizrt/system-info/myip.cache
-  mkdir -p $(dirname $file)
+  make_dir $(dirname $file)
 
   # we only query ifconfig.me every ten minutes
   local max_age=600
@@ -21,7 +21,7 @@ function print_my_ip_to_the_world() {
 
   if [[ $update -eq 1 ]]; then
     new_value="$( curl --silent \
-        --connect-timeout 30 \
+        --connect-timeout 10 \
         ifconfig.me 2>/dev/null )"
   fi
 
