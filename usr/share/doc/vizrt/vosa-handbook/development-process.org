@@ -31,8 +31,9 @@ The main components of the VOSA development environment are:
 
 You need to install the following items on your PC or Mac:
 
- - The Oracle Java Development Kit, version 7 (??). You can get this
-   from [[http://www.oracle.com/technetwork/java/javase/downloads/java-se-jdk-7-download-432154.html]].
+ - The Oracle Java Development Kit, version 6 or 7. You can get this
+   from [[http://www.oracle.com/technetwork/java/javase/downloads/jdk6u37-downloads-1859587.html]] 
+   and [[http://www.oracle.com/technetwork/java/javase/downloads/java-se-jdk-7-download-432154.html]] 
  - Apache Subversion client software. You can get this from
    [[http://subversion.apache.org/packages.html]] (or on Linux you can
    most likely install it using your package manager).
@@ -54,7 +55,6 @@ following plug-ins (although you may find you have use for others):
 
  - Maven integration plug-in
  - Subversion integration plug-in
- - ??
 
 All of the above products have their own installation
 procedures. Follow the relevant procedures for your operating system,
@@ -69,38 +69,45 @@ Setting up your development environment involves:
  - Obtaining copies of the code and systems you are going to work on
  - Getting access to the project infrastructure (HipChat, Jira and so on) 
 
-*** Set up your local test site
+*** Set up your local development environment
 
-Download the following virtual machine image:
+The main environment for change is the local development environment
+a.k.a. "dev image". The dev image is downloaded as a .ova file that
+can be imported into VirtualBox or VMWare Player. It works under
+Windows, OSX and Linux, and provides an Ubuntu image with Escenic
+Content Engine already installed with a publication and an .ear
+file from the project.
 
- [[<%= trail_dev_image_uri %>]]
+Start by downloading the image: [[<%= trail_dev_image_uri %>][Local Development Environment]]
 
-When the file has finished downloading, double-click on it. This
-starts VirtualBox, which opens the file and creates a virtual machine
-from it. When the virtual machine is ready, a <%= trail_dev_image_name%>
-entry will appear in the list on the left hand side of the
-VirtualBox window.
+*** Import .ova file into VirtualBox
 
+1) After you have downloaded the .ova file you can open the file in i.e. VirtualBox.
 
-Click on *Start* to run the machine. A terminal window is displayed,
-showing the virtual machine boot-up messages. When the boot sequence
-has finished, the terminal window will contain an information page
-starting with the following welcome message:
+2) VirtualBox will recognize the format and offer you a dialog for importing the image.
+
+3) After klicking "Import" you will be asked to agree to a license agreement and after clicking "Agree" the import process will start.
+
+4) When the import finished the VirtualBox Manager will open and your image will be visible in a list. It's now time to adjust your settings. Unless you have very specific changes you would like to perform for memory, number of CPUs etc... opening the settings dialog and then click "OK" is enough to finish the initial configuration.
+
+5) The next step will be to start the image. This is done by selecting the image in the list and then click "Start" in the VirtualBox Manager.
+
+6) When the boot sequence has finished, the terminal window will contain an information page starting with the following welcome message:
 
 #+BEGIN_SRC default
 Welcome to the <%= trail_dev_host_name %> development environment
 #+END_SRC
 
-This is the URL you must use to access your test site.
-
 Below this welcome messages are the IP addresses used by the virtual
 machine and the user name/password combinations you can use to log in
-to the system.
+to the system. 
 
-In order to be able to use the <%= trail_dev_host_name %> URLs, you need to add the host name <%= trail_dev_host_name %> to your computer's =hosts= file. To do this:
+In order to be able to use the *<%= trail_dev_host_name %>* 
+URLs, you need to add the host name *<%= trail_dev_host_name %>* to 
+your computer's =hosts= file. To do this:
 
 1. Open your hosts file in a text editor. On a Windows PC, you will find the
-   hosts file at =C:\Windows\System32\drivers\etc\hosts=. On a Mac or Linux 
+   hosts file at =C:\Windows\System32\drivers\etc\hosts=. On a Mac or Linux
    machine you will find it at =/etc/hosts=.
 2. Add the following line to the file:
    #+BEGIN_SRC default
@@ -108,9 +115,39 @@ In order to be able to use the <%= trail_dev_host_name %> URLs, you need to add 
    #+END_SRC
    where <ip-address> is the =eth1= IP address listed on the virtual machine's welcome page.
 3. Save your changes.
-  
-Your test system is now up and running. You should be able to access
-your test site by opening a browser and navigating to [[http://<%= trail_dev_host_name %>]].
+
+Your test system is now up and running. You should be able to verify your system by opening a browser and navigating to [[http://<%= trail_dev_host_name %>:8080/escenic-admin/status.jsp?tests=all]].
+
+*** Verify available services
+
+- With the image runing you should now be able to access the following features:
+|---------------------+---------------------------------------------------------------|
+| Feature             | URL                                                           |
+|---------------------+---------------------------------------------------------------|
+| Escenic Admin       | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
+|---------------------+---------------------------------------------------------------|
+| Web Studio          | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
+|---------------------+---------------------------------------------------------------|
+| Content Studio      | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
+|---------------------+---------------------------------------------------------------|
+| Solr                | http://<%= trail_customer_acronym %>-dev:8180/solr            |
+|---------------------+---------------------------------------------------------------|
+- Where is/are my publication(s)?
+|--------------------+------------------------------------+-----------------------------------------|
+| Publication        | username / password                |                                         |
+|--------------------+------------------------------------+-----------------------------------------|
+| <publication-name> | <publication-name>\_admin / admin  | [[http://local.<publication-name>.com]] |
+|--------------------+------------------------------------+-----------------------------------------|
+
+
+*** What's included
+
+- Ubuntu (actually, an Ubuntu Enterprise Cloud Image, modified to boot under almost any hypervisor.)
+- two virtual network cards, one for outbound NAT traffic and the other for inbound traffic.
+- varnish cache (just like in production)
+- memcached (just like in production)
+- separate solr java (just like in production)
+- remote debugging enabled (on port 5005)
 
 *** Configure Maven
 
@@ -183,15 +220,17 @@ To set up your project:
 8. In the displayed *Deployment* dialog, click on the + icon.
 9. Enter a name for your deployment set-up in the *Name* field,  *SFTP* in the *Type* field and 
    click on *OK*.
-10. On the *Connections* tab of the displayed form, enter *[[<%= trail_dev_host_name %>]]* in 
+10. On the *Connections* tab of the displayed form, enter *<%= trail_dev_host_name %>* in 
     the *SFTP Host* field, *escenic* in the *User name* field and the corresponding password 
     in the *Password* field.
 11. Click on *Test SFTP Connection...* to check you have entered the correct login credentials.
 12. On the form's *Mappings* tab, enter the following two mappings:
-    | Local path                                                                                 | Deployment path                                                         |
-    |--------------------------------------------------------------------------------------------+-------------------------------------------------------------------------|
-    | /<path-from-root>/publications/shared-war/src/main/webapp/template/                        | /opt/tomcat-engine1/webapps/<%= trail_publication_name %>/template/ |
-    | /<path-from-root>/publications/<%= trail_publication_name %>/src/main/webapp/template/ | /opt/tomcat-engine1/webapps/<%= trail_publication_name %>/template/ |
+
+    | Local path                                                                  | Deployment path                                                             |
+    |-----------------------------------------------------------------------------+-----------------------------------------------------------------------------|
+    | /<path-from-root>/publications/shared-war/src/main/webapp/template/         | /opt/tomcat-engine1/webapps-<publication-name>/<publication-name>/template/ |
+    | /<path-from-root>/publications/<publication-name>/src/main/webapp/template/ | /opt/tomcat-engine1/webapps-<publication-name>/<publication-name>/template/ |
+
 13. Click *OK*.
 14. Select *Tools* > *Deployment* > *Automatic upload*.
 
@@ -201,10 +240,10 @@ Any changes you make to your project should now be automatically deployed to the
 on your test server. To test that this is actually the case:
 
 1. Display your test server's file system by selecting *Tools* > *Deployment* > *Browse Remote Host*.
-2. Navigate down the displayed tree to show the contents of the =/opt/tomcat-engine1/webapps/<%= trail_publication_name %>/template/widgets= folder.
-   (=/opt/tomcat-engine1/webapps/<%= trail_publication_name %>/template/= and all its children should be highlighted in green. If this is not the case,
+2. Navigate down the displayed tree to show the contents of the =/opt/tomcat-engine1/webapps-<publication-name>/<publication-name>/template/widgets= folder.
+   (=/opt/tomcat-engine1/webapps-<publication-name>/<publication-name>/template/= and all its children should be highlighted in green. If this is not the case,
    go back and and check that you entered the deployment path correctly in the *Deployment* dialog.)
-3. In your local code tree, navigate to publications/<%= trail_publication_name %>/src/main/webapp/template/widgets/dummy.
+3. In your local code tree, navigate to publications/<publication-name>/src/main/webapp/template/widgets/dummy.
 4. Create a file (any name) in this folder. The dummy folder and the file you have created should immediately be duplicated in the deployment tree.  If this is not the case,
    go back and and check that you entered the correct local paths in the *Deployment* dialog.
 5. Delete the test file you created. It should also disappear from the deployment tree.
@@ -226,7 +265,7 @@ on your test server. To test that this is actually the case:
 
 *** TODO Development
 
-The [[<%= trail_publication_name %>]] publication is made using the *Escenic Widget Framework*. This means that
+The <%= trail_dev_project_name %> publication(s) is/are made using the *Escenic Widget Framework*. This means that
 all publication layout and functionality is assembled from *widgets*. A widget is a package of JSP, CSS and graphics files 
 that together provide a web site component. A component may be primarily graphical (such as the =storyContent= widget that 
 governs the layout of a story in a publication), primarily functional (such as the =webAnalytics= widget) or a combination
@@ -244,117 +283,32 @@ in two ways:
  - By customizing existing widgets
 
 This manual does not cover the details of Widget Framework development, since this is covered elsewhere 
-([[<%= trail_virtual_host_documentation %>/widget-framework-2.0.html]]).
+([[http://documentation.vizrt.com/widget-framework-2.0.html]]).
 
 The development environment you have set up is designed to support and simplify the process of extending
-the standard widgets supplied with the Widget Framework. The =publications/<%= trail_publication_name %>/src/main/webapp/template/= 
+the standard widgets supplied with the Widget Framework. The =publications/<publication-name>/src/main/webapp/template/= 
 tree is a *customization layer* that you can use to store any modifications you want to make to the standard widgets
 in the =publications/shared-war/src/main/webapp/template/= tree. During the application build process,
 the files in your customization layer are merged with the standard widgets to create a customized widget
 set for deployment.
 
-The deployment mappings you have set up mimic this process: any changes you make in
-=publications/[[<%= trail_publication_name %>]]/src/main/webapp/template/= are instantly copied to your
-test server. This means you can instantly test all changes you make by displaying an appropriate page of 
-your test [[<%= trail_publication_name %>]] publication.
+The deployment mappings you have set up mimic this process: any changes you make in 
+=publications/<publication-name>/src/main/webapp/template/= are instantly copied to your development image. T
+his means you can instantly test all changes you've made by using browser to request the appropriate page from the
+publication on your development image.
 
 **** TODO Customizing a widget
 
-**** TODO Creating a new widget???
+**** TODO Creating a new widget
 
 *** TODO Building and deployment
 
 (about using guru to do it for you)
 
-
 ** TODO Jira
-
 
 ** TODO Source code repository
 
-
 ** TODO The builder
 
-
-** Development image
-
-The main environment for change is the local development environment 
-a.k.a. "dev image". The dev image is downloaded as a .ova file that 
-can be imported into VirtualBox or VMWare Player. It works under 
-Windows, OSX and Linux, and provides an Ubuntu image with Escenic 
-Content Engine already installed with a publication and an .ear 
-file from the project.
-
-*** Download .ova file
-
-Your dev image can be downloaded here - [[<%= trail_dev_image_uri %>][Local development environment]].
-
-*** Import .ova file into VirtualBox
-
-1) After you have downloaded the .ova file you can open the file in i.e. VirtualBox.
-
-	[[./graphics/development-process/01-download-image.png]]
-
-2) VirtualBox will recognize the format and offer you a dialog for importing the image.
-
-	[[./graphics/development-process/02-import-image.png]]
-
-3) After klicking "Import" you will be asked to agree to a license agreement and after clicking "Agree" the import process will start.
-
-	[[./graphics/development-process/03-agree-to-license.png]]
-	
-	[[./graphics/development-process/04-wait-for-import.png]]
-
-4) When the import finished the VirtualBox Manager will open and your image will be visible in a list. It's now time to adjust your settings. Unless you have very specific changes you would like to perform for memory, number of CPUs etc... opening the settings dialog and then click "OK" is enough to finish the initial configuration.
-	
-	[[./graphics/development-process/05-adjust-settings.png]]
-
-	[[./graphics/development-process/06-apply-settings.png]]
-
-5) The next step will be to start the image. This is done by selecting the image in the list and then click "Start" in the VirtualBox Manager.
-
-	[[./graphics/development-process/07-power-on.png]]
-
-6) After the image has started up, you should be able to see its local IP address. This is the IP you need to add to the hosts file on your workstation/laptop.
-
-	[[./graphics/development-process/08-fetch-ip.png]]
-	[[./graphics/development-process/09-add-host-entry.png]]
-
-*** Verify available services
-
-1) With the image runing you should now be able to access the following features
-
-|---------------------+---------------------------------------------------------------|
-| Feature             | URL                                                           |
-|---------------------+---------------------------------------------------------------|
-| Escenic Admin       | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
-|---------------------+---------------------------------------------------------------|
-| Web Studio          | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
-|---------------------+---------------------------------------------------------------|
-| Content Studio      | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
-|---------------------+---------------------------------------------------------------|
-| Solr                | http://<%= trail_customer_acronym %>-dev:8180/solr            |
-|---------------------+---------------------------------------------------------------|
-
-
-
-*** What's included
-
-- Ubuntu (actually, an Ubuntu Enterprise Cloud Image, modified to boot under almost any hypervisor.)
-- two virtual network cards, one for outbound NAT traffic and the other for inbound traffic.
-- varnish cache (just like in production)
-- memcached (just like in production)
-- separate solr java (just like in production)
-- remote debugging enabled (on port 5005)
-
-/Which publications are available?/
-|-----------------+------------------------------------|
-| Publication     | username / password                |
-|-----------------+------------------------------------|
-| [pubName]       | [pubName]_admin / admin            |
-|-----------------+------------------------------------|
-
-/What are the important credentials?/
-
-Operating system: The usernames ubuntu (with sudo privileges), escenic (runs escenic).
 
