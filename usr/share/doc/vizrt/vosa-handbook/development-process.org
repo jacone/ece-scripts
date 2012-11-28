@@ -126,9 +126,9 @@ Your test system is now up and running. You should be able to verify your system
 |---------------------+---------------------------------------------------------------|
 | Escenic Admin       | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
 |---------------------+---------------------------------------------------------------|
-| Web Studio          | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
+| Web Studio          | http://<%= trail_customer_acronym %>-dev:8080/escenic         |
 |---------------------+---------------------------------------------------------------|
-| Content Studio      | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
+| Content Studio      | http://<%= trail_customer_acronym %>-dev:8080/studio          |
 |---------------------+---------------------------------------------------------------|
 | Solr                | http://<%= trail_customer_acronym %>-dev:8180/solr            |
 |---------------------+---------------------------------------------------------------|
