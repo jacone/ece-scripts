@@ -101,7 +101,7 @@ function install_mysql_server_software() {
       run /etc/init.d/mysql restart
     fi
 
-    assert_pre_requisite mysqld
+    assert_commands_available mysqld
   else
     # when only running the SQL scripts, typically when using Amazon
     # RDS, we need the mysql-client.
@@ -112,7 +112,7 @@ function install_mysql_server_software() {
 function install_mysql_client_software() {
   set_up_percona_repository_if_possible
   install_packages_if_missing $mysql_client_packages
-  assert_pre_requisite mysql
+  assert_commands_available mysql
 }
 
 ## $1: optional parameter, binaries_only. If passed, $1=binaries_only,
@@ -130,14 +130,14 @@ function install_database_server() {
       run /etc/init.d/mysql restart
     fi
 
-    assert_pre_requisite mysqld
+    assert_commands_available mysqld
   else
     # when only running the SQL scripts, typically when using Amazon
     # RDS, we need the mysql-client.
     install_mysql_client_software
    fi
 
-  assert_pre_requisite mysql
+  assert_commands_available mysql
 
   if [ -z "$1" ]; then
     download_escenic_components
@@ -604,7 +604,7 @@ function leave_db_trails() {
 ## *sounds* grand *is* grand, right?)
 function install_db_backup_server() {
   install_mysql_client_software
-  assert_pre_requisite mysqldump
+  assert_commands_available mysqldump
   make_dir ${escenic_backups_dir}
   local file=/etc/cron.daily/${db_schema}-backup
   cat > $file <<EOF

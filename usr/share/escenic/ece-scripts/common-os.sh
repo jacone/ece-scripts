@@ -104,11 +104,18 @@ function get_ip() {
 ## current context. If it is not, the program aborts and removes the
 ## PID.
 ##
-## $1: the binary/executable/program
-function assert_pre_requisite() {
-  if [ $(which $1 2>/dev/null | wc -l) -lt 1 ]; then
-    print_and_log "Please install $1 and then run $(basename $0) again."
-    remove_pid_and_exit_in_error
+## $@: a list of the binary/executable/program
+function assert_commands_available() {
+  local errors_found=0
+  for el in $@; do
+    if [ $(which ${el} 2>/dev/null | wc -l) -lt 1 ]; then
+      print_and_log "Please install $1 and then run $(basename $0) again."
+      errors_found=1
+    fi
+  done
+
+  if [ $errors_found -eq 1 ]; then
+    exit 1
   fi
 }
 

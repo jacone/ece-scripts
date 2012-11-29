@@ -148,7 +148,7 @@ EOF
     if [ -d $escenic_root_dir/widget-framework-core-*/publications/demo-core ]; then
       run cd $escenic_root_dir/widget-framework-core-*/publications/demo-core
       install_packages_if_missing "maven2"
-      assert_pre_requisite mvn
+      assert_commands_available mvn
       run mvn $maven_opts package
       run cp target/demo-core-*.war ${publication_war}
     # WF 2.x

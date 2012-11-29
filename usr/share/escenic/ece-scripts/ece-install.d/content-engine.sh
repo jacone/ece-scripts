@@ -549,10 +549,7 @@ function install_ece_third_party_packages
   fi
   
   install_packages_if_missing $packages
-  
-  for el in ant java jar; do
-    assert_pre_requisite $el
-  done
+  assert_commands_available ant java jar
 }
 
 ece_instance_ear_file=""

@@ -11,7 +11,7 @@ function install_memory_cache()
     run /etc/init.d/memcached restart
   fi
   
-  assert_pre_requisite memcached
+  assert_commands_available memcached
   
   run cd $download_dir
   run wget $wget_opts $memcached_java_lib_url

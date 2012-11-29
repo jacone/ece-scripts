@@ -124,7 +124,7 @@ function install_wf_1_if_present() {
     fi
     
     install_packages_if_missing "maven2"
-    assert_pre_requisite mvn
+    assert_commands_available mvn
     export JAVA_HOME=$java_home
     
     print_and_log "Installing Widget Framework into your Maven repository ..."

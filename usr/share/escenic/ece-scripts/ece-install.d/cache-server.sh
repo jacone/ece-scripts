@@ -62,7 +62,7 @@ function install_varnish_software() {
     install_packages_if_missing varnish
   fi
   
-  assert_pre_requisite varnishd
+  assert_commands_available varnishd
 }
 
 function install_cache_server() {

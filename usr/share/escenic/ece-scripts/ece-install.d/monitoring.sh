@@ -516,7 +516,7 @@ function install_system_info() {
   print_and_log "Setting up a self-reporting module on $HOSTNAME ..."
 
   install_packages_if_missing lighttpd escenic-common-scripts
-  assert_pre_requisite lighttpd
+  assert_commands_available lighttpd
 
   local port=${fai_reporting_port-5678}
   local dir=${fai_reporting_dir-/var/www/system-info}
@@ -532,6 +532,10 @@ function install_system_info() {
   else
     run sed -i "s~^${property}.*=.*$~${property}=\"${port}\"~g" $file
   fi
+
+  # disable the hackish IPv6 listener on port 80
+  local ipv6_pl='include_shell "/usr/share/lighttpd/use-ipv6.pl"'
+  run sed -is "s~^${ipv6_pl}~#${ipv6_pl}~g" $file
 
   # set the document root
   property=server.document-root

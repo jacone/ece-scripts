@@ -227,10 +227,7 @@ function install_common_os_packages()
   fi
   
   install_packages_if_missing $packages $git_package
-  
-  for el in lsb_release curl host wget git unzip; do
-    assert_pre_requisite $el
-  done
+  assert_commands_available lsb_release curl host wget git unzip
 
   # all hosts need the system-info package, hence we'll install the
   # escenic-content-engine package here if on a Debian based
@@ -498,7 +495,7 @@ function assert_correct_runtime_environment()
 ## checks the Technet and WF credentials.
 function check_software_credentials() {
   install_packages_if_missing curl
-  assert_pre_requisite curl
+  assert_commands_available curl
 
   if [ ${fai_offline_mode-0} -eq 1 ]; then
     return
@@ -606,7 +603,7 @@ function common_pre_install()
     fi
 
     check_software_credentials
-    assert_pre_requisite lsb_release
+    assert_commands_available lsb_release
     
     if [ $(lsb_release -i | grep Ubuntu | wc -l) -gt 0 ]; then
         on_ubuntu=1
