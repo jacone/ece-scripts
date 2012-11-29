@@ -628,7 +628,7 @@ mysqldump \\
   --single-transaction \\
   -h $db_host \\
   $db_schema | \\
-  gzip -9 - \\
+  gzip --rsyncable -9 - \\
   > ${escenic_backups_dir}/\${fn}
 
 # (2) make sure the backup went OK 

@@ -185,7 +185,7 @@ function backup_db() {
       -p${db_password} \
       -h ${db_host} \
       -P ${db_port} ${db} | \
-      gzip -9 \
+      gzip --rsyncable -9 \
       > $db_backup_file
 
     print "Database dumped: $db_backup_file"
