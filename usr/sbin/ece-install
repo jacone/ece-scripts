@@ -649,12 +649,42 @@ function ask_for_instance_name()
     make_dir $escenic_conf_dir/engine/instance/${instance_name}
 }
 
+## Will source /etc/default/ece if it exists, if not, it will provide
+## the one shipped with the escenic-content-engine-scripts package.
+function source_default_ece_or_add_it_if_not_exists() {
+  if [ ! -e /etc/default/ece ]; then
+    print_and_log "No /etc/default/ece present, adding a default one for you."
+    local file=/usr/share/doc/escenic/escenic-content-engine-scripts/examples/etc/default/ece
+    if [ -r $file ]; then
+      cp $file /etc/default/ece
+      run source /etc/default/ece
+    else
+      # just adding the bare necessities, the other values are added
+      # by ece-install itself if not present.
+      cat > /etc/default/ece <<EOF
+# added by $(basename $0) @ $(date)
+engine_instance_list=""
+search_instance_list=""
+analysis_instance_list=""
+
+ece_unix_group="escenic"
+ece_unix_user="escenic"
+
+ece_script=/usr/bin/ece
+remove_old_log=1
+EOF
+    fi
+  else
+    run source /etc/default/ece
+  fi
+}
+
 # Will update /etc/default/instance with the type instances which are
 # installed on the given host. This method should work for engine,
 # search and analysis instances.
 function update_type_instances_to_start_up()
 {
-  run source /etc/default/ece
+  source_default_ece_or_add_it_if_not_exists
 
   if [ $type = "engine" ]; then
     if [[ "$engine_instance_list" != *"${instance_name}"* ]]; then
@@ -741,24 +771,6 @@ function get_conf_value()
         echo $(grep $1 $conf_file | grep -v ^# | cut -d'=' -f2)
     fi
 }
-
-# returns 0 for false, 1 for true
-#
-# parameters: $1 : the conf key, see get_conf_value
-function get_boolean_conf_value()
-{
-    value=$(get_conf_value $1)
-    if [ -z "$value" ]; then
-        echo 0
-    elif [ "$value" = "" ]; then
-        echo 0
-    elif [ "$value" -eq 1 ]; then
-        echo 1
-    else
-        echo 0
-    fi
-}
-
 
 # useful for development and test environments.
 function install_all_in_one_environment()
@@ -957,75 +969,75 @@ if [ ${fai_enabled-0} -eq 1 ]; then
 
     # some profiles, like DB slave might need the NFS client, hence we
     # install it pretty far up.
-    if [ $(get_boolean_conf_value fai_nfs_client_install) -eq 1 ]; then
+    if [ ${fai_nfs_client_install-0} -eq 1 ]; then
       install_profile_number=$PROFILE_NFS_CLIENT
       install_nfs_client
       no_fai_profile=0
     fi
 
-    if [ $(get_boolean_conf_value fai_all_install) -eq 1 ]; then
+    if [ ${fai_all_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_ALL_IN_ONE
         install_all_in_one_environment
         no_fai_profile=0
     fi
     
-    if [[ $(get_boolean_conf_value fai_db_install) -eq 1 ||
-          $(get_boolean_conf_value fai_analysis_db_install) -eq 1 ]]; then
+    if [[ ${fai_db_install-0} -eq 1 ||
+          ${fai_analysis_db_install-0} -eq 1 ]]; then
         install_profile_number=$PROFILE_DB_SERVER
         install_database_server
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_editor_install) -eq 1 ]; then
+    if [ ${fai_editor_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_EDITORIAL_SERVER
         install_editorial_server
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_search_install) -eq 1 ]; then
+    if [ ${fai_search_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_SEARCH_SERVER
         install_search_server
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_wf_install) -eq 1 ]; then
+    if [ ${fai_wf_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_WIDGET_FRAMEWORK
         install_widget_framework
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_presentation_install) -eq 1 ]; then
+    if [ ${fai_presentation_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_PRESENTATION_SERVER
         install_presentation_server
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_cache_install) -eq 1 ]; then
+    if [ ${fai_cache_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_CACHE_SERVER
         install_cache_server
         install_web_server 0
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_publication_create) -eq 1 ]; then
+    if [ ${fai_publication_create-0} -eq 1 ]; then
         install_profile_number=$PROFILE_CREATE_PUBLICATION
         create_publication
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_monitoring_install) -eq 1 ]; then
+    if [ ${fai_monitoring_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_MONITORING_SERVER
         install_monitoring_server
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
+    if [ ${fai_restore_from_backup-0} -eq 1 ]; then
         install_profile_number=$PROFILE_RESTORE_FROM_BACKUP
         restore_from_backup
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_rmi_install) -eq 1 ]; then
+    if [ ${fai_rmi_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_RMI_HUB
         install_rmi_hub
         no_fai_profile=0
@@ -1043,13 +1055,13 @@ if [ ${fai_enabled-0} -eq 1 ]; then
     # them. This because it configures the EAE ECE plugin, which the
     # ECE profiles also will copy out if EAE is listed in the
     # technet_download_list.
-    if [ $(get_boolean_conf_value fai_analysis_install) -eq 1 ]; then
+    if [ ${fai_analysis_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_ANALYSIS_SERVER
         install_analysis_server
         no_fai_profile=0
     fi
     
-    if [ $(get_boolean_conf_value fai_nfs_server_install) -eq 1 ]; then
+    if [ ${fai_nfs_server_install-0} -eq 1 ]; then
       install_profile_number=$PROFILE_NFS_SERVER
       install_nfs_server
       no_fai_profile=0
@@ -1058,7 +1070,7 @@ if [ ${fai_enabled-0} -eq 1 ]; then
     # checking for VIP profile last so that ece-install can (if so
     # configured in the ece-install.con) install all dependent
     # services first.
-    if [ $(get_boolean_conf_value fai_vip_install) -eq 1 ]; then
+    if [ ${fai_vip_install-0} -eq 1 ]; then
       install_profile_number=$PROFILE_VIP_PROVIDER
       install_vip_provider
       no_fai_profile=0

@@ -100,10 +100,11 @@ function set_up_escenic-build-scripts() {
 }
 
 function set_up_escenic-content-engine-scripts() {
+  local doc_dir=$target_dir/usr/share/doc/escenic/escenic-content-engine-scripts
   mkdir -p $target_dir/etc/bash_completion.d
   mkdir -p $target_dir/etc/cron.daily/
   mkdir -p $target_dir/etc/init.d
-  mkdir -p $target_dir/usr/share/doc/escenic
+  mkdir -p $doc_dir
   mkdir -p $target_dir/usr/share/escenic/ece-scripts
   mkdir -p $target_dir/usr/{bin,sbin,share/doc}
   mkdir -p $target_dir/{etc,usr,/etc/default}
@@ -129,9 +130,11 @@ function set_up_escenic-content-engine-scripts() {
   cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
 
   # doc
-  cp -r ../../doc/escenic/ece-guide.org \
-    $target_dir/usr/share/doc/escenic
-
+  cp ../../doc/escenic/ece-guide.org $doc_dir/
+  local examples_dir=$doc_dir/examples/etc/default
+  mkdir -p $examples_dir
+  cp ../../../../etc/default/ece $examples_dir
+  
   # cron
   cp -r ../../../../etc/cron.daily/remove-old-escenic-log-files \
     $target_dir/etc/cron.daily/

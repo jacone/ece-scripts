@@ -42,8 +42,8 @@ function restore_from_backup()
 
   wipe_the_slate_clean
   
-  if [ $(get_boolean_conf_value fai_enabled) -eq 1 -a \
-    $(get_boolean_conf_value fai_restore_from_backup) -eq 1 ]; then
+  if [ ${fai_enabled-0} -eq 1 -a \
+    ${fai_restore_from_backup-0} -eq 1 ]; then
     print_and_log "Restoring from backup on $HOSTNAME ..."
     
     backup_file=${fai_restore_from_file}
@@ -53,27 +53,27 @@ function restore_from_backup()
       remove_pid_and_exit_in_error
     fi
 
-    if [ $(get_boolean_conf_value fai_restore_all) -eq 1 ]; then
+    if [ ${fai_restore_all-0} -eq 1 ]; then
       restore_all=1
     fi
     
-    if [ $(get_boolean_conf_value fai_restore_db) -eq 1 ]; then
+    if [ ${fai_restore_db-0} -eq 1 ]; then
       restore_db=1
     fi
     
-    if [ $(get_boolean_conf_value fai_restore_data_files) -eq 1 ]; then
+    if [ ${fai_restore_data_files-0} -eq 1 ]; then
       restore_data_files=1
     fi
     
-    if [ $(get_boolean_conf_value fai_restore_software_binaries) -eq 1 ]
+    if [ ${fai_restore_software_binaries-0} -eq 1 ]
     then
       restore_binaries=1
     fi
     
-    if [ $(get_boolean_conf_value fai_restore_configuration) -eq 1 ]; then
+    if [ ${fai_restore_configuration-0} -eq 1 ]; then
       restore_conf=1
     fi
-  elif [ $(get_boolean_conf_value fai_enabled) -eq 0 ]; then
+  elif [ ${fai_enabled-0} -eq 0 ]; then
     print "From which dataset do you wish to restore?"
     if [ ! -d $backup_dir ]; then
       print_and_log "Directory $backup_dir doesn't exist or isn't readable"
