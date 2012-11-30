@@ -24,11 +24,11 @@ function set_up_solr() {
       wget_auth=$wget_builder_auth
     
       local a_tmp_dir=$(mktemp -d)
-      local file=$(
-        download_uri_target_to_dir \
-          $ece_instance_conf_archive \
-          $a_tmp_dir
-      )
+      download_uri_target_to_dir \
+        $ece_instance_conf_archive \
+        $a_tmp_dir
+      local file=$a_tmp_dir/$(basename $ece_instance_conf_archive)
+
       run cd $a_tmp_dir
       run tar xzf $(basename $ece_instance_conf_archive) engine/solr/conf
       run cp -r engine/solr/conf $escenic_conf_dir/solr

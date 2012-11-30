@@ -51,7 +51,7 @@ DESCRIPTION
       analysis - The Escenic Analysis Engine also knows as 'Stats'
 
  -i --instance <instance>
-      The type instance, such as editor1, web1 or search1
+      The type instance, such as editor1, engine1 or search1
 
  -p --publication <publication>
       Needed only for updating publication resources
@@ -212,40 +212,40 @@ $ ece -i myinstance flush
 The "ece info" command will give you a lot of useful information about
 the current instance:
 #+BEGIN_SRC text
-$ ece -i web1 info
-[ece#engine-web1] Current instance: web1
-[ece#engine-web1] Instances available on myhost: web1
-[ece#engine-web1] Conf files parsed: /etc/escenic/ece-web1.conf /etc/escenic/ece.conf
-[ece#engine-web1] ECE location: /opt/escenic/engine
-[ece#engine-web1] Assembly Tool location: /opt/escenic/assemblytool
-[ece#engine-web1] Java location: /usr/lib/jvm/java-6-sun
-[ece#engine-web1] Log files:
-[ece#engine-web1] |-> System out log: /var/log/escenic/engine-web1.out
-[ece#engine-web1] |-> App server log: /opt/tomcat-web1/logs/localhost.2012-04-02.log
-[ece#engine-web1] |-> Log4j log: /var/log/escenic/ece-web1-messages
-[ece#engine-web1] |-> GC log: /var/log/escenic/engine-web1-gc.log
-[ece#engine-web1] Application server:
-[ece#engine-web1] |-> Status: DOWN
-[ece#engine-web1] |-> Port: 8080
-[ece#engine-web1] |-> Type: tomcat
-[ece#engine-web1] |-> Tomcat home: /opt/tomcat
-[ece#engine-web1] |-> Tomcat base: /opt/tomcat-web1
-[ece#engine-web1] Application server resources:
-[ece#engine-web1] |-> escenic/solr-base-uri: http://mysearch:8080/solr/
-[ece#engine-web1] Database:
-[ece#engine-web1] |-> name: jdbc/ECE_READ_DS
-[ece#engine-web1] |-> url: mysql://mydb:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8
-[ece#engine-web1] |-> username: ece5user
-[ece#engine-web1] |-> name: jdbc/ECE_UPDATE_DS
-[ece#engine-web1] |-> url: mysql://mydb:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8
-[ece#engine-web1] |-> username: ece5user
-[ece#engine-web1] Deployed web applications:
-[ece#engine-web1] |-> http://myhost:8080/escenic-admin
-[ece#engine-web1] Deployment state:
-[ece#engine-web1] |-> Version: mysite.com-1.2.3
-[ece#engine-web1] |-> EAR used: http://my.build.server.com/engine-mysite.com-1.2.3.ear
-[ece#engine-web1] |-> MD5 sum: 5881d1895c09c7b35a032806c6249433
-[ece#engine-web1] |-> Deployment date: Wed Mar 28 18:29:58 CST 2012  
+$ ece -i engine1 info
+[ece#engine-engine1] Current instance: engine1
+[ece#engine-engine1] Instances available on myhost: engine1
+[ece#engine-engine1] Conf files parsed: /etc/escenic/ece-engine1.conf /etc/escenic/ece.conf
+[ece#engine-engine1] ECE location: /opt/escenic/engine
+[ece#engine-engine1] Assembly Tool location: /opt/escenic/assemblytool
+[ece#engine-engine1] Java location: /usr/lib/jvm/java-6-sun
+[ece#engine-engine1] Log files:
+[ece#engine-engine1] |-> System out log: /var/log/escenic/engine-engine1.out
+[ece#engine-engine1] |-> App server log: /opt/tomcat-engine1/logs/localhost.2012-04-02.log
+[ece#engine-engine1] |-> Log4j log: /var/log/escenic/ece-engine1-messages
+[ece#engine-engine1] |-> GC log: /var/log/escenic/engine-engine1-gc.log
+[ece#engine-engine1] Application server:
+[ece#engine-engine1] |-> Status: DOWN
+[ece#engine-engine1] |-> Port: 8080
+[ece#engine-engine1] |-> Type: tomcat
+[ece#engine-engine1] |-> Tomcat home: /opt/tomcat
+[ece#engine-engine1] |-> Tomcat base: /opt/tomcat-engine1
+[ece#engine-engine1] Application server resources:
+[ece#engine-engine1] |-> escenic/solr-base-uri: http://mysearch:8080/solr/
+[ece#engine-engine1] Database:
+[ece#engine-engine1] |-> name: jdbc/ECE_READ_DS
+[ece#engine-engine1] |-> url: mysql://mydb:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8
+[ece#engine-engine1] |-> username: ece5user
+[ece#engine-engine1] |-> name: jdbc/ECE_UPDATE_DS
+[ece#engine-engine1] |-> url: mysql://mydb:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8
+[ece#engine-engine1] |-> username: ece5user
+[ece#engine-engine1] Deployed web applications:
+[ece#engine-engine1] |-> http://myhost:8080/escenic-admin
+[ece#engine-engine1] Deployment state:
+[ece#engine-engine1] |-> Version: mysite.com-1.2.3
+[ece#engine-engine1] |-> EAR used: http://my.build.server.com/engine-mysite.com-1.2.3.ear
+[ece#engine-engine1] |-> MD5 sum: 5881d1895c09c7b35a032806c6249433
+[ece#engine-engine1] |-> Deployment date: Wed Mar 28 18:29:58 CST 2012  
 #+END_SRC
 
 * Installation
@@ -380,24 +380,24 @@ the search instance which runs the Solr indexer, so that the Solr
 index isn't corrupted:
 #+BEGIN_SRC text
 $ ece -i search1 stop
-$ ece -i web1 backup
-[ece#engine-web1] Backing up the web1 instance of engine on raven ...
-[ece#engine-web1] Cleaning up generated files in /opt/escenic/assemblytool ...
-[ece#engine-web1] Cleaning up web1's work directory in /opt/tomcat-web1/work ...
-[ece#engine-web1] Cleaning up web1's temp directory in /opt/tomcat-web1/temp ...
-[ece#engine-web1] Database dumped: /var/backups/escenic/ece5db-2012-08-17.sql.gz
-[ece#engine-web1] Creating snapshot ... (this may take a while)
-[ece#engine-web1] Backup ready: /var/backups/escenic/engine-web1-backup-2012-08-17.tar size: 62M
-[ece#engine-web1] The backup arhcive includes:
-[ece#engine-web1] - Database snapshot
-[ece#engine-web1] - All Solr in /var/lib/escenic/solr
-[ece#engine-web1] - All Escenic data files in /var/lib/escenic/engine
-[ece#engine-web1] - All app servers in /opt
-[ece#engine-web1] - All Escenic software binaries in /opt/escenic/engine
-[ece#engine-web1] - All configuration in /etc/escenic and /etc/default/ece
-[ece#engine-web1] - All bootstrap scripts from /etc/init.d
-[ece#engine-web1] - All state files in /var/lib/escenic
-[ece#engine-web1] Enjoy!
+$ ece -i engine1 backup
+[ece#engine-engine1] Backing up the engine1 instance of engine on raven ...
+[ece#engine-engine1] Cleaning up generated files in /opt/escenic/assemblytool ...
+[ece#engine-engine1] Cleaning up engine1's work directory in /opt/tomcat-engine1/work ...
+[ece#engine-engine1] Cleaning up engine1's temp directory in /opt/tomcat-engine1/temp ...
+[ece#engine-engine1] Database dumped: /var/backups/escenic/ece5db-2012-08-17.sql.gz
+[ece#engine-engine1] Creating snapshot ... (this may take a while)
+[ece#engine-engine1] Backup ready: /var/backups/escenic/engine-engine1-backup-2012-08-17.tar size: 62M
+[ece#engine-engine1] The backup arhcive includes:
+[ece#engine-engine1] - Database snapshot
+[ece#engine-engine1] - All Solr in /var/lib/escenic/solr
+[ece#engine-engine1] - All Escenic data files in /var/lib/escenic/engine
+[ece#engine-engine1] - All app servers in /opt
+[ece#engine-engine1] - All Escenic software binaries in /opt/escenic/engine
+[ece#engine-engine1] - All configuration in /etc/escenic and /etc/default/ece
+[ece#engine-engine1] - All bootstrap scripts from /etc/init.d
+[ece#engine-engine1] - All state files in /var/lib/escenic
+[ece#engine-engine1] Enjoy!
 #+END_SRC
 
 

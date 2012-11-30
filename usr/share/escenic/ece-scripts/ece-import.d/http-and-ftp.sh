@@ -49,11 +49,11 @@ function download_files_if_desired() {
       continue
     fi
     print_and_log "Downloading" $uri/$el "..."
-    local result=$(
-      download_uri_target_to_dir \
+    download_uri_target_to_dir \
       $uri/$el \
       $raw_spool_base_dir/$publication_name/$job_name/
-    )
+    local result=$raw_spool_base_dir/$publication_name/$job_name/$(basename $el)
+
     log "Downloaded" $(basename $el) "to" $result
     echo $uri/$el >> $(get_state_file)
   done

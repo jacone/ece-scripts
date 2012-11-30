@@ -116,7 +116,7 @@ function create_publication_definition_and_war()
 {
   publication_name=mypub
 
-  if [ $fai_enabled -eq 0 ]; then
+  if [ ${fai_enabled-0} -eq 0 ]; then
     print "What name do you wish to give your publication?"
     print "Press ENTER to accept ${publication_name}"
     echo -n "Your choice [${publication_name}]> "
