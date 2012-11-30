@@ -179,7 +179,7 @@ function list_previous_deployments() {
 
   for el in $(find $ece_deploy_data_dir -maxdepth 1 -type d | sed "s#${ece_deploy_data_dir}##g" | sort -nr | head -20); do
     local id=$(basename $el)
-    echo "   - Deployment" ${id} "was made @" $(date --date="@${id}")
+    echo "   - Deployment" ${id} "was made @" $(date --date="@$(echo ${id} | cut -d'-' -f2)")
   done
 }
 
@@ -288,7 +288,7 @@ function update_publication_resources() {
 }
 
 function generate_deployment_id() {
-  deployment_id=$(date +%s)
+  deployment_id=${HOSTNAME}-$(date +%s)
   print_and_log "This deployment has ID" ${deployment_id}
 }
 
