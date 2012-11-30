@@ -13,7 +13,7 @@ DESCRIPTION"
        analysis - The Escenic Analysis Engine also knows as 'Stats'
 
  -i --instance <instance> 
-      The type instance, such as editor1, web1 or search1
+      The type instance, such as editor1, engine1 or search1
 
  -f --file <file> } --uri <uri>
       Specificies the file that the given comand shall act upon.

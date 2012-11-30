@@ -714,7 +714,7 @@ function install_presentation_server()
 {
     print_and_log "Installing a presentation server on $HOSTNAME."
     type=engine
-    install_ece_instance "web1" $PROFILE_PRESENTATION_SERVER
+    install_ece_instance "engine1" $PROFILE_PRESENTATION_SERVER
 }
 
 # If the system is installed using the recommended paths, the method

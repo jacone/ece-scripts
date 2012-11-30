@@ -3,7 +3,7 @@
 ## Script which creates an overview of system information related to
 ## the specified ECE/EAE/Search instance, example invocation:
 ##
-## $ system-info -i web1 | xmllint --format - > /var/www/web1.html
+## $ system-info -i engine1 | xmllint --format - > /var/www/engine1.html
 ##
 ## TODO:
 ## Add this to /etc/cronttab

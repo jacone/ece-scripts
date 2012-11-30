@@ -936,7 +936,7 @@ $HOME/ece-install.conf file of the root user:
 | =fai_presentation_conf_archive=       | ""                                                           | conf.tar.gz to use for Nursery & JAAS configuration                                                      |
 | =fai_presentation_ear=                | ""                                                           | EAR to use instead of the Escenic binaries                                                               |
 | =fai_presentation_install=            | 0                                                            | Install the presentation server profile                                                                  |
-| =fai_presentation_name=               | web1                                                         | Name of the presentation server instance                                                                 |
+| =fai_presentation_name=               | engine1                                                  | Name of the presentation server instance                                                                 |
 | =fai_presentation_port=               | 8080                                                         | HTTP port of the presentation server instance                                                            |
 | =fai_presentation_deploy_white_list=  | "escenic-admin <assemblytool/publications/*>"                | The list of WARs to be deployed on this instance.                                                        |
 | =fai_presentation_shutdown=           | 8005                                                         | Shutdown port of the presentation instance                                                               |
@@ -988,19 +988,19 @@ fai_publication_name=jollygood
 #+END_SRC
 
 ****** Install Two Presentation Servers On a Single Host
-To install two presentation servers called =web1= and
-=web2= on the same host,  first run =ece-install= with the following settings:
+To install two presentation servers called =engine1= and
+=engine2= on the same host,  first run =ece-install= with the following settings:
 #+BEGIN_SRC conf
 fai_enabled=1
 fai_presentation_install=1
-fai_presentation_name=web1
+fai_presentation_name=engine1
 #+END_SRC 
 
 Then run it a second time with the following settings:
 #+BEGIN_SRC conf
 fai_enabled=1
 fai_presentation_install=1
-fai_presentation_name=web2
+fai_presentation_name=engine2
 fai_presentation_port=8081
 fai_presentation_shutdown=8105
 #+END_SRC
