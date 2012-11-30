@@ -352,7 +352,7 @@ function roll_back_everything_to_version() {
     log "Using data in" $old_data_dir "to perform the rollback"
   fi
 
-  local package_version_file=$data_dir/${roll_back_to_version}/old/vosa-conf-${HOSTNAME}.version
+  local package_version_file=$data_dir/${roll_back_to_version}/new/vosa-conf-${HOSTNAME}.version
   if [ -e $package_version_file ]; then
     local deb_file=$ece_deploy_download_dir/vosa-conf-$HOSTNAME-$(cat $package_version_file).deb
     if [ -e $deb_file ]; then
@@ -371,7 +371,7 @@ function roll_back_everything_to_version() {
   fi
 
   for el in $engine_instance_list; do
-    file=$data_dir/${roll_back_to_version}/old/${el}.state
+    file=$data_dir/${roll_back_to_version}/new/${el}.state
     if [ ! -e $file ]; then
       continue
     fi
@@ -387,7 +387,6 @@ function roll_back_everything_to_version() {
   print_and_log "You have now rolled back to deployment ${roll_back_to_version}"
 }
 
-unset http_proxy
 assert_commands_available xmllint
 read_user_input "$@"
 verify_user_input
