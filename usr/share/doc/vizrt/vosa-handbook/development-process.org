@@ -48,6 +48,10 @@ You need to install the following items on your PC or Mac:
    information. Note that version 11.x is required: earlier versions of IntelliJ IDEA do not
    contain all the functions required by the VOSA development process
    and will not work properly.
+ - Oracle VirtualBox. You can get this from [[https://www.virtualbox.org/wiki/Downloads]]
+   (or on Linux you can most likely install it using your package manager). You 
+   can use another virtual machine hypervisor such as VMWare if you prefer, but this
+   documentation assumes you are using VirtualBox.
 
 During the IntelliJ IDEA installation process you are allowed to
 choose which plug-ins to activate. You should activate at least the
@@ -69,30 +73,54 @@ Setting up your development environment involves:
  - Obtaining copies of the code and systems you are going to work on
  - Getting access to the project infrastructure (HipChat, Jira and so on) 
 
-*** Set up your local development environment
+*** Set up your local test system
 
-The main environment for change is the local development environment
-a.k.a. "dev image". The dev image is downloaded as a .ova file that
-can be imported into VirtualBox or VMWare Player. It works under
-Windows, OSX and Linux, and provides an Ubuntu image with Escenic
-Content Engine already installed with a publication and an .ear
-file from the project.
+You will have your own test copy of the site you are working on. It is a 
+complete working copy of the production server and runs in a virtual machine
+on your PC. It is supplied as an Ubuntu Enterprise Cloud Image, modified to boot 
+under almost any hypervisor (VirtualBox, for example).
 
-Start by downloading the image: [[<%= trail_dev_image_uri %>][Local Development Environment]]
+The supplied image consists of an Ubuntu server OS, with the following SW installed 
+and preconfigured:
 
-*** Import .ova file into VirtualBox
+- Java
+- Escenic Content Engine
+- Varnish cache (like the production server)
+- Memcached (like the production server)
+- Solr running in a separate Java VM (like the production server)
+- A publication and .ear file from your project
 
-1) After you have downloaded the .ova file you can open the file in i.e. VirtualBox.
+The system is configured with two virtual network cards (one for outbound NAT traffic
+and the other for inbound traffic), and has remote debugging enabled on port 5005.
 
-2) VirtualBox will recognize the format and offer you a dialog for importing the image.
+Click on this link to download the virtual machine image:
 
-3) After klicking "Import" you will be asked to agree to a license agreement and after clicking "Agree" the import process will start.
+[[<%= trail_dev_image_uri %>]]
 
-4) When the import finished the VirtualBox Manager will open and your image will be visible in a list. It's now time to adjust your settings. Unless you have very specific changes you would like to perform for memory, number of CPUs etc... opening the settings dialog and then click "OK" is enough to finish the initial configuration.
+When the file has finished downloading, you can open it with your chosen
+hypervisor. If you are using VirtualBox then the procedure for
+installing the image is as follows:
 
-5) The next step will be to start the image. This is done by selecting the image in the list and then click "Start" in the VirtualBox Manager.
+1. Start VirtualBox and open the downloaded <%= trail_dev_image_name %> file.
 
-6) When the boot sequence has finished, the terminal window will contain an information page starting with the following welcome message:
+2. VirtualBox recognizes the format and displays an import dialog. Click *Import*.
+
+3. A license agreement dialog is displayed. Click *Agree* to continue.
+
+4. When the image file has been imported, the VirtualBox Manager window is displayed, 
+   and the imported image is displayed in a list. Select the image and click on
+   *Settings*. 
+   
+5. The settings page displays various parameters that you can use to configure the 
+   virtual machine. Unless you know that you have specific changes that you want to make regarding
+   memory allocation, number of CPUs etc., the default settings should be good enough
+   so you can just click *OK* to accept them.
+
+6. Make sure your image is still selected and click *Start* to start the virtual machine.
+
+A terminal window is displayed showing the virtual machine boot-up messages. When the boot sequence 
+has finished, the terminal window will contain an information page starting with the
+following welcome message:
 
 #+BEGIN_SRC default
 Welcome to the <%= trail_dev_host_name %> development environment
@@ -113,16 +141,17 @@ your computer's =hosts= file. To do this:
    #+BEGIN_SRC default
    <ip-address> <%= trail_dev_host_name %>
    #+END_SRC
-   where <ip-address> is the =eth1= IP address listed on the virtual machine's welcome page.
+   where =<ip-address>= is the =eth1= IP address listed on the virtual machine's welcome page.
 3. Save your changes.
 
-Your test system is now up and running. You should be able to verify your system by opening a browser and navigating to [[http://<%= trail_dev_host_name %>:8080/escenic-admin/status.jsp?tests=all]].
+Your test system is now up and running. You should be able to verify your system by opening a browser 
+and navigating to [[http://<%= trail_dev_host_name %>:8080/escenic-admin/status.jsp?tests=all]].
 
-*** Verify available services
+*** Verify available services and publications
 
-- With the image runing you should now be able to access the following features:
+- With the image runing you should now be able to access the following services:
 |---------------------+---------------------------------------------------------------|
-| Feature             | URL                                                           |
+| Service             | URL                                                           |
 |---------------------+---------------------------------------------------------------|
 | Escenic Admin       | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
 |---------------------+---------------------------------------------------------------|
@@ -132,22 +161,15 @@ Your test system is now up and running. You should be able to verify your system
 |---------------------+---------------------------------------------------------------|
 | Solr                | http://<%= trail_customer_acronym %>-dev:8180/solr            |
 |---------------------+---------------------------------------------------------------|
-- Where is/are my publication(s)?
+
+You should also be able to access the following publications:
+
 |--------------------+------------------------------------+-----------------------------------------|
-| Publication        | username / password                |                                         |
+| Publication        | username / password                | URL                                     |
 |--------------------+------------------------------------+-----------------------------------------|
 | <publication-name> | <publication-name>\_admin / admin  | [[http://local.<publication-name>.com]] |
 |--------------------+------------------------------------+-----------------------------------------|
 
-
-*** What's included
-
-- Ubuntu (actually, an Ubuntu Enterprise Cloud Image, modified to boot under almost any hypervisor.)
-- two virtual network cards, one for outbound NAT traffic and the other for inbound traffic.
-- varnish cache (just like in production)
-- memcached (just like in production)
-- separate solr java (just like in production)
-- remote debugging enabled (on port 5005)
 
 *** Configure Maven
 
@@ -251,17 +273,80 @@ on your test server. To test that this is actually the case:
 
 ** Procedures
 
+You have now installed and configured all the local components of your development
+environment. However, your development environment consists of many other systems
+in your local network and on the Internet, and also includes the people you will be working
+with. This section provides:
+
+ - An overview of how all these systems and people fit together
+ - Some suggested procedures for making the best use of your environment
+
+*** Change management
+
+VOSA aims to provide a development environment that is organized but flexible
+and above all *transparent*. It should be easy for any interested party to find
+out what is going on at any time:
+
+ - What tasks have been carried out, what tasks are in progress, what
+   tasks are planned.
+ - Who is involved in carrying out the tasks.
+ - Why the tasks are being carried out (what requirements they are intended to satisfy).
+ - Where the task is in the development cycle.
+
+The environment is designed to support agile development methodologies such as
+[[http://en.wikipedia.org/wiki/Scrum_(development)][Scrum]] and is centered around a web-based bug-tracking and change
+management system called *Jira*. Every VOSA project
+has a corresponding Jira project at [[https://vizrtcustomers.jira.com]]. All the work
+to be carried out in the VOSA project must be registered as *issues* in this Jira project.
+
+Jira supports a hierarchy of issues so that high level requirements (called *epics* in 
+Scrum terminology) can be broken down into smaller requirements (*stories*) and the individual
+development tasks that you will actually work with. Jira tracks the progress of these
+tasks (plus bug correction tasks, which are also registered as issues) through a lifecycle
+of development work, testing, error correction and release. It keeps track of who is working
+on the tasks and mantains a log of all code changes associated with them, plus comments, notes
+and discussions.
+
+Jira is a large and very powerful change management system that can be used in many different
+ways. You will need to find your way around at least some parts of it, and you are recommended 
+to make use of its help facilities and documentation to do so. As a VOSA developer, 
+however, the most important points you need to understand are:
+
+ - Jira is where your work comes from :: If you haven't got the number of a Jira issue describing
+   the work you are doing, then you should not be writing or modifying any code.
+ - Jira needs to know how you're getting on :: When you are satisfied enough with a change to
+   check it in to Subversion, then you must include the issue number in your check-in comment.
+   The check-in is then recorded in the issue. Add notes and comments to the issue as you go
+   along so it contains a complete record of decisisons and changes made along the way. When
+   you are finished with the task, record the fact in Jira by *resolving*??  the issue.
+
+You can access your Jira project(s) from:
+
+[[http://start.vizrtsaas.com/<%= trail_dev_project_name %>]]
+
+*** Version control
+
+All code (JSP, HTML, XML, Java, Javascript, CSS etc.), documentation and other resources (images, videos,
+sound, configuration files) in a VOSA project is stored in a Subversion repository. The code
+you work with on your machine is only a copy of the code stored in Subversion, and you cannot
+build or deploy your changes for others to see until you have checked them back in to Subversion.
+
+Subversion is a very widely-used version control system and there are plenty of resources
+available on the Internet for learning how to use it. The Subversion client you have
+installed only has a command line user interface. If you are not comfortable with using
+that, there are [[http://en.wikipedia.org/wiki/Comparison_of_Subversion_clients][many]] graphical front ends available for it. In
+addition, most of the simple everyday operations can be carried out
+
+using IntelliJ's built-in Subversion support.
+
+Note that VOSA's Subversion server is set up to prevent you checking in any changes 
+without a Jira issue number in your check-in comment.
+
+
 *** TODO Communicating with your colleagues
 
 (about using HipChat)
 
-*** TODO Change management
-
-(about using Jira)
-
-*** TODO Version control
-
-(about using Subversion)
 
 *** TODO Development
 
@@ -294,7 +379,7 @@ set for deployment.
 
 The deployment mappings you have set up mimic this process: any changes you make in 
 =publications/<publication-name>/src/main/webapp/template/= are instantly copied to your development image. T
-his means you can instantly test all changes you've made by using browser to request the appropriate page from the
+his means you can instantly test all changes you've made by using the browser to request the appropriate page from the
 publication on your development image.
 
 **** TODO Customizing a widget
@@ -312,3 +397,4 @@ publication on your development image.
 ** TODO The builder
 
 
+   
