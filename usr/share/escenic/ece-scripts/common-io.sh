@@ -103,7 +103,12 @@ function download_uri_target_to_dir() {
   
   if [[ $uri == "http://"* || $uri == "https://"* ]]; then
     run cd $target_dir
-    run wget $wget_opts $wget_auth $uri -O $(basename $uri)
+    run wget \
+      $wget_opts \
+      $wget_auth \
+      --server-response \
+      --output-document $(basename $uri) \
+      $uri
     file=$target_dir/$(basename $uri)
   elif [[ $uri == "file://"* ]]; then
       # length of file:// is 7
