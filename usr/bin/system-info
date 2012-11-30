@@ -22,6 +22,7 @@ current_indent_level=0
 INDENT="  "
 verbose=0
 temporaries=1
+log=$HOME/.$(basename $0).log
 
 function init() {
   # first, try to be nice
