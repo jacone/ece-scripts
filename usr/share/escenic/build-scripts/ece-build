@@ -507,10 +507,10 @@ function create_machine_conf_packages() {
     echo "$(get_etc_hosts_for_machine ${machine} $conf_dir)" > $target_dir/etc/hosts
 
     # common files
-    run cp -r $conf_dir/common/* $target_dir/
+    run cp -rf $conf_dir/common/* $target_dir/
 
     # machine specific files
-    run cp -r $conf_dir/${machine}/* $target_dir/
+    run cp -rf $conf_dir/${machine}/* $target_dir/
 
     # delete those pesky .svn folders
     find $target_dir -name .svn -type d | xargs rm -rf
