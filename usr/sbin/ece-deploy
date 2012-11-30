@@ -8,7 +8,7 @@
 ## directory before starting the instances again. The last thing the
 ## script does, is to deploy the conf package.
 
-data_dir=/var/lib/escenic/$(basename $0)
+ece_deploy_data_dir=/var/lib/escenic/$(basename $0)
 ece_deploy_download_dir=/var/cache/escenic
 
 function bootstrap_thyself() {
@@ -34,7 +34,7 @@ function bootstrap_thyself() {
 
   create_pid
   create_lock
-  
+
   # hooks for when the scirpt exits cleanly and when a user or someone
   # kills the process
   trap common_bashing_exit_hook EXIT
@@ -47,13 +47,18 @@ log=/var/log/escenic/$(basename $0).log
 run source /etc/default/ece
 
 function deploy_ear() {
+  local proxy_setings=""
+  if [ -n "$http_proxy" ]; then
+    proxy_settings="http_proxy=$http_proxy"
+  fi
+  
   for el in $engine_instance_list; do
-	  su - $ece_unix_user -c \
-	    "ece -i $el stop deploy clean start --uri $ear_uri"
+    su - $ece_unix_user -c \
+      "${proxy_settings} ece -i $el stop deploy clean start --uri $ear_uri"
   done
   for el in $search_instance_list; do
-	  su - $ece_unix_user -c \
-	    "ece -i $el -t search stop deploy clean start --uri $ear_uri"
+    su - $ece_unix_user -c \
+      "${proxy_settings} ece -i $el -t search stop deploy clean start --uri $ear_uri"
     exit_on_error "Running ece deploy as $ece_unix_user"
   done
 }
@@ -71,7 +76,7 @@ function set_builder_user_and_password() {
   if [[ -n "$builder_http_user" && -n "$builder_http_password" ]]; then
     found=1
   fi
-  
+
   if [ $found -eq 0 ]; then
     local file_list=/etc/escenic/ece.conf
     for el in $engine_instance_list; do
@@ -85,25 +90,24 @@ function set_builder_user_and_password() {
   fi
 }
 
-
 function deploy_conf() {
   if [ ${make_deployment-1} -eq 0 ]; then
     return
   fi
-  
+
   make_dir $ece_deploy_download_dir
 
   set_builder_user_and_password
 
   print "Downloading" $conf_package_uri "..."
   (
-	  cd $ece_deploy_download_dir
-	  run wget \
-	    --quiet \
-	    --continue \
-	    --http-user $builder_http_user \
-	    --http-password $builder_http_password \
-	    $conf_package_uri
+  cd $ece_deploy_download_dir
+  run wget \
+    --quiet \
+    --continue \
+    --http-user $builder_http_user \
+    --http-password $builder_http_password \
+    $conf_package_uri
   )
 
   print "Installing" $(basename $conf_package_uri) "..."
@@ -115,7 +119,7 @@ function deploy_conf() {
 function read_user_input() {
   local next_is_ear_uri=0
   local next_is_conf_uri=0
-  
+
   for el in "$@"; do
     if [[ $el == "--ear" ]]; then
       next_is_ear_uri=1
@@ -162,25 +166,24 @@ function verify_user_input() {
       errors=1
     fi
   fi
-  
+
   if [ $errors -eq 1 ]; then
     exit 1
   fi
 }
 
 function list_previous_deployments() {
-  if [ ! -d $data_dir ]; then
+  if [ ! -d $ece_deploy_data_dir ]; then
     return
   fi
-  
-  for el in $(find $data_dir -maxdepth 1 -type d | sed "s#${data_dir}##g" | sort -nr | head -20); do
+
+  for el in $(find $ece_deploy_data_dir -maxdepth 1 -type d | sed "s#${ece_deploy_data_dir}##g" | sort -nr | head -20); do
     local id=$(basename $el)
     echo "   - Deployment" ${id} "was made @" $(date --date="@${id}")
   done
 }
 
-function prepare_rollback() {
-  local publication_resource_list="
+publication_resource_list="
     0/escenic/section-parameter
     escenic/content-type
     escenic/feature
@@ -191,54 +194,6 @@ function prepare_rollback() {
     escenic/plugin/menu
     escenic/teaser-type
   "
-  
-  for el in $engine_instance_list; do
-    source /etc/escenic/ece-${el}.conf
-    local publication_list=$(
-      curl -s  http://localhost:${appserver_port}/escenic-admin/pages/publication/list.jsp | \
-        grep '/escenic-admin/pages/publication/view.jsp' | \
-        sed 's/.*name=\(.*\)".*/\1/g'
-    )
-
-    for publication in $publication_list; do
-      local dir=${data_dir}/${deployment_id}/old/${publication}
-      
-      for publication_resource in $publication_resource_list; do
-        (
-          make_dir $dir/$(dirname $publication_resource)
-          
-          run cd $dir
-          local xml=$(
-            wget --quiet --continue --output-document - \
-              http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/${publication_resource}
-          )
-
-          if [[ -n "${xml}"  && ${xml:0:1} == "<" ]]; then
-            echo "${xml}" | xmllint --format - > ${publication_resource}
-          else
-            echo "${xml}" > ${publication_resource}
-          fi
-        )
-      done
-    done
-
-    # copying the current deployment state, so that we can roll back
-    dir=${data_dir}/${deployment_id}/old
-    make_dir $dir
-    if [ -e /var/lib/escenic/${el}.state ]; then
-      run cp /var/lib/escenic/${el}.state $dir
-    fi
-
-    # get a hold of the current vosa-conf package, first all packages
-    # to detect if we've got packages intended for other hosts.
-    dpkg -l "vosa-conf-*" 2>/dev/null | tail -1\
-      > $dir/vosa-conf-package.list
-    dpkg -l vosa-conf-$HOSTNAME 2>/dev/null | tail -1 | awk '{print $3;}' \
-      > $dir/vosa-conf-${HOSTNAME}.version
-  done
-
-  print_and_log "Rollback prepared in" $data_dir/$deployment_id/old
-}
 
 function looks_like_xml() {
   local xml=$(cat "$1")
@@ -268,32 +223,32 @@ function update_publication_resources() {
   if [ ! -d $1 ]; then
     return
   fi
-  
+
   for el in $engine_instance_list; do
     source /etc/escenic/ece-${el}.conf
     local publication_list=$(get_publication_list ${appserver_port})
 
     for publication in $publication_list; do
       print_and_log "Updating resources for publication" $publication "..."
-      
+
       if [[ "$1" == "$tomcat_base" ]]; then
         local publication_resources_dir=$tomcat_base/webapps-${publication}/${publication}/META-INF/escenic/publication-resources
       else
         local publication_resources_dir=${1}/${publication}
       fi
-      
+
       if [ ! -d $publication_resources_dir ]; then
         continue
       fi
-      
+
       (
         cd $publication_resources_dir
         for ele in $(find -type f | sed 's#^./##g'); do
-          new_dir=$data_dir/$deployment_id/new/$publication/$(dirname $ele)
+          new_dir=$ece_deploy_data_dir/$deployment_id/new/$publication/$(dirname $ele)
           make_dir $new_dir
-          
-          old_file=$data_dir/$deployment_id/old/$publication/${ele}
-          
+
+          old_file=$ece_deploy_data_dir/$deployment_id/old/$publication/${ele}
+
           if [ $(looks_like_xml $ele) -eq 1 ]; then
             file=$new_dir/$(basename $ele)
             xmllint --format $ele > $file
@@ -316,7 +271,7 @@ function update_publication_resources() {
           if [ ${number_of_lines_changed} -lt 1 ]; then
             continue
           fi
-          
+
           print_and_log "Applying" \
             $number_of_lines_changed \
             "changes to" $ele \
@@ -343,16 +298,16 @@ function roll_back_everything_to_version() {
     "from" $(date --date @${roll_back_to_version}) \
     "..."
 
-  local old_data_dir=$data_dir/${roll_back_to_version}/old
-  if [ ! -d $old_data_dir ]; then
+  local old_ece_deploy_data_dir=$ece_deploy_data_dir/${roll_back_to_version}/old
+  if [ ! -d $old_ece_deploy_data_dir ]; then
     print_and_log "I cannot find ${roll_back_to_version}'s files," \
-      "they should have been here:" $old_data_dir
+      "they should have been here:" $old_ece_deploy_data_dir
     exit 1
   else
-    log "Using data in" $old_data_dir "to perform the rollback"
+    log "Using data in" $old_ece_deploy_data_dir "to perform the rollback"
   fi
 
-  local package_version_file=$data_dir/${roll_back_to_version}/new/vosa-conf-${HOSTNAME}.version
+  local package_version_file=$ece_deploy_data_dir/${roll_back_to_version}/new/vosa-conf-${HOSTNAME}.version
   if [ -e $package_version_file ]; then
     local deb_file=$ece_deploy_download_dir/vosa-conf-$HOSTNAME-$(cat $package_version_file).deb
     if [ -e $deb_file ]; then
@@ -371,7 +326,7 @@ function roll_back_everything_to_version() {
   fi
 
   for el in $engine_instance_list; do
-    file=$data_dir/${roll_back_to_version}/new/${el}.state
+    file=$ece_deploy_data_dir/${roll_back_to_version}/new/${el}.state
     if [ ! -e $file ]; then
       continue
     fi
@@ -383,8 +338,24 @@ function roll_back_everything_to_version() {
     deploy_ear
   done
 
-
   print_and_log "You have now rolled back to deployment ${roll_back_to_version}"
+}
+
+function prepare_rollback() {
+  print_and_log "Making it possible to roll back to $deployment_id ..."
+  make_dir $ece_deploy_data_dir/$deployment_id/new
+  
+  for el in $engine_instance_list $search_instance_list; do
+    local file=/var/lib/escenic/${el}.state
+    if [ -e $file ]; then
+      cp /var/lib/escenic/${el}.state $ece_deploy_data_dir/$deployment_id/new/
+    fi
+  done
+  
+  dpkg -l vosa-conf-$HOSTNAME 2>/dev/null | \
+    grep vosa-conf-$HOSTNAME | \
+    awk '{ print $3 }' > \
+    $ece_deploy_data_dir/${deployment_id}/new/vosa-conf-${HOSTNAME}.version
 }
 
 assert_commands_available xmllint
@@ -393,16 +364,17 @@ verify_user_input
 
 if [ ${list_the_revious_deployments-0} -eq 0 ]; then
   generate_deployment_id
-  prepare_rollback
 fi
 
 if [ ${make_deployment-1} -eq 1 ]; then
   deploy_ear
   deploy_conf
-
+  
   if [ ${update_the_publication_resources-0} -eq 1 ]; then
     update_publication_resources $tomcat_base
   fi
+  
+  prepare_rollback
 fi
 
 if [ ${list_the_revious_deployments-0} -eq 1 ]; then
@@ -411,9 +383,8 @@ fi
 
 if [ ${roll_back-0} -eq 1 ]; then
   roll_back_everything_to_version
-  
+
   if [ ${update_the_publication_resources-0} -eq 1 ]; then
-    update_publication_resources $data_dir/${roll_back_to_version}/new
+    update_publication_resources $ece_deploy_data_dir/${roll_back_to_version}/new
   fi
 fi
-  
