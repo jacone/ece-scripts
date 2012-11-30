@@ -51,7 +51,17 @@ function deploy_ear() {
   if [ -n "$http_proxy" ]; then
     proxy_settings="http_proxy=$http_proxy"
   fi
-  
+
+  print_and_log "Noting the old deployment states for all instances ..."
+  for el in $engine_instance_list $search_instance_list; do
+    local old_dir=$ece_deploy_data_dir/$deployment_id/old
+    make_dir $old_dir
+    local file=/var/lib/escenic/${el}.state
+    if [ -e $file ]; then
+      run cp $file $old_dir
+    fi
+  done
+    
   for el in $engine_instance_list; do
     su - $ece_unix_user -c \
       "${proxy_settings} ece -i $el stop deploy clean start --uri $ear_uri"
@@ -177,9 +187,14 @@ function list_previous_deployments() {
     return
   fi
 
-  for el in $(find $ece_deploy_data_dir -maxdepth 1 -type d | sed "s#${ece_deploy_data_dir}##g" | sort -nr | head -20); do
+  for el in $(find $ece_deploy_data_dir -maxdepth 1 -type d | \
+    sed "s#${ece_deploy_data_dir}##g" | \
+    sort -nr | \
+    head -20); do
     local id=$(basename $el)
-    echo "   - Deployment" ${id} "was made @" $(date --date="@$(echo ${id} | cut -d'-' -f2)")
+    echo "   - Deployment" ${id} \
+      "was made @" \
+      $(date --date="@$(echo ${id} | cut -d'-' -f2)")
   done
 }
 
