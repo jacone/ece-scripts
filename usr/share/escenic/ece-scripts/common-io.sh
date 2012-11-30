@@ -111,8 +111,6 @@ function download_uri_target_to_dir() {
   else
     file=$uri
   fi
-
-  echo $file
 }
 
 ## Will verify that the archive passed to the function is ok. If it's

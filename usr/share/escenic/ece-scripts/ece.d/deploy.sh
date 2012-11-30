@@ -49,7 +49,8 @@ function deploy() {
 
     # wget_auth is needed for download_uri_target_to_dir
     wget_auth=$wget_builder_auth
-    ear=$(download_uri_target_to_dir $file $cache_dir)
+    download_uri_target_to_dir $file $cache_dir
+    ear=$cache_dir/$(basename $file)
     
     if [ ! -e "$ear" ]; then
       print_and_log "The EAR $ear_uri specified in $file could" \

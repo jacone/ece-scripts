@@ -567,11 +567,10 @@ function log4j_download_the_tomcat_juli_libraries_and_copy_these_to_cl() {
   local libraries="tomcat-juli-adapters.jar tomcat-juli.jar"
   local tomcat_base_uri=$(dirname $(get_tomcat_download_url))
   for el in $libraries; do
-    local file=$(
-      download_uri_target_to_dir \
-        $tomcat_base_uri/extras/$el \
-        $download_dir
-    )
+    download_uri_target_to_dir \
+      $tomcat_base_uri/extras/$el \
+      $download_dir
+    local file=$download_dir/$(basename $el)
   done
 
   run cp $download_dir/tomcat-juli-adapters.jar $tomcat_home/lib/

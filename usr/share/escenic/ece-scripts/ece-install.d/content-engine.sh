@@ -280,11 +280,10 @@ EOF
     
     wget_auth=$wget_builder_auth
     for el in ${fai_publication_war_uri_list}; do
-      local download_file=$(
-        download_uri_target_to_dir \
-          $el \
-          $escenic_root_dir/assemblytool/publications
-      )
+      download_uri_target_to_dir \
+        $el \
+        $escenic_root_dir/assemblytool/publications
+      local download_file=$escenic_root_dir/assemblytool/publications/$(basename $el)
       
       if [ ! -e $(basename $el) ]; then
         print_and_log "Failed to get user publication $el." \
@@ -325,11 +324,11 @@ function set_up_basic_nursery_configuration() {
     wget_auth=$wget_builder_auth
     
     local a_tmp_dir=$(mktemp -d)
-    local file=$(
-      download_uri_target_to_dir \
-        $ece_instance_conf_archive \
-        $a_tmp_dir
-    )
+    download_uri_target_to_dir \
+      $ece_instance_conf_archive \
+      $a_tmp_dir
+    local file=$a_tmp_dir/$(basename $ece_instance_conf_archive)
+
     run cd $a_tmp_dir
     extract_archive $file
     
