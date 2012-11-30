@@ -21,6 +21,7 @@ function bootstrap_thyself() {
   local common_libraries="
     common-bashing.sh
     common-io.sh
+    common-os.sh
   "
 
   for el in $common_libraries; do
@@ -168,7 +169,7 @@ function verify_user_input() {
 }
 
 function list_previous_deployments() {
-  if [ ${list_the_revious_deployments-0} -eq 0 ]; then
+  if [ ! -d $data_dir ]; then
     return
   fi
   
@@ -230,7 +231,7 @@ function prepare_rollback() {
 
     # get a hold of the current vosa-conf package, first all packages
     # to detect if we've got packages intended for other hosts.
-    dpkg -l "vosa-conf-*" | tail -1 2>/dev/null\
+    dpkg -l "vosa-conf-*" 2>/dev/null | tail -1\
       > $dir/vosa-conf-package.list
     dpkg -l vosa-conf-$HOSTNAME 2>/dev/null | tail -1 | awk '{print $3;}' \
       > $dir/vosa-conf-${HOSTNAME}.version
@@ -250,40 +251,54 @@ function looks_like_xml() {
 
 ## app server port
 function get_publication_list() {
-  curl -s  http://localhost:${1}/escenic-admin/pages/publication/list.jsp | \
+  curl --silent \
+    --connect-timeout 30 \
+    http://localhost:${1}/escenic-admin/pages/publication/list.jsp | \
     grep '/escenic-admin/pages/publication/view.jsp' | \
     sed 's/.*name=\(.*\)".*/\1/g'
 }
-  
+
+
+## $1 :: base dir of the new publication resource to apply to the
+## running instance. If this base dir is the $tomcat_base from the
+## ece-<instance>.conf, the function will figure out the path to the
+## publication resources inside the exploded publication specific
+## webapps directories by itself.
 function update_publication_resources() {
-  if [ ${update_the_publication_resources-0} -eq 0 ]; then
+  if [ ! -d $1 ]; then
     return
   fi
-
-  print_and_log "Updating publication resources ..."
+  
   for el in $engine_instance_list; do
     source /etc/escenic/ece-${el}.conf
     local publication_list=$(get_publication_list ${appserver_port})
 
     for publication in $publication_list; do
-      local publication_resources_dir=$tomcat_base/webapps-${publication}/${publication}/META-INF/escenic/publication-resources 
-      if [ ! -e $publication_resources_dir ]; then
+      print_and_log "Updating resources for publication" $publication "..."
+      
+      if [[ "$1" == "$tomcat_base" ]]; then
+        local publication_resources_dir=$tomcat_base/webapps-${publication}/${publication}/META-INF/escenic/publication-resources
+      else
+        local publication_resources_dir=${1}/${publication}
+      fi
+      
+      if [ ! -d $publication_resources_dir ]; then
         continue
       fi
       
       (
         cd $publication_resources_dir
         for ele in $(find -type f | sed 's#^./##g'); do
-          dir=$data_dir/$deployment_id/new/$publication/$(dirname $ele)
-          make_dir $dir
+          new_dir=$data_dir/$deployment_id/new/$publication/$(dirname $ele)
+          make_dir $new_dir
           
           old_file=$data_dir/$deployment_id/old/$publication/${ele}
           
           if [ $(looks_like_xml $ele) -eq 1 ]; then
-            file=$dir/$(basename $ele)
+            file=$new_dir/$(basename $ele)
             xmllint --format $ele > $file
           else
-            file=$dir/$(basename $ele)
+            file=$new_dir/$(basename $ele)
             cp $ele $dir/$(basename $ele)
           fi
 
@@ -291,11 +306,12 @@ function update_publication_resources() {
             old_file=$(mktemp)
           fi
 
-          local number_of_lines_changed=$(diff \
-            <(cat $old_file | grep -v '^$') \
-            <(cat $file | grep -v '^$') | \
-            egrep '<|>' | \
-            wc -l
+          local number_of_lines_changed=$(
+            diff \
+              <(cat $old_file | grep -v '^$') \
+              <(cat $file | grep -v '^$') | \
+              egrep '<|>' | \
+              wc -l
           )
           if [ ${number_of_lines_changed} -lt 1 ]; then
             continue
@@ -304,8 +320,8 @@ function update_publication_resources() {
           print_and_log "Applying" \
             $number_of_lines_changed \
             "changes to" $ele \
-            "full diff can be found here: $dir/$(basename $ele).diff"
-          diff $old_file $file > $dir/$(basename $ele).diff
+            "full diff can be found here: $new_dir/$(basename $ele).diff"
+          diff $old_file $file > $new_dir/$(basename $ele).diff
 
           run curl --silent \
             -T $ele \
@@ -322,10 +338,6 @@ function generate_deployment_id() {
 }
 
 function roll_back_everything_to_version() {
-  if [ ${roll_back-0} -eq 0 ]; then
-    return
-  fi
-  
   print_and_log "Rolling back to" \
     ${roll_back_to_version} \
     "from" $(date --date @${roll_back_to_version}) \
@@ -358,28 +370,6 @@ function roll_back_everything_to_version() {
       "you must get a hold of the latest/approriate one yourself."
   fi
 
-  print_and_log "Rolling back publication resources ..."
-  for el in $engine_instance_list; do
-    source /etc/escenic/ece-${el}.conf
-    for publication in $(get_publication_list ${appserver_port}); do
-      dir=$data_dir/${roll_back_to_version}/old/${publication}
-      if [ ! -d $dir ]; then
-        continue
-      fi
-      
-      (
-        run cd $dir
-        for ele in $(find -type f | sed 's#^./##g'); do
-          print_and_log "Rolling back publication resource ${ele} ..."
-          run curl \
-            --silent \
-            -T $ele \
-            http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/$ele
-        done
-      )
-    done
-  done
-
   for el in $engine_instance_list; do
     file=$data_dir/${roll_back_to_version}/old/${el}.state
     if [ ! -e $file ]; then
@@ -397,41 +387,34 @@ function roll_back_everything_to_version() {
   print_and_log "You have now rolled back to deployment ${roll_back_to_version}"
 }
 
-function check_pre_requisites() {
-  local required_command_list="
-    xmllint
-  "
-
-  local some_missing=0
-  
-  for el in $required_command_list; do
-    which $el > /dev/null 2>/dev/null
-    if [ $? -gt 0 ]; then
-      print_and_log "$(basename $0) needs the command $el to be installed"
-      some_missing=1
-    fi
-  done
-
-  if [ $some_missing -eq 1 ]; then
-    exit 1
-  fi
-}
-
 unset http_proxy
-check_pre_requisites
+assert_commands_available xmllint
 read_user_input "$@"
 verify_user_input
-generate_deployment_id
 
 if [ ${list_the_revious_deployments-0} -eq 0 ]; then
+  generate_deployment_id
   prepare_rollback
 fi
 
 if [ ${make_deployment-1} -eq 1 ]; then
   deploy_ear
   deploy_conf
+
+  if [ ${update_the_publication_resources-0} -eq 1 ]; then
+    update_publication_resources $tomcat_base
+  fi
 fi
 
-update_publication_resources
-list_previous_deployments
-roll_back_everything_to_version
+if [ ${list_the_revious_deployments-0} -eq 1 ]; then
+  list_previous_deployments
+fi
+
+if [ ${roll_back-0} -eq 1 ]; then
+  roll_back_everything_to_version
+  
+  if [ ${update_the_publication_resources-0} -eq 1 ]; then
+    update_publication_resources $data_dir/${roll_back_to_version}/new
+  fi
+fi
+  
