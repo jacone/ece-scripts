@@ -83,6 +83,13 @@ function deploy_ear() {
   done
 }
 
+function start_all_content_engine_instances() {
+  for el in $engine_instance_list; do
+    su - $ece_unix_user -c \
+      "${proxy_settings} ece -i $el status restart"
+  done
+}  
+
 function set_builder_user_and_password() {
   run source /etc/escenic/ece.conf
   for el in $engine_instance_list; do
@@ -251,7 +258,13 @@ function update_publication_resources() {
 
   for el in $engine_instance_list; do
     source /etc/escenic/ece-${el}.conf
+    
     local publication_list=$(get_publication_list ${appserver_port})
+    if [ -z "${publication_list}" ]; then
+      print_and_log "$el doesn't have any publications" \
+        "so there's no publication resources to update ;-)"
+      continue
+    fi
 
     for publication in $publication_list; do
       print_and_log "Updating resources for publication" $publication "..."
@@ -366,21 +379,52 @@ function roll_back_everything_to_version() {
   print_and_log "You have now rolled back to deployment ${roll_back_to_version}"
 }
 
-function prepare_rollback() {
-  print_and_log "Making it possible to roll back to $deployment_id ..."
-  make_dir $ece_deploy_data_dir/$deployment_id/new
+## $1 :: dir, can be the patht to the new or old directory of this
+## deployment
+function remember_state() {
+  make_dir $1
   
   for el in $engine_instance_list $search_instance_list; do
     local file=/var/lib/escenic/${el}.state
     if [ -e $file ]; then
-      cp /var/lib/escenic/${el}.state $ece_deploy_data_dir/$deployment_id/new/
+      cp /var/lib/escenic/${el}.state $1/
     fi
   done
   
   dpkg -l vosa-conf-$HOSTNAME 2>/dev/null | \
     grep vosa-conf-$HOSTNAME | \
     awk '{ print $3 }' > \
-    $ece_deploy_data_dir/${deployment_id}/new/vosa-conf-${HOSTNAME}.version
+    $1/vosa-conf-${HOSTNAME}.version
+}
+
+function print_summary() {
+  print_and_log "Finished @ $(date)"
+  print_and_log "A full summary of the changes can be found in" \
+    $ece_deploy_data_dir/${deployment_id} "Here's a short summary:"
+  diff -r $ece_deploy_data_dir/${deployment_id}/old \
+    $ece_deploy_data_dir/${deployment_id}/new
+}
+
+function crawl_a_wee_bit() {
+  for el in $engine_instance_list; do
+    source /etc/escenic/ece-${el}.conf
+    local file=$tomcat_base/conf/server.xml
+    local virtual_hosts=$(
+      xml_grep \
+        --nowrap \
+        --text \
+        --cond 'Server/Service/Engine/Host/Alias' \
+        $file
+    )
+
+    for ele in $virtual_hosts; do
+      print_and_log "Crawling $ele ..."
+      echo wget \
+        --page-requisites \
+        --delete-after \
+        --header "Host: $ele" http://localhost:${appserver_port}/
+    done
+  done
 }
 
 assert_commands_available xmllint
@@ -388,18 +432,23 @@ read_user_input "$@"
 verify_user_input
 
 if [ ${list_the_revious_deployments-0} -eq 0 ]; then
+  print_and_log "Started @ $(date)"
   generate_deployment_id
 fi
 
 if [ ${make_deployment-1} -eq 1 ]; then
+  remember_state $ece_deploy_data_dir/$deployment_id/old
+
   deploy_ear
   deploy_conf
   
   if [ ${update_the_publication_resources-0} -eq 1 ]; then
     update_publication_resources $tomcat_base
   fi
-  
-  prepare_rollback
+
+  start_all_content_engine_instances
+  remember_state $ece_deploy_data_dir/$deployment_id/new
+  crawl_a_wee_bit
 fi
 
 if [ ${list_the_revious_deployments-0} -eq 1 ]; then
@@ -412,4 +461,8 @@ if [ ${roll_back-0} -eq 1 ]; then
   if [ ${update_the_publication_resources-0} -eq 1 ]; then
     update_publication_resources $ece_deploy_data_dir/${roll_back_to_version}/new
   fi
+fi
+
+if [ ${list_the_revious_deployments-0} -eq 0 ]; then
+  print_summary
 fi
