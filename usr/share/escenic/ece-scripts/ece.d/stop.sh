@@ -19,7 +19,7 @@ function stop_type() {
       fi
     fi
 
-    for i in {0..5}; do
+    for i in {0..15}; do
       set_type_pid
       
       if [ -n "$type_pid" ]; then
