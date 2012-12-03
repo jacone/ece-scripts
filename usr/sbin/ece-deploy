@@ -46,19 +46,29 @@ bootstrap_thyself
 log=/var/log/escenic/$(basename $0).log
 run source /etc/default/ece
 
+function get_old_dir() {
+  local old_dir=$ece_deploy_data_dir/$deployment_id/old
+  make_dir $old_dir
+  echo $old_dir
+}
+
+function get_new_dir() {
+  local new_dir=$ece_deploy_data_dir/$deployment_id/new
+  make_dir $new_dir
+  echo $new_dir
+}
+
 function deploy_ear() {
   local proxy_setings=""
   if [ -n "$http_proxy" ]; then
     proxy_settings="http_proxy=$http_proxy"
   fi
 
-  print_and_log "Noting the old deployment states for all instances ..."
+  print_and_log "Remembering the old deployment states for all instances ..."
   for el in $engine_instance_list $search_instance_list; do
-    local old_dir=$ece_deploy_data_dir/$deployment_id/old
-    make_dir $old_dir
     local file=/var/lib/escenic/${el}.state
     if [ -e $file ]; then
-      run cp $file $old_dir
+      run cp $file $(get_old_dir)
     fi
   done
     
