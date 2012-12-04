@@ -1,6 +1,6 @@
 # ece-install module for installing the memory cache
 
-memcached_java_lib_url=http://img.whalin.com/memcached/jdk5/log4j/java_memcached-release_2.0.1.tar.gz
+memcached_java_lib_url=https://github.com/downloads/gwhalin/Memcached-Java-Client/java_memcached-release_2.5.3.jar
 
 function install_memory_cache()
 {
@@ -12,26 +12,16 @@ function install_memory_cache()
   fi
   
   assert_commands_available memcached
-  
-  run cd $download_dir
-  run wget $wget_opts $memcached_java_lib_url
 
-  local tmp_dir=$(mktemp -d)
-  run cd $tmp_dir
-  run tar xzf $download_dir/$(basename $memcached_java_lib_url)
-  local name=$(get_base_dir_from_bundle $memcached_java_lib_url)
+  print_and_log "Downloading the memcached java library ..."
+  download_uri_target_to_dir $memcached_java_lib_url $download_dir
+
   make_dir ${escenic_root_dir}/assemblytool/lib
-  run cp $name/$name.jar ${escenic_root_dir}/assemblytool/lib
-  run rm -rf $tmp_dir
-  run cd ~/
-  
+  run cp $(basename $memcached_java_lib_url) ${escenic_root_dir}/assemblytool/lib
   memcached_set_up_common_nursery
 
   # ece deploy will set up the necessary in-publication Nursery
   # configuration, if needed.
-  
-  # TODO inform the user that he/she might want to do this in the
-  # publication tree as well.
 }
 
 function memcached_set_up_common_nursery() {
