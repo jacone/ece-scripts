@@ -75,6 +75,9 @@ function deploy_ear() {
   for el in $engine_instance_list; do
     su - $ece_unix_user -c \
       "${proxy_settings} ece -i $el stop deploy clean start --uri $ear_uri"
+    # asking for the versions to make sure the ECEs are
+    # bootstrapped. It's also nice user feedback to see which versions
+    # are deployed/upgraded.
   done
   for el in $search_instance_list; do
     su - $ece_unix_user -c \
@@ -86,7 +89,7 @@ function deploy_ear() {
 function start_all_content_engine_instances() {
   for el in $engine_instance_list; do
     su - $ece_unix_user -c \
-      "${proxy_settings} ece -i $el status restart"
+      "${proxy_settings} ece -i $el restart"
   done
 }  
 
@@ -149,8 +152,10 @@ function read_user_input() {
 
   for el in "$@"; do
     if [[ $el == "--ear" ]]; then
+      deploy_an_ear_file=1
       next_is_ear_uri=1
     elif [[ $el == "--conf" ]]; then
+      deploy_a_conf_file=1
       next_is_conf_uri=1
     elif [[ $el == "--rollback" ]]; then
       roll_back=1
@@ -183,15 +188,16 @@ function verify_user_input() {
     fi
   elif [ ${list_the_revious_deployments-0} -eq 1 ]; then
     nop=foo
-  else
-    if [ -z "$conf_package_uri" ]; then
-      print "You must specify the conf package with --conf :-("
-      errors=1
-    fi
-    if [ -z "$ear_uri" ]; then
-      print "You must specify the URI of the EAR file with --ear :-("
-      errors=1
-    fi
+  fi
+  
+  if [[ ${deploy_an_ear_file-0} -eq 1 && -z "${ear_uri}" ]]; then
+    print "You must specify the URI of the EAR file with --ear :-("
+    errors=1
+  fi
+  
+  if [[ ${deploy_a_conf_file-0} -eq 1 && -z "$conf_package_uri" ]]; then
+    print "You must specify the conf package with --conf :-("
+    errors=1
   fi
 
   if [ $errors -eq 1 ]; then
@@ -239,8 +245,7 @@ function looks_like_xml() {
 ## app server port
 function get_publication_list() {
   curl --silent \
-    --connect-timeout 30 \
-    http://localhost:${1}/escenic-admin/pages/publication/list.jsp | \
+    http://localhost:8080/escenic-admin/pages/publication/list.jsp | \
     grep '/escenic-admin/pages/publication/view.jsp' | \
     sed 's/.*name=\(.*\)".*/\1/g'
 }
@@ -258,8 +263,21 @@ function update_publication_resources() {
 
   for el in $engine_instance_list; do
     source /etc/escenic/ece-${el}.conf
-    
-    local publication_list=$(get_publication_list ${appserver_port})
+
+    print_and_log "Getting the publication list on $el ..."
+    for i in {0..5}; do
+      local publication_list=$(get_publication_list ${appserver_port})
+      
+      if [ -n "${publication_list}" ]; then
+        break
+      fi
+      
+      # if we haven't gotten any content from the local ECE (yet), it
+      # might be because it hasn't come up yet (slow app server),
+      # hence we sleep for a wee while and try again.
+      sleep 3
+    done
+
     if [ -z "${publication_list}" ]; then
       print_and_log "$el doesn't have any publications" \
         "so there's no publication resources to update ;-)"
@@ -419,7 +437,8 @@ function crawl_a_wee_bit() {
 
     for ele in $virtual_hosts; do
       print_and_log "Crawling $ele ..."
-      echo wget \
+      wget \
+        --quiet \
         --page-requisites \
         --delete-after \
         --header "Host: $ele" http://localhost:${appserver_port}/
@@ -440,10 +459,13 @@ if [ ${make_deployment-1} -eq 1 ]; then
   remember_state $ece_deploy_data_dir/$deployment_id/old
 
   deploy_ear
-  deploy_conf
+  if [ -n "$conf_uri" ]; then
+    deploy_conf
+  fi
   
   if [ ${update_the_publication_resources-0} -eq 1 ]; then
-    update_publication_resources $tomcat_base
+    # not active until gets stable
+    echo update_publication_resources $tomcat_base
   fi
 
   start_all_content_engine_instances
