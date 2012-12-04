@@ -102,6 +102,7 @@ function download_uri_target_to_dir() {
   local file=""
   
   if [[ $uri == "http://"* || $uri == "https://"* ]]; then
+    log "Downloading" $uri "to" $target_dir "..." 
     run cd $target_dir
     run wget \
       $wget_opts \
