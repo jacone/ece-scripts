@@ -427,7 +427,7 @@ function crawl_a_wee_bit() {
   done
 }
 
-assert_commands_available xmllint
+assert_commands_available xmllint xml_grep
 read_user_input "$@"
 verify_user_input
 
