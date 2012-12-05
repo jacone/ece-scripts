@@ -1,3 +1,23 @@
+## $1 :: full path to the WAR file
+function create_publication_prepare_war_file() {
+  if [ -n "${fai_publication_war_remove_file_list}" ]; then
+    local the_tmp_dir=$(mktemp -d)
+    (
+      cd $the_tmp_dir
+      run jar xf $1
+
+      for el in $fai_publication_war_remove_file_list; do
+        if [ -e $el ]; then
+          print_and_log "Removing" $el "from" $(basename $1) "..."
+          run rm $el
+        fi
+      done
+
+      run jar cf $1 .
+    )
+  fi
+}
+
 function create_publication() {
   print_and_log "Preparing publication creation ..."
 
@@ -66,7 +86,8 @@ function create_the_publication() {
   
   print_and_log "Creating a publication with name" $publication_name \
     "using the publication resources from" $publication_war
-  
+
+  create_publication_prepare_war_file $publication_war
   local the_instance=${fai_publication_use_instance-$default_ece_intance_name}
   ensure_that_instance_is_running $the_instance
   create_publication_in_db $publication_name $publication_war $the_instance
