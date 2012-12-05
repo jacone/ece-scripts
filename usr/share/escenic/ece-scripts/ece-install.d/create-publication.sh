@@ -88,7 +88,7 @@ function create_the_publication() {
   local publication_war=$2
   
   print_and_log "Creating a publication with name" $publication_name \
-    "using the publication resources from" $publication_war
+    "using the publication resources from" $(basename $publication_war)
 
   create_publication_prepare_war_file $publication_war
   local the_instance=${fai_publication_use_instance-$default_ece_intance_name}
@@ -113,7 +113,7 @@ function add_publication_to_deployment_lists() {
     run source $file
     
     for ele in $deploy_webapp_white_list; do
-      if [[ "$el" == "$1" ]]; then
+      if [[ "$ele" == "$1" ]]; then
         please_add=0
       fi
     done
