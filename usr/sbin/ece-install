@@ -366,7 +366,7 @@ function print_status_and_next_steps()
         $install_profile_number -ne $PROFILE_CACHE_SERVER -a \
         $install_profile_number -ne $PROFILE_WIDGET_FRAMEWORK ]; then
         add_next_step "Install info: "\ "/usr/share/doc/escenic/ece-install-guide.txt"
-        add_next_step "Guide books: http://documentation.vizrt.com/ece-5.3.html"
+        add_next_step "Guide books: http://documentation.vizrt.com/ece-5.5.html"
     fi
 
     print_next_step_list

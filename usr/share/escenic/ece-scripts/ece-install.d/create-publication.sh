@@ -1,3 +1,6 @@
+## If the user has fai_publication_war_remove_file_list set, these
+## files will, if present, be removed from the WAR file.
+##
 ## $1 :: full path to the WAR file
 function create_publication_prepare_war_file() {
   if [ -n "${fai_publication_war_remove_file_list}" ]; then
