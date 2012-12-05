@@ -35,3 +35,6 @@ default_app_server_redirect=8443
 
 # cache server constants
 default_cache_port=80
+
+# ece constants
+default_ece_intance_name=engine1
