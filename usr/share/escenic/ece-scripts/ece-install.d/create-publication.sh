@@ -1,4 +1,6 @@
 function create_publication() {
+  print_and_log "Getting ready to create a new publication ..."
+  
   if [ ! -e $escenic_root_dir/engine -o \
     ! -e $escenic_root_dir/assemblytool ]; then
     print_and_log "Please install ECE and an assembly environment before" \
@@ -6,7 +8,6 @@ function create_publication() {
     remove_pid_and_exit_in_error
   fi
 
-  print_and_log "Getting ready to create a new publication ..."
   create_publication_definition_and_war
 
   instance_list=$(get_instance_list)
