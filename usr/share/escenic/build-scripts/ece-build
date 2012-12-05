@@ -419,6 +419,11 @@ function publish_ear
   resulting_ear=$customer-$release_label-rev$revision-$build_date.ear
   if [ -e $assemblytool_root_dir/dist/engine.ear ]; then 
     run cp $assemblytool_root_dir/dist/engine.ear $release_dir/$resulting_ear
+    
+    # remove old style latest link
+    run rm -f $release_dir/latest
+    
+    # add new latest.ear link
     run ln -fs $release_dir/$resulting_ear $release_dir/latest.ear
   else
     print_and_log "I'm done, but the .ear is still missing, exiting!"
