@@ -444,8 +444,6 @@ function read_user_input()
 "$PROFILE_RMI_HUB - RMI hub"
 "$PROFILE_SEARCH_SERVER - Search server (Solr + indexer-webapp)"
 "$PROFILE_WIDGET_FRAMEWORK - Install Widget Framework."
-"$PROFILE_CREATE_PUBLICATION - Create a new publication"\
-" based on WF if available, ECE/clean-demo if not"
 "$PROFILE_MONITORING_SERVER - A monitoring server (web server +"\
 " Munin gatherer)"
 "$PROFILE_RESTORE_FROM_BACKUP - Restore from backup"\
