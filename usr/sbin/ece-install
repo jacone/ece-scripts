@@ -679,7 +679,7 @@ EOF
   fi
 }
 
-# Will update /etc/default/instance with the type instances which are
+# Will update /etc/default/ece with the type instances which are
 # installed on the given host. This method should work for engine,
 # search and analysis instances.
 function update_type_instances_to_start_up()
@@ -714,7 +714,7 @@ function install_presentation_server()
 {
     print_and_log "Installing a presentation server on $HOSTNAME."
     type=engine
-    install_ece_instance "engine1" $PROFILE_PRESENTATION_SERVER
+    install_ece_instance $default_ece_intance_name $PROFILE_PRESENTATION_SERVER
 }
 
 # If the system is installed using the recommended paths, the method
@@ -778,7 +778,7 @@ function install_all_in_one_environment()
     print_and_log "Installing an all-in-one environment on $HOSTNAME ..."
     type=engine
     install_database_server
-    install_ece_instance "dev1" 0
+    install_ece_instance $default_ece_intance_name 0
     install_cache_server
     install_web_server 2
     install_munin_gatherer
