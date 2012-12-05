@@ -1,15 +1,42 @@
 function create_publication() {
-  print_and_log "Getting ready to create a new publication ..."
+  print_and_log "Preparing publication creation ..."
 
   if [ ${fai_enabled-0} -eq 1 ]; then
-    local publication_name=${fai_publication_name-mypub}
-
     # figure out which WAR to use for the publication creation
     local publication_war=""
     if [ -n "${fai_publication_ear}" ]; then
-      print_and_log "Will try to find" ${fai_publication_name}.war \
-        "inside" $fai_publication_ear 
+      print_and_log "I will create all publications in" \
+        $fai_publication_ear "using the the domain mapping list ..."
+      
+      ensure_variable_is_set fai_publication_domain_mapping_list
+      local the_tmp_dir=$(mktemp -d)
+      (
+        run cd $the_tmp_dir
+        run jar xf $fai_publication_ear
+      )
+
+      for el in ${fai_publication_domain_mapping_list}; do
+        local old_ifs=$IFS
+        # the entries in the fai_publication_domain_mapping_list are on
+        # the form: <publication[,pub.war]>#<domain>[#<alias1>[,<alias2>]]
+        IFS='#' read publication domain aliases <<< "$el"
+        IFS=',' read publication_name publication_war <<< "$publication"
+        IFS=$old_ifs
+
+        # this is the default case were the WAR is called the same as
+        # the publication name with the .war suffix.
+        if [ -z "${publication_war}" ]; then
+          publication_war=${publication_name}.war
+        fi
+        
+        create_the_publication $publication_name $the_tmp_dir/$publication_war
+      done
+
+      log "Cleaing up $the_tmp_dir ..."
+      run rm -rf $the_tmp_dir
     else
+      local publication_name=${fai_publication_name-mypub}
+      
       if [ -z "${fai_publication_war}" ]; then
         # if the user hasn't set the fai_publication_war, see if the
         # demo-clean.war is available on the system.
@@ -25,19 +52,31 @@ function create_publication() {
       else
         publication_war=$fai_publication_war
       fi
+
+      create_the_publication $publication_name $publication_war
     fi
-
-    local the_instance=${fai_publication_use_instance-$default_ece_intance_name}
-    ensure_that_instance_is_running $the_instance
-    create_publication_in_db $publication_name $publication_war $the_instance
-    add_publication_to_deployment_lists $(basename $publication_war .war)
-
-    add_next_step "A publication with name" $publication_name \
-      "has been created using the publication resources in" \
-      $publication_war "The WAR has been added to the deployment" \
-      "white list, so that it will be included next time you do" \
-      "ece -i ${the_instance} deploy"
   fi
+}
+
+## $1 :: publication name
+## $2 :: publication war
+function create_the_publication() {
+  local publication_name=$1
+  local publication_war=$2
+  
+  print_and_log "Creating a publication with name" $publication_name \
+    "using the publication resources from" $publication_war
+  
+  local the_instance=${fai_publication_use_instance-$default_ece_intance_name}
+  ensure_that_instance_is_running $the_instance
+  create_publication_in_db $publication_name $publication_war $the_instance
+  add_publication_to_deployment_lists $(basename $publication_war .war)
+
+  add_next_step "A publication with name" $publication_name \
+    "has been created using the publication resources in" \
+    $publication_war "The WAR has been added to the deployment" \
+    "white list, so that it will be included next time you do" \
+    "ece -i ${the_instance} deploy"
 }
 
 ## $1 : publication WAR name
