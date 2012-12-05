@@ -33,11 +33,12 @@ function create_publication() {
       
       ensure_variable_is_set fai_publication_domain_mapping_list
       local the_tmp_dir=$(mktemp -d)
+      download_uri_target_to_dir $fai_publication_ear $download_dir
       (
         run cd $the_tmp_dir
-        run jar xf $fai_publication_ear
+        run jar xf $download_dir/$(basename $fai_publication_ear)
       )
-
+      
       for el in ${fai_publication_domain_mapping_list}; do
         local old_ifs=$IFS
         # the entries in the fai_publication_domain_mapping_list are on
