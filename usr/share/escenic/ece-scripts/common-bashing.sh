@@ -123,7 +123,7 @@ function remove_pid_and_exit_in_error() {
 function exit_on_error() {
   local code=$?
   if [ ${code} -gt 0 ]; then
-    print_and_log "The command [${@}] run as user $USER $(red FAILED)" \
+    print_and_log "The command <${@}> run as user $USER $(red FAILED)" \
       "(the command exited with code ${code}), I'll exit now :-("
     print "See $log for further details."
     remove_file_if_exists $lock_file
