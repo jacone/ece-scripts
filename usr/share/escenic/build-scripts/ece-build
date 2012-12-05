@@ -513,7 +513,7 @@ function create_machine_conf_packages() {
     # copy common and machine specific files
     for el in common ${machine}; do
       if [[ -d $conf_dir/$el && \
-        $(find $conf_dir/$el -maxdepth 1 | wc -l) -gt 1 ]]; then
+        $(find $conf_dir/$el -maxdepth 1 | egrep -v ".git|.svn" | wc -l) -gt 1 ]]; then
         run cp -rf $conf_dir/$el/* $target_dir/
       fi
     done
