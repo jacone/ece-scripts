@@ -421,7 +421,9 @@ function publish_ear
     run cp $assemblytool_root_dir/dist/engine.ear $release_dir/$resulting_ear
     
     # remove old style latest link
-    run rm -f $release_dir/latest
+    if [ -e $release_dir/latest ]; then
+      run rm -f $release_dir/latest
+    fi
     
     # add new latest.ear link
     run ln -fs $release_dir/$resulting_ear $release_dir/latest.ear
