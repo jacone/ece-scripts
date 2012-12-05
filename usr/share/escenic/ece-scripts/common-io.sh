@@ -99,7 +99,7 @@ function make_ln() {
 function download_uri_target_to_dir() {
   local uri=$1
   local target_dir=$2
-  local file=""
+  make_dir $target_dir
   
   if [[ $uri == "http://"* || $uri == "https://"* ]]; then
     log "Downloading" $uri "to" $target_dir "..." 
@@ -110,12 +110,13 @@ function download_uri_target_to_dir() {
       --server-response \
       --output-document $(basename $uri) \
       $uri
-    file=$target_dir/$(basename $uri)
   elif [[ $uri == "file://"* ]]; then
       # length of file:// is 7
-    file=${file:7}
+    local file=${file:7}
+    run cp $file $target_dir
   else
-    file=$uri
+    local file=$uri
+    run cp $file $target_dir
   fi
 }
 
