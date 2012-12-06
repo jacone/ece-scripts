@@ -71,3 +71,18 @@ function get_app_base() {
 
   echo webapps-${war}
 }
+
+## Returns a list of publications on the local host
+## 
+## $1 :: app server port. Optional, default is 8080.
+function get_publication_list() {
+  if [ $(which curl | wc -l) -lt 1 ]; then
+    return ""
+  fi
+  
+  curl --silent \
+    --connect-timeout 20 \
+    http://localhost:${1-8080}/escenic-admin/pages/publication/list.jsp | \
+    grep '/escenic-admin/pages/publication/view.jsp' | \
+    sed 's/.*name=\(.*\)".*/\1/g'
+}
