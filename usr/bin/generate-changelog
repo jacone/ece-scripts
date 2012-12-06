@@ -1,0 +1,108 @@
+#! /usr/bin/env bash
+
+log=$HOME/.$(basename $0).log
+
+function bootstrap_thyself() {
+  # first, try to be nice, then check the standard location
+  local dir=$(dirname $0)/../share/escenic/ece-scripts
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
+
+  local common_libraries="
+    common-bashing.sh
+    common-io.sh
+  "
+
+  for el in $common_libraries; do
+    source $dir/$el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+}
+
+function read_user_settings() {
+  local file=$HOME/.$(basename $0).conf
+  run source $file
+}
+
+function get_header_from_jira() {
+  local body=$(curl -s https://${user}:${password}@${jira_host}/browse/${1})
+  echo "$body" | grep '<title>' | sed -e 's/<title>//g' -e 's/<\/title>//g'
+  echo "URL:" https://$jira_host}/browse/${1}
+}
+
+function get_to_revision() {
+  svn info | grep ^'Last Changed Rev' | awk '{ print $4 }'
+}
+
+function get_from_revision() {
+  echo ${from-PREV}
+}
+
+function get_user_input() {
+  local next_is_from=0
+  local next_is_to=0
+  local next_is_project=0
+  
+  for el in "$@"; do
+    if [[ "$el" == "-s" || "$el" == "--from" ]]; then
+      next_is_from=1
+    elif [[ "$el" == "-t" || "$el" == "--to" ]]; then
+      next_is_to=1
+    elif [[ "$el" == "-p" || "$el" == "--project" ]]; then
+      next_is_project=1
+    elif [[ "$el" == "-f" || "$el" == "--full" ]]; then
+      full_listing=1
+    elif [ ${next_is_from-0} -eq 1 ]; then
+      from=$el
+      next_is_from=0
+    elif [ ${next_is_to-0} -eq 1 ]; then
+      to=$el
+      next_is_to=0
+    elif [ ${next_is_project-0} -eq 1 ]; then
+      project_code=$el
+      next_is_project=0
+    fi
+  done
+}
+
+function get_commit_information_from_vcs() {
+  local suffix=-${project_code}-from-$(get_from_revision)-to-$(get_to_revision).diff
+  local tmp_diff=$(mktemp --suffix "${suffix}")
+  svn diff -r $(get_from_revision):$(get_to_revision) > $tmp_diff
+  exit_on_error "svn diff"
+  if [ ${full_listing-0} -eq 1 ]; then
+    cat $tmp_diff
+  else
+    echo "A full overview of all the changes can be viewed here:" $tmp_diff | fmt
+  fi
+}
+
+function get_related_issue_overview() {
+  local commit_log=$(svn log -r $(get_from_revision):$(get_to_revision))
+  echo "$commit_log" | \
+    grep ${project_code}-[0-9]* | \
+    sed "s#.*\(${project_code}-[0-9]*\).*#\1#g" | \
+    sort | \
+    uniq | while read f; do
+    get_header_from_jira $f
+  done
+}
+
+function sanity_check() {
+  if [ ! -e $(pwd)/.svn ]; then
+    print "This directory, $(pwd), " \
+      "does not contain a working version control checkout."
+    exit 1
+  fi
+}
+
+bootstrap_thyself
+read_user_settings
+get_user_input "$@"
+sanity_check
+get_related_issue_overview
+get_commit_information_from_vcs
