@@ -236,7 +236,7 @@ function set_up_hugin-node() {
 }
 
 function set_up_spore() {
-  mkdir -p $target_dir/usr/bin \
+  mkdir -p $target_dir/usr/{bin,sbin} \
            $target_dir/usr/share/doc/spore
 
   local dir=$(mktemp -d)
@@ -245,6 +245,7 @@ function set_up_spore() {
     wget $wget_opts https://github.com/vizrt/spore/archive/master.tar.gz 
     tar xzf master.tar.gz
     cp $dir/spore-master/bin/* $target_dir/usr/bin
+    cp $dir/spore-master/sbin/* $target_dir/usr/sbin
     cp $dir/spore-master/README.md $target_dir/usr/share/doc/spore
     cp -r $dir/spore-master/examples $target_dir/usr/share/doc/spore/examples
   )
