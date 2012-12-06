@@ -18,6 +18,7 @@ _ece_commands()
       kill
       list-instances
       list-logs
+      list-publications
       log
       outlog
       package
@@ -39,14 +40,6 @@ _ece_commands()
 
     # default completions is the list of commands
     completions=$commands" "$options
-
-    publications=""
-    dir=/opt/escenic/assemblytool/publications
-    if [ -r $dir ] ; then
-        for el in ${dir}/*.properties; do
-            publications=$(basename $el .properties)" "$publications
-        done
-    fi
 
     case "$prev" in
         backup)
@@ -71,7 +64,13 @@ _ece_commands()
             completions=$(ece -q list-instances)
             ;;
         -p|--publication)
-            completions=$publications
+            local file=/usr/share/escenic/ece-scripts/common-ece.sh
+            if [ -r $file ]; then
+              source $file
+              completions=$(get_publication_list)
+            else
+              completions=""
+            fi
             ;;
         -r|--publication-resource)
             completions=$resources
