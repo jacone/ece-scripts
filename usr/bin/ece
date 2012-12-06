@@ -195,6 +195,7 @@ function set_common_settings() {
 
     log4j_file_list="
       $log_dir/${HOSTNAME}-${instance}-messages
+      $log_dir/${instance}-messages
       $log_dir/messages
       $log_dir/Escenic-error.log
     "

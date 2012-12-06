@@ -1,5 +1,13 @@
 function get_gc_log() {
-  echo ${gc_log}
+  if [ -r $gc_log ]; then
+    echo ${gc_log}
+  fi
+}
+
+function get_deployment_log() {
+  if [ -r $log_dir/${instance}-deployment.log ]; then
+    echo $log_dir/${instance}-deployment.log
+  fi
 }
 
 function get_log4j_log() {
@@ -32,7 +40,7 @@ function tail_out_log() {
 function get_app_log() {
   local app_log=""
   if [ "$appserver" == "tomcat" ]; then
-    app_log=$tomcat_base/logs/localhost.`date +%F`.log
+    app_log=$log_dir/${instance}-tomcat
   elif [ "$appserver" == "resin" -a -e $resin_home/log/jvm-default.log ]; then
     app_log=$resin_home/log/jvm-default.log
   else
@@ -65,6 +73,7 @@ function show_all_log_paths() {
     print "Log4j log:  "$(get_log4j_log)
     print "GC log:  "$(get_gc_log)
     print "$(basename $0) script log: "$log
+    print "Deployment log:" $(get_deployment_log)
   else
     echo $(get_app_log)
     if [[ $appserver == "tomcat" ]]; then

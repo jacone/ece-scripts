@@ -48,14 +48,15 @@ md5_sum=${ear_md5_sum}
 deployed_date=${deployment_date}
 EOF
 
+  print_and_log "Deployment state file updated: $state_file"
+
   # update the deployment log too
   echo ${deployment_date} \
-    ${ear_used} \
-    $(get_version_from_ear_file ${ear_used}) \
+    $(basename ${ear_used}) \
     ${ear_md5_sum} \
-    > $(get_deployment_log_file)
+    >> $(get_deployment_log_file)
   
-  print_and_log "Deployment state file updated: $state_file"
+  print_and_log "Deployment log file updated:" $(get_deployment_log_file)
 }
 
 function deploy() {
