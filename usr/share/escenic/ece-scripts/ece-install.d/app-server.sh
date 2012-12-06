@@ -330,6 +330,12 @@ EOF
 
       local file=$tomcat_base/conf/server.xml
 
+      # We are using the WAR and not the publication as the base for
+      # the appBase and docBase variables here to make it possible for
+      # 'ece deploy' to figure out the same location for deploying the
+      # WARs. As 'ece deploy' doesn't have any concept of which
+      # publication the WARs belong to, we must use a scheme were it's
+      # the WAR file name which determines the webapp context.
       cat >> $file <<EOF
       <Host
         name="${domain}"
