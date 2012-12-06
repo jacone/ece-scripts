@@ -749,6 +749,12 @@ function get_escenic_admin_url() {
     echo ${url}
 }
 
+function show_all_publications() {
+  set_type_port
+  print "These are all the publications on ${instance}:"
+  get_publication_list ${port}
+}  
+
 init
 read_rc_file_if_present
 set_type_command_and_instance $@
@@ -780,6 +786,9 @@ for el in $command; do
             ;;
         list-logs)
             show_all_log_paths
+            ;;
+        list-publications)
+            show_all_publications
             ;;
         outlog)
             tail_out_log
