@@ -12,10 +12,10 @@ function start_type() {
     if [ -r $rmi_hub_conf ]; then
       export CLASSPATH=$rmi_hub_conf:$CLASSPATH
     else
-      print $rmi_hub_conf "must point to a valid Nursery configuration"
-      print "for the rmi-hub, you may copy the one found in"
-      print "$ece_home/contrib/rmi-hub/config."
-      print "Exiting :-("
+      print $rmi_hub_conf "must point to a valid Nursery configuration" \
+        "for the rmi-hub, you may copy the one found in" \
+        "$ece_home/contrib/rmi-hub/config." \
+        "Exiting :-("
       exit 1
     fi
     
@@ -31,7 +31,7 @@ function start_type() {
     
     echo $pid > $pid_file
     exit 0
-
+    
   elif [ "$type" == "search" ]; then
     # TODO trim & tun the default parameters for the search
     # instance.
@@ -39,9 +39,9 @@ function start_type() {
   elif [ "$type" == "engine" ]; then
     ensure_that_required_fields_are_set $engine_required_fields
     if [ ! -d "$ece_security_configuration_dir" ] ; then
-      print "ece_security_configuration_dir $ece_security_configuration_dir"
-      print "did not exist."
-      print "Exiting :-("
+      print "ece_security_configuration_dir $ece_security_configuration_dir" \
+        "did not exist." \
+        "Exiting :-("
       exit 1
     fi
   elif [ "$type" == "analysis" ]; then
@@ -56,16 +56,14 @@ function start_type() {
       # Tomcat respects JAVA_OPTS set in configure(), so no need to
       # set them here.
       if [ ! -x $tomcat_home/bin/catalina.sh ]; then
-        print "$tomcat_home/bin/catalina.sh was not executable"
-        print "unable to start tomcat"
+        print "$tomcat_home/bin/catalina.sh was not executable" \
+          "unable to start tomcat"
         exit 1
       fi
 
       export CATALINA_PID=$pid_file
       export CATALINA_OUT=$(get_catalina_out_file)
-      $tomcat_home/bin/catalina.sh start \
-        1>>$log \
-        2>>$log
+      run $tomcat_home/bin/catalina.sh start
       ;;
     oc4j)
       export OC4J_JVM_ARGS=$ece_args
@@ -112,7 +110,6 @@ function start_type() {
       print "No appserver is defined in $ece_conf"
       exit 1
   esac
-  
   
   exit_on_error $message
 }
