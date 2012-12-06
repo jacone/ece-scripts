@@ -4,6 +4,10 @@ function get_state_file() {
   echo $data_dir/${instance}.state
 }
 
+function get_deployment_log_file() {
+  echo $data_dir/${instance}-deployment.log
+}
+
 ## $1 : local EAR file
 function get_version_from_ear_file() {
   local version=$(basename $1 .ear | sed 's/^engine-//g')
@@ -18,7 +22,7 @@ function get_version_from_ear_file() {
 }
 
 ## $1 : local EAR file
-function update_deployment_state_file() {
+function update_deployment_state_and_log_files() {
   local state_file=$(get_state_file)
 
   if [ ! -w $(dirname $state_file) ]; then
@@ -27,17 +31,30 @@ function update_deployment_state_file() {
   fi
 
   if [ -n "${file}" ]; then
-    echo "ear_used=$file" > $state_file
+    ear_used=$file
   else
-    echo "ear_used=$1" > $state_file
+    ear_used=$1
   fi
-  
-  cat >> $state_file <<EOF
-version=$(get_version_from_ear_file $1)
-md5_sum=$(md5sum $1 | cut -d' ' -f1)
-deployed_date=$(date)
+
+  local deployment_date=$(date)
+  # we use $1 here as this is the locally downloaded EAR (if the
+  # deployment was done with --uri)
+  local ear_md5_sum=$(md5sum $1 | cut -d' ' -f1)
+
+  cat > $state_file <<EOF
+ear_used=$ear_used
+version=$(get_version_from_ear_file ${ear_used})
+md5_sum=${ear_md5_sum}
+deployed_date=${deployment_date}
 EOF
 
+  # update the deployment log too
+  echo ${deployment_date} \
+    ${ear_used} \
+    $(get_version_from_ear_file ${ear_used}) \
+    ${ear_md5_sum} \
+    > $(get_deployment_log_file)
+  
   print_and_log "Deployment state file updated: $state_file"
 }
 
@@ -168,7 +185,7 @@ function deploy() {
   esac
 
   run rm -rf ${dir}
-  update_deployment_state_file $ear
+  update_deployment_state_and_log_files $ear
 }
 
 ## $1 : dir of the webapp 
