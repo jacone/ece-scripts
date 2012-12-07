@@ -17,6 +17,19 @@ function ece_deploy_cancel_hook() {
   common_bashing_user_cancelled_hook
 }
 
+function create_pretty_printed_file_if_xml() {
+  if [ ! $1 ]; then
+    return
+  fi
+  if [ ! -e $1 ]; then
+    return
+  fi
+  
+  if [ $(looks_like_xml ${1}) -eq 1 ]; then
+    xmllint --format ${1} > ${1}.xml
+  fi
+}
+
 function bootstrap_thyself() {
   # first, try to be nice, then check the standard location
   local dir=$(dirname $0)/../share/escenic/ece-scripts
@@ -53,18 +66,6 @@ bootstrap_thyself
 log=/var/log/escenic/$(basename $0).log
 run source /etc/default/ece
 
-function get_old_dir() {
-  local old_dir=$ece_deploy_data_dir/$deployment_id/old
-  make_dir $old_dir
-  echo $old_dir
-}
-
-function get_new_dir() {
-  local new_dir=$ece_deploy_data_dir/$deployment_id/new
-  make_dir $new_dir
-  echo $new_dir
-}
-
 function deploy_ear() {
   local proxy_setings=""
   if [ -n "$http_proxy" ]; then
@@ -75,7 +76,7 @@ function deploy_ear() {
   for el in $engine_instance_list $search_instance_list; do
     local file=/var/lib/escenic/${el}.state
     if [ -e $file ]; then
-      run cp $file $(get_old_dir)
+      run cp $file $(get_publication_old_dir)
     fi
   done
     
@@ -261,6 +262,18 @@ function looks_like_xml() {
   fi
 }
 
+function get_deployment_dir() {
+  echo $ece_deploy_data_dir/$deployment_id
+}
+
+function get_publication_new_dir() {
+  echo $(get_deployment_dir)/new/$publication
+}
+
+function get_publication_old_dir() {
+  echo $(get_deployment_dir)/old/$publication
+}
+
 ## $1 :: base dir of the new publication resource to apply to the
 ## running instance. If this base dir is the $tomcat_base from the
 ## ece-<instance>.conf, the function will figure out the path to the
@@ -304,63 +317,79 @@ function update_publication_resources() {
     fi
 
     print_and_log "Updating resources for publication" $publication "..."
-    for ele in $(find $publication_resources_dir -type f | sed "s#${publication_resources_dir}/##g"); do
-      new_dir=$ece_deploy_data_dir/$deployment_id/new/$publication/$(dirname $ele)
-      make_dir $new_dir
-      old_file=$ece_deploy_data_dir/$deployment_id/old/$publication/${ele}
+    for publication_resource in $(find $publication_resources_dir -type f); do
+      local relative_resource=$(
+        echo $publication_resource | sed "s#${publication_resources_dir}/##g"
+      )
+
+      local new_file=$(get_publication_new_dir)/${relative_resource}
+      local old_file=$(get_publication_old_dir)/${relative_resource}
+      make_dir $(dirname $new_file) $(dirname $old_file)
+
+      # copy the new file to the deployment data directory
+      run cp $publication_resource $new_file
       
-      # when updating the resources as a part of a regular
-      # deployment (as opposed to a roll back) we must download the
-      # old/current version of the file.
+      # when updating the resources as a part of a regular deployment
+      # (as opposed to a roll back) we must download the old/current
+      # version of the file.
       if [ ! -e $old_file ]; then
-        make_dir $(dirname $old_file)
-        (
-          cd $(dirname $old_file)
-          wget \
-            --quiet \
-            --continue \
-            http://localhost:${appserver_port}/escenic-admin/publication-resources/$publication/${ele} \
-            2>/dev/null
-
-          if [ $(looks_like_xml $(basename ${ele})) -eq 1 ]; then
-            xmllint --format ${ele} > ${ele}.tmp
-            mv ${ele}.tmp ${ele}
-          fi
-        )
+        wget \
+          --quiet \
+          --continue \
+          --output-document $old_file \
+          http://localhost:${appserver_port}/escenic-admin/publication-resources/$publication/${relative_resource} \
+          2>/dev/null
       fi
+
+      create_pretty_printed_file_if_xml $old_file
+      create_pretty_printed_file_if_xml $new_file
+
       
-      if [ $(looks_like_xml $publication_resources_dir/$ele) -eq 1 ]; then
-        new_file=$new_dir/$(basename $ele)
-        xmllint --format $publication_resources_dir/$ele > $new_file
-      else
-        new_file=$new_dir/$(basename $ele)
-        cp $publication_resources_dir/$ele $new_dir/$(basename $ele)
+      local diff_from_file=$old_file
+      local diff_to_file=$new_file
+      
+      if [[ -e ${old_file}.xml && -e ${new_file}.xml ]]; then
+        diff_from_file=$old_file.xml
+        diff_to_file=$new_file.xml
       fi
 
+      # in case the running system doesn't have the publication
+      # resource from the the new EAR.
       if [ ! -e $old_file ]; then
         old_file=$(mktemp)
       fi
 
-      local number_of_lines_changed=$(
+      local the_diff=$(
         diff -w \
-          <(cat $old_file | grep -v '^$') \
-          <(cat $new_file | grep -v '^$') | \
-          egrep '<|>' | \
-          wc -l
+          <(cat ${diff_from_file} | grep -v '^$') \
+          <(cat ${diff_to_file} | grep -v '^$') | \
+          egrep '<|>'
       )
-      if [ ${number_of_lines_changed} -lt 1 ]; then
+      local number_of_lines_changed=$(echo "$the_diff" | wc -l)
+        
+      # add the diff to this variable and print it out in print_summary
+      if [ -n "$the_diff" ]; then
+        diff_list="${diff_list}Changes to ${relative_resource}:
+${the_diff}
+"
+      fi
+
+      # since we echo the string above, an empty string will be of one
+      # lines (as with wc -l), thus we test for -lt 2 here
+      if [ ${number_of_lines_changed} -lt 2 ]; then
         continue
       fi
 
+      local diff_file=$(dirname $new_file)/$(basename $relative_resource).diff
       print_and_log "Applying" \
         $number_of_lines_changed \
-        "changes to" $ele \
-        "full diff can be found here: $new_dir/$(basename $ele).diff"
-      diff -w $old_file $new_file > $new_dir/$(basename $ele).diff
+        "changes to" $publication_resource \
+        "full diff can be found here:" $diff_file
+      diff -w ${diff_from_file-$old_file} ${diff_to_file-$new_file} > ${new_file}.diff
 
       run curl --silent \
-        -T $publication_resources_dir/$ele \
-        http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/$ele
+        -T $new_file \
+        http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/${relative_resource}
     done
   done
 }
@@ -437,10 +466,13 @@ function remember_state() {
 
 function print_summary() {
   print_and_log "Finished @ $(date)"
-  print_and_log "A full summary of the changes can be found in" \
-    $ece_deploy_data_dir/${deployment_id} "Here's a short summary:"
-  diff -r $ece_deploy_data_dir/${deployment_id}/old \
-    $ece_deploy_data_dir/${deployment_id}/new
+  local diff_files=$(find $(get_deployment_dir) -name "*.diff")
+  if [ $(echo "$diff_files" | wc -l) -gt 1 ]; then
+    print_and_log "Here are diffs of all publication resources that were changed:"
+    for el in $diff_files; do
+      echo $el
+    done
+  fi
 }
 
 function crawl_a_wee_bit() {
@@ -476,9 +508,13 @@ if [ ${list_the_revious_deployments-0} -eq 0 ]; then
 fi
 
 if [ ${make_deployment-1} -eq 1 ]; then
-  remember_state $ece_deploy_data_dir/$deployment_id/old
+  make_dir $(get_deployment_dir)/old $(get_deployment_dir)/new
+  remember_state $(get_deployment_dir)/old
 
-  deploy_ear
+  if [ -n "$ear_uri" ]; then
+    deploy_ear
+  fi
+  
   if [ -n "$conf_package_uri" ]; then
     deploy_conf
   fi
@@ -491,7 +527,7 @@ if [ ${make_deployment-1} -eq 1 ]; then
   fi
 
   start_all_content_engine_instances
-  remember_state $ece_deploy_data_dir/$deployment_id/new
+  remember_state $(get_deployment_dir)/new
   crawl_a_wee_bit
 fi
 
