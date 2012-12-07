@@ -134,6 +134,7 @@ function set_up_escenic-content-engine-scripts() {
   local examples_dir=$doc_dir/examples/etc/default
   mkdir -p $examples_dir
   cp ../../../../etc/default/ece $examples_dir
+  cp ../../../../etc/escenic/ece.conf $doc_dir/examples/etc
   
   # cron
   cp -r ../../../../etc/cron.daily/remove-old-escenic-log-files \
