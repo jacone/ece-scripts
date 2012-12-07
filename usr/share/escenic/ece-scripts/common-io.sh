@@ -62,9 +62,11 @@ function set_conf_file_value() {
 }
 
 function make_dir() {
-  if [ ! -d $1 ]; then
-    run mkdir -p $1
-  fi
+  for el in $@; do
+    if [ ! -d $el ]; then
+      run mkdir -p $el
+    fi
+  done
 }
 
 function remove_dir() {
