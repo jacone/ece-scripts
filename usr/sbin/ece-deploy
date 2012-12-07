@@ -11,6 +11,12 @@
 ece_deploy_data_dir=/var/lib/escenic/$(basename $0)
 ece_deploy_download_dir=/var/cache/escenic
 
+function ece_deploy_cancel_hook() {
+  local the_dir=$ece_deploy_data_dir/$deployment_id
+  run rm -rf $the_dir
+  common_bashing_user_cancelled_hook
+}
+
 function bootstrap_thyself() {
   # first, try to be nice, then check the standard location
   local dir=$(dirname $0)/../share/escenic/ece-scripts
@@ -22,6 +28,7 @@ function bootstrap_thyself() {
     common-bashing.sh
     common-io.sh
     common-os.sh
+    common-ece.sh
   "
 
   for el in $common_libraries; do
@@ -38,7 +45,7 @@ function bootstrap_thyself() {
   # hooks for when the scirpt exits cleanly and when a user or someone
   # kills the process
   trap common_bashing_exit_hook EXIT
-  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
+  trap ece_deploy_cancel_hook SIGINT SIGHUP
 }
 
 bootstrap_thyself
@@ -75,6 +82,10 @@ function deploy_ear() {
   for el in $engine_instance_list; do
     su - $ece_unix_user -c \
       "${proxy_settings} ece -i $el stop deploy clean start --uri $ear_uri"
+    if [ ${PIPESTATUS[@]} -gt 0 ]; then
+      exit 1
+    fi
+    
     # asking for the versions to make sure the ECEs are
     # bootstrapped. It's also nice user feedback to see which versions
     # are deployed/upgraded.
@@ -234,6 +245,14 @@ publication_resource_list="
   "
 
 function looks_like_xml() {
+  if [ -z "$1" ]; then
+    echo 0
+  fi
+
+  if [ ! -r "$1" ]; then
+    echo 0
+  fi
+  
   local xml=$(cat "$1")
   if [[ ${xml:0:1} == "<" ]]; then
     echo 1
@@ -241,15 +260,6 @@ function looks_like_xml() {
     echo 0
   fi
 }
-
-## app server port
-function get_publication_list() {
-  curl --silent \
-    http://localhost:8080/escenic-admin/pages/publication/list.jsp | \
-    grep '/escenic-admin/pages/publication/view.jsp' | \
-    sed 's/.*name=\(.*\)".*/\1/g'
-}
-
 
 ## $1 :: base dir of the new publication resource to apply to the
 ## running instance. If this base dir is the $tomcat_base from the
@@ -261,84 +271,96 @@ function update_publication_resources() {
     return
   fi
 
-  for el in $engine_instance_list; do
-    source /etc/escenic/ece-${el}.conf
-
-    print_and_log "Getting the publication list on $el ..."
-    for i in {0..5}; do
-      local publication_list=$(get_publication_list ${appserver_port})
-      
-      if [ -n "${publication_list}" ]; then
-        break
-      fi
-      
+  print_and_log "Will now update the publication resources" \
+    "getting list of all publications on $el ..."
+  for i in {0..5}; do
+    local publication_list=$(get_publication_list ${appserver_port})
+    
+    if [ -n "${publication_list}" ]; then
+      break
+    fi
+    
       # if we haven't gotten any content from the local ECE (yet), it
       # might be because it hasn't come up yet (slow app server),
       # hence we sleep for a wee while and try again.
-      sleep 3
-    done
+    sleep 3
+  done
 
-    if [ -z "${publication_list}" ]; then
-      print_and_log "$el doesn't have any publications" \
-        "so there's no publication resources to update ;-)"
+  if [ -z "${publication_list}" ]; then
+    print_and_log "$el doesn't have any publications" \
+      "so there's no publication resources to update ;-)"
+    continue
+  fi
+
+  for publication in $publication_list; do
+    if [[ "$1" == "$tomcat_base" ]]; then
+      local publication_resources_dir=$tomcat_base/webapps-${publication}/${publication}/META-INF/escenic/publication-resources
+    else
+      local publication_resources_dir=${1}/${publication}
+    fi
+
+    if [ ! -d $publication_resources_dir ]; then
       continue
     fi
 
-    for publication in $publication_list; do
-      print_and_log "Updating resources for publication" $publication "..."
+    print_and_log "Updating resources for publication" $publication "..."
+    for ele in $(find $publication_resources_dir -type f | sed "s#${publication_resources_dir}/##g"); do
+      new_dir=$ece_deploy_data_dir/$deployment_id/new/$publication/$(dirname $ele)
+      make_dir $new_dir
+      old_file=$ece_deploy_data_dir/$deployment_id/old/$publication/${ele}
+      
+      # when updating the resources as a part of a regular
+      # deployment (as opposed to a roll back) we must download the
+      # old/current version of the file.
+      if [ ! -e $old_file ]; then
+        make_dir $(dirname $old_file)
+        (
+          cd $(dirname $old_file)
+          wget \
+            --quiet \
+            --continue \
+            http://localhost:${appserver_port}/escenic-admin/publication-resources/$publication/${ele} \
+            2>/dev/null
 
-      if [[ "$1" == "$tomcat_base" ]]; then
-        local publication_resources_dir=$tomcat_base/webapps-${publication}/${publication}/META-INF/escenic/publication-resources
+          if [ $(looks_like_xml $(basename ${ele})) -eq 1 ]; then
+            xmllint --format ${ele} > ${ele}.tmp
+            mv ${ele}.tmp ${ele}
+          fi
+        )
+      fi
+      
+      if [ $(looks_like_xml $publication_resources_dir/$ele) -eq 1 ]; then
+        new_file=$new_dir/$(basename $ele)
+        xmllint --format $publication_resources_dir/$ele > $new_file
       else
-        local publication_resources_dir=${1}/${publication}
+        new_file=$new_dir/$(basename $ele)
+        cp $publication_resources_dir/$ele $new_dir/$(basename $ele)
       fi
 
-      if [ ! -d $publication_resources_dir ]; then
+      if [ ! -e $old_file ]; then
+        old_file=$(mktemp)
+      fi
+
+      local number_of_lines_changed=$(
+        diff -w \
+          <(cat $old_file | grep -v '^$') \
+          <(cat $new_file | grep -v '^$') | \
+          egrep '<|>' | \
+          wc -l
+      )
+      if [ ${number_of_lines_changed} -lt 1 ]; then
         continue
       fi
 
-      (
-        cd $publication_resources_dir
-        for ele in $(find -type f | sed 's#^./##g'); do
-          new_dir=$ece_deploy_data_dir/$deployment_id/new/$publication/$(dirname $ele)
-          make_dir $new_dir
+      print_and_log "Applying" \
+        $number_of_lines_changed \
+        "changes to" $ele \
+        "full diff can be found here: $new_dir/$(basename $ele).diff"
+      diff -w $old_file $new_file > $new_dir/$(basename $ele).diff
 
-          old_file=$ece_deploy_data_dir/$deployment_id/old/$publication/${ele}
-
-          if [ $(looks_like_xml $ele) -eq 1 ]; then
-            file=$new_dir/$(basename $ele)
-            xmllint --format $ele > $file
-          else
-            file=$new_dir/$(basename $ele)
-            cp $ele $dir/$(basename $ele)
-          fi
-
-          if [ ! -e $old_file ]; then
-            old_file=$(mktemp)
-          fi
-
-          local number_of_lines_changed=$(
-            diff \
-              <(cat $old_file | grep -v '^$') \
-              <(cat $file | grep -v '^$') | \
-              egrep '<|>' | \
-              wc -l
-          )
-          if [ ${number_of_lines_changed} -lt 1 ]; then
-            continue
-          fi
-
-          print_and_log "Applying" \
-            $number_of_lines_changed \
-            "changes to" $ele \
-            "full diff can be found here: $new_dir/$(basename $ele).diff"
-          diff $old_file $file > $new_dir/$(basename $ele).diff
-
-          run curl --silent \
-            -T $ele \
-            http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/$ele
-        done
-      )
+      run curl --silent \
+        -T $publication_resources_dir/$ele \
+        http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/$ele
     done
   done
 }
@@ -351,7 +373,7 @@ function generate_deployment_id() {
 function roll_back_everything_to_version() {
   print_and_log "Rolling back to" \
     ${roll_back_to_version} \
-    "from" $(date --date @${roll_back_to_version}) \
+    "from" $(date --date @$(echo ${roll_back_to_version} | cut -d'-' -f2)) \
     "..."
 
   local old_ece_deploy_data_dir=$ece_deploy_data_dir/${roll_back_to_version}/old
@@ -393,8 +415,6 @@ function roll_back_everything_to_version() {
     ear_uri=${old_ear}
     deploy_ear
   done
-
-  print_and_log "You have now rolled back to deployment ${roll_back_to_version}"
 }
 
 ## $1 :: dir, can be the patht to the new or old directory of this
@@ -459,13 +479,15 @@ if [ ${make_deployment-1} -eq 1 ]; then
   remember_state $ece_deploy_data_dir/$deployment_id/old
 
   deploy_ear
-  if [ -n "$conf_uri" ]; then
+  if [ -n "$conf_package_uri" ]; then
     deploy_conf
   fi
   
   if [ ${update_the_publication_resources-0} -eq 1 ]; then
-    # not active until gets stable
-    echo update_publication_resources $tomcat_base
+    for el in $engine_instance_list; do
+      run source /etc/escenic/ece-${el}.conf
+      update_publication_resources $tomcat_base
+    done
   fi
 
   start_all_content_engine_instances
@@ -483,6 +505,8 @@ if [ ${roll_back-0} -eq 1 ]; then
   if [ ${update_the_publication_resources-0} -eq 1 ]; then
     update_publication_resources $ece_deploy_data_dir/${roll_back_to_version}/new
   fi
+  
+  print_and_log "You have now rolled back to deployment ${roll_back_to_version}"
 fi
 
 if [ ${list_the_revious_deployments-0} -eq 0 ]; then
