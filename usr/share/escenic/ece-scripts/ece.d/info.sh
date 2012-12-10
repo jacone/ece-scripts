@@ -67,7 +67,7 @@ function print_deployment_state() {
   print "|-> Deployment date:" $(grep ^deployed_date $file | cut -d'=' -f2-)
 }
 
-## $1: dir
+## $1: tomcat dir
 function print_deployed_webapps() {
   local webapps=""
 
@@ -76,9 +76,10 @@ function print_deployed_webapps() {
   fi
 
   print "Deployed web applications:"
-  for el in $(find $1/webapps -maxdepth 1 -type d | \
-    grep -v webapps$); do
-    print "|-> http://${HOSTNAME}:${port}/"$(basename $el)
+  for context in $1/webapps*; do
+    for el in $(find $context -maxdepth 1 -type d | sed -n 2,50p); do
+      print "|->" $(echo $el | sed "s#${1}/##g")
+    done
   done
 
 }
