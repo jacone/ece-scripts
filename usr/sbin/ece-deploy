@@ -284,8 +284,8 @@ function update_publication_resources() {
     return
   fi
 
-  print_and_log "Will now update the publication resources" \
-    "getting list of all publications on $el ..."
+  print_and_log "Will now update the publication resources," \
+    "first getting a list of all publications on $el ..."
   for i in {0..5}; do
     local publication_list=$(get_publication_list ${appserver_port})
     
@@ -466,9 +466,20 @@ function remember_state() {
 
 function print_summary() {
   print_and_log "Finished @ $(date)"
+  for el in $engine_instance_list $search_instance_list; do
+    for ele in ${el}.state vosa-conf-$HOSTNAME.version; do
+      if [[ -e $(get_deployment_dir)/old/${ele} && \
+        -e $(get_deployment_dir)/new/${ele} ]]; then
+        diff $(get_deployment_dir)/old/${ele} \
+          $(get_deployment_dir)/new/${ele} \
+          > $(get_deployment_dir)new/${ele}.diff
+      fi
+    done
+  done
+  
   local diff_files=$(find $(get_deployment_dir) -name "*.diff")
-  if [ $(echo "$diff_files" | wc -l) -gt 1 ]; then
-    print_and_log "Here are diffs of all publication resources that were changed:"
+  if [ $(echo "$diff_files" | wc -c) -gt 2 ]; then
+    print_and_log "Here are the diffs of all publication resources that were changed:"
     for el in $diff_files; do
       echo $el
     done
