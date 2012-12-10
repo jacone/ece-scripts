@@ -26,7 +26,7 @@ function create_pretty_printed_file_if_xml() {
   fi
   
   if [ $(looks_like_xml ${1}) -eq 1 ]; then
-    xmllint --format ${1} > ${1}.xml
+    xml_pp ${1} | xmllint --format - > ${1}.xml
   fi
 }
 
@@ -142,19 +142,21 @@ function deploy_conf() {
   set_builder_user_and_password
 
   print "Downloading" $conf_package_uri "..."
-  (
-  cd $ece_deploy_download_dir
-  run wget \
-    --quiet \
-    --continue \
-    --http-user $builder_http_user \
-    --http-password $builder_http_password \
-    $conf_package_uri
-  )
+  
+  # common-ece::download_uri_target_to_dir honors wget_auth
+  wget_auth="
+    --http-user $builder_http_user
+    --http-password $builder_http_password
+  "
+  download_uri_target_to_dir $conf_package_uri $ece_deploy_download_dir
 
   print "Installing" $(basename $conf_package_uri) "..."
+  if [ ${force_everything-0} -eq 1 ]; then
+    dpkg_opts="--force-overwrite"
+  fi
+
   dpkg \
-    --force-overwrite \
+    $dpkg_opts \
     --install $ece_deploy_download_dir/$(basename $conf_package_uri)
 }
 
@@ -234,16 +236,16 @@ function list_previous_deployments() {
 }
 
 publication_resource_list="
-    0/escenic/section-parameter
-    escenic/content-type
-    escenic/feature
-    escenic/image-version
-    escenic/layout
-    escenic/layout-group
-    escenic/plugin/community/security
-    escenic/plugin/menu
-    escenic/teaser-type
-  "
+  0/escenic/section-parameter
+  escenic/content-type
+  escenic/feature
+  escenic/image-version
+  escenic/layout
+  escenic/layout-group
+  escenic/plugin/community/security
+  escenic/plugin/menu
+  escenic/teaser-type
+"
 
 function looks_like_xml() {
   if [ -z "$1" ]; then
@@ -306,10 +308,12 @@ function update_publication_resources() {
   fi
 
   for publication in $publication_list; do
+    # this means a regular deployment
     if [[ "$1" == "$tomcat_base" ]]; then
       local publication_resources_dir=$tomcat_base/webapps-${publication}/${publication}/META-INF/escenic/publication-resources
     else
-      local publication_resources_dir=${1}/${publication}
+      # this means roll back
+      local publication_resources_dir=${1}/${publication}/old
     fi
 
     if [ ! -d $publication_resources_dir ]; then
@@ -317,7 +321,10 @@ function update_publication_resources() {
     fi
 
     print_and_log "Updating resources for publication" $publication "..."
-    for publication_resource in $(find $publication_resources_dir -type f); do
+    # we gep away .xml and .diff file shere as these will be present
+    # when rolling back a deployment.
+    for publication_resource in \
+      $(find $publication_resources_dir -type f | egrep -v ".(xml|diff)$"); do
       local relative_resource=$(
         echo $publication_resource | sed "s#${publication_resources_dir}/##g"
       )
@@ -344,7 +351,6 @@ function update_publication_resources() {
       create_pretty_printed_file_if_xml $old_file
       create_pretty_printed_file_if_xml $new_file
 
-      
       local diff_from_file=$old_file
       local diff_to_file=$new_file
       
@@ -359,36 +365,21 @@ function update_publication_resources() {
         old_file=$(mktemp)
       fi
 
-      local the_diff=$(
-        diff -w \
-          <(cat ${diff_from_file} | grep -v '^$') \
-          <(cat ${diff_to_file} | grep -v '^$') | \
-          egrep '<|>'
-      )
-      local number_of_lines_changed=$(echo "$the_diff" | wc -l)
-        
-      # add the diff to this variable and print it out in print_summary
-      if [ -n "$the_diff" ]; then
-        diff_list="${diff_list}Changes to ${relative_resource}:
-${the_diff}
-"
-      fi
-
-      # since we echo the string above, an empty string will be of one
-      # lines (as with wc -l), thus we test for -lt 2 here
-      if [ ${number_of_lines_changed} -lt 2 ]; then
+      diff -w ${diff_from_file-$old_file} \
+        ${diff_to_file-$new_file} \
+        > ${new_file}.diff
+      local number_of_lines_changed=$(egrep '<|>' ${new_file}.diff | wc -l)
+      if [ $number_of_lines_changed -lt 1 ]; then
         continue
       fi
-
-      local diff_file=$(dirname $new_file)/$(basename $relative_resource).diff
-      print_and_log "Applying" \
-        $number_of_lines_changed \
-        "changes to" $publication_resource \
-        "full diff can be found here:" $diff_file
-      diff -w ${diff_from_file-$old_file} ${diff_to_file-$new_file} > ${new_file}.diff
-
-      run curl --silent \
-        -T $new_file \
+      
+      print_and_log "Applying" $number_of_lines_changed \
+        "changes to" $publication_resource
+      run curl \
+        --silent \
+        --upload-file $new_file \
+        --fail \
+        --verbose \
         http://localhost:${appserver_port}/escenic-admin/publication-resources/${publication}/${relative_resource}
     done
   done
@@ -411,7 +402,7 @@ function roll_back_everything_to_version() {
       "they should have been here:" $old_ece_deploy_data_dir
     exit 1
   else
-    log "Using data in" $old_ece_deploy_data_dir "to perform the rollback"
+    print_and_log "Using data in" $old_ece_deploy_data_dir "to perform the rollback"
   fi
 
   local package_version_file=$ece_deploy_data_dir/${roll_back_to_version}/new/vosa-conf-${HOSTNAME}.version
@@ -420,7 +411,7 @@ function roll_back_everything_to_version() {
     if [ -e $deb_file ]; then
       print_and_log "Reverting back to version" $(cat $package_version_file) \
         "vosa-conf-$HOSTNAME ..."
-      dpkg --install --force-overwrite $deb_file
+      dpkg --install ${dpkg_opts} $deb_file
     else
       print_and_log "You must now install version" \
         $(cat $package_version_file) \
@@ -433,7 +424,7 @@ function roll_back_everything_to_version() {
   fi
 
   for el in $engine_instance_list; do
-    file=$ece_deploy_data_dir/${roll_back_to_version}/new/${el}.state
+    local file=$ece_deploy_data_dir/${roll_back_to_version}/new/${el}.state
     if [ ! -e $file ]; then
       continue
     fi
@@ -479,9 +470,11 @@ function print_summary() {
   
   local diff_files=$(find $(get_deployment_dir) -name "*.diff")
   if [ $(echo "$diff_files" | wc -c) -gt 2 ]; then
-    print_and_log "Here are the diffs of all publication resources that were changed:"
+    print_and_log "Here are the diffs of all resources that were changed:"
     for el in $diff_files; do
-      echo $el
+      if [ $(wc -c $el | awk '{print $1;}') -gt 0 ]; then
+        echo $el $(egrep '<|>' $el | wc -l) "changes"
+      fi
     done
   fi
 }
@@ -509,7 +502,7 @@ function crawl_a_wee_bit() {
   done
 }
 
-assert_commands_available xmllint xml_grep
+assert_commands_available xmllint xml_grep xml_pp
 read_user_input "$@"
 verify_user_input
 
@@ -547,10 +540,14 @@ if [ ${list_the_revious_deployments-0} -eq 1 ]; then
 fi
 
 if [ ${roll_back-0} -eq 1 ]; then
+  make_dir $(get_deployment_dir)/old $(get_deployment_dir)/new
   roll_back_everything_to_version
 
   if [ ${update_the_publication_resources-0} -eq 1 ]; then
-    update_publication_resources $ece_deploy_data_dir/${roll_back_to_version}/new
+    for el in $engine_instance_list; do
+      run source /etc/escenic/ece-${el}.conf
+      update_publication_resources $ece_deploy_data_dir/${roll_back_to_version}/new
+    done
   fi
   
   print_and_log "You have now rolled back to deployment ${roll_back_to_version}"
