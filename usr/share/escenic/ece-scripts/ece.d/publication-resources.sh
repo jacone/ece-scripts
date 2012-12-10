@@ -90,16 +90,16 @@ function update_publication_resources() {
   
   log POSTing $resource to $url
   if [[ -n "$do_put" && "$do_put" == "true" ]]; then
-    curl -T ${resource} \
+    run curl -T ${resource} \
       ${curl_appserver_auth} \
-      ${url} \
-      1>>$log 2>>$log
+      --fail \
+      ${url}
   else
-    wget $wget_appserver_auth \
-      -O - \
+    run wget $wget_appserver_auth \
+      --output-document - \
+      --server-response \
       --post-file ${resource} \
-      $url \
-      1>>$log 2>>$log
+      $url
   fi
 
   if [ -d $tmp_dir ]; then
