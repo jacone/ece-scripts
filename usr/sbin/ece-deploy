@@ -472,7 +472,7 @@ function print_summary() {
         -e $(get_deployment_dir)/new/${ele} ]]; then
         diff $(get_deployment_dir)/old/${ele} \
           $(get_deployment_dir)/new/${ele} \
-          > $(get_deployment_dir)new/${ele}.diff
+          > $(get_deployment_dir)/new/${ele}.diff
       fi
     done
   done
