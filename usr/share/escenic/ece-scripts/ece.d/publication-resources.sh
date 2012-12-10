@@ -8,6 +8,20 @@ function update_publication_resources() {
     print "You must specify which publication to update (-p <publication>)"
     exit 1
   fi
+
+  local found=0
+  local publication_list=$(get_publication_list)
+  for el in $publication_list; do
+    if [[ "$publication" == "$el" ]]; then
+      found=1
+    fi
+  done
+  
+  if [ $found -eq 0 ]; then
+    print "There is no publication called" \
+      $publication "(only $publication_list)"
+    exit 1
+  fi
   
   local url=$(get_escenic_admin_url)/publication-resources
 
