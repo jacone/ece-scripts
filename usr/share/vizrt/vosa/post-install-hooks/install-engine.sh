@@ -40,7 +40,7 @@ if [ -z "$ECE_INSTALLER" ] ; then
 fi
 
 if [ -z "$ECE_INSTALLER" ] ; then
-  wget "https://github.com/skybert/ece-scripts/tarball/master" -O $2/ece-install.tar.gz
+  wget "https://github.com/vizrt/ece-scripts/tarball/master" -O $2/ece-install.tar.gz
   scp -F $2/ssh.conf $2/ece-install.tar.gz root@guest:
   ssh -F $2/ssh.conf root@guest tar xfz ece-install.tar.gz
   ECE_INSTALLER="bash *-ece-scripts-*/usr/sbin/ece-install"
