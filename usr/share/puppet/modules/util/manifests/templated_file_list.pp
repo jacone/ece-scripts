@@ -8,7 +8,7 @@
 #														{module}/templates directory that needs to be deployed.
 #
 # $util_module_directory::  This parameter must point to the directory where 
-#														https://github.com/skybert/ece-scripts/tree/master/usr/share/puppet/modules/util
+#														https://github.com/vizrt/ece-scripts/tree/master/usr/share/puppet/modules/util
 #                   				is deployed on your puppet master
 #														default: "/etc/puppet/modules/util/"
 #

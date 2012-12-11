@@ -131,7 +131,7 @@ Use =git= to get the ece-install script. Type this in
 your shell:
 
 #+BEGIN_SRC text
-$ git clone https://github.com/skybert/ece-scripts.git
+$ git clone https://github.com/vizrt/ece-scripts.git
 #+END_SRC
 
 The reason why we want you to use git to download ece-install, is that
@@ -140,7 +140,7 @@ one of your reported issues), by doing "git pull" inside the
 ece-scripts directory.
 
 If you have problems installing git, you can also download a ZIP
-archive here: https://github.com/skybert/ece-scripts/zipball/master
+archive here: https://github.com/vizrt/ece-scripts/zipball/master
 
 ** <<<Become Root>>>
 You must be the root user to run =ece-install=. If you try to run it as
