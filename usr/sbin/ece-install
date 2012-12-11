@@ -7,7 +7,7 @@
 # with the "ece -i <instance> backup" command.
 #
 # Always check for the latest version at
-# http://github.com/escenic/ece-scripts
+# http://github.com/vizrt/ece-scripts
 
 # echo comments and suggestions > tkj@vizrt.com
 # echo frustrations > /dev/null
