@@ -31,11 +31,14 @@ function read_user_settings() {
 function get_header_from_jira() {
   local body=$(curl -s https://${user}:${password}@${jira_host}/browse/${1})
   echo "$body" | grep '<title>' | sed -e 's/<title>//g' -e 's/<\/title>//g'
-  echo "URL:" https://$jira_host}/browse/${1}
 }
 
 function get_to_revision() {
-  svn info | grep ^'Last Changed Rev' | awk '{ print $4 }'
+  if [ -n "${to}" ]; then
+    echo "${to}"
+  else
+    svn info | grep ^'Last Changed Rev' | awk '{ print $4 }'
+  fi
 }
 
 function get_from_revision() {
@@ -73,11 +76,12 @@ function get_commit_information_from_vcs() {
   local suffix=-${project_code}-from-$(get_from_revision)-to-$(get_to_revision).diff
   local tmp_diff=$(mktemp --suffix "${suffix}")
   svn diff -r $(get_from_revision):$(get_to_revision) > $tmp_diff
-  exit_on_error "svn diff"
+  exit_on_error "svn diff -r $(get_from_revision):$(get_to_revision)"
   if [ ${full_listing-0} -eq 1 ]; then
     cat $tmp_diff
   else
-    echo "A full overview of all the changes can be viewed here:" $tmp_diff | fmt
+    echo "A full overview of all" $(egrep '^(\+|\-) ' $tmp_diff | wc -l) \
+      "changes can be viewed here:" $tmp_diff | fmt
   fi
 }
 
@@ -88,8 +92,27 @@ function get_related_issue_overview() {
     sed "s#.*\(${project_code}-[0-9]*\).*#\1#g" | \
     sort | \
     uniq | while read f; do
-    get_header_from_jira $f
+    echo "   *" $(get_header_from_jira $f) | fmt
+    echo "   URL: https://$jira_host}/browse/${1}"
+    echo ""
   done
+}
+
+## $@ :: svn revision number or tag name
+function get_date_from_svn_log() {
+  echo $(svn log -r "$@" | sed -n '2p' | cut -d'|' -f3)
+}
+
+function get_svn_location() {
+  svn info | grep URL | cut -d':' -f2-
+}
+
+function get_header() {
+  cat <<EOF
+Changes in $(get_svn_location)
+From: revision $(get_from_revision) @ $(get_date_from_svn_log $(get_from_revision))
+To  : revision $(get_to_revision) @ $(get_date_from_svn_log $(get_to_revision))
+EOF
 }
 
 function sanity_check() {
@@ -104,5 +127,6 @@ bootstrap_thyself
 read_user_settings
 get_user_input "$@"
 sanity_check
+get_header
 get_related_issue_overview
 get_commit_information_from_vcs
