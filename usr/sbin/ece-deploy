@@ -10,6 +10,7 @@
 
 ece_deploy_data_dir=/var/lib/escenic/$(basename $0)
 ece_deploy_download_dir=/var/cache/escenic
+log=/var/log/escenic/$(basename $0).log
 
 function ece_deploy_cancel_hook() {
   local the_dir=$ece_deploy_data_dir/$deployment_id
@@ -63,7 +64,6 @@ function bootstrap_thyself() {
 
 bootstrap_thyself
 
-log=/var/log/escenic/$(basename $0).log
 run source /etc/default/ece
 
 function deploy_ear() {
@@ -86,11 +86,8 @@ function deploy_ear() {
     if [ ${PIPESTATUS[@]} -gt 0 ]; then
       exit 1
     fi
-    
-    # asking for the versions to make sure the ECEs are
-    # bootstrapped. It's also nice user feedback to see which versions
-    # are deployed/upgraded.
   done
+  
   for el in $search_instance_list; do
     su - $ece_unix_user -c \
       "${proxy_settings} ece -i $el -t search stop deploy clean start --uri $ear_uri"
@@ -175,6 +172,8 @@ function read_user_input() {
       roll_back=1
       next_is_roll_back_to_version=1
       make_deployment=0
+    elif [[ $el == "--force" ]]; then
+      force_everything=1
     elif [[ $el == "--update-publication-resources" ]]; then
       update_the_publication_resources=1
     elif [[ $el == "--list-deployments" ]]; then
@@ -387,7 +386,8 @@ function update_publication_resources() {
 
 function generate_deployment_id() {
   deployment_id=${HOSTNAME}-$(date +%s)
-  print_and_log "This deployment has ID" ${deployment_id}
+  print_and_log "This deployment has ID" ${deployment_id} \
+    "and is logging to" $log
 }
 
 function roll_back_everything_to_version() {
@@ -448,11 +448,32 @@ function remember_state() {
       cp /var/lib/escenic/${el}.state $1/
     fi
   done
+
+  if [ $(dpkg -l vosa-conf-$HOSTNAME | wc -l) -eq 0 ]; then
+    return
+  fi
   
-  dpkg -l vosa-conf-$HOSTNAME 2>/dev/null | \
+  dpkg -l vosa-conf-$HOSTNAME | \
     grep vosa-conf-$HOSTNAME | \
     awk '{ print $3 }' > \
     $1/vosa-conf-${HOSTNAME}.version
+
+  print_and_log "Remembering all files from the current version of" \
+    vosa-conf-$HOSTNAME "..."
+  dpkg -L vosa-conf-$HOSTNAME | while read f; do
+    local dir=${1}/vosa-conf-${HOSTNAME}/$(dirname $f)
+    make_dir $dir
+    if [ -d $f ]; then
+      continue
+    fi
+    if [ ! -e $f ]; then
+      print_and_log $(yellow WARNING) $f "was installed with the" \
+        "vosa-conf-$HOSTNAME package," \
+        "however, it's not present on $HOSTNAME."
+      continue
+    fi
+    cp $f $dir/
+  done
 }
 
 function print_summary() {
@@ -461,22 +482,33 @@ function print_summary() {
     for ele in ${el}.state vosa-conf-$HOSTNAME.version; do
       if [[ -e $(get_deployment_dir)/old/${ele} && \
         -e $(get_deployment_dir)/new/${ele} ]]; then
-        diff $(get_deployment_dir)/old/${ele} \
+        diff --ignore-all-space $(get_deployment_dir)/old/${ele} \
           $(get_deployment_dir)/new/${ele} \
           > $(get_deployment_dir)/new/${ele}.diff
       fi
     done
   done
   
+  if [[ $(dpkg -l vosa-conf-$HOSTNAME | wc -l) -gt 0 && \
+    -d $(get_deployment_dir)/old/vosa-conf-$HOSTNAME && \
+    -d $(get_deployment_dir)/new/vosa-conf-$HOSTNAME ]]; then
+    diff --recursive --ignore-all-space \
+      $(get_deployment_dir)/old/vosa-conf-$HOSTNAME \
+      $(get_deployment_dir)/new/vosa-conf-$HOSTNAME \
+      > $(get_deployment_dir)/new/vosa-conf-${HOSTNAME}.diff
+  fi
+  
   local diff_files=$(find $(get_deployment_dir) -name "*.diff")
   if [ $(echo "$diff_files" | wc -c) -gt 2 ]; then
-    print_and_log "Here are the diffs of all resources that were changed:"
+    print_and_log "Here are the diffs of all publication resources" \
+      "and files that were changed:"
     for el in $diff_files; do
       if [ $(wc -c $el | awk '{print $1;}') -gt 0 ]; then
         echo $el $(egrep '<|>' $el | wc -l) "changes"
       fi
     done
   fi
+
 }
 
 function crawl_a_wee_bit() {
