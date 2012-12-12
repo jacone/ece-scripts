@@ -98,6 +98,11 @@ function select_tap_interface() {
     local network
     for network in $rundir/*.availablenetwork ; do
       [[ -f $network ]] || continue
+      # If we have a bridge preference, and it doesn't match the
+      # contents of the network file, ignore it as an available
+      # network.
+      [[ "$boot_config_bridge" != "" ]] && [[ "$boot_config_bridge" != "$(cat "$network")" ]] && continue;
+
       # $network == tap4.availablenetwork.  Contains the name(s) of vm04's networks
       local tap
       tap=$(basename $network .availablenetwork)

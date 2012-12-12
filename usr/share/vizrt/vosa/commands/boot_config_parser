@@ -4,6 +4,7 @@
 boot_config_memory=
 boot_config_processor_affinity=
 boot_config_vnc_port=
+boot_config_bridge=
 
 
 function boot_config_memory() {
@@ -16,6 +17,10 @@ function boot_config_processor_affinity() {
 
 function boot_config_vnc_port() {
   boot_config_vnc_port=$1
+}
+
+function boot_config_bridge() {
+  boot_config_bridge=$1
 }
 
 # Handle arrays
