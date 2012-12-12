@@ -132,6 +132,13 @@ function exit_on_error() {
 }
 
 function run() {
+  if [ ! -e $log ]; then
+    touch $log || {
+      echo "Couldn't create $log"
+      kill $BASHPID
+    }
+  fi
+  
   "${@}" 1>>$log 2>>$log
   exit_on_error $@
 }
