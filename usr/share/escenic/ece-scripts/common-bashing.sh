@@ -196,26 +196,42 @@ function get_perl_escaped() {
 ##
 ## $1: input string
 function red() {
-  echo -e "\E[37;31m\033[1m${@}\033[0m"
+  if [[ -t "0" || -p /dev/stdin ]]; then
+    echo -e "\E[37;31m\033[1m${@}\033[0m"
+  else
+    echo "$@"
+  fi
 }
 
 ## Returns the inputted string(s) as green
 ##
 ## $1: input string
 function green() {
-  echo -e "\E[37;32m\033[1m${@}\033[0m"
+  if [[ -t "0" || -p /dev/stdin ]]; then
+    echo -e "\E[37;32m\033[1m${@}\033[0m"
+  else
+    echo "$@"
+  fi
 }
 
 ## Returns the inputted string(s) as yellow
 ##
 ## $1: input string
 function yellow() {
-  echo -e "\E[37;33m\033[1m${@}\033[0m"
+  if [[ -t "0" || -p /dev/stdin ]]; then
+    echo -e "\E[37;33m\033[1m${@}\033[0m"
+  else
+    echo "$@"
+  fi
 }
 
 function blue() {
-  echo -e "\E[37;34m\033[1m${@}\033[0m";
-};
+  if [[ -t "0" || -p /dev/stdin ]]; then
+    echo -e "\E[37;34m\033[1m${@}\033[0m";
+  else
+    echo "$@"
+  fi
+}
 
 ## $1: full path to the file.
 function get_base_dir_from_bundle()

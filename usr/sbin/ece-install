@@ -51,7 +51,7 @@ ece_scripts_version="straight-from-github"
 #####################################################################
 
 download_dir=/var/cache/$(basename $0)
-log=/var/log/$(basename $0).log
+log=/var/log/escenic/$(basename $0).log
 conf_file=$HOME/ece-install.conf
 ece_scripts_git_source=https://github.com/vizrt/ece-scripts.git
 maven_opts="--batch-mode"
@@ -78,26 +78,25 @@ force_packages=0
 ece_software_setup_completed=0
 
 ############################################################################
-# For ECE 5.3
+# For ECE 5.5
 ############################################################################
 technet_download_list="
-http://technet.escenic.com/downloads/assemblytool-2.0.2.zip
-http://technet.escenic.com/downloads/release/53/analysis-engine-2.3.7.0.zip
-http://technet.escenic.com/downloads/release/53/community-engine-3.6.2.124119.zip
-http://technet.escenic.com/downloads/release/53/dashboard-1.1.1.124124.zip
-http://technet.escenic.com/downloads/release/53/engine-5.3.7.126916.zip
-http://technet.escenic.com/downloads/release/53/forum-3.0.1.124096.zip
-http://technet.escenic.com/downloads/release/53/geocode-dist-2.3.1.0.zip
-http://technet.escenic.com/downloads/release/53/inpage-2.0.0.0.zip
-http://technet.escenic.com/downloads/release/53/lucy-dist-4.1.6.0.zip
-http://technet.escenic.com/downloads/release/53/menu-editor-dist-2.0.6.0.zip
-http://technet.escenic.com/downloads/release/53/poll-2.1.3.0.zip
-http://technet.escenic.com/downloads/release/53/section-feed-dist-2.0.4.0.zip
-http://technet.escenic.com/downloads/release/53/xml-editor-dist-2.1.0.0.zip
+  http://technet.escenic.com/downloads/release/55/analysis-engine-2.5.0.131590.zip
+  http://technet.escenic.com/downloads/release/55/assemblytool-2.0.4.jar
+  http://technet.escenic.com/downloads/release/55/community-engine-3.8.1.132399.zip
+  http://technet.escenic.com/downloads/release/55/engine-5.5.0.131978.zip
+  http://technet.escenic.com/downloads/release/55/forum-3.2.1.132293.zip
+  http://technet.escenic.com/downloads/release/55/geocode-2.4.1.130693.zip
+  http://technet.escenic.com/downloads/release/55/lucy-4.2.1.129603.zip
+  http://technet.escenic.com/downloads/release/55/menu-editor-2.1.1.128528.zip
+  http://technet.escenic.com/downloads/release/55/online-graphics-1.0.1.133123.zip
+  http://technet.escenic.com/downloads/release/55/poll-2.3.0.128547.zip
+  http://technet.escenic.com/downloads/release/55/vcpeditor-1.0.0.132434.zip
+  http://technet.escenic.com/downloads/release/55/video-1.2.1.132710.zip
 "
 wf_download_list="
-http://technet.escenic.com/downloads/widget-framework/widget-framework-core-1.10.0.0.zip
-http://technet.escenic.com/downloads/widget-framework/widget-framework-community-1.10.0.0.zip
+  http://technet.escenic.com/downloads/release/55/framework-dist-2.0.2.131581.zip
+  http://technet.escenic.com/downloads/release/55/framework-community-dist-2.0.2.131581.zip
 "
 ############################################################################
 
@@ -109,16 +108,21 @@ escenic_sources=/etc/apt/sources.list.d/escenic.list
 # prepare the pre-requisites.
 dry_run=0
 
-# hooks for when the scirpt exits cleanly and when a user or someone
-# kills the process
-trap common_bashing_exit_hook EXIT
-trap common_bashing_user_cancelled_hook SIGINT SIGHUP
-
 ## Bootstrapping, load files from /usr/share/escenic/ece-scripts The
 ## method will first try to be smart, in case the user has copied the
 ## ece-scripts somewhere else., e.g.: moved everything to ~/ece-scrpts
 ## or /opt/escenic/ece-scripts, this should also work.
 function init() {
+  # before doing anything else, be sure that the directory of the log
+  # file exists.
+  local dir=$(dirname $log)
+  if [ ! -d $dir ]; then
+    mkdir $(dirname $log) 2>/dev/null || {
+      echo "Couldn't create $(dirname $log)"
+      exit 1
+    }
+  fi
+  
   # first, try to be nice
   local dir=$(dirname $0)/../share/escenic/ece-scripts
 
@@ -143,6 +147,11 @@ function init() {
     echo "I cannot find $(basename $0)'s dependencies, exiting :-("
     exit 1
   fi
+  
+  # hooks for when the scirpt exits cleanly and when a user or someone
+  # kills the process
+  trap common_bashing_exit_hook EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
 }
 
 function download_escenic_components()
