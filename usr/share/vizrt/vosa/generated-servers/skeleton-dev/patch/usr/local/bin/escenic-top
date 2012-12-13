@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+watch --no-title 'echo "Hit [ctrl]+C to stop top.        $(date --rfc-3339=seconds)"; echo; curl 2>/dev/null -s http://localhost:8080/escenic-admin/top'
+
+

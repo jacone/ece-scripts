@@ -1,0 +1,27 @@
+macaddr $MAC_ADDRESS
+ip_address $IP_ADDRESS
+netmask $NETMASK
+gateway $GATEWAY
+
+original_image /var/lib/vizrt/vosa/uec-images/current/disk.img
+kernel /var/lib/vizrt/vosa/uec-images/current/vmlinuz
+initial_disk_size 15
+overlay /etc/vizrt/vosa/overlay/common
+timezone Europe/Oslo
+
+postinstall wait-for-ssh.sh
+postinstall permit-root-login.sh
+postinstall make-a-motd.sh
+
+postinstall ./hooks/post-install-hook-set-hostname.sh
+postinstall ./hooks/post-install-hook-set-password.sh
+postinstall ./hooks/post-install-hook-copy-files.sh
+postinstall ./hooks/post-install-hook-install-java.sh
+postinstall ./hooks/post-install-hook-install-ece-install.sh
+
+postinstall install-engine.sh
+
+postinstall ./hooks/post-install-hook-set-password.sh
+postinstall ./hooks/post-install-hook-apply-patch.sh
+postinstall ./hooks/post-install-hook-deploy-configuration.sh
+postinstall ./hooks/post-install-hook-restart-tomcats.sh
