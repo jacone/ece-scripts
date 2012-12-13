@@ -529,7 +529,8 @@ function crawl_a_wee_bit() {
     )
 
     for ele in $virtual_hosts; do
-      print_and_log "Crawling $ele ..."
+      print_and_log "Crawling the front page (including JS, CSS, pictures) " \
+        "of $ele ..."
       wget \
         --quiet \
         --page-requisites \
