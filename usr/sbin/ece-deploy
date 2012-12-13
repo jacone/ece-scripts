@@ -60,11 +60,16 @@ function bootstrap_thyself() {
   # kills the process
   trap common_bashing_exit_hook EXIT
   trap ece_deploy_cancel_hook SIGINT SIGHUP
+
+  source /etc/default/ece 2>/dev/null || {
+    print "There's no /etc/default/ece on $HOSTNAME" \
+      "this means there's no ece-installed ECE here, I will exit"
+    exit 1
+  }
 }
 
 bootstrap_thyself
 
-run source /etc/default/ece
 
 function deploy_ear() {
   local proxy_setings=""

@@ -170,6 +170,7 @@ function set_up_escenic-common-scripts() {
   # system-info is useful for all packages, hence goes to
   # escenic-common-scripts.
   cp -r ../../../bin/system-info $target_dir/usr/bin/
+  cp -r ../../../bin/generate-changelog $target_dir/usr/bin/
   cp -r ../../escenic/ece-scripts/system-info.d \
     $target_dir/usr/share/escenic/ece-scripts/
   cp ../../../../etc/default/system-info $target_dir/etc/default/

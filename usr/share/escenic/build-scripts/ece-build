@@ -9,7 +9,6 @@
 # Common variables
 ece_scripts_version="straight-from-github"
 log=~/ece-build.log
-pid_file=~/ece-build.pid
 build_date=`date +%F_%H%M`
 builder_root_dir=/home/builder
 builder_engine_dir=$builder_root_dir/engine
@@ -61,16 +60,6 @@ unzip
 wget"
 
 ##
-function set_pid {
-  if [ -e $pid_file ]; then
-    echo "Instance of $(basename $0) already running!"
-    exit 1
-  else
-    echo $BASHPID > $pid_file
-  fi
-}
-
-##
 function init
 {
   init_failed=0
@@ -91,6 +80,12 @@ function init
     echo "$error_message"
     exit 1
   fi
+
+  pid_file=~/ece-build.pid
+  create_pid
+  
+  trap common_bashing_exit_hook EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
 }
 
 ##
@@ -248,7 +243,8 @@ function add_global_libs
     remove_pid_and_exit_in_error
   fi
   local engine_version=`readlink $engine_root_dir`
-  echo "$engine_version" | grep "engine-5.3"
+  log engine_version="$engine_version"
+  
   if [ $? = 0 ]; then
     if [ -e $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar ]; then
       run ln -s $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
@@ -306,14 +302,14 @@ function verify_requested_versions
   verification_failed=0
   if [ ! -d $engine_root_dir ]; then
     broken_link=`readlink $engine_root_dir`
-    print_and_log "The requested engine $broken_link does not exist on the plattform and must be added!"
+    print_and_log "The requested engine $broken_link does not exist on the platform and must be added!"
     verification_failed=1
   fi
   for f in $(ls -d $plugin_dir/*);
   do
     if [ ! -d $f ]; then
       broken_link=`readlink $f`
-      print_and_log "The requested plugin $broken_link does not exist on the plattform and must be added!"
+      print_and_log "The requested plugin $broken_link does not exist on the platform and must be added!"
       verification_failed=1
     fi
   done
@@ -400,7 +396,7 @@ function generate_publication_properties
 context-root:/${f%.war}" > $assemblytool_pub_dir/${f%.war}.properties
   done
   if [ -d ${plugins/dashboard} ]; then
-    print_and_log "Adding an assembly descriptor for Dashboard ..."
+    log "Adding an assembly descriptor for Dashboard ..."
     echo "source-war: ../../plugins/dashboard/wars/dashboard-webapp.war
 context-root: /dashboard" > $assemblytool_pub_dir/dashboard.properties
   fi
@@ -445,18 +441,12 @@ function print_result
 }
 
 ##
-function common_post_build {
-  run rm $pid_file
-}
-
-##
 function phase_startup {
-  set_pid
   init
 }
 
 ##
-function phase_verify_plattform
+function phase_verify_platform
 {
   verify_dependencies
   verify_java
@@ -487,6 +477,22 @@ function phase_verify_project
   add_global_libs
 }
 
+function generate_new_changelog_if_does_not_exist() {
+  local dir=$HOME/.$(basename $0)/changelog
+  make_dir $dir
+
+  local file=${dir}/${revision}.changelog
+  if [ -e $file ]; then
+    return
+  fi
+
+  print_and_log "Generating change log for revision $revision" ...
+  (
+    cd ${svn_src_dir}
+    generate-changelog --from PREV --to $revision > $file
+  )
+}
+
 ## creates DEB and RPM packages with the server configuration for all
 ## of the machines available in <project>/server-admin/<machine
 ## instance>
@@ -500,6 +506,8 @@ function create_machine_conf_packages() {
   if [ ! -d $conf_dir ]; then
     return
   fi
+
+  generate_new_changelog_if_does_not_exist
 
   local machine_list=$(
     find $conf_dir -maxdepth 1 -type d | \
@@ -666,7 +674,7 @@ function phase_release
 ##
 function phase_shutdown
 {
-  common_post_build
+  echo nothing > /dev/null
 }
 
 ## ece-build execution
@@ -674,7 +682,7 @@ phase_startup
 get_user_options $@
 print_and_log "Starting release creation! @ $(date)"
 print_and_log "Additional output can be found in $log"
-phase_verify_plattform
+phase_verify_platform
 phase_verify_user
 phase_clean_up
 phase_verify_project
