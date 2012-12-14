@@ -707,7 +707,7 @@ function set_id() {
 
 function get_status() {
     if [ -z "$type_pid" ]; then
-        echo "DOWN"
+        echo "$(red DOWN)"
         exit 0
     elif [ -r $pid_file ]; then
         
@@ -733,7 +733,7 @@ function get_status() {
     minutes=$(( seconds_left / 60 ))
     seconds_left=$(( seconds_left - $minutes * 60 ))
 
-    echo "UP" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    echo "$(green UP)" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 }
 
 function read_rc_file_if_present() {
