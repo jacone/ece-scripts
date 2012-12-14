@@ -1,6 +1,7 @@
 #! /usr/bin/env bash
 
 log=$HOME/.$(basename $0).log
+archive_base_dir=$HOME/.$(basename $0)
 
 function bootstrap_thyself() {
   # first, try to be nice, then check the standard location
@@ -21,6 +22,7 @@ function bootstrap_thyself() {
       exit 1
     }
   done
+
 }
 
 function read_user_settings() {
@@ -29,16 +31,12 @@ function read_user_settings() {
 }
 
 function get_header_from_jira() {
-  local body=$(curl -s https://${user}:${password}@${jira_host}/browse/${1})
+  local body=$(curl -u ${user}:${password} -s ${jira_base_url}/browse/${1})
   echo "$body" | grep '<title>' | sed -e 's/<title>//g' -e 's/<\/title>//g'
 }
 
 function get_to_revision() {
-  if [ -n "${to}" ]; then
-    echo "${to}"
-  else
-    svn info | grep ^'Last Changed Rev' | awk '{ print $4 }'
-  fi
+  echo ${to-COMMITTED}
 }
 
 function get_from_revision() {
@@ -72,30 +70,30 @@ function get_user_input() {
   done
 }
 
-function get_commit_information_from_vcs() {
-  local suffix=-${project_code}-from-$(get_from_revision)-to-$(get_to_revision).diff
-  local tmp_diff=$(mktemp --suffix "${suffix}")
-  svn diff -r $(get_from_revision):$(get_to_revision) > $tmp_diff
-  exit_on_error "svn diff -r $(get_from_revision):$(get_to_revision)"
-  if [ ${full_listing-0} -eq 1 ]; then
-    cat $tmp_diff
-  else
-    echo "A full overview of all" $(egrep '^(\+|\-) ' $tmp_diff | wc -l) \
-      "changes can be viewed here:" $tmp_diff | fmt
+function should_regenerate() {
+  if [[ $(is_number $(get_from_revision)) -eq 1 && \
+    $(is_number $(get_to_revision)) ]]; then
+    echo 0
+    return
   fi
+
+  echo 1
 }
 
-function get_related_issue_overview() {
-  local commit_log=$(svn log -r $(get_from_revision):$(get_to_revision))
-  echo "$commit_log" | \
-    grep ${project_code}-[0-9]* | \
-    sed "s#.*\(${project_code}-[0-9]*\).*#\1#g" | \
-    sort | \
-    uniq | while read f; do
-    echo "   *" $(get_header_from_jira $f) | fmt
-    echo "   URL: https://$jira_host}/browse/${1}"
-    echo ""
-  done
+function get_commit_information_from_vcs() {
+  local the_diff=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).diff
+
+  if [[ ! -e $the_diff || $(should_regenerate) -eq 1 ]]; then
+    svn diff -r $(get_from_revision):$(get_to_revision) > $the_diff
+    exit_on_error "svn diff -r $(get_from_revision):$(get_to_revision)"
+  fi
+
+  if [ ${full_listing-0} -eq 1 ]; then
+    cat $the_diff
+  else
+    echo "A full overview of all" $(egrep '^(\+|\-) ' $the_diff | wc -l) \
+      "changes can be viewed here:" $the_diff | fmt
+  fi
 }
 
 ## $@ :: svn revision number or tag name
@@ -107,12 +105,29 @@ function get_svn_location() {
   svn info | grep URL | cut -d':' -f2-
 }
 
-function get_header() {
-  cat <<EOF
-Changes in $(get_svn_location)
-From: revision $(get_from_revision) @ $(get_date_from_svn_log $(get_from_revision))
-To  : revision $(get_to_revision) @ $(get_date_from_svn_log $(get_to_revision))
-EOF
+function get_info_from_jira() {
+  local the_report=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).report
+  
+  if [[ ! -e $the_report || $(should_regenerate) -eq 1 ]]; then
+    echo "Changes in $(get_svn_location)" > $the_report
+    echo "From: revision $(get_from_revision) @" \
+      $(get_date_from_svn_log $(get_from_revision)) >> $the_report
+    echo "To  : revision $(get_to_revision) @" \
+      $(get_date_from_svn_log $(get_to_revision)) >> $the_report
+
+    local commit_log=$(svn log -r $(get_from_revision):$(get_to_revision))
+    echo "$commit_log" | \
+      grep ${project_code}-[0-9]* | \
+      sed "s#.*\(${project_code}-[0-9]*\).*#\1#g" | \
+      sort | \
+      uniq | while read f; do
+      echo "   *" $(get_header_from_jira $f) | fmt >> $the_report
+      echo "   URL: ${jira_base_url}/browse/$(basename $f)" >> $the_report
+      echo "" >> $the_report
+    done
+  fi
+  
+  cat $the_report
 }
 
 function sanity_check() {
@@ -123,10 +138,26 @@ function sanity_check() {
   fi
 }
 
+function get_project() {
+  echo ${project_code} | tr [A-Z] [a-z]
+}
+
+function get_archive_dir() {
+  local project_context=$(get_svn_location | \
+    sed -e  "s#${svn_base_url}/##g" -e 's#[ ]*##g' | \
+    tr [A-Z] [a-z]
+  )
+  
+  local dir=${archive_base_dir}/${project_context}
+  make_dir $dir
+  echo $dir
+}
+
 bootstrap_thyself
 read_user_settings
 get_user_input "$@"
 sanity_check
-get_header
-get_related_issue_overview
+get_info_from_jira
 get_commit_information_from_vcs
+
+
