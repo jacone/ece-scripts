@@ -481,12 +481,19 @@ function generate_new_changelog() {
   print_and_log "Generating change log for revision $revision" ...
   (
     cd ${svn_src_dir}
-    # TODO, get the previous revision built instead of PREV
+    local previous_revision=PREV
+    previous_revision=$(
+      ls $release_dir/*.deb | \
+        grep -v latest | \
+        sed 's/.*r\([0-9]*\).deb/\1/g' | \
+        sort | \
+        uniq
+    )
     run generate-changelog \
       --project $customer \
       --user $svn_user \
       --password $svn_password \
-      --from PREV \
+      --from $previous_revision \
       --to $revision
   )
 }
@@ -568,6 +575,15 @@ Description: Server configuration for ${machine}
   directory in the ${USER} user's Version Control System.
 EOF
 
+    # changelogs
+    local package_changelog_dir=${target_dir}/usr/share/doc/vizrt/$package_name
+    make_dir $package_changelog_dir
+    local change_log_dir=$HOME/.generate-changelog/${customer}/${svn_path}
+    if [ -d  $change_log_dir ]; then
+      run cp ${change_log_dir}/* $package_changelog_dir
+    fi
+
+    # build the package
     if [ ! -x /usr/bin/dpkg-deb ]; then
       print_and_log "You must have dpkg-deb installed to create packages :-("
       return
