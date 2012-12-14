@@ -477,19 +477,17 @@ function phase_verify_project
   add_global_libs
 }
 
-function generate_new_changelog_if_does_not_exist() {
-  local dir=$HOME/.$(basename $0)/changelog
-  make_dir $dir
-
-  local file=${dir}/${revision}.changelog
-  if [ -e $file ]; then
-    return
-  fi
-
+function generate_new_changelog() {
   print_and_log "Generating change log for revision $revision" ...
   (
     cd ${svn_src_dir}
-    generate-changelog --from PREV --to $revision > $file
+    # TODO, get the previous revision built instead of PREV
+    run generate-changelog \
+      --project $customer \
+      --user $svn_user \
+      --password $svn_password \
+      --from PREV \
+      --to $revision
   )
 }
 
@@ -507,7 +505,7 @@ function create_machine_conf_packages() {
     return
   fi
 
-  generate_new_changelog_if_does_not_exist
+  generate_new_changelog
 
   local machine_list=$(
     find $conf_dir -maxdepth 1 -type d | \
