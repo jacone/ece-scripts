@@ -216,8 +216,9 @@ function set_up_escenic-munin-plugins() {
 }
 
 function set_up_hugin-node() {
-  mkdir -p $target_dir/etc/{hugin.often,hugin.hourly,hugin.daily,hugin.weekly,cron.d}
-  mkdir -p $target_dir/usr/{bin,sbin,share/doc/hugin,share/hugin}
+  mkdir -p $target_dir/etc/hugin/{hugin.often,hugin.hourly,hugin.daily,hugin.weekly}
+  mkdir -p $target_dir/etc/{cron.d,sudoers.d}
+  mkdir -p $target_dir/usr/{bin,share/doc/hugin,share/hugin/plugins,share/hugin/helpers}
   mkdir -p $target_dir/var/lib/hugin
   
   local dir=$(mktemp -d)
@@ -226,11 +227,13 @@ function set_up_hugin-node() {
     wget $wget_opts https://bitbucket.org/mogsie/hugin/get/default.tar.gz
     tar xzf default.tar.gz
     cp $dir/mogsie-hugin-*/bin/* $target_dir/usr/bin
-    cp $dir/mogsie-hugin-*/sbin/* $target_dir/usr/sbin
-    cp $dir/mogsie-hugin-*/etc/* $target_dir/etc
+    cp $dir/mogsie-hugin-*/helpers/* $target_dir/usr/share/hugin/helpers/
+    cp $dir/mogsie-hugin-*/etc/* $target_dir/etc/hugin/
+    cp $dir/mogsie-hugin-*/sudoers/* $target_dir/etc/sudoers.d/
     cp $dir/mogsie-hugin-*/cron/* $target_dir/etc/cron.d/
-    cp $dir/mogsie-hugin-*/checks/* $target_dir/usr/share/hugin/
-    cp $dir/mogsie-hugin-*/README.md $target_dir/usr/share/doc/hugin
+    cp $dir/mogsie-hugin-*/checks/* $target_dir/usr/share/hugin/plugins/
+    cp $dir/mogsie-hugin-*/*.md $target_dir/usr/share/doc/hugin
+    cp $dir/mogsie-hugin-*/LICENSE $target_dir/usr/share/doc/hugin
 
     # chmod 755 $file $target_dir/usr/bin/*
   )
