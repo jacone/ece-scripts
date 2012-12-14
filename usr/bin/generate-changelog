@@ -47,10 +47,16 @@ function get_user_input() {
   local next_is_from=0
   local next_is_to=0
   local next_is_project=0
+  local next_is_user=0
+  local next_is_password=0
   
   for el in "$@"; do
     if [[ "$el" == "-s" || "$el" == "--from" ]]; then
       next_is_from=1
+    elif [[ "$el" == "-u" || "$el" == "--user" ]]; then
+      next_is_user=1
+    elif [[ "$el" == "-p" || "$el" == "--password" ]]; then
+      next_is_password=1
     elif [[ "$el" == "-t" || "$el" == "--to" ]]; then
       next_is_to=1
     elif [[ "$el" == "-p" || "$el" == "--project" ]]; then
@@ -60,6 +66,12 @@ function get_user_input() {
     elif [ ${next_is_from-0} -eq 1 ]; then
       from=$el
       next_is_from=0
+    elif [ ${next_is_user-0} -eq 1 ]; then
+      user=$el
+      next_is_user=0
+    elif [ ${next_is_password-0} -eq 1 ]; then
+      password=$el
+      next_is_password=0
     elif [ ${next_is_to-0} -eq 1 ]; then
       to=$el
       next_is_to=0
@@ -136,6 +148,14 @@ function sanity_check() {
       "does not contain a working version control checkout."
     exit 1
   fi
+
+  conf_file=$HOME/.$(basename $0).conf
+  ensure_variable_is_set \
+    project_code \
+    user \
+    password \
+    jira_base_url \
+    svn_base_url
 }
 
 function get_project() {
