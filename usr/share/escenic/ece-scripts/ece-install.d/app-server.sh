@@ -466,7 +466,7 @@ function set_appropriate_jvm_heap_sizes() {
   local total_size=$(get_total_memory_in_mega_bytes)
 
   if [ $total_size -lt $heap_size ]; then
-    print_and_log "$(yellow WARNING) $HOSTNAME only has $total_size MBs of" \
+    print_and_log "$(yellow WARNING) $HOSTNAME has only $total_size MBs of" \
       "memory, I will use ${percent}% of this for the JVM heap sizes, but you" \
       "should really consider adding more RAM so that" \
       "the $instance_name instance gets at least 2GBs"
