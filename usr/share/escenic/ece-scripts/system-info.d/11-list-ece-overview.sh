@@ -63,7 +63,7 @@ function create_ece_overview() {
 
 ## $1 :: the instance name
 function list_error_overview_for_instance() {
-  local file=/var/log/escenic/${HOSTNAME}-${1}-messages
+  local file=/var/log/escenic/${1}-messages
   if [ ! -r $file ]; then
     return
   fi
@@ -131,7 +131,7 @@ function check_picture_file() {
 
 ## $1 is thefile
 function list_sax_errors() {
-  local file=/var/log/escenic/${HOSTNAME}-${1}-messages
+  local file=/var/log/escenic/${1}-messages
   local result="$(grep ^'Caused by: org.xml.sax.SAXParseException:' $file | sort | uniq)"
   
   if [ -z $result ]; then
@@ -148,7 +148,7 @@ function list_import_overview_for_instance() {
     return
   fi
   
-  local file=/var/log/escenic/${HOSTNAME}-${1}-messages
+  local file=/var/log/escenic/${1}-messages
   
   if [ ! -e $file ]; then
     return
