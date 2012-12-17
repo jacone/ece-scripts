@@ -1,2 +1,1 @@
-/etc/escenic/ece.conf
 /etc/cron.daily/remove-old-escenic-log-files
