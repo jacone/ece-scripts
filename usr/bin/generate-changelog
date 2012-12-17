@@ -168,16 +168,21 @@ function sanity_check() {
     password \
     jira_base_url \
     svn_base_url
+
+  if [[ "$(get_from_revision)" == "$(get_to_revision)" ]]; then
+    print_and_log "From and to revision are the same," \
+      "will no create any change log"
+    exit 0
+  fi
 }
 
 function get_project() {
-  echo ${project_code} | tr [A-Z] [a-z]
+  echo $(lowercase ${project_code})
 }
 
 function get_archive_dir() {
-  local project_context=$(get_svn_location | \
-    sed -e  "s#${svn_base_url}/##g" -e 's#[ ]*##g' | \
-    tr [A-Z] [a-z]
+  local project_context=$(lowercase $(get_svn_location | \
+    sed -e  "s#${svn_base_url}/##g" -e 's#[ ]*##g')
   )
   
   local dir=${archive_base_dir}/${project_context}
