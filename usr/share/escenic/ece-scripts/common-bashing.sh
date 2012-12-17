@@ -499,3 +499,9 @@ function common_bashing_user_cancelled_hook() {
   common_bashing_exit_hook
 }
 
+## Returns the string passed where all letters are lower cased.
+##
+## $@ :: as many strings as you like.
+function lowercase() {
+  echo "$@" | tr [A-Z] [a-z]
+}
