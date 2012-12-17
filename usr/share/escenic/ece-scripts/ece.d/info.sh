@@ -65,6 +65,7 @@ function print_deployment_state() {
   print "|-> EAR used:" $(grep ^ear_used $file | cut -d'=' -f2-)
   print "|-> MD5 sum:" $(grep ^md5_sum $file | cut -d'=' -f2-)
   print "|-> Deployment date:" $(grep ^deployed_date $file | cut -d'=' -f2-)
+  print "|-> Deployment log:" 
 }
 
 ## $1: tomcat dir
