@@ -82,6 +82,7 @@ function show_all_log_paths() {
     echo $(get_log4j_log)
     echo $(get_gc_log)
     echo $log
+    echo $(get_deployment_log)
   fi
 }
 
