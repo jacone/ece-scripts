@@ -579,7 +579,8 @@ EOF
     # changelogs
     local package_changelog_dir=${target_dir}/usr/share/doc/vizrt/$package_name
     make_dir $package_changelog_dir
-    local change_log_dir=$HOME/.generate-changelog/${customer}/${svn_path}
+    local svn_base_dir=$(dirname $svn_base)
+    local change_log_dir=$HOME/.generate-changelog/${svn_base_dir}/${svn_path}
     if [ -d  $change_log_dir ]; then
       run cp ${change_log_dir}/* $package_changelog_dir
     fi
