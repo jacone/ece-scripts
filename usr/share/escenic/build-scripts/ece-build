@@ -487,7 +487,8 @@ function generate_new_changelog() {
         grep -v latest | \
         sed 's/.*r\([0-9]*\).deb/\1/g' | \
         sort | \
-        uniq
+        uniq | \
+        tail -1
     )
     run generate-changelog \
       --project $customer \
