@@ -483,18 +483,26 @@ function generate_new_changelog() {
     cd ${svn_src_dir}
     local previous_revision=PREV
     previous_revision=$(
-      ls $release_dir/*.deb | \
+      ls $release_dir/*.deb 2>/dev/null | \
         grep -v latest | \
         sed 's/.*r\([0-9]*\).deb/\1/g' | \
         sort | \
         uniq | \
         tail -1
     )
+
+    # in case we don't have any previous builds, we don't pass
+    # anything in the from parameters.
+    local from_option=""
+    if [ -n "${previous_revision}" ]; then
+      from_option="--from $previous_revision"
+    fi
+    
     run generate-changelog \
-      --project $customer \
+      --project $(basename $svn_base) \
       --user $svn_user \
       --password $svn_password \
-      --from $previous_revision \
+      ${from_option} \
       --to $revision
   )
 }
@@ -579,8 +587,9 @@ EOF
     # changelogs
     local package_changelog_dir=${target_dir}/usr/share/doc/vizrt/$package_name
     make_dir $package_changelog_dir
-    local svn_base_dir=$(dirname $svn_base)
+    local svn_base_dir=$(lowercase $(basename $svn_base))
     local change_log_dir=$HOME/.generate-changelog/${svn_base_dir}/${svn_path}
+    
     if [ -d  $change_log_dir ]; then
       run cp ${change_log_dir}/* $package_changelog_dir
     fi
