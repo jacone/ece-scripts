@@ -398,12 +398,12 @@ function check_for_required_downloads()
   local some_is_missing=0
   
   for el in $required_escenic_packages; do
-    if [ $(ls $download_dir/$el*.zip 2>/dev/null | wc -l) -lt 1 ]; then
+    if [ $(ls $download_dir/$el*.{zip,jar} 2>/dev/null | wc -l) -lt 1 ]; then
       print_and_log "-> $el is missing"
       some_is_missing=1
     else
       # want the newest one if there are several
-      local file=$(ls $download_dir/$el*.zip | tail -1)
+      local file=$(ls $download_dir/$el*.{zip,jar} 2>/dev/null | tail -1)
       unzip -t $file > /dev/null 2>&1
 
       if [ $? -ne 0 ]; then

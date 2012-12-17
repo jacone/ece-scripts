@@ -184,13 +184,15 @@ function set_up_engine_and_plugins() {
 }
 
 function set_up_assembly_tool() {
-  log "Setting up the Assembly Tool ..."
+  print_and_log "Setting up the Assembly Tool ..."
 
   make_dir $escenic_root_dir/assemblytool/
   cd $escenic_root_dir/assemblytool/
 
   if [ -e $download_dir/assemblytool*zip ]; then
     run unzip -q -u -o $download_dir/assemblytool*zip
+  elif [ -e $download_dir/assemblytool*jar ]; then
+    run unzip -q -u -o $download_dir/assemblytool*jar
   fi
 
   # adding an instance layer to the Nursery configuration
