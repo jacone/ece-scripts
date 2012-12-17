@@ -18,6 +18,7 @@ function get_info_for_type() {
   print "|-> App server log:" $(get_app_log)
   print "|-> Log4j log:     " $(get_log4j_log)
   print "|-> GC log:        " $(get_gc_log)
+  print "|-> Deployment log:" $(get_deployment_log)
 
   if [ -n "${appserver}" ]; then
     print "Application server:"
@@ -65,7 +66,6 @@ function print_deployment_state() {
   print "|-> EAR used:" $(grep ^ear_used $file | cut -d'=' -f2-)
   print "|-> MD5 sum:" $(grep ^md5_sum $file | cut -d'=' -f2-)
   print "|-> Deployment date:" $(grep ^deployed_date $file | cut -d'=' -f2-)
-  print "|-> Deployment log:" 
 }
 
 ## $1: tomcat dir
