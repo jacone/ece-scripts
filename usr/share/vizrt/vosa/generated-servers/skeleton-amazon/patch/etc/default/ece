@@ -1,0 +1,25 @@
+# Configuration for the /etc/init.d/ece script     -*- conf -*-
+
+# Space separated lists of instance names for ECE instances and search
+# instances. If you only have one # instance, use "default" as its
+# name. If you don't have any instances of that type on this host,
+# then just set the variable to an empty string.
+engine_instance_list="engine1"
+search_instance_list="search1"
+analysis_instance_list=""
+
+# You only need one hub in an ECE cluster, so only set this one to
+# true on one host. 1 means on, 0 means off.
+enable_rmi_hub=0
+
+# The location of the ece script, default is /usr/bin/ece
+ece_script=/usr/bin/ece
+
+# Default Unix user that will run the processes, default is escenic
+# for both of these.
+ece_unix_group="escenic"
+ece_unix_user="escenic"
+
+# Do you want cron to remove (5 days) old log files every day?
+# (default is yes, i.e. 1. Set 0 to turn this off)
+remove_old_log_files=1
