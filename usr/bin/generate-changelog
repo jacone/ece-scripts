@@ -27,7 +27,11 @@ function bootstrap_thyself() {
 
 function read_user_settings() {
   local file=$HOME/.$(basename $0).conf
-  run source $file
+  if [ -r $file ]; then
+    run source $file
+  else
+    log $(blue INFO) $file "doesn't exist, will default to Atlassian on Demand"
+  fi
 }
 
 function get_header_from_jira() {
@@ -147,6 +151,14 @@ function sanity_check() {
     print "This directory, $(pwd), " \
       "does not contain a working version control checkout."
     exit 1
+  fi
+
+  # defaulting to Atlassian on demand
+  jira_base_url=${jira_base_url-https://vizrtcustomers.jira.com}
+  if [ -z "$svn_base_url" ]; then
+    # bash default string substitution terminates with slashes, hence
+    # have to set this manually here.
+    svn_base_url=${jira_base_url}/svn
   fi
 
   conf_file=$HOME/.$(basename $0).conf
