@@ -556,45 +556,32 @@ function install_system_info() {
   # creating symlinks like:
   # /var/www/system-info/var/log/escenic -> /var/log/escenic
   # /var/www/system-info/etc/escenic -> /etc/escenic
-  make_dir ${dir}/$(dirname $escenic_log_dir)
-  local target=${dir}/$(dirname ${escenic_log_dir})/$(basename ${escenic_log_dir})
-  if [ ! -h $target ]; then
-    run ln -s ${escenic_log_dir} $target
-  fi
+  local dir_list="
+    $escenic_log_dir
+    $escenic_conf_dir
+    $escenic_data_dir
+    $tomcat_base/logs
+  "
+  for source_dir in $dir_list; do
+    if [ ! -d $source_dir ]; then
+      continue
+    fi
 
-  make_dir ${dir}/$(dirname $escenic_conf_dir)
-  target=${dir}/$(dirname $escenic_conf_dir)/$(basename $escenic_conf_dir)
-  if [ ! -h $target ]; then
-    run ln -s ${escenic_conf_dir} $target
-  fi
-
-  make_dir ${dir}/$tomcat_base
-  target=${dir}/$tomcat_base/logs
-  if [ ! -h $target ]; then
-    run ln -s $tomcat_base/logs $target
-  fi
-
-  # thttpd doesn't serve files if they've got the execution bit set
-  # (it then think it's a misnamed CGI script). Hence, we must ensure
-  # the execute bit is set.
-  if [ -d $escenic_log_dir ]; then
-    find $escenic_log_dir -type f | egrep ".log$|.out$" | while read f; do
+    local target_dir=$dir/$source_dir
+    make_dir $(dirname $target_dir)
+    
+    if [ ! -h $target_dir ]; then
+      run ln -s $source_dir $target_dir
+    fi
+    
+    # thttpd doesn't serve files if they've got the execution bit set
+    # (it then think it's a misnamed CGI script). Hence, we must
+    # ensure the execute bit is not set.
+    find $source_dir -type f | egrep ".(conf|properties|log|diff|report|out)$" | \
+      while read f; do
       run chmod 644 $f
     done
-  fi
-
-  if [ -d $escenic_conf_dir ]; then
-    find $escenic_conf_dir -type f | \
-      egrep ".conf$|.properties$" | while read f; do
-      run chmod 644 $f
-    done
-  fi
-
-  if [ -d  $tomcat_base/logs ]; then
-    find $tomcat_base/logs -type f | egrep ".log$" | while read f; do
-      run chmod 644 $f
-    done
-  fi
+  done
 
   add_next_step "Always up to date system info: http://$HOSTNAME:$port/" \
     "you can also see system-info in the shell, type: system-info"
