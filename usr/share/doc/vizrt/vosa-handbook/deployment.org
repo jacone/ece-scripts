@@ -24,7 +24,7 @@ the chat room. This is the URI you use for the 'ece deploy' command below.
 
 In future you will also be able to deploy an ear to staging in the chatroom.
 
-*** Build from the command line on your builder
+*** Build from the command line on your build server
 Log on to the build server as the user for the given habitat and run
 the build script:
 
@@ -48,8 +48,25 @@ To build trunk:
 $ ece-build -b <branchname>
 #+END_SRC
 
-Once the build is done, the URI of the finished EAR file is printed in
-the shell. This is the URI you use for the 'ece deploy' command below.
+Once the build is done, the URI of the finished EAR file and the
+corresponding configuration packages for all the machines in your
+environment are printed out in the shell:
+#+BEGIN_SRC text
+[ece-build-0] Starting release creation! @ <%= trail_today_date %>
+[ece-build-0] Additional output can be found in /home/<%= trail_builder_user %>/ece-build.log
+[ece-build-477] Generating change log for revision 6307 ...
+[ece-build-515] Configuration packages available here:
+[ece-build-515] http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/vosa-conf-${HOSTNAME}-1-<%= trail_builder_user %>-trunk-r6307.deb
+[ece-build-515] Replace '${HOSTNAME}' with any of: [ <%= trail_presentation_host_list %>
+[ece-build-515] <%= trail_editor_host %> <%= trail_staging_editor_host %> ] for the other machines' conf packages.
+[ece-build-515] BUILD SUCCESSFUL! @ <%= trail_today_date %>
+[ece-build-515] You'll find the release here:
+[ece-build-515] http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4331-<%= trail_today_date %>_1225.ear
+#+END_SRC
+
+The EAR URI can be used the 'ece deploy' command below, and the conf
+package(s) can be used with the =ece-deploy= command, or downloaded
+manually.
 
 ** Deploying a new EAR file
 In the examples here, we have a build server on <%= trail_builder_host %>
