@@ -28,7 +28,7 @@ function install_analysis_server() {
   su - $ece_user -c "$ece_command" 1>>$log 2>>$log
   exit_on_error "su - $ece_user -c \"$ece_command\""
 
-  local seconds=15
+  local seconds=25
   print_and_log "Waiting ${seconds} seconds for EAE to come up ..."
   sleep $seconds
   
