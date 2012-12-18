@@ -5,8 +5,8 @@ function get_gc_log() {
 }
 
 function get_deployment_log() {
-  if [ -r $log_dir/${instance}-deployment.log ]; then
-    echo $log_dir/${instance}-deployment.log
+  if [ -r $data_dir/${instance}-deployment.log ]; then
+    echo $data_dir/${instance}-deployment.log
   fi
 }
 
@@ -30,8 +30,8 @@ function tail_messages_log() {
 function tail_out_log() {
   tail_list=$log
 
-    # if needs be, we can add more system out logs here. For now,
-    # we're sticking with the default one.
+  # if needs be, we can add more system out logs here. For now,
+  # we're sticking with the default one.
   
   print "Tailing the system out log $tail_list"
   tail -f $tail_list
