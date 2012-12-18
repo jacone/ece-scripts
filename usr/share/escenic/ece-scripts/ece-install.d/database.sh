@@ -182,7 +182,7 @@ function set_db_settings_from_fai_conf()
   # if the analysis or analysis DB profile is selected, these are the
   # only ones that care about analysis specific DB settings.
   if [[ $install_profile_number -eq $PROFILE_ANALYSIS_DB_SERVER ||
-        $install_analysis_server -eq $PROFILE_ANALYSIS_SERVER ]]; then
+        $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]]; then
     # order of precedence:
     # 1) fai_analysis_db_*
     # 2) default_db_*
