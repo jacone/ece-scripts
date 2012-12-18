@@ -986,8 +986,7 @@ if [ ${fai_enabled-0} -eq 1 ]; then
         no_fai_profile=0
     fi
     
-    if [[ ${fai_db_install-0} -eq 1 ||
-          ${fai_analysis_db_install-0} -eq 1 ]]; then
+    if [ ${fai_db_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_DB_SERVER
         install_database_server
         no_fai_profile=0
