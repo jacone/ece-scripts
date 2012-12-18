@@ -110,7 +110,6 @@ $ sudo ssh escenic@<%= trail_presentation_host %> ece -i engine1 info
 [ece#engine-engine1] |-> MD5 sum: 58638b16efc7f4cebd8d0acb4eecfb40
 #+END_SRC
 
-
 If anything goes wrong in [[Deploying%20a%20new%20EAR%20file%20for%20an%20ECE%0Ainstance][Deploying a new EAR file for an ECE
 instance]], you can just repeat the deployment steps with the URL of the
 previous EAR.
@@ -163,68 +162,18 @@ torstein@control:~$ sudo ssh escenic@<%= trail_presentation_host %> ece
 
 
 ** Updating Publication Resources
-This section describes how you update publication resources. Here, we
-use content-type as an example.
-
-The content type publication resource is special because it's merged
-by WF and you thus must take it from the EAR the build server built
-for you. Other publication resources could be taken directly from the
-SCM, but for consistency, you can just follow the guide below for
-these as well (layout, layout-group, menu, community/security and so
-on).
-
-First, make sure you have already done the deployment on the
-<%= trail_presentation_host %> server. Login to one of the presentation
-servers. From <%= trail_control_host %>, do:
+Updating the publication resources is only a matter of passing the
+=--update-publication-resources= to the =ece-deploy= command:
 #+BEGIN_SRC sh
-$ sudo ssh root@<%= trail_presentation_host %>
+$ sudo ece-deploy \
+   --ear http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4121-<%= trail_today_date %>_1524.ear \
+   --update-publication-resources
 #+END_SRC
 
-Then, change to the user running the ECE user
-#+BEGIN_SRC sh
-# su - escenic
-#+END_SRC
-
-After this, download current content-type so that we can keep a backup
-of it.
-#+BEGIN_SRC sh
-$ mkdir ~/backup
-$ wget -O ~/backup/content-type-$(date --iso)-before-deployment \
-       http://localhost:8080/escenic-admin/publication-resources/<%= trail_publication_name %>/escenic/content-type
-#+END_SRC
-
-The next step is to locate the new content-type definition.  Go to the
-new new content-type from your latest deployment
-
-#+BEGIN_SRC sh
-$ cd /opt/tomcat-engine1/webapps/<%= trail_webapp_name %>/META-INF/escenic/publication-resources/escenic/
-#+END_SRC
-
-Then, confirm the changes using diff:
-#+BEGIN_SRC sh
-$ diff -w ~/backup/content-type-$(date --iso)-before-deployment content-type
-#+END_SRC
-
-Now, upload the new content-type to ECE.  The command below assumes
-that there is a file called the same as the publication resource in
-the current directory.
-#+BEGIN_SRC sh
-$ ece -i engine1 -p <%= trail_publication_name %> -r content-type update
-#+END_SRC
-
-To confirm our changes, we now download the resource again to check if
-all the changes are the way we want them:
-#+BEGIN_SRC sh
-$ wget -O ~/backup/content-type-$(date --iso)-after-deployment \
-       http://localhost:8080/escenic-admin/publication-resources/<%= trail_publication_name %>/escenic/content-type
-#+END_SRC
-
-Finally, run diff again to see that the changes are correct:
-#+BEGIN_SRC sh
-$ diff -w ~/backup/content-type-$(date --iso)-before-deployment \
-          ~/backup/content-type-$(date --iso)-after-deployment
-#+END_SRC
-
+The list of publications will be pull down from the =/escenic-admin=
+web application mounted on all Content Engines running on the host
+you're logged into and the publication resources will be located on
+the file system under the app server deployment path.
 
 ** Updating Server Configuration
 *** Make changes to the =server-admin= tree
@@ -288,30 +237,27 @@ packages for all of the machines you've defined in your =server-admin=
 directory tree.
 
 #+BEGIN_SRC text
-<%= trail_builder_user %>@<%= trail_builder_host %>:~$ ./build.sh release
-[build.sh-0] Starting building @ <%= trail_today_date_full %>
-[build.sh-256] Adding an assembly descriptor for Dashboard ...
-[build.sh-374] Build SUCCESSFUL! @ <%= trail_today_date_full %>
-[build.sh-374] You'll find the release here: http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4121-<%= trail_today_date_full %>_1524.ear
-[build.sh-407] Conf packages available: http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/vosa-conf-<%= trail_presentation_host %>-1-<%= trail_builder_user %>-trunk-r4899.deb
-[build.sh-407] Replace '<%= trail_presentation_host %>' with any of: [ <%= trail_editor_host %> <%= trail_db_master_host %> <%= trail_db_slave_host %> <%= trail_import_host %> <%= trail_analysis_host %> <%= trail_presentation_host_list %> ] for the other machines' conf packages.
+<%= trail_builder_user %>@<%= trail_builder_host %>:~$ ece-build
+[ece-build-0] Starting building @ <%= trail_today_date_full %>
+[ece-build-256] Adding an assembly descriptor for Dashboard ...
+[ece-build-374] Build SUCCESSFUL! @ <%= trail_today_date_full %>
+[ece-build-374] You'll find the release here: http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4121-<%= trail_today_date_full %>_1524.ear
+[ece-build-407] Conf packages available: http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/vosa-conf-<%= trail_presentation_host %>-1-<%= trail_builder_user %>-trunk-r4899.deb
+[ece-build-407] Replace '<%= trail_presentation_host %>' with any of: [ <%= trail_editor_host %> <%= trail_db_master_host %> <%= trail_db_slave_host %> <%= trail_import_host %> <%= trail_analysis_host %> <%= trail_presentation_host_list %> ] for the other machines' conf packages.
 <%= trail_builder_user %>@<%= trail_builder_host %>:~$
 #+END_SRC
 
 *** Deploying the Configuration Packages
-Log on to the different hosts, download their DEB package and install
-it using =dpkg=. Here, we use <%= trail_presentation_host %> as an
+Log on to the different hosts and call =ece-deploy= with the =--conf=
+parameter to install the package (you normally do this together with
+the EAR file, but for the sake of the example, you /can/ just deploy
+the conf package): Here, we use <%= trail_presentation_host %> as an
 example:
 
 #+BEGIN_SRC text
 <%= trail_control_host %>$ ssh <%= trail_presentation_host %>
-<%= trail_presentation_host %>$ cd /tmp
-<%= trail_presentation_host %>$ wget \
-  --quiet \
-  --http-user <%= trail_builder_http_user %> \
-  --http-password <%= trail_builder_http_password %> \
+<%= trail_presentation_host %>$ sudo ece-insatll --conf \
   http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/vosa-conf-<%= trail_presentation_host %>-1-<%= trail_builder_user %>-trunk-r4899.deb
-<%= trail_presentation_host %>$ sudo -i vosa-conf-<%= trail_presentation_host %>-1-<%= trail_builder_user %>-trunk-r4899.deb
 #+END_SRC
 
 Because of the mighty =dpkg= and the =DEB= package format, you'll get
