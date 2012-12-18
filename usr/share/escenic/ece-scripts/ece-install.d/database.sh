@@ -167,8 +167,6 @@ function set_ecedb_conf() {
 }
 
 function set_up_ecedb() {
-  print_and_log "Setting up the ${db_schema} database schema ..."
-
   set_ecedb_conf
   pre_install_new_ecedb
   create_ecedb
