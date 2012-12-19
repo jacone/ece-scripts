@@ -33,6 +33,7 @@ function create_publication() {
       
       ensure_variable_is_set fai_publication_domain_mapping_list
       local the_tmp_dir=$(mktemp -d)
+      wget_auth=$wget_builder_auth
       download_uri_target_to_dir $fai_publication_ear $download_dir
       (
         run cd $the_tmp_dir
