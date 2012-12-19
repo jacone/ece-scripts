@@ -141,6 +141,8 @@ function get_info_from_jira() {
       echo "   URL: ${jira_base_url}/browse/$(basename $f)" >> $the_report
       echo "" >> $the_report
     done
+
+    add_risk_assemsment_to_report
   fi
 
   echo "Report:" $the_report
@@ -202,6 +204,5 @@ get_user_input "$@"
 sanity_check
 get_info_from_jira
 get_commit_information_from_vcs
-add_risk_assemsment_to_report
 
 
