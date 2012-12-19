@@ -107,8 +107,8 @@ function get_commit_information_from_vcs() {
   if [ ${full_listing-0} -eq 1 ]; then
     cat $the_diff
   else
-    echo "A full overview of all" $(egrep '^(\+|\-) ' $the_diff | wc -l) \
-      "changes can be viewed here:" $the_diff | fmt
+    echo "Full diff of all" $(egrep '^(\+|\-) ' $the_diff | wc -l) \
+      "changes:" $the_diff | fmt
   fi
 }
 
@@ -122,7 +122,7 @@ function get_svn_location() {
 }
 
 function get_info_from_jira() {
-  local the_report=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).report
+  the_report=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).report
   
   if [[ ! -e $the_report || $(should_regenerate) -eq 1 ]]; then
     echo "Changes in $(get_svn_location)" > $the_report
@@ -142,8 +142,8 @@ function get_info_from_jira() {
       echo "" >> $the_report
     done
   fi
-  
-  cat $the_report
+
+  echo "Report:" $the_report
 }
 
 function sanity_check() {
@@ -190,11 +190,18 @@ function get_archive_dir() {
   echo $dir
 }
 
+function add_risk_assemsment_to_report() {
+  echo "Risk assessment score: " \
+    $(wc -l $the_report 2>/dev/null | cut -d' ' -f1) | \
+    tee --append $the_report
+}
+
 bootstrap_thyself
 read_user_settings
 get_user_input "$@"
 sanity_check
 get_info_from_jira
 get_commit_information_from_vcs
+add_risk_assemsment_to_report
 
 
