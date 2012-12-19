@@ -97,7 +97,7 @@ function should_regenerate() {
 }
 
 function get_commit_information_from_vcs() {
-  local the_diff=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).diff
+  the_diff=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).diff
 
   if [[ ! -e $the_diff || $(should_regenerate) -eq 1 ]]; then
     svn diff -r $(get_from_revision):$(get_to_revision) > $the_diff
@@ -194,15 +194,15 @@ function get_archive_dir() {
 
 function add_risk_assemsment_to_report() {
   echo "Risk assessment score: " \
-    $(wc -l $the_report 2>/dev/null | cut -d' ' -f1) | \
-    tee --append $the_report
+    $(wc -l $the_diff 2>/dev/null | cut -d' ' -f1) \
+    >> $the_report
 }
 
 bootstrap_thyself
 read_user_settings
 get_user_input "$@"
 sanity_check
-get_info_from_jira
 get_commit_information_from_vcs
+get_info_from_jira
 
 
