@@ -45,8 +45,25 @@ function set_up_ece_scripts()
   else
     install_ece_scripts_with_git
   fi
-  
+
   local file=${escenic_conf_dir}/ece.conf
+  local example_ece_conf=/usr/share/doc/escenic/escenic-content-engine-scripts/examples/etc/ece.conf
+
+  # if there's no ece.conf on the system, we assume it's a clean
+  # system and we use the ece.conf from the examples directory.
+  if [ ! -e $file ]; then
+    if [ -e $example_ece_conf ]; then
+      print_and_log "The common conf file for /usr/bin/ece," \
+        $file "didn't exist on" $HOSTNAME \
+        "(I assume a fresh system), copying the one from" $example_ece_conf "..."
+      run cp $example_ece_conf $file
+    else
+      print_and_log $(yellow WARNING) $file "couldn't be found" \
+        "and neither could" $example_ece_conf ", you'll have to" \
+        "provide a valid ece.conf yourself, e.g. with a conf package"
+    fi
+  fi
+  
   set_conf_file_value assemblytool_home ${escenic_root_dir}/assemblytool $file
   set_conf_file_value backup_dir ${escenic_backups_dir} $file
   set_conf_file_value cache_dir ${escenic_cache_dir} ${file}
