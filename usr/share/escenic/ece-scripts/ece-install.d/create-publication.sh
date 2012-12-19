@@ -33,7 +33,16 @@ function create_publication() {
       
       ensure_variable_is_set fai_publication_domain_mapping_list
       local the_tmp_dir=$(mktemp -d)
-      wget_auth=$wget_builder_auth
+
+      # we're using the builder HTTP crendentials, if set, for
+      # downloading the EAR.
+      if [[ -n "${fai_builder_http_user}" && \
+        -n "${fai_builder_http_password}" ]]; then
+        wget_auth="
+          --http-user $fai_builder_http_user
+          --http-password $fai_builder_http_password
+        "
+      fi
       download_uri_target_to_dir $fai_publication_ear $download_dir
       (
         run cd $the_tmp_dir
