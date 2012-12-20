@@ -433,6 +433,14 @@ if [ -e /etc/bash_completion.d/ece ]; then
 fi
 EOF
   fi
+
+  # Having the EDITOR variable set is requirement for several
+  # commmands, including running:
+  # 
+  # 'ece -i <instance> -p <publication> -r <resource> edit'
+  if [ $(grep EDITOR ${bashrc} 2>/dev/null | wc -l) -lt 1 ]; then
+    echo "export EDITOR=vi" >> ${bashrc}
+  fi
   
   if [ $(grep ECE_CONF_LOCATIONS ${bashrc} | wc -l) -eq 0 ]; then
     echo "export ECE_CONF_LOCATIONS=\"$escenic_conf_dir\"" >> ${bashrc}
