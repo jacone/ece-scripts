@@ -16,6 +16,7 @@ _ece_commands()
       help
       info
       kill
+      list-deployments
       list-instances
       list-logs
       list-publications
