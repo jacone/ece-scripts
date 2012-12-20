@@ -53,7 +53,7 @@ function update_publication_resources() {
     root-section-parameters)
       do_put=true
       url=$(get_escenic_admin_url)
-      url=${url}/section-parameters-declared/${publication}
+      url=${url}/publication-resources/${publication}/0/escenic/section-parameter
       ;;
     *)
       print "Invalid resource: $(basename $resource) :-("
