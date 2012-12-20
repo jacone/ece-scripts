@@ -27,7 +27,7 @@ function create_pretty_printed_file_if_xml() {
   fi
   
   if [ $(looks_like_xml ${1}) -eq 1 ]; then
-    xml_pp ${1} | xmllint --format - > ${1}.xml
+    xml_pp ${1} | xmllint --noblanks --format - > ${1}.xml
   fi
 }
 
@@ -309,23 +309,40 @@ function update_publication_resources() {
     print_and_log "$el doesn't have any publications" \
       "so there's no publication resources to update ;-)"
     continue
+  else
+    print_and_log "${el}@${HOSTNAME} has the following publications:" \
+      $publication_list
   fi
 
   for publication in $publication_list; do
+    publication=$publication
+    
     # this means a regular deployment
     if [[ "$1" == "$tomcat_base" ]]; then
-      local publication_resources_dir=$tomcat_base/webapps-${publication}/${publication}/META-INF/escenic/publication-resources
+      local publication_resources_dir="/tmp/no/thing"
+      # must search for the right context in defaults.properties as
+      # the WAR file can differ from the publication name.
+      for el in $(find $tomcat_base/webapps-* -name defaults.properties); do
+        if [ $(grep "^publication-name=${publication}$" $el | wc -l) -gt 0 ]; then
+          local base_dir=${el%/WEB-INF/localconfig/defaults.properties}
+          publication_resources_dir=${base_dir}/META-INF/escenic/publication-resources
+          # we're happy, so break out of the loop
+          break
+        fi
+      done
+    # this means a roll back
     else
-      # this means roll back
-      local publication_resources_dir=${1}/${publication}/old
+      local publication_resources_dir=${1}/${publication}
     fi
 
+    print publication_resources_dir=$publication_resources_dir
+    
     if [ ! -d $publication_resources_dir ]; then
       continue
     fi
 
     print_and_log "Updating resources for publication" $publication "..."
-    # we gep away .xml and .diff file shere as these will be present
+    # we grep away .xml and .diff file shere as these will be present
     # when rolling back a deployment.
     for publication_resource in \
       $(find $publication_resources_dir -type f | egrep -v ".(xml|diff)$"); do
