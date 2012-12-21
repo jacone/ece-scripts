@@ -307,8 +307,6 @@ function update_publication_resources() {
   fi
 
   for publication in $publication_list; do
-    publication=$publication
-    
     # this means a regular deployment
     if [[ "$1" == "$tomcat_base" ]]; then
       local publication_resources_dir="/tmp/no/thing"
@@ -571,7 +569,7 @@ if [ ${make_deployment-1} -eq 1 ]; then
   if [ -n "$conf_package_uri" ]; then
     deploy_conf
   fi
-  
+
   if [ ${update_the_publication_resources-0} -eq 1 ]; then
     for el in $engine_instance_list; do
       run source /etc/escenic/ece-${el}.conf
