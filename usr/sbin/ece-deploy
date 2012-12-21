@@ -77,14 +77,6 @@ function deploy_ear() {
     proxy_settings="http_proxy=$http_proxy"
   fi
 
-  print_and_log "Remembering the old deployment states for all instances ..."
-  for el in $engine_instance_list $search_instance_list; do
-    local file=/var/lib/escenic/${el}.state
-    if [ -e $file ]; then
-      run cp $file $(get_publication_old_dir)
-    fi
-  done
-    
   for el in $engine_instance_list; do
     su - $ece_unix_user -c \
       "${proxy_settings} ece -i $el stop deploy clean start --uri $ear_uri"
@@ -335,8 +327,6 @@ function update_publication_resources() {
       local publication_resources_dir=${1}/${publication}
     fi
 
-    print publication_resources_dir=$publication_resources_dir
-    
     if [ ! -d $publication_resources_dir ]; then
       continue
     fi
@@ -418,16 +408,16 @@ function roll_back_everything_to_version() {
     "from" $(date --date @$(echo ${roll_back_to_version} | cut -d'-' -f2)) \
     "..."
 
-  local old_ece_deploy_data_dir=$ece_deploy_data_dir/${roll_back_to_version}/old
-  if [ ! -d $old_ece_deploy_data_dir ]; then
+  local new_ece_deploy_data_dir=$ece_deploy_data_dir/${roll_back_to_version}/new
+  if [ ! -d $new_ece_deploy_data_dir ]; then
     print_and_log "I cannot find ${roll_back_to_version}'s files," \
-      "they should have been here:" $old_ece_deploy_data_dir
+      "they should have been here:" $new_ece_deploy_data_dir
     exit 1
   else
-    print_and_log "Using data in" $old_ece_deploy_data_dir "to perform the rollback"
+    print_and_log "Using data in" $new_ece_deploy_data_dir "to perform the rollback"
   fi
 
-  local package_version_file=$ece_deploy_data_dir/${roll_back_to_version}/new/vosa-conf-${HOSTNAME}.version
+  local package_version_file=$new_ece_deploy_data_dir/vosa-conf-${HOSTNAME}.version
   if [ -e $package_version_file ]; then
     local deb_file=$ece_deploy_download_dir/vosa-conf-$HOSTNAME-$(cat $package_version_file).deb
     if [ -e $deb_file ]; then
@@ -441,17 +431,17 @@ function roll_back_everything_to_version() {
         "I couldn't find it in" $deb_file
     fi
   else
-    print_and_log "Couldn't find the previous version for vosa-conf-$HOSTNAME" \
+    print_and_log $(yellow WARNING) \
+      "Couldn't find the previous version for vosa-conf-$HOSTNAME" \
       "you must get a hold of the latest/approriate one yourself."
   fi
 
   for el in $engine_instance_list; do
-    local file=$ece_deploy_data_dir/${roll_back_to_version}/new/${el}.state
+    local file=$new_ece_deploy_data_dir/${el}.state
     if [ ! -e $file ]; then
       continue
     fi
 
-    # we source the state file to get the 'ear_used' value
     local old_ear=$(grep ear_used $file | cut -d'=' -f2)
     print_and_log "Rolling back ${el}'s EAR to ${old_ear} ..."
     ear_uri=${old_ear}
@@ -459,11 +449,12 @@ function roll_back_everything_to_version() {
   done
 }
 
-## $1 :: dir, can be the patht to the new or old directory of this
+## $1 :: dir, can be the path to the new or old directory of this
 ## deployment
 function remember_state() {
   make_dir $1
   
+  print_and_log "Remembering the deployment states for all instances ..."
   for el in $engine_instance_list $search_instance_list; do
     local file=/var/lib/escenic/${el}.state
     if [ -e $file ]; then
@@ -471,7 +462,7 @@ function remember_state() {
     fi
   done
 
-  if [ $(dpkg -l vosa-conf-$HOSTNAME | wc -l) -eq 0 ]; then
+  if [ $(dpkg -l vosa-conf-$HOSTNAME 2>/dev/null | wc -l) -eq 0 ]; then
     return
   fi
   
@@ -499,7 +490,6 @@ function remember_state() {
 }
 
 function print_summary() {
-  print_and_log "Finished @ $(date)"
   for el in $engine_instance_list $search_instance_list; do
     for ele in ${el}.state vosa-conf-$HOSTNAME.version; do
       if [[ -e $(get_deployment_dir)/old/${ele} && \
@@ -511,7 +501,7 @@ function print_summary() {
     done
   done
   
-  if [[ $(dpkg -l vosa-conf-$HOSTNAME | wc -l) -gt 0 && \
+  if [[ $(dpkg -l vosa-conf-$HOSTNAME 2>/dev/null | wc -l) -gt 0 && \
     -d $(get_deployment_dir)/old/vosa-conf-$HOSTNAME && \
     -d $(get_deployment_dir)/new/vosa-conf-$HOSTNAME ]]; then
     diff --recursive --ignore-all-space \
@@ -520,7 +510,10 @@ function print_summary() {
       > $(get_deployment_dir)/new/vosa-conf-${HOSTNAME}.diff
   fi
   
-  local diff_files=$(find $(get_deployment_dir) -name "*.diff")
+  local diff_files=$(
+    find $(get_deployment_dir) -name "*.diff" | \
+    grep -v 'usr/share/doc/escenic'
+  )
   if [ $(echo "$diff_files" | wc -c) -gt 2 ]; then
     print_and_log "Here are the diffs of all publication resources" \
       "and files that were changed:"
@@ -531,6 +524,7 @@ function print_summary() {
     done
   fi
 
+  print_and_log "Finished @ $(date)"
 }
 
 function crawl_a_wee_bit() {
@@ -596,6 +590,8 @@ fi
 
 if [ ${roll_back-0} -eq 1 ]; then
   make_dir $(get_deployment_dir)/old $(get_deployment_dir)/new
+  remember_state $(get_deployment_dir)/old
+  
   roll_back_everything_to_version
 
   if [ ${update_the_publication_resources-0} -eq 1 ]; then
@@ -605,6 +601,7 @@ if [ ${roll_back-0} -eq 1 ]; then
     done
   fi
   
+  remember_state $(get_deployment_dir)/new
   print_and_log "You have now rolled back to deployment ${roll_back_to_version}"
 fi
 
