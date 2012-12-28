@@ -27,17 +27,18 @@ text_resources="
 
 . /etc/vosa-service-declaration.conf 
 
+# TODO: grab port number from somewhere
 pubs=( $trail_publication_domain_mapping_list )
 for pub in "${pubs[@]/\#*/}" ; do
   for resource in $xml_resources ; do
     name=${resource//[\/]/-}
-    echo "escenic-publication-${pub}$name" "set -o pipefail; curl -s http://localhost:8080/escenic-admin/publication-resources/$pub$resource | xmllint --encode UTF-8 --format -"
+    echo "escenic-publication-${pub}$name" "curl -s http://localhost:8080/escenic-admin/publication-resources/$pub$resource | xml_pp -e UTF-8"
   done
   for resource in $text_resources ; do
     name=${resource//[\/]/-}
     echo "escenic-publication-${pub}$name" "curl -s http://localhost:8080/escenic-admin/publication-resources/$pub$resource"
   done
-  echo "escenic-publication-${pub}-section-parameters" "set -o pipefail; curl -s http://localhost:8080/escenic-admin/section-parameters/$pub/ | grep -v ^# | sort -n"
+  echo "escenic-publication-${pub}-section-parameters" "curl -s http://localhost:8080/escenic-admin/section-parameters/$pub/ | grep -v ^# | sort -n"
 done
 
 
