@@ -13,8 +13,18 @@ _ece-deploy_commands()
     "
     
     # default completions is the list of options
-    completions="$options"
-
+    case "$prev" in
+        --conf)
+        completions="http://"
+        ;;
+        --ear)
+        completions="http://"
+        ;;
+      *)
+        completions="$options"
+        ;;
+    esac
+    
     COMPREPLY=( $(compgen -W "$completions" -- $cur) )
 }
 
