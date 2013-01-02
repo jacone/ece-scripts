@@ -333,6 +333,8 @@ function update_publication_resources() {
     fi
 
     if [ ! -d $publication_resources_dir ]; then
+      print_and_log "Couldn't find the publication resource dir for" \
+        "publication" $publication ", I will not update its resources."
       continue
     fi
 
