@@ -1,0 +1,22 @@
+# auto completion for the ece-deploy command.                    -*- sh -*-
+
+_ece-deploy_commands()
+{
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local prev=${COMP_WORDS[COMP_CWORD-1]}
+
+    options="
+      --conf
+      --ear
+      --list-deployments
+      --update-publication-resources
+    "
+    
+    # default completions is the list of options
+    completions="$options"
+
+    COMPREPLY=( $(compgen -W "$completions" -- $cur) )
+}
+
+complete -o default -F _ece-deploy_commands ece-deploy
+

@@ -83,7 +83,10 @@ function set_up_escenic-content-engine-installer() {
   mkdir -p $target_dir/usr/{bin,sbin,share/doc}
   mkdir -p $target_dir/usr/share/doc/escenic/examples
   mkdir -p $target_dir/usr/share/escenic/ece-scripts
+  mkdir -p $target_dir/etc/bash_completion.d
   
+  cp ../../../../etc/bash_completion.d/ece-install \
+    $target_dir/etc/bash_completion.d/
   cp -r ../../../sbin/ece-install $target_dir/usr/sbin/
   cp -r ../../escenic/ece-scripts/ece-install.d/ \
     $target_dir/usr/share/escenic/ece-scripts/
@@ -121,7 +124,7 @@ function set_up_escenic-content-engine-scripts() {
   cp ../../../sbin/ece-deploy $target_dir/usr/sbin/
 
   # conf
-  cp -r ../../../../etc/bash_completion.d/ece \
+  cp ../../../../etc/bash_completion.d/{ece,ece-import,ece-deploy} \
     $target_dir/etc/bash_completion.d
   # we don't include /etc/default/ece as this file often is also
   # included in the conf packages.

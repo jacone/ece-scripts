@@ -1,0 +1,24 @@
+# auto completion for the ece-install command.                    -*- sh -*-
+
+_ece-install_commands()
+{
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local prev=${COMP_WORDS[COMP_CWORD-1]}
+
+    options="
+      --conf-file
+      --verbose
+      --version
+      -V
+      -f
+      -v
+    "
+    
+    # default completions is the list of options
+    completions="$options"
+
+    COMPREPLY=( $(compgen -W "$completions" -- $cur) )
+}
+
+complete -o default -F _ece-install_commands ece-install
+

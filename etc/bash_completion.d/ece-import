@@ -1,0 +1,32 @@
+# auto completion for the ece-import command.                    -*- sh -*-
+
+_ece-import_commands()
+{
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local prev=${COMP_WORDS[COMP_CWORD-1]}
+
+    options="
+      --directories-only
+      --escenic-group
+      --escenic-user
+      --import-archive
+      --name
+      --password
+      --publication
+      --uri
+      --user
+      --version
+      -V
+      -f
+      -n
+      -p
+    "
+    
+    # default completions is the list of options
+    completions="$options"
+
+    COMPREPLY=( $(compgen -W "$completions" -- $cur) )
+}
+
+complete -o default -F _ece-import_commands ece-import
+
