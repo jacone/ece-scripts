@@ -74,20 +74,20 @@ where we build EARs for the the <%= trail_builder_user %> website.
 
 *** Preparing to deploy to production
 If you have changes to be deployed to production you should follow the next checklist:
-1. Find out whitch EAR is running in production today.
+1. Find out which EAR is running in production today.
 2. Ensure that your EAR is running on staging and a smoketest has been performed.
 2. Make release notes:
   1. Collect all subversion changes that have made it into the EAR that you want to deploy by reviewing all Subversion commits since the last deploy.
   2. List all the Jira from those Subversion commits.
   3. Ensure that all those Jira issues are tested on staging and closed. If you cannot close one, make a new issue for the resulting work and close it anyway.
 3. Copy and paste the list of Jira issues in a support case (by email or otherwise) and make sure that the subject contains the name of the EAR file.
-4. Expect the support team to perform the deploy within 24 hours or call the support phonnumber ask ask them to do it earlier.
-5. If you are a support engineer yourself ask one of your colleagues to deploy to production and follow the checklist there. You shoud not prepare a deploy and than go ahead and deploy it yourself :-).
+4. Expect the support team to perform the deploy within 24 hours or call the support phone number and ask them to do it earlier.
+5. If you are a support engineer yourself ask one of your colleagues to deploy to production and follow the checklist there. You shoud not prepare a deploy and then go ahead and deploy it yourself :-).
 
 *** Deploying to a production system
 Deployments to production are only done by operators in the Support group of Vizrt Online in Dhaka or Oslo.
-If you are getting ready to depoy to a production system you have to follow the next checklist:
-0. Verify that you are not the same person who did the changes to the codes :-)
+If you are getting ready to deploy to a production system you have to follow the next checklist:
+0. Verify that you are not the same person who did the changes to the code :-)
 1. Has the EAR been properly release tested?
 1. Has the EAR been properly smoke tested?
 2. Do the release notes match the changes made to the codes and do they make sense?
