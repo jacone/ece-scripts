@@ -318,7 +318,8 @@ function update_publication_resources() {
       local publication_resources_dir="/tmp/no/thing"
       # must search for the right context in defaults.properties as
       # the WAR file can differ from the publication name.
-      for el in $(find $tomcat_base/webapps-* -name defaults.properties); do
+      for el in $(find $tomcat_base/webapps-* \
+        -name defaults.properties 2>/dev/null); do
         if [ $(grep "^publication-name=${publication}$" $el | wc -l) -gt 0 ]; then
           local base_dir=${el%/WEB-INF/localconfig/defaults.properties}
           publication_resources_dir=${base_dir}/META-INF/escenic/publication-resources
