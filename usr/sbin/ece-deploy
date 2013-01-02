@@ -70,7 +70,6 @@ function bootstrap_thyself() {
 
 bootstrap_thyself
 
-
 function deploy_ear() {
   local proxy_setings=""
   if [ -n "$http_proxy" ]; then
@@ -207,6 +206,13 @@ function verify_user_input() {
   
   if [[ ${deploy_a_conf_file-0} -eq 1 && -z "$conf_package_uri" ]]; then
     print "You must specify the conf package with --conf :-("
+    errors=1
+  fi
+
+  if [[ ${roll_back-0} -eq 0 && \
+    ${list_the_revious_deployments-0} -eq 0 && \
+    ${deploy_an_ear_file-0} -eq 0 && \
+    ${deploy_a_conf_file-0} -eq 0 ]]; then
     errors=1
   fi
 
