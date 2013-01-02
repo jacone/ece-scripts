@@ -50,8 +50,8 @@ ece_scripts_version="straight-from-github"
 
 #####################################################################
 
-download_dir=/var/cache/escenic/$(basename $0)
-log=/var/log/escenic/$(basename $0).log
+download_dir=${escenic_cache_dir}/$(basename $0)
+log=${escenic_log_dir}/$(basename $0).log
 conf_file=$HOME/ece-install.conf
 ece_scripts_git_source=https://github.com/vizrt/ece-scripts.git
 maven_opts="--batch-mode"
@@ -60,7 +60,7 @@ apt_opts="--no-install-recommends"
 curl_opts="--silent"
 
 # hook scripts
-ece_install_scripts_dir=$HOME/ece-install.d
+ece_install_scripts_dir=$HOME/$(basename $0).d
 
 # globals will be set to correct values in run-time.
 appserver_host=localhost
