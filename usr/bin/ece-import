@@ -18,6 +18,7 @@ function bootstrap_thyself() {
   local common_libraries="
     common-bashing.sh
     common-io.sh
+    common-os.sh
   "
 
   for el in $common_libraries; do
@@ -170,28 +171,6 @@ function get_user_input() {
   fi
   
   if [ $errors -eq 1 ]; then
-    remove_pid_and_exit_in_error
-  fi
-}
-
-function check_pre_requisites() {
-  local required_command_list="
-    xsltproc
-    xmllint
-    xml_grep
-  "
-
-  local some_missing=0
-  
-  for el in $required_command_list; do
-    which $el > /dev/null 2>/dev/null
-    if [ $? -gt 0 ]; then
-      print_and_log "$(basename $0) needs the command $el to be installed"
-      some_missing=1
-    fi
-  done
-
-  if [ $some_missing -eq 1 ]; then
     remove_pid_and_exit_in_error
   fi
 }
@@ -380,7 +359,8 @@ function print_report() {
   fi
 }
 
-check_pre_requisites
+
+assert_commands_available  xsltproc xmllint xml_grep
 get_user_input $@
 
 function run_import() {
