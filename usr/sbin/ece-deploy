@@ -232,7 +232,7 @@ function list_previous_deployments() {
   for el in $(find $ece_deploy_data_dir -maxdepth 1 -type d | \
     sed "s#${ece_deploy_data_dir}##g" | \
     sort -nr | \
-    head -20); do
+    tail -20); do
     local id=$(basename $el)
     echo "   - Deployment" ${id} \
       "was made @" \
@@ -240,6 +240,7 @@ function list_previous_deployments() {
   done
 }
 
+## $1 :: file that you want to see if it's XML or not
 function looks_like_xml() {
   if [ -z "$1" ]; then
     echo 0
@@ -510,7 +511,7 @@ function print_summary() {
   
   local diff_files=$(
     find $(get_deployment_dir) -name "*.diff" | \
-    grep -v 'usr/share/doc/escenic'
+    grep -v 'usr/share/doc'
   )
   if [ $(echo "$diff_files" | wc -c) -gt 2 ]; then
     print_and_log "Here are the diffs of all publication resources" \
