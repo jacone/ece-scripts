@@ -243,9 +243,7 @@ function add_global_libs
     remove_pid_and_exit_in_error
   fi
   local engine_version=`readlink $engine_root_dir`
-  log engine_version="$engine_version"
-  
-  if [ $? = 0 ]; then
+  if [ $(echo "$engine_version" | grep "engine-5.3" | wc -l) -gt 0 ]; then
     if [ -e $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar ]; then
       run ln -s $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
     else
