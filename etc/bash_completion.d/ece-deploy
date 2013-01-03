@@ -8,6 +8,7 @@ _ece-deploy_commands()
     options="
       --conf
       --ear
+      --force
       --list-deployments
       --update-publication-resources
     "
