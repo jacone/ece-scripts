@@ -237,18 +237,6 @@ function list_previous_deployments() {
   done
 }
 
-publication_resource_list="
-  0/escenic/section-parameter
-  escenic/content-type
-  escenic/feature
-  escenic/image-version
-  escenic/layout
-  escenic/layout-group
-  escenic/plugin/community/security
-  escenic/plugin/menu
-  escenic/teaser-type
-"
-
 function looks_like_xml() {
   if [ -z "$1" ]; then
     echo 0
