@@ -118,10 +118,10 @@ function set_builder_user_and_password() {
       file_list="$file_list /etc/escenic/ece-${el}.conf"
     done
     print_and_log \
-      "You need to set builder_http_user & and builder_http_password" \
-      "in one of these files:" \
-      $file_list
-    exit 1
+      "You haven't set builder_http_user & and builder_http_password" \
+      "in neither of these files:" \
+      $file_list \
+      "I assume the downloads are not password protected"
   fi
 }
 
@@ -145,7 +145,10 @@ function deploy_conf() {
 
   print "Installing" $(basename $conf_package_uri) "..."
   if [ ${force_everything-0} -eq 1 ]; then
-    dpkg_opts="--force-overwrite"
+    dpkg_opts="--force-overwrite --force-confnew"
+    print_and_log $(yellow WARNING) "using force as you requested" \
+      "installing" $(basename $conf_package_uri) "using these flags:" \
+      $dpkg_opts
   fi
 
   dpkg \
