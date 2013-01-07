@@ -22,7 +22,6 @@ function bootstrap_thyself() {
       exit 1
     }
   done
-
 }
 
 function read_user_settings() {
