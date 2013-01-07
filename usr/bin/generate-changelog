@@ -106,7 +106,7 @@ function get_commit_information_from_vcs() {
   if [ ${full_listing-0} -eq 1 ]; then
     cat $the_diff
   else
-    echo "Full diff of all" $(egrep '^(\+|\-) ' $the_diff | wc -l) \
+    echo "Full diff of all" $(egrep '^(\+|\-)' $the_diff | wc -l) \
       "changes:" $the_diff | fmt
   fi
 }
