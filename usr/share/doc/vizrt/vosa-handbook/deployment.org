@@ -33,17 +33,17 @@ To log onto the builder:
 $ ssh <%= trail_builder_user %>@<%= trail_builder_host %>
 #+END_SRC
 
-To build trunk:
+To build the trunk:
 #+BEGIN_SRC sh
 $ ece-build
 #+END_SRC
 
-To build from a tag in subversion:
+To build from a tag in Subversion you do:
 #+BEGIN_SRC sh
 $ ece-build -t <tagname>
 #+END_SRC
 
-To build trunk:
+To build a branch you can use the =-b= parameter:
 #+BEGIN_SRC sh
 $ ece-build -b <branchname>
 #+END_SRC
@@ -61,7 +61,7 @@ environment are printed out in the shell:
 [ece-build-515] <%= trail_editor_host %> <%= trail_staging_editor_host %> ] for the other machines' conf packages.
 [ece-build-515] BUILD SUCCESSFUL! @ <%= trail_today_date %>
 [ece-build-515] You'll find the release here:
-[ece-build-515] http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4331-<%= trail_today_date %>_1225.ear
+[ece-build-515] http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev6307-<%= trail_today_date %>_1225.ear
 #+END_SRC
 
 The EAR URI can be used the 'ece deploy' command below, and the conf
@@ -73,14 +73,66 @@ In the examples here, we have a build server on <%= trail_builder_host %>
 where we build EARs for the the <%= trail_builder_user %> website.
 
 *** Preparing to deploy to production
-If you have changes to be deployed to production you should follow the next checklist:
-1. Find out which EAR is running in production today.
-2. Ensure that your EAR is running on staging and a smoketest has been performed.
-2. Make release notes:
-  1. Collect all subversion changes that have made it into the EAR that you want to deploy by reviewing all Subversion commits since the last deploy.
-  2. List all the Jira from those Subversion commits.
-  3. Ensure that all those Jira issues are tested on staging and closed. If you cannot close one, make a new issue for the resulting work and close it anyway.
-3. Copy and paste the list of Jira issues in a support case (by email or otherwise) and make sure that the subject contains the name of the EAR file.
+
+**** Get the current version of the EAR and conf package
+First, we need to know which is the currently deployed EAR (to see all the deployments
+remove the pipe to =tail -1=):
+#+BEGIN_SRC text
+$ ece -i engine1 list-deployments | tail -1
+Thu Dec 13 15:05:41 IST 2012 <%= trail_customer_shortname-trunk-rev6260-2012-12-12_1401.ear c6c762523db66ae21cdf7f7f00016f7f
+#+END_SRC
+
+Also, confirm that the =vosa-conf= configruation package correspond to
+the EAR version:
+#+BEGIN_SRC text
+$ dpkg -l vosa-conf-<%= trail_presentation_host %> | grep ^ii
+ii  vosa-conf-<%= trail_presentation_host %> 1-<%=trail_customer_acronym%>-trunk-r6260  Server configuration for <%= trail_presentation_host %>
+#+END_SRC 
+
+**** Read through the change log and code diff
+Second, read through the change log and code diff for the new EAR
+and conf packages. These are present as one =.report= and one =.diff=
+file for each build that the builder makes for your project. If you're
+working on trunk, you'll find all these under http://<%= trail_builder_host %>/<%= trail_builder_user %>/changelogs/trunk. 
+Replace =trunk= with =branches/<branch>= if you're working on a branch.
+
+You will see a number of files e.g.:
+#+BEGIN_SRC text
+from-6100-to-6200.report
+from-6100-to-6200.diff
+from-6200-to-6250.report
+from-6200-to-6250.diff
+from-6250-to-6255.report
+from-6250-to-6255.diff
+#+END_SRC
+
+Now, if the new EAR you built in [[Build new EAR]] has revision =6255= and
+the current deployed EAR has revision =6200=, you must look at the
+files which contains the changes in between, namely:
+=from-6200-to-6250.report=, =from-6200-to-6250.diff=,
+=from-6250-to-6255.report= and =from-6250-to-6255.diff=.
+
+**** Deploy & test on staging
+Log on to <%= trail_staging_editor_host %> and make the deployment:
+#+BEGIN_SRC text
+$ ssh <%= trail_staging_editor_host %>
+$ sudo ece-deploy \
+  --ear  http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev6307-<%= trail_today_date %>_1225.ear \
+  --conf http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/vosa-conf-${HOSTNAME}-1-<%= trail_builder_user %>-trunk-r6307.deb \
+  --update-publication-resources
+#+END_SRC
+
+Ensure that your EAR is running on staging and a smoketest has been performed.
+
+Ensure that all those Jira issues are tested on <%=
+trail_staging_editor_host %> and closed. If you cannot close one, make
+a new issue for the resulting work and close it anyway.
+
+**** Update support cases
+Copy and paste the list of Jira issues in a support case (by email or
+otherwise) and make sure that the subject contains the name of the EAR
+file.
+
 4. Expect the support team to perform the deploy within 24 hours or call the support phone number and ask them to do it earlier.
 5. If you are a support engineer yourself ask one of your colleagues to deploy to production and follow the checklist there. You shoud not prepare a deploy and then go ahead and deploy it yourself :-).
 
@@ -90,7 +142,7 @@ If you are getting ready to deploy to a production system you have to follow the
 0. Verify that you are not the same person who did the changes to the code :-)
 1. Has the EAR been properly release tested?
 1. Has the EAR been properly smoke tested?
-2. Do the release notes match the changes made to the codes and do they make sense?
+2. Do the release notes match the changes made to the code and do they make sense?
 3. Are the changes in the EAR causing you to feel that the service will fail after deploy?
 4. Is there a valid rollback scenario after deploying the change?
 5. Is someone you trust available to help you if you run into trouble rolling back?
@@ -113,6 +165,7 @@ $ sudo ssh escenic@<%= trail_presentation_host %> ece -i engine1 info
 If anything goes wrong in [[Deploying%20a%20new%20EAR%20file%20for%20an%20ECE%0Ainstance][Deploying a new EAR file for an ECE
 instance]], you can just repeat the deployment steps with the URL of the
 previous EAR.
+
 
 ** Deploying a new EAR file for an ECE instance
 All the commands in this section is written to be executed on
