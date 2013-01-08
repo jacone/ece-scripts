@@ -77,8 +77,9 @@ function set_customer_specific_variables() {
       trail_virtual_host_list="${trail_virtual_host_list} ${fqdn}"
     done
   
-    expand_all_variables_in_org_files
   fi
+  
+  expand_all_variables_in_org_files
 }
 
 function set_defaults_if_the_trails_are_not_set() {
