@@ -6,7 +6,7 @@ where we build EARs for the the <%= trail_builder_user %> website.
 *** Build from from your Hipchat room
 You can start a build right from your chatroom!
 
-Go to the <%= trail_customer_shortname %> Hipchat room named: <%= trail_customer_hipchat_room_name %> or goto Hipchat in your [[https://vizrtcustomers.hipchat.com/chat][browser]].
+Go to the <%= trail_customer_shortname %> Hipchat room named: <%= trail_customer_hipchat_room_name %> or go to Hipchat in your [[https://vizrtcustomers.hipchat.com/chat][browser]].
 
 when you are in the chatroom type:
 #+BEGIN_SRC sh
