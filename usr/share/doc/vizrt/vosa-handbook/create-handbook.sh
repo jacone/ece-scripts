@@ -69,7 +69,16 @@ function set_customer_specific_variables() {
     trail_website_name=$first_website
   fi
 
-  expand_all_variables_in_org_files
+  if [ -n "${trail_publication_domain_mapping_list}" ]; then
+    # create a list of all virtual hosts
+    
+    for el in $trail_publication_domain_mapping_list; do
+      IFS='#' read ece_pub fqdn alias <<< "$el"
+      trail_virtual_host_list="${trail_virtual_host_list} ${fqdn}"
+    done
+  
+    expand_all_variables_in_org_files
+  fi
 }
 
 function set_defaults_if_the_trails_are_not_set() {
@@ -767,7 +776,6 @@ function get_user_input() {
   conf_file=$(basename $0 .sh).conf
 
   for el in $@; do
-    # -s as in input
     if [[ "$el" == "--doc-dir" || "$el" == "-i" ]]; then
       customer_doc_dir_is_next=1
     elif [[ "$el" == "--conf-file" || "$el" == "-f" ]]; then
@@ -782,7 +790,7 @@ function get_user_input() {
   done
 }
 
-echo "building $trail_customer_shortname VOSA Guide"
+echo "Building the $trail_customer_shortname VOSA Guide"
 get_user_input $@
 set_up_build_directory
 set_customer_specific_variables
