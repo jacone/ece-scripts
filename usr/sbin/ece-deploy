@@ -231,7 +231,7 @@ function list_previous_deployments() {
 
   for el in $(find $ece_deploy_data_dir -maxdepth 1 -type d | \
     sed "s#${ece_deploy_data_dir}##g" | \
-    sort -nr | \
+    sort -n | \
     tail -20); do
     local id=$(basename $el)
     echo "   - Deployment" ${id} \
