@@ -13,7 +13,7 @@ Escenic-based sites, such as:
  - Tomcat application server
  - MySQL/Percona database server
  - Varnish cache server
- - Munin monitoring server
+ - Icinga & Munin monitoring server
  - NFS server and clients
  - Memcached distributed memory cache
 
@@ -36,7 +36,6 @@ these components for you.
 =ece-install= works best on Debian 6.0 (Squeeze) or later. It should,
 however, work on any Unix-like system that provides a BASH command
 shell (version 4.2 or later). 
-
 
 Here is an overview of the situation on some of the most popular
 platforms:
@@ -127,20 +126,20 @@ is as follows:
        profile (see Run ece-install).
 
 ** <<<Get ece-install>>>
-Use =git= to get the ece-install script. Type this in
-your shell:
+On Debian based systems, such as Ubuntu, you can use the [[http://apt.vizrt.com][Vizrt APT
+repository]] and install the package =escenic-content-engine-installer=
+to get the =ece-install= command.
 
-#+BEGIN_SRC text
-$ git clone https://github.com/vizrt/ece-scripts.git
-#+END_SRC
-
-The reason why we want you to use git to download ece-install, is that
-you later easily can get the latest changes (for instance after we fix
-one of your reported issues), by doing "git pull" inside the
-ece-scripts directory.
-
-If you have problems installing git, you can also download a ZIP
-archive here: https://github.com/vizrt/ece-scripts/zipball/master
+On RedHat based systems, such as CentOS, you can use the RPMs
+available from http://yum.vizrt.com/rpm and install the RPM
+=escenic-common-scripts= and =escenic-content-engine-installer= to
+get the =ece-install= command.
+ 
+If you have any problems installing using the DEB or RPM packages, or
+if you're system is neither Debian nor RedHat based, you can also
+download a ZIP archive of all the =ece-scripts=, which =ece-install=
+is a part of, here:
+https://github.com/vizrt/ece-scripts/zipball/master
 
 ** <<<Become Root>>>
 You must be the root user to run =ece-install=. If you try to run it as
@@ -161,7 +160,8 @@ $ su -
 
 #+BEGIN_QUOTE
 Note that using =sudo= to run =ece-install= (that is, entering  "=sudo
-ece-install=") may not work. You should actually become the root user.
+ece-install=") may not work. You should actually become the root user
+before running =ece-install=.
 #+END_QUOTE
 
 ** <<<Create a Configuration File>>>
