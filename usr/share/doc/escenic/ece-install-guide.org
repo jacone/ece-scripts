@@ -1,6 +1,6 @@
 #+TITLE: Escenic Installer User Guide
 #+AUTHOR: Vizrt Online / The SaaS Team
-#+OPTIONS: H:6 num:5 toc:2 
+#+OPTIONS: H:6 num:5 toc:2
 
 * Introduction
 The Escenic Content Engine Installer, =ece-install=  is a command line
@@ -23,7 +23,7 @@ Unix-like operating systems, but the level of support varies between
 platforms. On a fully-supported operating system (for example Debian 6.0),
 =ece-install= can both install and configure all required
 components, so that the entire process is reduced to a simple sequence
-of =ece-install= commands. 
+of =ece-install= commands.
 
 On less well-supported platforms, =ece-install= may not be able to
 automatically install some third-party components. You will then need to
@@ -35,7 +35,7 @@ these components for you.
 ** Supported Operating Systems
 =ece-install= works best on Debian 6.0 (Squeeze) or later. It should,
 however, work on any Unix-like system that provides a BASH command
-shell (version 4.2 or later). 
+shell (version 4.2 or later).
 
 Here is an overview of the situation on some of the most popular
 platforms:
@@ -112,7 +112,7 @@ function it will perform. The set of components installed on a
 particular server is called its *profile*.
 
 The overall procedure for installing Escenic on a cluster of machines
-is as follows: 
+is as follows:
 
  1. Determine the profile of each server in the cluster. For
     descriptions of all available profiles, see Server Profiles.
@@ -134,7 +134,7 @@ On RedHat based systems, such as CentOS, you can use the RPMs
 available from http://yum.vizrt.com/rpm and install the RPM
 =escenic-common-scripts= and =escenic-content-engine-installer= to
 get the =ece-install= command.
- 
+
 If you have any problems installing using the DEB or RPM packages, or
 if you're system is neither Debian nor RedHat based, you can also
 download a ZIP archive of all the =ece-scripts=, which =ece-install=
@@ -167,7 +167,9 @@ before running =ece-install=.
 ** <<<Create a Configuration File>>>
 =ece-install= expects to find a configuration file called
 =ece-install.conf= in the root user's home directory, which is usually
-=/root=.
+=/root=. If you wish to call your configuration file something else,
+you need to specify it with the =-f= parameter, e.g. =ece-install -f
+ece-install-db-master.conf=.
 
 If you forget to provide such a file before running =ece-install=,
 then =ece-install= will complain:
@@ -203,9 +205,9 @@ If the configuration file does not contain these settings then
 Depending on what components you are installing on the server, you may
 need to include other configuration parameters in the file. If you are
 installing the Widget Framework, for example, you will need to specify
-additional download credentials (see ??). In most cases, however,
-parameters have default settings that enable =ece-install= to complete
-installation with very few settings.
+additional download credentials (see [[fai_wf_install]]). In most cases,
+however, parameters have default settings that enable =ece-install= to
+complete installation with very few settings.
 
 ****** Interactive Mode
 The setting =fai_enabled=1= tells =ece-install= to run in *fully
@@ -227,7 +229,7 @@ interactively instead. You are, however, *strongly advised* not to run
 ** <<<Run ece-install>>>
 To run =ece-install=, enter:
 #+BEGIN_SRC text
-# bash ece-install <options>
+# ece-install <options>
 #+END_SRC
 
 The following options may be specified with the command:
@@ -260,10 +262,8 @@ Doing this lets you see everything that BASH does while executing the
 script - how wild card variables are  expanded and so on.
 
 =ece-install= displays a series of progress messages during the
-installation process.
-
-You can redirect standard output to a log file for easy reading later
-on as follows:
+installation process. you can redirect standard output to a log file
+for easy reading of these messages later:
 #+BEGIN_SRC text
 # bash ece-install > ece-install.out
 #+END_SRC
@@ -291,13 +291,13 @@ created for you by =ece-install=). To do this enter:
 The =escenic= user is the user you will need to use for most
 escenic-related purposes.
 
-** Preventing accidental execution of ece-install 
+** Preventing accidental execution of ece-install
 You can ensure that =ece-install= is not executed accidentally by
 creating a *lock file*. Simply create a file with this path:
 #+BEGIN_SRC text
 /var/lock/ece-install.lock
 #+END_SRC
-    
+
 If this file is present then =ece-install= will fail fast as follows:
 #+BEGIN_SRC text
 The lock file is present: /var/lock/ece-install.lock and ece-install
@@ -412,7 +412,7 @@ adding this setting to =ece-install.conf= before you run =ece-install=:
 fai_db_drop_old_db_first=1
 #+END_SRC
 
-Given that the mysqld is installed, this profile will download all the
+Given that =mysqld= is installed, this profile will download all the
 Escenic components and install the ECE database schema based from the
 SQL files contained inside the distribution bundles specified with in
 the =technet_download_list= and =wf_dowload_list= variables. The
@@ -454,7 +454,8 @@ fai_db_master_log_position=106
 
 =ece-install= uses internal defaults to create a replication user and
 credentials. You can override these defaults by setting additional
-parameters in =ece-install.conf=. For details, see ??.
+parameters in =ece-install.conf=. For details, see [[Overview of All FAI
+Parameters]].
 
 ** <<<fai_cache_install>>>
 To use this profile, add =fai_cache_install=1= to your
@@ -476,20 +477,22 @@ typical requirements of an Escenic site:
    so that you can access these applications without needing to
    manually edit the ACL or disable security.
  * Sets up sticky sessions/session binding
- * Sets up a back-end cluster and allows the user?? to enter the
-   various backend servers that will serve the web site.
- * Sets up a configuration that strips cookies from static  resources,
+ * Sets up a back-end cluster for balancing web site requests to the
+   cache server.
+ * Sets up configuration that strips cookies from static  resources,
    such as CSS files, JS files and images.
  * Installs the =nginx= web server for serving static content and
    configures Varnish accordingly. This is particularly useful for
    installations where VME Online servers need to access content.
 
+#+BEGIN_COMMENT
 TBD:
 - If run on a Linux platform, the script will tweak the kernel
   parameters for optimal TCP handling for a web facing server.
 - let the /munin run through on port 80, requiring the connecting IPs
   to be in the staff network ACL, defined in the Varnish
-  configuration. 
+  configuration.
+#+END_COMMENT
 
 ** <<<fai_search_install>>>
 To use this profile, add =fai_search_install=1= to your
@@ -502,17 +505,16 @@ This profile installs search components (Apache Solr plus the Escenic
 To use this profile, add =fai_rmi_install=1= to your
 =ece-install.conf= file.
 
-This profile installs an RMI hub.
+This profile installs an RMI hub. This is only necessary on systems
+using ECE < 5.3
 
 ** <<<fai_monitoring_install>>>
 To use this profile, add =fai_monitoring_install=1= to your
 =ece-install.conf= file.
 
-This profile installs a Munin gatherer plus a web server for providing
-access to the reports Munin generates.
-
-TBD: This profile will also install the Nagios interface for
-monitoring the different nodes. 
+This profile installs a Munin gatherer, a Icinga (an enhanced Nagios)
+server plus a web server for providing access to Icinga and the
+reports Munin generates.
 
 ** <<<fai_publication_create>>>
 To use this profile, add =fai_publication_create=1= to your
@@ -524,7 +526,23 @@ presentation profile.
 
 If the Widget Framework is installed on the machine, then the
 create publication is based on the Widget Framework. Otherwise the
-publication is based on the clean demo WAR supplied with the Content Engine.
+publication is based on the clean demo WAR supplied with the Content
+Engine.
+
+=ece-install= will create publication of all publication WAR files you
+have in your EAR file if you also define
+=fai_publication_domain_mapping_list= and =fai_publication_ear=.
+#+BEGIN_SRC text
+fai_publication_create=1
+fai_publication_ear=/var/cache/escenic/stoppok-trunk-rev6195-2012-12-04_1134.ear
+fai_publication_domain_mapping_list="
+  stoppok,st.war#stoppok.example.com#newindian.example.com
+  helden#dinamani.example.com#helden.example.com
+"
+#+END_SRC
+
+See [[Overview of All FAI Parameters]] for further details on the format
+of the domain mapping list.
 
 ** <<<fai_all_install>>>
 To use this profile, add =fai_all_install=1= to your
@@ -581,7 +599,7 @@ specify what you want to restore are:
 | =fai_restore_data_files=        |       0 | Restore the Solr and Content Engine data files            |
 | =fai_restore_configuration=     |       0 | Restore the Solr and content Engine configuration files   |
 | =fai_restore_software_binaries= |       0 | Restore the Escenic and Apache Tomcat software            |
-| =fai_restore_from_file=         |      "" | The .tar.gz produced by =ece -i <instance> backup=        |
+| =fai_restore_from_file=         |      "" | The =.tar= file produced by =ece -i <instance> backup=    |
 |---------------------------------+---------+-----------------------------------------------------------|
 
 So to restore everything in a specified backup file, you would need
@@ -590,7 +608,7 @@ something like this in your =ece-install.conf= file:
 fai_enabled=1
 fai_restore_from_backup=1
 fai_restore_all=1
-fai_restore_from_file=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar.gz
+fai_restore_from_file=/var/backups/escenic/engine-dev1-backup-2011-10-10.tar
 #+END_SRC
 
 =ece-install= can also remove unwanted files from an existing
@@ -646,15 +664,16 @@ To use this profile, add =fai_nfs_client_install=1= to your
 =ece-install.conf= file.
 
 This profile installs an NFS client, creates the client mount points
-and mounts them on the host.
+and mounts them on the host. Per default, all network drives are
+mount under =/mnt=.
 
-The following example shows the ece-install.conf settings required to 
+The following example shows the ece-install.conf settings required to
 mount the Escenic multimedia archive on the NFS server:
 #+BEGIN_SRC conf
 fai_enabled=1
 fai_nfs_client_install=1
 fai_nfs_server_address=192.168.1.200
-fai_nfs_export_list="/var/exports/multimedia"  
+fai_nfs_export_list="/var/exports/multimedia"
 #+END_SRC
 
 ** <<<fai_vip_install>>>
@@ -666,8 +685,9 @@ To use this profile, add =fai_vip_install=1= to your
 This profile is usually used in combination with one of the other
 =ece-install= profiles. It makes a host capable of providing the
 services it offers on specified virtual IP addresses (VIPs). This
-makes it possible to provide fail-over for for all single points of failure ([[http://en.wikipedia.org/wiki/Single_point_of_failure][SPOFs)]] in
-your installation, such as the file server or database.
+makes it possible to provide fail-over for all single points of
+failure ([[http://en.wikipedia.org/wiki/Single_point_of_failure][SPOFs)]] in your installation, such as the file server or
+database.
 
 You might, for example, in order to provide a robust file
 server, install both an NFS server and a VIP provider on two hosts:
@@ -701,7 +721,8 @@ fai_vip_install=1
 fai_vip_service_list="nfs-kernel-server"
 fai_vip_primary_node_name=ubiquitous
 fai_vip_primary_node_ip=192.168.1.112
-fai_vip_primary_node_auth_key=d41d8cd98f00b204e9800998ecf8427efai_vip_secondary_node_name=ubiquitous-lts
+fai_vip_primary_node_auth_key=d41d8cd98f00b204e9800998ecf8427e
+fai_vip_secondary_node_name=ubiquitous-lts
 fai_vip_secondary_node_ip=192.168.1.111
 fai_vip_address=192.168.1.200
 fai_vip_sibling_ip=$fai_vip_secondary_node_ip
@@ -726,7 +747,7 @@ You can generate the key as follows:
 #+BEGIN_SRC sh
 $ dd if=/dev/urandom bs=512 count=1 | \
     openssl md5 | \
-    cut -d' ' -f2   
+    cut -d' ' -f2
 #+END_SRC
 
 ** Installing from EARs instead of Binaries
@@ -736,7 +757,7 @@ Escenic Content Engine and plugins.
 
 The EAR to provide is the one you generate with:
 #+BEGIN_SRC text
-$ ece -i <instance> assemble 
+$ ece -i <instance> assemble
 #+END_SRC
 Normally, the EAR will then be available in:
 #+BEGIN_SRC conf
@@ -763,9 +784,9 @@ assembly environment set up and then do:
 $ cd /opt/escenic
 $ tar czf /tmp/nursery-skeleton-solr-and-security.tar.gz \
   engine/security \
-  engine/siteconfig/config-skeleton/ \
+  engine/siteconfig/config-skeleton \
   engine/solr/conf \
-  engine/siteconfig/bootstrap-skeleton/
+  engine/siteconfig/bootstrap-skeleton
 #+END_SRC
 
 =/tmp/nursery-skeleton-solr-and-security.tar.gz= should now have everything
@@ -782,7 +803,7 @@ profiles, see the table below.
 
 The inclusion of the engine/solr directory makes it easy for users to
 provide their own, optimised Solr configuration. In this context, also
-note that a post install hook, set_up_solr.postinst, is available.
+note that a post install hook, =set_up_solr.postinst=, is available.
 
 If you wish to provide Nursery configuration for the plugins, you
 simply put them in engine/siteconfig/config-skeleton inside your
@@ -860,11 +881,11 @@ Now, the =appBase= and =docBase= values will become =webapps-fire= and
 As you can see, there's a third optional option to the
 =fai_publication_domain_mapping_list= which can be specified as a
 comma separated list of host aliases to be added to the app server host
-configuration. 
+configuration.
 
 Furthermore, if these host names are  not resolvable to your local
 host (neither localhost or the IP of your $HOSTNAME), ece-install will
-add entries for these domains in the machine's /etc/hosts:
+add entries for these domains to the machine's =/etc/hosts= file:
 #+BEGIN_SRC conf
 # added by ece-install @ Wed Feb  8 19:21:49 CST 2012
 127.0.1.1 fire.escenic.com
@@ -873,8 +894,8 @@ add entries for these domains in the machine's /etc/hosts:
 127.0.1.1 ild.escenic.com
 #+END_SRC
 
-If you do not want ece-install to touch your /etc/hosts, you can set
-fai_keep_off_etc_hosts=1 in your ece-install.conf
+If you do not want ece-install to touch your =/etc/hosts=, you can set
+=fai_keep_off_etc_hosts=1= in your =ece-install.conf=.
 
 ** Overview of All FAI Parameters
 The ece-install script understands the following settings in the
@@ -883,7 +904,7 @@ $HOME/ece-install.conf file of the root user:
 |----------------------------------------+--------------------------------------------------------------+-------------------------------------------------------------------------------------------------------|
 | Parameter                              | Default                                                      | Description                                                                                           |
 |----------------------------------------+--------------------------------------------------------------+-------------------------------------------------------------------------------------------------------|
-| =fai_all_conf_archive=                 | ""                                                           | conf.tar.gz to use for Nursery & JAAS configuration                                                   |
+| =fai_all_conf_archive=                 | ""                                                           | =conf.tar.gz= to use for Nursery & JAAS configuration                                                 |
 | =fai_all_ear=                          | ""                                                           | EAR to use instead of the Escenic binaries                                                            |
 | =fai_all_install=                      | 0                                                            | Install all components on your server.                                                                |
 | =fai_all_stop_and_clear=               | 0                                                            | After installation, stop the instance and clear its work & log files.                                 |
@@ -910,7 +931,7 @@ $HOME/ece-install.conf file of the root user:
 | =fai_db_schema=                        | ece5db                                                       | Useful for DB installation profile                                                                    |
 | =fai_db_user=                          | ece5user                                                     | Useful for DB installation profile                                                                    |
 | =fai_dry_run=                          | 0                                                            | ece-install will download Escenic archives and install OS packages, but will not configure anything.  |
-| =fai_editor_conf_archive=              | ""                                                           | conf.tar.gz to use for Nursery & JAAS configuration                                                   |
+| =fai_editor_conf_archive=              | ""                                                           | =conf.tar.gz= to use for Nursery & JAAS configuration                                                 |
 | =fai_editor_deploy_white_list=         | "escenic-admin escenic studio indexer-webservice webservice" | The list of WARs to be deployed on this instance.                                                     |
 | =fai_editor_ear=                       | ""                                                           | EAR to use instead of the Escenic binaries                                                            |
 | =fai_editor_install=                   | 0                                                            | Install the editorial profile                                                                         |
@@ -927,13 +948,13 @@ $HOME/ece-install.conf file of the root user:
 | =fai_monitoring_munin_node_list=       | ""                                                           | Set this to a whitespace separated list of nodes that munin should monitor                            |
 | =fai_monitoring_search_host_list=      | ""                                                           | Hosts running search instance(s) (Solr + indexer)                                                     |
 | =fai_monitoring_server_ip=             | 127.0.0.1                                                    | The IP of the monitoring server.                                                                      |
-| =fai_nfs_allowed_client_network=       | ""                                                           | IP/netmwask of allowed NFS clients, example: 192.168.1.0/255.255.255.0                                |
+| =fai_nfs_allowed_client_network=       | ""                                                           | IP/netmask of allowed NFS clients, example: 192.168.1.0/255.255.255.0                                 |
 | =fai_nfs_client_install=               | 0                                                            | Installs an NFS client                                                                                |
 | =fai_nfs_client_mount_point_parent=    | /mnt                                                         | Mount point parent directory                                                                          |
 | =fai_nfs_export_list=                  | ""                                                           | Space separated list of NFS export directories, full paths as seen on the NFS server.                 |
 | =fai_nfs_server_address=               | ""                                                           | Address of the NFS server, useful for the NFS client profile                                          |
 | =fai_nfs_server_install=               | 0                                                            | Install an NFS server                                                                                 |
-| =fai_presentation_conf_archive=        | ""                                                           | conf.tar.gz to use for Nursery & JAAS configuration                                                   |
+| =fai_presentation_conf_archive=        | ""                                                           | =conf.tar.gz= to use for Nursery & JAAS configuration                                                 |
 | =fai_presentation_ear=                 | ""                                                           | EAR to use instead of the Escenic binaries                                                            |
 | =fai_presentation_install=             | 0                                                            | Install the presentation server profile                                                               |
 | =fai_presentation_name=                | engine1                                                      | Name of the presentation server instance                                                              |
@@ -951,11 +972,11 @@ $HOME/ece-install.conf file of the root user:
 | =fai_publication_war=                  | "WF or ECE demo WAR"                                         | WAR to base the new publication on                                                                    |
 | =fai_publication_war_remove_file_list= | ""                                                           | File list that should be removed from all WARs inside =fai_publication_ear= or =fai_publication_war=  |
 | =fai_publication_war_uri_list=         | ""                                                           | Publication WARs used for setting up Assembly tool.                                                   |
-| =fai_rmi_install=                      | 0                                                            | Install RMI hub profile                                                                               |
-| =fai_search_conf_archive=              | ""                                                           | conf.tar.gz to use for Nursery & JAAS configuration                                                   |
+| =fai_rmi_install=                      | 0                                                            | Install the RMI hub profile                                                                           |
+| =fai_search_conf_archive=              | ""                                                           | =conf.tar.gz= to use for Nursery & JAAS configuration                                                 |
 | =fai_search_deploy_white_list=         | "solr indexer-webapp"                                        | The list of WARs to be deployed on this instance.                                                     |
 | =fai_search_ear=                       | ""                                                           | EAR to use instead of the Escenic binaries                                                            |
-| =fai_search_for_editor=                | 0                                                            | If 1 (true), will configure Solr for use with an editorial server, if not for presentation servers.   |
+| =fai_search_for_editor=                | 0                                                            | If 1, will configure Solr for use with an editorial server, if not for presentation servers.          |
 | =fai_search_indexer_ws_uri=            | http://${HOSTNAME}:8080/indexer-webservice/index/            | URI of the indexer-webservice that the search instance shall use for knowing what to index.           |
 | =fai_search_install=                   | 0                                                            | Install the search server profile (Solr + indexer)                                                    |
 | =fai_search_name=                      | search1                                                      | Name of the search instance                                                                           |
@@ -972,12 +993,15 @@ $HOME/ece-install.conf file of the root user:
 | =fai_vip_sibling_ip=                   | ""                                                           | The IP of the other node offering the VIP                                                             |
 | =fai_wf_install=                       | 0                                                            | Install Widget Framework profile                                                                      |
 |----------------------------------------+--------------------------------------------------------------+-------------------------------------------------------------------------------------------------------|
-#+TBLFM: $1=fai_publication_war=
+#+TBLFM: $1=fai_publication_war=::$3=conf.tar.gz= to use for Nursery & JAAS configuration
 
 0 means "false" and 1 means "true".
 
 ** Example Configurations
-Here are a few simple example configurations:
+Here are a few simple example configurations, you can find more under
+=/usr/share/doc/escenic/examples= if you've got the
+=escenic-content-engine-installer= package installed or you can
+[[https://github.com/vizrt/ece-scripts/tree/master/usr/share/doc/escenic/examples][browse them online]].
 
 ****** Install an Editorial Server and Create a Publication
 To automatically install an editorial server and create a publication
@@ -997,7 +1021,7 @@ To install two presentation servers called =engine1= and
 fai_enabled=1
 fai_presentation_install=1
 fai_presentation_name=engine1
-#+END_SRC 
+#+END_SRC
 
 Then run it a second time with the following settings:
 #+BEGIN_SRC conf
@@ -1022,26 +1046,26 @@ it will abort:
 #+END_SRC
 
 * Re-running ece-install (and How To Speed It Up)
-Although the initial thought behind ece-install, is to run it on a
-clean system to get up and running as soon as possible. However, you
-may want to re-run ece-install on the same host, for instance to add
-another instance of ECE, set up Widget Framework or create another
+The initial thought behind ece-install, is to run it on a clean system
+to get up and running as soon as possible. However, you may want to
+re-run ece-install on the same host, for instance to add another
+instance of ECE, set up Widget Framework or create another
 publication.
 
-ece-install has a number of features which will try to minimise the
-time it takes to run it on consecutive runs. If running on Debian
-based systems, it will check if you already have installed
-pre-requisite 3rd party libraries and only if any are missing will it
-ask the package manager to fetch it.
+=ece-install= has a number of features which will try to minimise the
+time it takes to run it on consecutive runs. For instance, it will
+check if you already have installed pre-requisite 3rd party libraries
+and only if any are missing will it ask the package manager to fetch
+it.
 
-Likewise, ece-install will see if the Escenic artifacts or application
-server that you need are already present in the
+Likewise, =ece-install= will see if the Escenic artifacts or
+application server that you need are already present in the
 =/var/cache/ece-install= folder, and only download the missing ones
 (if any).
 
 To get a list of the artifacts it'll pull from
 http://technet.escenic.com and http://tomcat.apache.org search for the
-following variables:
+following variables inside =/usr/sbin/ece-install=:
 - =technet_download_list=
 - =wf_download_list=
 - =tomcat_download=
@@ -1050,17 +1074,8 @@ Two other ways of speeding up the installation is (of course) to use
 the backup/restore feature or install from a EAR and configuration
 bundle, see the FAI section.
 
-* Modifying installed versions
-Given that the mysqld is installed, this profile will download all the
-Escenic components and install the ECE database schema based from the
-SQL files contained inside the distribution bundles specified with in
-the =technet_download_list= and =wf_dowload_list= variables. The
-defaults are inside the =ece-install= script itself, but you can
-overrides these in your =ece-install.conf= if you wish different minor
-versions of the ECE and plugins.
-
 * Using a Custom Configuration File for ece-install
-You can specify a different configuration by using the -f parameter: 
+You can specify a different configuration by using the -f parameter:
 #+BEGIN_SRC text
 $ ece-install -f ece-install-presentation-server.conf
 #+END_SRC
@@ -1183,7 +1198,7 @@ You trigger this by setting the following in your ece-install.conf
 fai_un_install_everything=1
 #+END_SRC
 
-    
+
 ece-install will then prompt the user to type a confirmation
 sentence. Once the un-installation is done, a summary is printed to
 the user.
@@ -1213,4 +1228,3 @@ I know what I'm doing, please do as I say.
 [ece-install-11] Everything (well, most) set up by ece-install should now
 [ece-install-11] have been removed from raven.
 #+END_SRC
-
