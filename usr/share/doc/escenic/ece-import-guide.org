@@ -1,9 +1,9 @@
-#+TITLE: User Guide for the ece-import Script
+#+TITLE: User Guide for the ece-import Command
 #+AUTHOR: Vizrt Online / The SaaS Team
 #+OPTIONS: H:6 num:5 toc:2 
 
 * Introduction
-The =ece-import= script will help you with the following tasks:
+The =ece-import= command will help you with the following tasks:
 
 - Setting up imports, either [[From an import archive]] or [[Without an import archive]]
 - [[Getting raw import data from HTTP or FTP servers]]
@@ -92,8 +92,8 @@ following directory structure is required:
 #+BEGIN_SRC text
 <publication>/<import name>
 <publication>/<import name>/transformers/<number>-<transformer task>.xsl
-<publication>/<import name>/cron.hourly/<cron job script>
-<publication>/<import name>/cron.every.five.minutes/<cron job script>
+<publication>/<import name>/cron.hourly/<cron job command>
+<publication>/<import name>/cron.every.five.minutes/<cron job command>
 #+END_SRC
 
 - publication name :: the name of the publication for which the import
@@ -111,11 +111,11 @@ following directory structure is required:
                   argument, namely the input XML data. Each
                   transformer is responsible to write changes back to
                   the file.
-- cron.hourly :: scripts to be run every our. These will be put in
+- cron.hourly :: commands to be run every our. These will be put in
                  =/etc/cron.hourly= on the import server. Be sure to
                  set the execute bit on the file and note that as with
                  all cron jobs, the file cannot have a file suffix.
-- cron.every.five.minutes :: scripts to run every five minutes.
+- cron.every.five.minutes :: commands to run every five minutes.
 
 We're calling the import configuration =moo= since we're
 setting up an import feed from our imaginary content provider, "Moo
@@ -162,13 +162,13 @@ file:
 #+BEGIN_SRC sh
 #! /usr/bin/env bash
 
-# Script which will download all thumbnails listed in the XML exported
+# Command which will download all thumbnails listed in the XML exported
 # from VMEO.
 #
 # It is normally called from ece-import, but can also be called
 # directly (when debugging).
 
-xpath_to_get_thumbnail_urls="/didl:DIDL/didl:Item/didl:Component/didl:Descriptor/didl:Statement/mpeg7:Mpeg7/mpeg7:Description/mpeg7:Summarization/mpeg7:Summary/mpeg7:VisualSummaryComponent/mpeg7:ImageLocator/mpeg7:MediaUri"
+xpath_to_get_thumbnail_urls="/didl:DIDL/didl:Item/didl:Component/didl:Decommandor/didl:Statement/mpeg7:Mpeg7/mpeg7:Decommandion/mpeg7:Summarization/mpeg7:Summary/mpeg7:VisualSummaryComponent/mpeg7:ImageLocator/mpeg7:MediaUri"
 
 # $1 is the raw XML
 cat "$1" | \

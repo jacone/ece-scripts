@@ -1,9 +1,9 @@
-#+TITLE: User Guide for the ece Script
+#+TITLE: User Guide for the ece Command
 #+AUTHOR: Vizrt Online / The SaaS Team
 #+OPTIONS: H:6 num:5 toc:2 
 
 * TAB completion
-The ece script offers TAB completion, given that your version of BASH
+The ece command offers TAB completion, given that your version of BASH
 supports this and that you have enabled it (some distributions hasn't
 turned on BASH completion per default).
 
@@ -18,14 +18,14 @@ clean       kill        restart     stop        versions
 #+END_SRC
 The commands are all described in detail in "ece help"
 
-** Completing types of servers the ece scripts can operate on
+** Completing types of servers the ece commands can operate on
 #+BEGIN_SRC text
 $ ece -t TAB TAB
 analysis  engine    rmi-hub   search 
 #+END_SRC
 
 ** Completing the publication resources available
-The ece script can update the publication resources for a given
+The ece command can update the publication resources for a given
 publication.
 
 To help selecting the correct publication resource, you can make ece
@@ -40,7 +40,7 @@ feature        layout         menu
 $ ece help
 Usage: /home/torstein/bin/ece [-t <type>] [-i <instance>] <command>
 
-DESCRIPTION
+DECOMMANDION
  -t --type <type>
       The following types are available:
       engine  -  The Escenic Content Engine, this is the default
@@ -72,7 +72,7 @@ The following commands are available:
    help       prints this help screen
    kill       uses force to stop the type
    log        the type's Log4J log
-   outlog     the [ece#engine] script log (system out log)
+   outlog     the [ece#engine] command log (system out log)
    restart    restarts the type
    start      starts the type
    status     checks if the type is running
@@ -85,11 +85,11 @@ The following commands are available:
 #+END_SRC
 
 * Tailing log files
-The script has a number of options to let you keep track of what's
+The command has a number of options to let you keep track of what's
 going on on your system.
 
 ** Getting an overview of the log files
-The ece script will be more than happy to tell you about the log files
+The ece command will be more than happy to tell you about the log files
 on your system that are of interest to your instance:
 #+BEGIN_SRC text
 $ ece -i dev1 loglist
@@ -129,12 +129,12 @@ $ ece -i dev1 -q loglist | xargs tail -f
 #+END_SRC
 
 * Assembling a new EAR
-The script will quite happily assemble your EAR file. Please note that
+The command will quite happily assemble your EAR file. Please note that
 you need to run 
 #+BEGIN_SRC text
 $ ece -i clean assemble
 #+END_SRC
-whenever you've upgraded either ECE or one of its plugins. The script
+whenever you've upgraded either ECE or one of its plugins. The command
 will try to take care of you though and warn you of such duplication:
 #+BEGIN_SRC text
 [ece#engine] Multiple versions of ECE and/or 3rd party libraries found.
@@ -193,7 +193,7 @@ to its deployment state file: /var/lib/escenic/<instance>.state, which
 again will be reported by the "ece info" command.
 
 * Updating the Publication Resources
-It's easy to update the publication resources using the ece script. If
+It's easy to update the publication resources using the ece command. If
 you have all these publication resources in your current directory,
 you can update them just by:
 #+BEGIN_SRC text
@@ -249,16 +249,16 @@ $ ece -i engine1 info
 #+END_SRC
 
 * Installation
-The ece script and ece.conf may be used on any Unix like system that
+The ece command and ece.conf may be used on any Unix like system that
 has a fairly recent version of BASH installed.
 
-** Overview of File Paths Used by the ece script
-These are recommended files and locations for using the ece script:
+** Overview of File Paths Used by the ece command
+These are recommended files and locations for using the ece command:
 
 |------------------------------------+----------------------------------|
 | Path                               | Explanation                      |
 |------------------------------------+----------------------------------|
-| ~/usr/bin/ece~                     | The script itself                |
+| ~/usr/bin/ece~                     | The command itself                |
 | ~/etc/escenic/ece.conf~            | The main configuration file      |
 | ~/etc/escenic/ece-<instance>.conf~ | Instance specific settings       |
 | ~/var/cache/escenic~               | Directory of assembled EAR files |
@@ -271,7 +271,7 @@ server files. The defaults all follow the File Hierarchy Standard, but
 you may of course change these to your liking.
 
 If you wish to put the .conf files in other places, you may like to know
-that the ece script has preset list of locations where it looks for
+that the ece command has preset list of locations where it looks for
 the .conf files mentioned above, namely:
 
 - current working directory
@@ -293,20 +293,20 @@ consultants, partners and customers have requested these locations to
 fit their systems. As you can see, fitting everyone's fancy adds up
 over time :-)
 
-* Running the ece script
+* Running the ece command
 ** You must run it as a non-privileged user
-You must be normal user to run the ece script, otherwise it will
+You must be normal user to run the ece command, otherwise it will
 complain:
 #+BEGIN_SRC text
 [ece#engine] Sorry, you cannot be root when running ece
 [ece#engine] The root user can only use /etc/init.d/ece
 #+END_SRC
 
-As it mentions, the root user may use the init.d script and the
+As it mentions, the root user may use the init.d command and the
 accompanying /etc/default/ece to command the different ECE, EAE and
 RMI hub instances on your system.
 ** Specifying the instance
-The script is made for being easy to use with multiple instances on
+The command is made for being easy to use with multiple instances on
 the same host. You specify the instance you want to operate on using
 the -i parameter. E.g. to assemble and deploy the editor1 instance, you'd
 do:
@@ -314,26 +314,26 @@ do:
 $ ece -i editor1 assemble deploy restart
 #+END_SRC
 
-The script's TAB completion will also help you with completing the
+The command's TAB completion will also help you with completing the
 available instances on your system, so you can just type:
 #+BEGIN_SRC text
 $ ece -i TAB TAB
 mypub myotherpub
 #+END_SRC
 
-For this to work, the script assumes that you have installed the
+For this to work, the command assumes that you have installed the
 instance specific configuration in /etc/escenic/engine/instance, as is
 described in the Escenic Content Engine Installation Guide.
 
 If you only have one instance installed, you may omit
 the --instance/-i parameter. However, if you're running ece from another
-script (e.g. an init.d or a deployment script), we recommend you to
+command (e.g. an init.d or a deployment command), we recommend you to
 always specify the --instance/-i parameter to make sure that future
-additions of instances don't break your old scripts which assumed that
+additions of instances don't break your old commands which assumed that
 only one instance was installed.
 
 ** TAB completion
-The ece script offers TAB completion of all commands, options and
+The ece command offers TAB completion of all commands, options and
 option values. For this to work, you need the completion file loaded
 from your ~.bashrc~. 
 
@@ -348,9 +348,9 @@ following line to your ~.bashrc~:
 #+END_SRC
 Naturally, the ~bash_comletion.d~ needs to be in the above location :-)
 * Backup
-One of the many features of the ece script, is that you can take a
+One of the many features of the ece command, is that you can take a
 snapshot of your current running system, which can then be restored
-using the /usr/sbin/ece-install script. 
+using the /usr/sbin/ece-install command. 
 
 The backup will include the database, the Nursery configuration, the
 DB configuration, the Varnish configuration, the nginx congiguration,
@@ -395,7 +395,7 @@ $ ece -i engine1 backup
 [ece#engine-engine1] - All app servers in /opt
 [ece#engine-engine1] - All Escenic software binaries in /opt/escenic/engine
 [ece#engine-engine1] - All configuration in /etc/escenic and /etc/default/ece
-[ece#engine-engine1] - All bootstrap scripts from /etc/init.d
+[ece#engine-engine1] - All bootstrap commands from /etc/init.d
 [ece#engine-engine1] - All state files in /var/lib/escenic
 [ece#engine-engine1] Enjoy!
 #+END_SRC
