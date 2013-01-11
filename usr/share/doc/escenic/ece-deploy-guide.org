@@ -1,0 +1,104 @@
+#+TITLE: User Guide for the ece-deploy Command
+#+AUTHOR: Vizrt Online / The SaaS Team
+#+OPTIONS: H:6 num:5 toc:2
+
+* Introduction
+The =ece-deploy= command will help you with the following tasks:
+
+- [[Deploying a new EAR file]]
+- [[Deploying a new configuration package]]
+- [[Updating publication resources]] of all publications
+- [[Rollback to a previous deployment]]
+- [[Get an overview of all deployments]] by =ece-deploy=
+
+* Background
+As you may know, there's already a nice way of deploying an EAR file
+to an ECE, EAE or search instance by the way of =ece -i <instance>
+--uri http://server/my-site.ear=. The problem with this, however is
+that:
+1. it only deploys on one instance. Normally, production systems have
+   at least two, one ECE and one search instance. Since people
+   generally only are interested in the changes on the ECE instance,
+   they forget to deploy to the search instance. Over time, the
+   version of the ECE binaries running on these two instance drift
+   apart.
+2. it doesn't update the publication resources, so that operators must
+   also do a =ece -i <instance> -r <resource> -p <publication> update=
+   for each of the publication resources that the developers say have
+   changed. Again, people only do the minimum of what they need to do
+   and often the necessary publication resources are not updated, or
+   only =content-type= is updated and the rest is left out. Again,
+   things start to drift apart.
+3. it doesn't update the system configuration. A new EAR deployment
+   works in tandem with a DEB or RPM configuration package. Again,
+   operators would need to update the system configurations after
+   running =ece deploy=.
+
+=ece-deploy= addresses all these issues, not be re-implementing the
+functionality already in place in =ece deploy= but by building upon it
+while adding features such as the capability to roll back and provide
+full diffs of everything that was changed.
+
+The reason why =ece-deploy= has its own deployment ID and doesn't use
+the version of the EAR & configuration package, is that it's possible
+to make several deployments of the same EAR/configuration package,
+even on the same host. Furthermore, =ece-deploy= deploys on several
+instances, not only one. And lastly, it's even possible to choose
+whether or not to update the publication resources. Hence,
+=ece-deploy= has its own IDs and database of its deployments to make
+everything reproduce-able.
+
+* Deploying a new EAR file
+#+BEGIN_SRC sh
+# ece-deploy --ear http://my.builder.com/snow/releases/snow-trunk-rev5233-2012-10-04_1608.ear
+#+END_SRC
+
+* Deploying a new configuration package
+#+BEGIN_SRC sh
+# ece-deploy --conf http://my.builder.com/snow/releases/vosa-conf-pres1-1-r5233.deb
+#+END_SRC
+
+* Updating publication resources
+#+BEGIN_SRC sh
+# ece-deploy --ear http://my.builder.com/snow/releases/snow-trunk-rev5233-2012-10-04_1608.ear \
+   --update-publication-resources
+#+END_SRC
+
+* Deploying everything with one command
+It's of course possible to deploy both the EAR and DEB at the same
+time and also update the publication resources with one call to
+=ece-deploy=:
+
+#+BEGIN_SRC sh
+# ece-deploy --ear http://my.builder.com/snow/releases/snow-trunk-rev5233-2012-10-04_1608.ear \
+   --conf http://my.builder.com/snow/releases/vosa-conf-pres1-1-r5233.deb \
+   --update-publication-resources
+#+END_SRC
+
+* Rollback to a previous deployment
+Perhaps the coolest feature of =ece-deploy=, is that it can roll back
+to any of the previous deployments that you have done with
+=ece-deploy=. First, get hold of the deployment ID you want from the [[Get an overview of all
+ deployments][list of all previous deployments]] and then pass this ID to the
+=--rollback= switch:
+
+#+BEGIN_SRC sh
+# ece-deploy --rollback pres1-1356015120 --update-publication-resources
+#+END_SRC
+
+As before, the =--update-publication-resource= is optional.
+
+* Get an overview of all deployments
+#+BEGIN_SRC sh
+# ece-deploy --list-deployments
+   - Deployment pres1-1354540403 was made @ Mon Dec 3 18:43:23 IST 2012
+   - Deployment pres1-1354621048 was made @ Tue Dec 4 17:07:28 IST 2012
+   - Deployment pres1-1355319440 was made @ Wed Dec 12 19:07:20 IST 2012
+   - Deployment pres1-1355320868 was made @ Wed Dec 12 19:31:08 IST 2012
+   - Deployment pres1-1355390454 was made @ Thu Dec 13 14:50:54 IST 2012
+#+END_SRC
+
+Having the ID, let's you [[Rollback to a previous version][roll back to that version]] and it lets you
+examine the state of the system before that deployment was made, what
+the state was afterwards and view full diffs of all configuration
+files that were changed as a part of that deployment.
