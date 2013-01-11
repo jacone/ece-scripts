@@ -117,6 +117,7 @@ function install_ece_instance() {
 
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
     $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
+    set_up_content_engine_cron_jobs
     install_memory_cache
     assemble_deploy_and_restart_type
   fi
@@ -720,4 +721,37 @@ function set_up_search_client_nursery_conf() {
   make_dir $dir
   echo "solrURI=http://${search_host}:${search_port}/solr" \
     >> $dir/SearchEngine.properties
+}
+
+function set_up_content_engine_cron_jobs() {
+  local file=/etc/cron.daily/remove-old-escenic-cache-files
+
+  if [ -e $file ]; then
+    return
+  fi
+
+  print_and_log "Setting up cron job $file ..."
+  cat > $file <<EOF
+#! /usr/bin/env bash
+
+# Created by $(basename $0) @ $(date)
+#
+# cron script to remove old cache files. These are the images that ECE
+# generates whenever someone requests an image version (often refereed
+# to as ALTERNATE int the URL & content-type).
+#
+# This cron job assumes that the ECE
+# com.escenic.presentation.servlet.multimedia.CacheFilter servlet
+# filter has been configrued to write to the path below in (each of
+# the publication webapp's) web.xml
+
+dir=${escenic_cache_dir}/engine/binary
+
+if [ -d $dir  ] ; then
+  nice find $dir -type f -daystart -atime +15 -delete
+  nice find $dir -type d -empty -delete
+fi
+EOF
+
+  run chmod +x $file
 }
