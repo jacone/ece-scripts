@@ -102,3 +102,6 @@ Having the ID, let's you [[Rollback to a previous version][roll back to that ver
 examine the state of the system before that deployment was made, what
 the state was afterwards and view full diffs of all configuration
 files that were changed as a part of that deployment.
+
+All the deployment history is easily browsable under:
+=/var/lib/escenic/ece-deploy/<deployment-id>=
