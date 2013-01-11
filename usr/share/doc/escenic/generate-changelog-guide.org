@@ -5,7 +5,7 @@
 * Introduction
 The =generate-changelog= command will help you with the following tasks:
 
-- [[Getting an overview of all the JIRA]] issues that have been worked on
+- [[Getting an overview of all the JIRA issues]] that have been worked on
   in the list of commits.
 
 - [[Getting a full code diff]] of all changes in the current build.
@@ -25,6 +25,23 @@ user=my-jira-user-name
 password=my-jira-password
 #+END_SRC
 
+* Running generate-changelog
+Go into the directory where you've got the trunk or branch of your
+project checked out and issue =generate-changelog= with the =--from=
+and optional =--to== parameters to specify which revision you want to
+create a change log for:
+
+#+BEGIN_SRC sh
+$ cd ~/src/my-project/branches/5.5
+$ generate-changelog --from 2342
+Full diff of all 7 changes:
+/home/torstein/.generate-changelog/my-project/branches/5.5/from-242-to-COMMITTED.diff
+Report: /home/torstein/.generate-changelog/my-project/branches/5.5/from-2342-to-COMMITTED.report
+#+END_SRC
+
+If you don't specify =--to=, you will get the report up until the
+latest committed change.
+
 * Getting a risk assessment
 [[Getting an overview of all the JIRA][The report]] also contains a risk assessment score. This score is
 calculated on the number of lines in the code diff. This means the
@@ -37,7 +54,7 @@ yet) have more logic than what's mentioned above, but in future, it
 might have some logic that counts some code changes less (or more)
 risky than others.
 
-* Getting an overview of all the JIRA
+* Getting an overview of all the JIRA issues
 Each run of =generate-changelog= will create a full code diff
 available in:
 #+BEGIN_SRC text
@@ -47,15 +64,10 @@ For instance, if you run =generate-changelog= as this:
 #+BEGIN_SRC text
 $ generate-changelog --from 5401 --to 5856 --project toy
 #+END_SRC
-and have this  =svn_base_url= in your =~/.generate-changelog.conf=:
-#+BEGIN_SRC text
-svn_base_url=http://svn.mycompany/svn
-#+END_SRC
 
-Once you've run =generate-changelog= you'll find an overview of all
-the JIRA issues that have been mentioned in commit messages. The
-issue titles have been pulled from JIRA, so is reporter information
-and some other bits and pieces.
+you will find an overview of all the JIRA issues that have been
+mentioned in commit messages. The issue titles have been pulled from
+JIRA, so is reporter information and some other bits and pieces.
 
 #+BEGIN_SRC text
 ~/.generate-changelog/myproject/trunk/from-5401-to-5856.report
@@ -67,16 +79,3 @@ the JIRA overview]], you will see your diff in:
 #+BEGIN_SRC text
 ~/.generate-changelog/myproject/trunk/from-5401-to-5856.diff
 #+END_SRC
-
-* Running generate-changelog
-Go into the directory where you've got the trunk or branch of your
-project checked out and issue =generate-changelog= with the =--from=
-and optional =--to== parameters to specify which revision you want to
-create a change log for:
-#+BEGIN_SRC sh
-$ cd ~/src/my-project/trunk
-$ generate-changelog --from 2342
-#+END_SRC
-
-If you don't specify =--to=, you will get the report up until the
-latest committed change.
