@@ -46,14 +46,14 @@ in =ece deploy= but builds upon it and adds new features such as the
 capability to roll back and provide full diffs of everything that was
 changed.
 
-The reason why =ece-deploy= has its own deployment ID and doesn't use
-the version of the EAR & configuration package, is that it's possible
-to make several deployments of the same EAR/configuration package,
-even on the same host. Furthermore, =ece-deploy= deploys on several
-instances, not only one. And lastly, it's even possible to choose
-whether or not to update the publication resources. Hence,
-=ece-deploy= has its own IDs and database of its deployments to make
-everything reproduce-able.
+As you see in this guide, each deployment gets its own ID. The reason
+why =ece-deploy= has its own deployment ID and doesn't use the version
+of the EAR & configuration package, is that it's possible to make
+several deployments of the same EAR/configuration package, even on the
+same host. Furthermore, =ece-deploy= deploys on several instances, not
+only one. And lastly, it's even possible to choose whether or not to
+update the publication resources. Hence, =ece-deploy= has its own IDs
+and database of its deployments to make everything reproduce-able.
 
 * Requirements
 As you can see from the code examples (they all start with a =#=),
