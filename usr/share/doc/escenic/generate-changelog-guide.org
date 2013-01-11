@@ -35,7 +35,7 @@ create a change log for:
 $ cd ~/src/my-project/branches/5.5
 $ generate-changelog --from 2342
 Full diff of all 7 changes:
-/home/torstein/.generate-changelog/my-project/branches/5.5/from-242-to-COMMITTED.diff
+/home/torstein/.generate-changelog/my-project/branches/5.5/from-2342-to-COMMITTED.diff
 Report: /home/torstein/.generate-changelog/my-project/branches/5.5/from-2342-to-COMMITTED.report
 #+END_SRC
 
