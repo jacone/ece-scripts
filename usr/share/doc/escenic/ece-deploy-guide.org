@@ -40,10 +40,11 @@ This approach has some limitations, however:
    style sheets. Again, operators would need to update the system
    configurations after running =ece deploy --uri <uri>=.
 
-=ece-deploy= addresses all these issues, not be re-implementing the
-functionality already in place in =ece deploy= but by building upon it
-while adding features such as the capability to roll back and provide
-full diffs of everything that was changed.
+The =ece-deploy= command addresses all these issues. It doesn't
+re-implement anything of the functionality which is already in place
+in =ece deploy= but builds upon it and adds new features such as the
+capability to roll back and provide full diffs of everything that was
+changed.
 
 The reason why =ece-deploy= has its own deployment ID and doesn't use
 the version of the EAR & configuration package, is that it's possible
