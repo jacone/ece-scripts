@@ -31,7 +31,7 @@ the build script:
 $ ssh <%= trail_builder_user %>@<%= trail_builder_host %>
 $ ece-build
 #+END_SRC
-This will build from trunk. 
+This will build from trunk.
 
 If you wish to build from a tag in Subversion you do:
 #+BEGIN_SRC sh
@@ -73,7 +73,7 @@ never happen if everyone always uses =ece-deploy=.
 
 *** Read Through the Change Log and Code Diff
 Second, read through [[Build changelogs][all the change logs and code diffs]] for the new EAR
-and conf packages. 
+and conf packages.
 
 You will see a number of files e.g.:
 #+BEGIN_SRC text
@@ -88,7 +88,7 @@ from-6250-to-6255.diff
 Now, if the new EAR you  [[Build new EAR][built on the build server]] has revision =6255= and
 the current deployed EAR has revision =6200=, you must look at the
 files which contains the changes in between, namely:
-=from-6200-to-6250.report=, 
+=from-6200-to-6250.report=,
 =from-6200-to-6250.diff=,
 =from-6250-to-6255.report= and =from-6250-to-6255.diff=.
 
@@ -96,7 +96,7 @@ It's important that you confirm that all JIRA issues found in the
 report files are fixed.
 
 *** Deploy & test on staging
-Log on to <%= trail_staging_editor_host %>, [[Making a full deployment][make a full deployment]] and 
+Log on to <%= trail_staging_editor_host %>, [[Making a full deployment][make a full deployment]] and
 [[Seeing the status of all instances][ensure that your ECE, Search and EAE instances are running]]
 
 Once this is through, you then need to [[Performing a smoke test][perform a smoke test]] to see
@@ -159,7 +159,7 @@ are two files: one report file with excerpts from all JIRA issues
 mentioned in the commit messages and one diff file with all the code
 changes.
 
-You can access these changelogs under http://<%= trail_builder_host %>/<%= trail_builder_user %>/changelogs 
+You can access these changelogs under http://<%= trail_builder_host %>/<%= trail_builder_user %>/changelogs
 As you will see, it keeps changelogs for trunk and the different branches in separate
 directories under.
 
@@ -206,7 +206,7 @@ Normally, the previous one will be the right one to roll back to, but
 if you've played a lot back and forth If you don't know which one to
 choose, then pick the one that's fairly recent and has been running
 for a long time, i.e., there's a long span between that deployment and
-the next one. 
+the next one.
 
 From the output above, we see that the one from the 4th of December
 has been running the longest, so we roll back to that one with a
@@ -237,7 +237,7 @@ why. Also, we check that there's a =<title/>= element returned from
 the front page of each of the domains:
 #+BEGIN_SRC text
 $ for host in <%= trail_virtual_host_list %>; do \
-    echo "${host}'s title:" 
+    echo "${host}'s title:"
     curl --silent --header "Host: $host" http://localhost:8080/ | grep -A 1 '<title>'; \
     echo "${host}'s front page bytes:"; \
     curl --silent --header "Host: $host" http://localhost:8080/ | wc -c; \
@@ -283,7 +283,7 @@ deployment log where the EAR used whenever running
 =ece -i <%= trail_presentation_host %> deploy= along with its MD5 sum and the date
 of deployment is available:
 #+BEGIN_SRC sh
-$ ece -i engine1 list-deployments 
+$ ece -i engine1 list-deployments
 [ece#engine-engine1] These are all the deployments made on engine1:
 Wed Dec 12 19:11:39 IST 2012 <%= trail_customer_acronym %>-trunk-rev6259-2012-10-12_1322.ear c6c7643234asdfasdfdf7f7f0001612e
 Wed Dec 12 19:31:35 IST 2012 <%= trail_customer_acronym %>-trunk-rev6260-2012-12-12_1401.ear c6c762523db66ae21cdf7f7f00016f7f
@@ -378,7 +378,8 @@ Thu Dec 13 15:05:41 IST 2012 <%= trail_customer_acronym %>-trunk-rev6260-2012-12
 The second way, is to search in the output from the =ece info= command:
 #+BEGIN_SRC text
 $ ece -i engine1 info | grep -A 1 EAR
-[ece#engine-engine1] |-> EAR used: http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4899-<%= trail_today_date %>_1524.ear
+[ece#engine-engine1] |-> EAR used:
+[ece#engine-engine1] http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4899-<%= trail_today_date %>_1524.ear
 #+END_SRC
 
 
@@ -386,7 +387,7 @@ To see which version of the system configuration is deployed on the machine, do:
 #+BEGIN_SRC text
 $ dpkg -l vosa-conf-<%= trail_presentation_host %> | grep ^ii
 ii  vosa-conf-<%= trail_presentation_host %> 1-<%=trail_customer_acronym %>-trunk-r6260  Server configuration for <%= trail_presentation_host %>
-#+END_SRC 
+#+END_SRC
 This version should correspond to the EAR version. If not, you should
 ask around to the other operators to find out why these
 differ. Normally, these two should always be in sync.
@@ -406,5 +407,3 @@ $ ssh <%= trail_control_host %>
 $ echo "Upgrading <%= trail_presentation_host %> to fix caching problem" | \
   downtime -i <%= trail_presentation_host %> 1 hours
 #+END_SRC
-
-
