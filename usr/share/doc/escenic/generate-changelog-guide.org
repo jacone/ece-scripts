@@ -69,10 +69,10 @@ the JIRA overview]], you will see your diff in:
 #+END_SRC
 
 * Running generate-changelog
-Go into the directory where you've got the trunk or branch of your poject checked
-out and issue =generate-changelog= with the =--from=  and optionall
-=--to== parameters to specify which revision you want to create a
-change log for:
+Go into the directory where you've got the trunk or branch of your
+project checked out and issue =generate-changelog= with the =--from=
+and optional =--to== parameters to specify which revision you want to
+create a change log for:
 #+BEGIN_SRC sh
 $ cd ~/src/my-project/trunk
 $ generate-changelog --from 2342
