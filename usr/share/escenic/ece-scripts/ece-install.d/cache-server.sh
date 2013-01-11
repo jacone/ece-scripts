@@ -24,7 +24,7 @@ function install_varnish_software() {
         1>>$log 2>>$log
       run apt-get update
     fi
-    
+
     local code_name=$(lsb_release -s -c)
     local supported_code_name=0
     local supported_list="$(get_supported_varnish_dist_list)"
@@ -44,7 +44,7 @@ function install_varnish_software() {
         "by the Varnish repositories. I'll use version Varnish from your" \
         "distribution's repositories instead"
     fi
-    
+
   elif [[ $on_redhat_or_derivative -eq 1 &&
         $(rpm -qa | grep varnish-release | wc -l) -lt 1 ]]; then
     print "Installing the Varnish repository RPM"
@@ -61,7 +61,7 @@ function install_varnish_software() {
   else
     install_packages_if_missing varnish
   fi
-  
+
   assert_commands_available varnishd
 }
 
@@ -69,7 +69,7 @@ function install_cache_server() {
   print_and_log "Installing a caching server on $HOSTNAME ..."
 
   install_varnish_software
-  
+
   if [ $fai_enabled -eq 0 ]; then
     print "You must now list your backend servers."
     print "These must be host names (not IPs) and must all be resolvable"
@@ -90,13 +90,13 @@ function install_cache_server() {
 
   set_up_varnish $backend_servers
   leave_cache_trails
-  
+
   add_next_step "Cache server is up and running at http://${HOSTNAME}:${cache_port}/"
 }
 
 function set_varnish_port() {
   log "Setting Varnish to listen on port" ${cache_port} "..."
-  
+
   local file=/etc/default/varnish
   if [ $on_redhat_or_derivative -eq 1 ]; then
     file=/etc/sysconfig/varnish
@@ -141,7 +141,7 @@ EOF
 }
 
 function create_varnish_conf_backends() {
-  
+
   local file=${varnish_conf_dir}/backends.vcl
   echo > $file
 
@@ -180,7 +180,7 @@ director webdirector client {
 EOF
 
   for (( i=0 ; i < ${#backend_servers[@]}; i++ )); do
-	  appserver_id=$(echo ${backend_servers[$i]} | cut -d':' -f1 | sed 's/-/_/g')        
+	  appserver_id=$(echo ${backend_servers[$i]} | cut -d':' -f1 | sed 's/-/_/g')
     cat >> $file <<EOF
   {
      .backend = ${appserver_id}${i};
@@ -205,7 +205,7 @@ EOF
   }
 EOF
   fi
-  
+
   echo "}" >> $file
 }
 
@@ -234,7 +234,35 @@ function create_varnish_conf_request_cleaning() {
   local file=${varnish_conf_dir}/request-cleaning.vcl
   cat > $file <<EOF
 sub vcl_recv {
-  /* Normalize the User-Agent headers here (if you want) */
+  /* Normalizing all user agents so that we can support both caching
+   * and (partial) device detection on backend servers like
+   * VMEO/Adactus and Mobiletech .
+   *
+   * All iPhones are treated as the same one, all iPads as the same
+   * iPad, all Opera Mini as the same one and all Android. If the
+   * client (browser) is neither of the above, a common UA string is
+   * set. */
+
+  if (req.http.User-Agent ~ "iPhone") {
+    set req.http.User-Agent = "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_3_3 like Mac OS X; en_us) AppleWebKit/525.18.1 (KHTML, like Gecko)";
+  }
+  else if (req.http.User-Agent ~ "iPad") {
+    set req.http.User-Agent = "Mozilla/5.0 (iPad; U; CPU OS 4_3_2 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8H7 Safari/6533.18.5";
+  }
+  else if (req.http.User-Agent ~ "Android") {
+    // we don't do anything for Android devices right now since there
+    // are just too many different ones.
+    //
+    // We could cache two versions, one mobile, one table for each
+    // Android 2.0-2.4, however, we try to leave it be right now and
+    // see how big the cache gets.
+  }
+  else if (req.http.User-Agent ~ "Opera Mini") {
+    set req.http.User-Agent = "Opera/9.80 (J2ME/MIDP; Opera Mini/4.0.10031/28.3392; U; en) Presto/2.8.119 Version/11.10";
+  }
+  else {
+    set req.http.User-Agent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; VOSA 1.0)";
+  }
 }
 EOF
 }
@@ -242,10 +270,11 @@ EOF
 function create_varnish_conf_cache_key() {
   local file=${varnish_conf_dir}/cache-key.vcl
   cat > $file <<EOF
+/* Manipulate the cache keys in this method. */
 sub vcl_hash {
-
-  /* Manipulate the cache keys here, e.g. if you've normalised the UA
-   * strings and want to inclue the UA string in the hash */
+  /* We've normalised the UA string in request-cleaning.vcl so we can
+   * include the UA in the hash */
+  hash_data(req.http.User-Agent);
 }
 EOF
 }
@@ -392,6 +421,13 @@ sub vcl_deliver {
            resp.status == 200) {
     set resp.http.Cache-Control = "public, max-age=7200";
   }
+
+  /* Since we're normalising the UA, we include it in the Vary header
+   * so that itermiediary proxies get all the information they need to
+   * create desired behaviour. We also add a debug header to show
+   * which UA we've used to produce the response. */
+  set resp.http.X-UA = req.http.User-Agent;
+  set resp.http.Vary = "Accept-Encoding,User-Agent";
 }
 EOF
 
@@ -434,7 +470,7 @@ function create_varnish_conf_redirects() {
       IFS=$old_ifs
 
       local from_domain=$(get_from_domain $publication_domain)
-      
+
       cat >> $file <<EOF
   if (req.http.host == "${from_domain}") {
     error 301 "Moved Temporarily";
@@ -449,7 +485,7 @@ sub vcl_error {
   /* We want both web sites to be identified by one URL, hence we make
    * an HTTP re-direct here. See vcl_recv for how these 301 error
    * directives.
-   */ 
+   */
 EOF
     for el in $fai_publication_domain_mapping_list; do
       local old_ifs=$IFS
@@ -458,7 +494,7 @@ EOF
       IFS=$old_ifs
 
       local from_domain=$(get_from_domain $publication_domain)
-      
+
       cat >> $file <<EOF
   if (obj.status == 301 && req.http.host == "${from_domain}") {
     set obj.http.Location = "http://${publication_domain}" + req.url;
@@ -466,7 +502,7 @@ EOF
   }
 EOF
     done
-    
+
     echo "}" >> $file
   fi
 }
