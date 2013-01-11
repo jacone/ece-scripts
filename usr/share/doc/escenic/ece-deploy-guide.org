@@ -13,26 +13,32 @@ The =ece-deploy= command will help you with the following tasks:
 
 * Background
 As you may know, there's already a nice way of deploying an EAR file
-to an ECE, EAE or search instance by the way of =ece -i <instance>
---uri http://server/my-site.ear=. The problem with this, however is
-that:
-1. it only deploys on one instance. Normally, production systems have
+to an ECE, EAE or search instance by the way of:
+#+BEGIN_SRC sh
+$ ece -i <instance> --uri http://my.builder.com/snow/releases/snow-trunk-rev5233-2012-10-04_1608.ear
+#+END_SRC
+
+This approach has some limitations, however:
+
+1. It only deploys on one instance. Normally, production systems have
    at least two, one ECE and one search instance. Since people
    generally only are interested in the changes on the ECE instance,
    they forget to deploy to the search instance. Over time, the
    version of the ECE binaries running on these two instance drift
    apart.
-2. it doesn't update the publication resources, so that operators must
+2. It doesn't update the publication resources, so that operators must
    also do a =ece -i <instance> -r <resource> -p <publication> update=
    for each of the publication resources that the developers say have
    changed. Again, people only do the minimum of what they need to do
    and often the necessary publication resources are not updated, or
    only =content-type= is updated and the rest is left out. Again,
    things start to drift apart.
-3. it doesn't update the system configuration. A new EAR deployment
-   works in tandem with a DEB or RPM configuration package. Again,
-   operators would need to update the system configurations after
-   running =ece deploy=.
+3. It doesn't update the system configuration. A new EAR deployment
+   works in tandem with a DEB or RPM configuration package. Often, a
+   new feature or bug fix on your website requires also changes to the
+   configuration of some of the components outside of the JSPs and CSS
+   style sheets. Again, operators would need to update the system
+   configurations after running =ece deploy --uri <uri>=.
 
 =ece-deploy= addresses all these issues, not be re-implementing the
 functionality already in place in =ece deploy= but by building upon it
@@ -47,6 +53,17 @@ instances, not only one. And lastly, it's even possible to choose
 whether or not to update the publication resources. Hence,
 =ece-deploy= has its own IDs and database of its deployments to make
 everything reproduce-able.
+
+* Requirements
+As you can see from the code examples (they all start with a =#=),
+=ece-deploy= must be run as =root= or with =sudo=.
+
+Furthermore, it requires the system to be set up with =ece-install=
+or have corresponding structure. Among other things, this means that
+all the instances to deploy to are listed correctly in
+=/etc/default/ece= and information on how to access the build and app
+servers is present in =/etc/escenic/ece.conf= and
+=/etc/escenic/ece-<instance>.conf=.
 
 * Deploying a new EAR file
 #+BEGIN_SRC sh
