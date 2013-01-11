@@ -1138,7 +1138,9 @@ appserver_parent_dir=/opt
 Note, this is only needed if you are running two completely separate
 environments on the same host. A use case is if you're setting up a
 test environment and want to separate stacks of Escenic Content Engine
-and plugins.
+and plugins. Another usecase is if you want to test out a new minor
+version of ECE, e.g. you're currently running 5.4, but want to try
+out 5.5 in parallel on the same boxes.
 
 * Extending ece-install by Writing Hooks
 ece-install  has a number of hooks on which you can hook on your own
@@ -1156,12 +1158,12 @@ install_analysis_server.preinst
 #+END_SRC
 
 Will be run before the body of the hook, just the corresponding
-.postinst hook will be run after.
+=.postinst= hook will be run after.
 
 ** Accessing ece-install variables
 Before running the hook, ece-install will make all its local variables
-available in /var/run/escenic/ece-install.env, which can then be used
-by the hook scripts.
+available in =/var/run/escenic/ece-install.env=, which can then be
+used by the hook scripts.
 
 ** Example hook
 Here is an example hook which will be run after the EAE is installed.
@@ -1187,11 +1189,13 @@ set_up_solr.postinst
 #+END_SRC
 
 * Uninstalling Everything that the ece-install Set Up
+#+BEGIN_QUOTE
 WARNING: this is potentially dangerous as some of these components may
 be used by other pieces of software you have running on your
 host. However, this may be useful if you're installing a clean
 environment and want to e.g. undo your previous install to install a
 different profile.
+#+END_QUOTE
 
 You trigger this by setting the following in your ece-install.conf
 #+BEGIN_SRC conf
