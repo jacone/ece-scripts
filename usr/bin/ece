@@ -6,6 +6,15 @@
 #
 # echo comments and suggestions > tkj@vizrt.com
 
+######################################################################
+# Needs to be here to bootstrap the ece script itself when it looks
+# for the ece[-[a-z0-9]*].conf files.
+#
+# There is one to avoid this bootstrap dependency, and that is to set
+# the ECE_CONF_LOCATIONS environment variable, however this is quite
+# uncommon and generally speaking not recommended.
+######################################################################
+escenic_conf_dir=/etc/escenic
 
 ######################################################################
 # Script defaults, my be overriden in any of the configration files
@@ -13,7 +22,6 @@
 force_ipv4=0
 quiet=0
 everything_but_the_kitchen_sink=0
-escenic_conf_dir=/etc/escenic
 
 ######################################################################
 # Dear user, don't touch anyting in this script, especially below this
@@ -60,7 +68,7 @@ enable_remote_monitoring
 java_home
 solr_home
 log_dir
-pid_dir
+run_dir
 tmp_dir
 "
 
@@ -96,7 +104,7 @@ function init() {
     for el in $common_libraries; do
       source $dir/${el}
     done
-    
+
     # load ece-install modules
     for el in $dir/ece.d/*.sh; do
       source $el
@@ -113,12 +121,12 @@ function init() {
 ####################################################################
 function ensure_that_required_fields_are_set() {
     requirements_failed=0
-    
+
     for el in $@; do
         if [ -n "$(eval echo $`echo $el`)" ]; then
             continue
         fi
-        
+
         print "You need to specifiy '$el' in one of ${ece_conf_files_read[@]}"
         requirements_failed=1
     done
@@ -148,16 +156,16 @@ function get_instance_list() {
     local allowed_types="engine analysis changelogd search rmi-hub"
     instance_list=""
     for el in $(\ls /etc/escenic/ece-*.conf 2>/dev/null); do
-      
+
       local instance=$(basename $el .conf)
       instance=${instance##ece-}
-      
+
       for ele in $allowed_types; do
         if [[ $instance == $ele ]]; then
           instance=""
           continue
         fi
-        
+
         local away="${ele}-"
         instance=${instance##${away}}
       done
@@ -186,11 +194,11 @@ function set_common_settings() {
 
     # main configuration file, may be overridden in the type and
     # instance specific ones.
-    read_conf_file `basename $0`.conf
+    read_conf_file $(basename $0).conf
 
     log=$log_dir/$instance.out
-    pid_file=$pid_dir/$instance.pid
-    
+    pid_file=$run_dir/$instance.pid
+
     gc_log=${log_dir}/${instance}-gc.log
 
     log4j_file_list="
@@ -205,7 +213,7 @@ function set_common_settings() {
 function set_type_settings() {
     # optional: possible to have type specific conf file,
     # will take precedences over the common one.
-    read_conf_file `basename $0`-$type.conf
+    read_conf_file $(basename $0)-$type.conf
 }
 
 function set_type_pid() {
@@ -214,7 +222,7 @@ function set_type_pid() {
     else
         ps_options="-ef"
     fi
-    
+
     # Get a hold of the PID of the process. Although we've got the PID
     # file, we stil get the PID from the OS here as we used it for
     # sanity checking later on, see stop_type().
@@ -265,8 +273,8 @@ function set_type_port() {
 function set_instance_settings() {
     # optional: possible to have instance specific conf files,
     # these will take precedence over the other two
-    read_conf_file `basename $0`-$instance.conf
-    read_conf_file `basename $0`-$type-$instance.conf
+    read_conf_file $(basename $0)-$instance.conf
+    read_conf_file $(basename $0)-$type-$instance.conf
 
     # at this point in the script flow, we have now read all the
     # possible combinations of conf files (common, type and instance)
@@ -277,6 +285,8 @@ function set_instance_settings() {
         ensure_that_required_fields_are_set $search_required_fields
     elif [ "$type" == "engine" ]; then
         ensure_that_required_fields_are_set $engine_required_fields
+    elif [ "$type" == "analysis" ]; then
+        ensure_that_required_fields_are_set $analysis_required_fields
     fi
 
     # We respect ece_server if it's set in any of the configuration
@@ -290,7 +300,7 @@ function set_instance_settings() {
     fi
 
     set_type_pid
-   
+
     # if type is rmi-hub, we don't' need more configuration.
     if [ "$type" == "rmi-hub" ]; then
         return
@@ -321,11 +331,11 @@ function set_instance_settings() {
     if [ "$jvm_gc_settings" ]; then
       ece_args=$ece_args" "$jvm_gc_settings
     fi
-    
+
     if [ "$jvm_proxy_settings" ]; then
       ece_args=$ece_args" "$jvm_proxy_settings
     fi
-    
+
     if [ "$jvm_connection_settings" ]; then
       ece_args=$ece_args" "$jvm_connection_settings
     fi
@@ -361,22 +371,26 @@ function set_instance_settings() {
     if [ "$max_permgen_size" ]; then
         ece_args=$ece_args" -XX:MaxPermSize=$max_permgen_size"
     fi
-    
+
     if [ "$jvm_encoding" ]; then
         ece_args=$ece_args" -Dsun.jnu.encoding=$jvm_encoding"
         ece_args=$ece_args" -Dfile.encoding=$jvm_encoding"
     fi
 
+    if [ "$analysis_conf_dir" ]; then
+      ece_args=$ece_args" -Dcom.escenic.eae.config=${analysis_conf_dir}"
+    fi
+
     if [ "$enable_remote_debugging" -eq 1 ]; then
         ece_args=$ece_args" -Xdebug -Xnoagent -Djava.compiler=NONE \
                             -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=$remote_debugging_port"
-    fi          
+    fi
 
     if [ "$enable_remote_monitoring" -eq 1 ]; then
         ece_args=$ece_args" -Dcom.sun.management.jmxremote"
         ece_args=$ece_args" -Dcom.sun.management.jmxremote.authenticate=false"
         ece_args=$ece_args" -Dcom.sun.management.jmxremote.ssl=false"
-        ece_args=$ece_args" -Dcom.sun.management.jmxremote.port=$remote_monitoring_port" 
+        ece_args=$ece_args" -Dcom.sun.management.jmxremote.port=$remote_monitoring_port"
     fi
 
     if [ "$enable_heap_dump" -eq 1 ]; then
@@ -387,7 +401,7 @@ function set_instance_settings() {
     if [ "$force_ipv4" -eq 1 ]; then
         ece_args=$ece_args" -Djava.net.preferIPv4Stack=true"
     fi
-    
+
     if [[ -n "$escenic_admin_http_user" && -n "$escenic_admin_http_password" ]]; then
       wget_appserver_auth="
         --http-user $escenic_admin_http_user
@@ -395,17 +409,17 @@ function set_instance_settings() {
       "
       curl_appserver_auth="-u ${escenic_admin_http_user}:${escenic_admin_http_password}"
     fi
-    
+
     if [[ -n "$builder_http_user" && -n "$builder_http_password" ]]; then
       wget_builder_auth="
         --http-user $builder_http_user
         --http-password $builder_http_password
       "
     fi
-    
+
     # Resin needs some more arguments as its XML parser is not
     # compatible with ECE.
-    if [ "$appserver" == "resin" ]; then
+    if [[ "$appserver" == "resin" ]]; then
         ece_args="$ece_args\
            -Dorg.xml.sax.driver=org.apache.xerces.parsers.SAXParser
            -Djavax.xml.stream.XMLInputFactory=com.sun.xml.stream.ZephyrParserFactory
@@ -427,7 +441,7 @@ function set_instance_settings() {
     export ECE_HOME=$ece_home
     export JAVA_OPTS="$JAVA_OPTS $ece_args"
     export JAVA_HOME=$java_home
-    
+
     debug ECE_HOME=$ECE_HOME
     debug JAVA_HOME=$JAVA_HOME
     debug JAVA_OPTS=$JAVA_OPTS
@@ -439,7 +453,7 @@ function sanity_check() {
         print "The root user can only use /etc/init.d/ece"
         exit 1
     fi
-    
+
     if [ "$(echo $command)" == "list-instances" ]; then
       return
     fi
@@ -480,7 +494,7 @@ function sanity_check() {
       print "Instance '$instance' doesn't exist on $HOSTNAME"
       exit 1
     fi
-    
+
     # verifies that java_home exists and has the java executable
     if [ ! -d $java_home ]; then
         print "java_home $java_home doesn't exist"
@@ -512,7 +526,7 @@ function get_actual_file() {
         # preserve the cwd, therefore, we're doing the "cd /" in a
         # subshell.
         real_file=$(
-            cd / 
+            cd /
             if [ ! -e ${real_file} ]; then
                 real_file=${dir}/${real_file}
             fi
@@ -523,7 +537,7 @@ function get_actual_file() {
     else
         real_file=${1}
     fi
-    
+
     echo ${real_file}
 }
 
@@ -535,13 +549,13 @@ function set_type_command_and_instance() {
     local next_is_http_user=0
     local next_is_http_password=0
     local next_is_file=0
-    
+
     for el in $@; do
         if [ "$el" == "-v" -o "$el" == "--verbose" ]; then
             debug=1
             continue
         fi
-        
+
         if [ "$el" == "--full" ]; then
             everything_but_the_kitchen_sink=1
             continue
@@ -556,7 +570,7 @@ function set_type_command_and_instance() {
             quiet=1
             continue
         fi
-        
+
         if [ "$el" == "--help" ]; then
             command=help
             continue
@@ -567,43 +581,43 @@ function set_type_command_and_instance() {
           next_is_file=0
           continue
         fi
-        
+
         if [ "$next_is_type" -eq 1 ]; then
             type=$el
             next_is_type=0
             continue
         fi
-        
+
         if [ "$next_is_http_user" -eq 1 ]; then
             http_user=$el
             next_is_http_user=0
             continue
         fi
-        
+
         if [ "$next_is_http_password" -eq 1 ]; then
             http_password=$el
             next_is_http_password=0
             continue
         fi
-        
+
         if [ "$next_is_instance" -eq 1 ]; then
             instance=$el
             next_is_instance=0
             continue
         fi
-        
+
         if [ "$next_is_publication" -eq 1 ]; then
             publication=$el
             next_is_publication=0
             continue
         fi
-        
+
         if [ "$next_is_resource" -eq 1 ]; then
             resource=$el
             next_is_resource=0
             continue
         fi
-        
+
         if [ "$el" == "-t" -o "$el"  == "--type" ]; then
             next_is_type=1
             continue
@@ -624,21 +638,21 @@ function set_type_command_and_instance() {
         else
             next_is_publication=0
         fi
-        
+
         if [ "$el" == "-r" -o "$el" == "--publication-resource" ]; then
             next_is_resource=1
             continue
         else
             next_is_resource=0
         fi
-        
+
         if [ "$el" == "-u" -o "$el" == "--user" ]; then
             next_is_http_user=1
             continue
         else
             next_is_http_user=0
         fi
-        
+
         if [ "$el" == "-w" -o "$el" == "--password" ]; then
             next_is_http_password=1
             continue
@@ -671,7 +685,7 @@ function set_type_command_and_instance() {
              echo "Version:" $ece_scripts_version
              exit 0
         fi
-        
+
         # the only thing left at this point, is the command
         command="$command $el"
     done
@@ -682,7 +696,7 @@ function set_type_command_and_instance() {
     if [ "$instance" == "default" ]; then
         debug "Trying to determine instance name"
         local instance_list=$(get_instance_list)
-        
+
         if [ $(echo $instance_list | grep ' ' | wc -l) -eq 0 ]; then
             instance=$instance_list
             if [ -z "$instance" ] ; then
@@ -695,11 +709,11 @@ function set_type_command_and_instance() {
 
 function set_id() {
     if [ "$instance" == "default" ]; then
-        id="["`basename $0`"#${type}]"
+        id="["$(basename $0)"#${type}]"
     else
-        id="["`basename $0`"#${type}-${instance}]"
+        id="["$(basename $0)"#${type}-${instance}]"
     fi
-    
+
     debug type is $type \
         and command is $command \
         and instance is $instance
@@ -707,33 +721,33 @@ function set_id() {
 
 function get_status() {
     if [ -z "$type_pid" ]; then
-        echo "$(red DOWN)"
+        echo "DOWN"
         exit 0
     elif [ -r $pid_file ]; then
-        
+
         if [ "$type_pid" != `cat $pid_file` ]; then
-            echo "Is running, but was not started with `basename $0`"
+            echo "Is running, but was not started with $(basename $0)"
             echo "system PID $ece_id differs from the PID in $pid_file"
             exit 1
         fi
     else
         echo $pid_file "did not exist, "
         echo "the ${instance} instance of ${type} is running with PID $type_pid"
-        echo "but hasn't been started properly with `basename $0`"
+        echo "but hasn't been started properly with $(basename $0)"
         exit 1
     fi
 
-    now=`date +%s`
-    started=`stat -c %Y $pid_file`
-    seconds=$(( now - started ))
-    days=$(( seconds / ( 60 * 60 * 24 ) ))
-    seconds_left=$(( seconds - ( $days * 60 * 60 * 24 ) ))
-    hours=$(( seconds_left / ( 60 * 60 ) ))
-    seconds_left=$(( seconds_left - ( $hours * 60 * 60 ) ))
-    minutes=$(( seconds_left / 60 ))
-    seconds_left=$(( seconds_left - $minutes * 60 ))
+    local now=`date +%s`
+    local started=`stat -c %Y $pid_file`
+    local seconds=$(( now - started ))
+    local days=$(( seconds / ( 60 * 60 * 24 ) ))
+    local seconds_left=$(( seconds - ( $days * 60 * 60 * 24 ) ))
+    local hours=$(( seconds_left / ( 60 * 60 ) ))
+    local seconds_left=$(( seconds_left - ( $hours * 60 * 60 ) ))
+    local minutes=$(( seconds_left / 60 ))
+    local seconds_left=$(( seconds_left - $minutes * 60 ))
 
-    echo "$(green UP)" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    echo "UP" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 }
 
 function read_rc_file_if_present() {
@@ -753,15 +767,7 @@ function show_all_publications() {
   set_type_port
   print "These are all the publications on ${instance}:"
   get_publication_list ${port}
-}  
-
-function show_all_deployments() {
-  print "These are all the deployments made on ${instance}:"
-  local log=$(get_deployment_log)
-  if [ -r $log ]; then
-    cat $log
-  fi
-}  
+}
 
 init
 read_rc_file_if_present
@@ -797,9 +803,6 @@ for el in $command; do
             ;;
         list-publications)
             show_all_publications
-            ;;
-        list-deployments)
-            show_all_deployments
             ;;
         outlog)
             tail_out_log
@@ -860,4 +863,3 @@ for el in $command; do
 done
 
 exit 0
-
