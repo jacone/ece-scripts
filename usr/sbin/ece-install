@@ -121,7 +121,7 @@ function init() {
       exit 1
     }
   fi
-  
+
   # first, try to be nice
   local dir=$(dirname $0)/../share/escenic/ece-scripts
 
@@ -146,7 +146,7 @@ function init() {
     echo "I cannot find $(basename $0)'s dependencies, exiting :-("
     exit 1
   fi
-  
+
   # hooks for when the scirpt exits cleanly and when a user or someone
   # kills the process
   trap common_bashing_exit_hook EXIT
@@ -161,7 +161,7 @@ function download_escenic_components()
 
     print_and_log "Downloading software from technet.escenic.com ..."
     run cd $download_dir
-    
+
     for el in $technet_download_list $wf_download_list; do
       if [ -e $(basename $el) ]; then
         continue
@@ -171,23 +171,23 @@ function download_escenic_components()
       run wget $wget_opts \
         --http-user $technet_user \
         --http-password $technet_password \
-        $el 
+        $el
     done
 }
 
 # we need to do one apt-get update to be sure the package list is
 # fresh. However, we don't want to do this in a common method, since
-# it *might* be that all pre-requisite packages already are present. 
+# it *might* be that all pre-requisite packages already are present.
 one_time_apt_update_done=0
 
 # Will install the passed packages if these are not installed from
 # before.
 #
 # parameters:
-# $1 : space separated string of package names 
+# $1 : space separated string of package names
 function install_packages_if_missing() {
   log "Installing package(s) [$@] if missing ..."
-  
+
   if [ $on_debian_or_derivative -eq 1 ]; then
     some_are_missing=0
     for el in $@; do
@@ -198,7 +198,7 @@ function install_packages_if_missing() {
         some_are_missing=1
       fi
     done
-    
+
     if [ $some_are_missing -eq 0 ]; then
       return
     elif [ $one_time_apt_update_done -eq 0 ]; then
@@ -225,7 +225,7 @@ function install_common_os_packages()
   print_and_log "Installing common OS packages ..."
   local packages="curl wget unzip bc ca-certificates"
   local git_package=git
-  
+
   if [ $on_debian_or_derivative -eq 1 ]; then
     # Ubuntu doesn't have git (!) but only git-core.
     if [ $on_ubuntu -eq 1 ]; then
@@ -233,7 +233,7 @@ function install_common_os_packages()
     fi
     packages="${packages} bind9-host"
   fi
-  
+
   install_packages_if_missing $packages $git_package
   assert_commands_available lsb_release curl host wget git unzip
 
@@ -250,7 +250,7 @@ function install_common_os_packages()
     fi
     install_packages_if_missing escenic-common-scripts
   fi
-  
+
 }
 
 # don't quote values when setting conf file values with
@@ -278,7 +278,7 @@ function ensure_domain_is_known_to_local_host() {
   if [ -z "$1" ]; then
     return 1
   fi
-  
+
   local hostname_ip=$(ping -c 1 $HOSTNAME 2>/dev/null | \
     head -1 | \
     cut -d'(' -f2 | \
@@ -309,7 +309,7 @@ EOF
   fi
 }
 
-# last, give the control back to the ECE user & group 
+# last, give the control back to the ECE user & group
 function set_correct_permissions()
 {
   log "Setting correct permissions on ECE related directories ..."
@@ -318,7 +318,7 @@ function set_correct_permissions()
     if [ ! -d $el ]; then
       continue
     fi
-    
+
     if [ ${el} = ${escenic_data_dir} ]; then
       local correct_permission=$(find ${el} \
         -maxdepth 0 \
@@ -388,15 +388,15 @@ function check_for_required_downloads()
   if [ $ece_software_setup_completed -eq 1 ]; then
     return
   fi
-  
+
   print_and_log "Asserting that required downloads succeeded ..."
   local required_escenic_packages="engine assemblytool"
   if [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
     required_escenic_packages="analysis-engine"
   fi
-  
+
   local some_is_missing=0
-  
+
   for el in $required_escenic_packages; do
     if [ $(ls $download_dir/$el*.{zip,jar} 2>/dev/null | wc -l) -lt 1 ]; then
       print_and_log "-> $el is missing"
@@ -424,7 +424,7 @@ function check_for_required_downloads()
 function set_up_user_environment()
 {
   local bashrc=$(get_user_home_directory $ece_user)/.bashrc
-  
+
   if [ $(grep bash_completion.d/ece ${bashrc} 2>/dev/null | \
     wc -l) -lt 1 ]; then
     cat >> ${bashrc} <<EOF
@@ -436,12 +436,12 @@ EOF
 
   # Having the EDITOR variable set is requirement for several
   # commmands, including running:
-  # 
+  #
   # 'ece -i <instance> -p <publication> -r <resource> edit'
   if [ $(grep EDITOR ${bashrc} 2>/dev/null | wc -l) -lt 1 ]; then
     echo "export EDITOR=vi" >> ${bashrc}
   fi
-  
+
   if [ $(grep ECE_CONF_LOCATIONS ${bashrc} | wc -l) -eq 0 ]; then
     echo "export ECE_CONF_LOCATIONS=\"$escenic_conf_dir\"" >> ${bashrc}
     run chown ${ece_user}:${ece_group} ${bashrc}
@@ -465,7 +465,7 @@ function read_user_input()
 "$PROFILE_RESTORE_FROM_BACKUP - Restore from backup"\
 " (DB, data files, binaries, conf & publications)"
     )
-    
+
     echo "Hi, which server profile do you wish to install?"$'\n'
 
     for (( i = 0; i < ${#installation_profiles[@]}; i++ )); do
@@ -475,7 +475,7 @@ function read_user_input()
     echo $'\n'"Select 1-${#installation_profiles[@]} and press ENTER"
     echo -n "Your choice [1]> "
     read install_profile_number
-    
+
     if [ -z "$install_profile_number" ]; then
         install_profile_number=$PROFILE_ALL_IN_ONE
     fi
@@ -496,7 +496,7 @@ function assert_correct_runtime_environment()
     create_pid
     started=`stat -c %Y $pid_file`
     create_lock
-    
+
     if [ ! -e "$conf_file" ]; then
       print_and_log $conf_file "doesn't exist." \
         "I cannot live without it, so I'm exiting :-("
@@ -514,9 +514,9 @@ function check_software_credentials() {
   if [ ${fai_offline_mode-0} -eq 1 ]; then
     return
   fi
-  
+
   print_and_log "Verifying that Technet credentials are OK ..."
-  
+
   local url=http://technet.escenic.com
   local notok=$(
     is_unauthorized_to_access_url \
@@ -537,7 +537,7 @@ function check_software_credentials() {
 
   # if the WF credentials are set, we check to see if they're OK
   if [ -n "${wf_user}" -a -n "${wf_password}" ]; then
-    print_and_log "Verifying that Widget Framework credentials are OK ..." 
+    print_and_log "Verifying that Widget Framework credentials are OK ..."
     local url=http://repo.escenic.com
     local notok=$(
       is_unauthorized_to_access_url \
@@ -569,7 +569,7 @@ function common_pre_install()
     # These variables are placed here as all the directories can be
     # overridden in ece-install.conf
     common_nursery_dir=$escenic_conf_dir/engine/common
-    
+
     # Because of issue VF-3559, we also create the default family and
     # host directories (fixed in 5.4.0.x).
     engine_dir_list="
@@ -598,7 +598,7 @@ function common_pre_install()
     if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
         on_debian_or_derivative=1
         export DEBIAN_FRONTEND=noninteractive
-        
+
       # chicken and the egg problem, we need lsb_release to install the
       # packages later on, hence as soon as we know we've got a Debian
       # based platform, we install lsb-release. Also note, the
@@ -618,7 +618,7 @@ function common_pre_install()
 
     check_software_credentials
     assert_commands_available lsb_release
-    
+
     if [ $(lsb_release -i | grep Ubuntu | wc -l) -gt 0 ]; then
         on_ubuntu=1
     elif [ $(lsb_release -i | grep Debian | wc -l) -gt 0 ]; then
@@ -629,7 +629,7 @@ function common_pre_install()
     # installed. As this happens on RedHat/CentOS 5.7, we turn it off
     # here.
     export GIT_SSL_NO_VERIFY=true
-    
+
     make_dir $download_dir
     install_common_os_packages
     create_user_and_group_if_not_present $ece_user $ece_group
@@ -763,7 +763,7 @@ function run_hook()
         # or may not be useful. Furthermore, we filter out upper case
         # variables as these are environment variables.
         set | grep ^[a-z] | grep \= > ${ece_install_env}
-        
+
         print_and_log "Started hook  $1 ..."
         bash ${ece_install_scripts_dir}/${1}
         print_and_log "Finished hook $1 ..."
@@ -815,9 +815,9 @@ function add_server_to_runlevels()
     print_and_log "Adding the ece init.d script to the default run levels ..."
     run update-rc.d ece defaults
   elif [ $on_redhat_or_derivative -eq 1 ]; then
-    run chkconfig --level 35 ece on      
+    run chkconfig --level 35 ece on
   else
-    add_next_step "Remember to add /etc/init.d/ece to the desired run levels." 
+    add_next_step "Remember to add /etc/init.d/ece to the desired run levels."
     # TODO add init.d to the default runlevels, for other
     # distributions too:
     # - Gentoo: rc-update add ece default
@@ -848,7 +848,7 @@ function common_post_install() {
 
   install_system_info
   set_correct_permissions
-  
+
   print_status_and_next_steps
 }
 
@@ -870,10 +870,10 @@ function un_install_everything() {
     munin-plugins-extra
     munin-java-extra
     nginx
-    percona-server-client                
-    percona-server-client-5.5            
-    percona-server-common-5.5            
-    percona-server-server                
+    percona-server-client
+    percona-server-client-5.5
+    percona-server-common-5.5
+    percona-server-server
     percona-server-server-5.5
     varnish
     sun-java6-jdk
@@ -911,25 +911,26 @@ function un_install_everything() {
   fi
 
   for el in $file_to_remove_list; do
-    run rm -rf $el
+    fail_safe_run rm -rf $el
   done
 
   for el in $key_to_remove_list; do
     if [ $(apt-key list | grep $el | wc -l) -gt 0 ]; then
-      run apt-key remove $el
+      fail_safe_run apt-key remove $el
     fi
   done
-  
+
   for el in $remove_package_list; do
     if [ $(dpkg -l $el | grep ^ii | wc -l) -gt 0 ]; then
-      run apt-get --yes --purge remove $el
+      fail_safe_run apt-get --yes --purge remove $el
     fi
   done
 
-  run apt-get clean
+  fail_safe_run apt-get clean
 
-  print_and_log "Everything set up by $(basename $0) should now"
-  print_and_log "have been removed from ${HOSTNAME}."
+  # cannot log since we've removed the log and its directory too.
+  print "Everything set up by $(basename $0) should now"
+  print "have been removed from ${HOSTNAME}."
 }
 
 ece_install_trail_file=/var/lib/$(basename $0)/$(date +%s)-$(basename $0).trail
@@ -957,7 +958,7 @@ for el in $@; do
                 conf_file=$(pwd)/${conf_file}
                 ;;
         esac
-        
+
         next_is_conf_file=0
     fi
 done
@@ -968,10 +969,10 @@ assert_correct_runtime_environment
 if [ ${fai_enabled-0} -eq 1 ]; then
     print_and_log "Full Automatic Install (FAI) enabled."
     print_and_log "All user input will be read from $conf_file"
-    
+
     common_pre_install
     perform_dry_run_if_applicable
-    
+
     no_fai_profile=1
 
     if [ ${fai_un_install_everything-0} -eq 1 ]; then
@@ -993,62 +994,62 @@ if [ ${fai_enabled-0} -eq 1 ]; then
         install_all_in_one_environment
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_db_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_DB_SERVER
         install_database_server
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_editor_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_EDITORIAL_SERVER
         install_editorial_server
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_search_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_SEARCH_SERVER
         install_search_server
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_wf_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_WIDGET_FRAMEWORK
         install_widget_framework
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_presentation_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_PRESENTATION_SERVER
         install_presentation_server
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_cache_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_CACHE_SERVER
         install_cache_server
         install_web_server 0
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_publication_create-0} -eq 1 ]; then
         install_profile_number=$PROFILE_CREATE_PUBLICATION
         create_publication
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_monitoring_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_MONITORING_SERVER
         install_monitoring_server
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_restore_from_backup-0} -eq 1 ]; then
         install_profile_number=$PROFILE_RESTORE_FROM_BACKUP
         restore_from_backup
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_rmi_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_RMI_HUB
         install_rmi_hub
@@ -1061,7 +1062,7 @@ if [ ${fai_enabled-0} -eq 1 ]; then
       install_database_server
       no_fai_profile=0
     fi
-    
+
     # Important that the EAE is installed after all, editor and
     # presentation in case it's running on the same host as any of
     # them. This because it configures the EAE ECE plugin, which the
@@ -1072,13 +1073,13 @@ if [ ${fai_enabled-0} -eq 1 ]; then
         install_analysis_server
         no_fai_profile=0
     fi
-    
+
     if [ ${fai_nfs_server_install-0} -eq 1 ]; then
       install_profile_number=$PROFILE_NFS_SERVER
       install_nfs_server
       no_fai_profile=0
     fi
-    
+
     # checking for VIP profile last so that ece-install can (if so
     # configured in the ece-install.con) install all dependent
     # services first.
@@ -1087,7 +1088,7 @@ if [ ${fai_enabled-0} -eq 1 ]; then
       install_vip_provider
       no_fai_profile=0
     fi
-    
+
     if [ ${fai_db_daily_backup-0} -eq 1 ]; then
       install_profile_number=$PROFILE_DB_BACKUP_SERVER
       install_db_backup_server
@@ -1100,18 +1101,18 @@ if [ ${fai_enabled-0} -eq 1 ]; then
       # in the common_post_install function.
       no_fai_profile=0
     fi
-    
+
     if [ $no_fai_profile -eq 1 ]; then
         print_and_log "No install profile selected, be sure to have one of the "
         print_and_log "fai_<profile>_install=1 in your $conf_file"
         remove_pid_and_exit_in_error
     fi
-    
+
     common_post_install
 else
     read_user_input
     common_pre_install
-    
+
     case $install_profile_number in
         $PROFILE_ALL_IN_ONE)
             install_all_in_one_environment
@@ -1163,4 +1164,3 @@ else
 fi
 
 exit 0
-
