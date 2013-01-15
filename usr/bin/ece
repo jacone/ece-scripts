@@ -769,6 +769,11 @@ function show_all_publications() {
   get_publication_list ${port}
 }
 
+function show_all_deployments() {
+  print "These are all the publications on ${instance}:"
+  cat $(get_deployment_log)
+}
+
 init
 read_rc_file_if_present
 set_type_command_and_instance $@
@@ -803,6 +808,9 @@ for el in $command; do
             ;;
         list-publications)
             show_all_publications
+            ;;
+        list-deployments)
+            show_all_deployments
             ;;
         outlog)
             tail_out_log
