@@ -364,11 +364,11 @@ function print_status_and_next_steps()
     local seconds_left=$(( seconds_left - $minutes * 60 ))
 
     if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]; then
-        s="The installation is now $(green complete)!"
+      local message="The installation is now $(green complete)!"
     else
-        s="The restore is now complete!"
+      local message="The restore is now $(green complete)!"
     fi
-    print_and_log $s" It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+    print_and_log "${message} It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
 
     if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP -a \
         $install_profile_number -ne $PROFILE_CACHE_SERVER -a \

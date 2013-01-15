@@ -23,13 +23,13 @@ function common_bashing_is_loaded() {
 
 function get_seconds_since_start() {
   local seconds="n/a"
-  
+
   if [ -n "$pid_file" -a -r "$pid_file" ]; then
     now=`date +%s`
     started=`stat -c %Y $pid_file`
     seconds=$(( now - started ))
   fi
-  
+
   echo "$seconds"
 }
 
@@ -38,7 +38,7 @@ function get_id() {
     echo $id
     return
   fi
-  
+
   local timestamp=$(get_seconds_since_start)
   echo "[$(basename $0)-${timestamp}]"
 }
@@ -116,7 +116,7 @@ function remove_pid_and_exit_in_error() {
   if [ -w $log ]; then
     log_call_stack
   fi
-  
+
   kill $$
 }
 
@@ -138,7 +138,7 @@ function run() {
       kill $BASHPID
     }
   fi
-  
+
   "${@}" 1>>$log 2>>$log
   exit_on_error $@
 }
@@ -163,7 +163,7 @@ function is_number() {
       return
     fi
   done
-  
+
   echo 1
 }
 
@@ -181,7 +181,7 @@ function get_escaped_bash_string() {
 
 # Munin nodes need the IP of the munin gatherer to be escaped. Hence
 # this function.
-# 
+#
 # Parameters:
 #
 # $1 : the IP
@@ -212,7 +212,6 @@ function green() {
   else
     echo "$@"
   fi
-  tput clear
 }
 
 ## Returns the inputted string(s) as yellow
@@ -239,7 +238,7 @@ function get_base_dir_from_bundle()
 {
     local file_name=$(basename $1)
     suffix=${file_name##*.}
-    
+
     if [ ${suffix} = "zip" ]; then
         # we'll look inside the archive to determine the base_dir
         file_name=$(
@@ -264,22 +263,22 @@ function get_base_dir_from_bundle()
 
 ## Will assert that all the passed variable names are set, if not, it
 ## will exit in error.
-## 
+##
 ## $@ : a list of variable names
 ##
 ## Requires $conf_file to be set.
 function ensure_variable_is_set() {
   local requirements_failed=0
-  
+
   for el in $@; do
     if [ -n "$(eval echo $`echo $el`)" ]; then
       continue
     fi
-    
+
     print_and_log "You need to specifiy '$el' in your $conf_file"
     requirements_failed=1
   done
-  
+
   if [ $requirements_failed -eq 1 ]; then
     remove_pid_and_exit_in_error
   fi
@@ -295,7 +294,7 @@ function is_archive_healthy() {
     echo 0
     return
   fi
-  
+
   if [ $? -eq 0 ]; then
     echo 1
   else
@@ -336,7 +335,7 @@ next_steps=()
 function add_next_step() {
   next_steps[${#next_steps[@]}]="$@"
   return
-  
+
   if [ -n "$next_steps" ]; then
     next_steps=${next_steps}$'\n'"[$(basename $0)] "${1}
   else
@@ -386,10 +385,10 @@ function split_string() {
   if [[ -z $1 || -z $2 ]]; then
     return
   fi
-  
+
   local delimeter=$1
   shift;
-  
+
   local old_ifs=$IFS
   IFS=$delimeter
   read splitted_string <<< $@
@@ -406,8 +405,8 @@ function create_file_if_doesnt_exist() {
     return
   elif [ -e $1 ]; then
     return
-  fi    
-  
+  fi
+
   local dir=$(dirname $1)
 
   # since this method can be called really early in scripts, we cannot
@@ -422,7 +421,7 @@ function remove_file_if_exists() {
   elif [ ! -e $1 ]; then
     return
   fi
-  
+
   fail_safe_run rm $1
 }
 
@@ -492,7 +491,7 @@ function common_bashing_exit_hook() {
 ## Put this in your script to have it exit whenever the user hits the
 ## user pressing Ctrl+c or by someone sending a regular kill <PID>
 ## signal to it.
-## 
+##
 ## Usage:
 ## trap common_bashing_user_cancelled_hook SIGHUP SIGINT
 function common_bashing_user_cancelled_hook() {
