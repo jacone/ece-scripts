@@ -241,13 +241,22 @@ sub vcl_recv {
    * All iPhones are treated as the same one, all iPads as the same
    * iPad, all Opera Mini as the same one and all Android. If the
    * client (browser) is neither of the above, a common UA string is
-   * set. */
-
+   * set.
+   *
+   * We check for Opera Mini before Android as some user agents
+   * contain both.
+   */
   if (req.http.User-Agent ~ "iPhone") {
     set req.http.User-Agent = "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4_3_3 like Mac OS X; en_us) AppleWebKit/525.18.1 (KHTML, like Gecko)";
   }
   else if (req.http.User-Agent ~ "iPad") {
     set req.http.User-Agent = "Mozilla/5.0 (iPad; U; CPU OS 4_3_2 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8H7 Safari/6533.18.5";
+  }
+  else if (req.http.User-Agent ~ "Opera Mini" ||
+           req.http.User-Agent ~ "Opera Mobi") {
+    set req.http.User-Agent = "Opera/9.80 (J2ME/MIDP; Opera Mini/4.0.10031/28.3392; U; en) Presto/2.8.119 Version/11.10";
+    set req.http.X-OperaMini-Phone-UA = "NokiaX2-00/5.0 (08.35) Profile/MIDP-2.1 Configuration/CLDC-1.1 Mozilla/5.0 AppleWebKit/420+ (KHTML, like Gecko)
+Safari/420+";
   }
   else if (req.http.User-Agent ~ "Android") {
     // we don't do anything for Android devices right now since there
@@ -256,9 +265,6 @@ sub vcl_recv {
     // We could cache two versions, one mobile, one table for each
     // Android 2.0-2.4, however, we try to leave it be right now and
     // see how big the cache gets.
-  }
-  else if (req.http.User-Agent ~ "Opera Mini") {
-    set req.http.User-Agent = "Opera/9.80 (J2ME/MIDP; Opera Mini/4.0.10031/28.3392; U; en) Presto/2.8.119 Version/11.10";
   }
   else {
     set req.http.User-Agent = "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; VOSA 1.0)";
