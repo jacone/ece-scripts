@@ -1,21 +1,40 @@
-#+TITLE: User Guide for the ece-import Command
+#+TITLE: ece-import
 #+AUTHOR: Vizrt Online / The SaaS Team
-#+OPTIONS: H:6 num:5 toc:2 
+#+OPTIONS: H:6 num:5 toc:2
 
-* Introduction
-The =ece-import= command will help you with the following tasks:
+* NAME
+ece-import
 
-- Setting up imports, either [[From an import archive]] or [[Without an import archive]]
+* SYNOPSIS
+ece-import [[[--name]]] [[[--publication]]] [[[--user]]] [[[--password]]] COMMAND
+
+* DESCRIPTION
+The ece-import command will help you with the following tasks:
+
+- [[create][Setting up imports]], either from an import archive or without an import archive.
 - [[Getting raw import data from HTTP or FTP servers]]
 - Running an import job, taking the raw XML from a 3rd party system,
   applying all defined transformations on it and dumping it in the
   designed import spool for Escenic Content Engine to pick it up and
   import it into its CMS. This is typically set up from a cron job,
-  but [[Running an import job manually]] is easy with =ece-import=.
+  but [[Running an import job manually]] is easy with ece-import.
 
-* Setting up a new import job
+* OPTIONS
+** --name
+The name of the import job
+** --publication
+The publication name that this job belongs to.
+** --user user
+The HTTP user to access the download data (optional). This option only
+applies when running the [[download-import-data]] command.
+** --password password
+The HTTP password to access the download data. This option only
+applies when running the [[download-import-data]] command.
 
-** From an import archive
+* COMMANDS
+** create
+ece-import will happily set up a new import job for you.
+From an import archive:
 The preferred way is to use an import archive, which you typically get
 from the web site developers who've created the XSL files and so on.
 #+BEGIN_SRC text
@@ -25,64 +44,65 @@ from the web site developers who've created the XSL files and so on.
 See [[Structure of an import archive]] for a detailed specification on how
 to create such an archive yourself.
 
-** Without an import archive
+You can also set up an import job without an import archive:
 #+BEGIN_SRC text
-# ece-import \
-  --name streaming-video \
-  --publication mypub \
+# ece-import \\
+  --name streaming-video \\
+  --publication mypub \\
   create
 #+END_SRC
 
-Here, =ece-import= will set up the file structure for your import job,
+Here, ece-import will set up the file structure for your import job,
 but you'll have to either put your transformers & cron jobs on the
 system yourself, or make sure that the XML you want import already is
 in the [[http://documentation.vizrt.com/ece-syndication-ref/5.4/escenic_syndication.html][Escenic Syndication XML format]].
 
-* Getting raw import data from HTTP or FTP servers
-There's built-in support for this in =ece-import=:
+
+** download-import-data
+There's built-in support for this in ece-import:
 #+BEGIN_SRC text
-$ ece-import \
-  --name streaming-video \
-  --publication mypub \
-  --user my-ftp-user \
-  --password my-ftp-password \
-  --uri http://news-feed.com/my-import-job-feed
+$ ece-import \\
+  --name streaming-video \\
+  --publication mypub \\
+  --user my-ftp-user \\
+  --password my-ftp-password \\
+  --uri http://news-feed.com/my-import-job-feed \\
   download-import-data
-[ece-import-0] Started @ Mon Nov 5 09:30:39 UTC 2012, I'm logging to
-[ece-import-0] /var/log/escenic/ece-import-root.log
-[ece-import-1] 12.xml has already been downloaded, skipping to the next one
-[ece-import-1] 19.xml has already been downloaded, skipping to the next one
-[ece-import-1] Downloading http://news-feed.com/my-import-job-feed/20.xml ...
-[ece-import-1] Downloading http://news-feed.com/my-import-job-feed/21.xml ...
-[ece-import-2] Downloading http://news-feed.com/my-import-job-feed/22.xml ...
-[ece-import-3] Downloading http://news-feed.com/my-import-job-feed/23.xml ...
-[ece-import-3] Downloading http://news-feed.com/my-import-job-feed/24.xml ...
-[ece-import-4] Downloading http://news-feed.com/my-import-job-feed/25.xml ...
-[ece-import-5] Downloading http://news-feed.com/my-import-job-feed/26.xml ...
-[ece-import-6] Finished @ Mon Nov 5 09:30:45 UTC 2012
+Started @ Mon Nov 5 09:30:39 UTC 2012, I'm logging to
+/var/log/escenic/ece-import-root.log
+12.xml has already been downloaded, skipping to the next one
+19.xml has already been downloaded, skipping to the next one
+Downloading http://news-feed.com/my-import-job-feed/20.xml ...
+Downloading http://news-feed.com/my-import-job-feed/21.xml ...
+Downloading http://news-feed.com/my-import-job-feed/22.xml ...
+Downloading http://news-feed.com/my-import-job-feed/23.xml ...
+Downloading http://news-feed.com/my-import-job-feed/24.xml ...
+Downloading http://news-feed.com/my-import-job-feed/25.xml ...
+Downloading http://news-feed.com/my-import-job-feed/26.xml ...
+Finished @ Mon Nov 5 09:30:45 UTC 2012
 #+END_SRC
 
-You can safely re-run this as many times as you wish, =ece-import=
+You can safely re-run this as many times as you wish, ece-import
 will keep track of previously downloaded files. If you ever need to
 re-download third party data, you can remove the corresponding
-resource from =/var/lib/escenic/raw/mypub/streaming-video/download.state=
+resource from /var/lib/escenic/raw/mypub/streaming-video/download.state
 
-* Running an import job manually
+** Running an import job manually
 #+BEGIN_SRC text
-$ ece-import \
-  --name streaming-video \
+$ ece-import \\
+  --name streaming-video \\
   --publication mypub
-[ece-import-0] Started @ Mon Nov 5 09:36:33 UTC 2012, I'm logging to
-[ece-import-0] /var/log/escenic/ece-import-root.log
-[ece-import-0] Publication: mypub
-[ece-import-0] Import configuration: streaming-video
-[ece-import-0] Importing raw XML #1: 21.xml ...
-[ece-import-0] Importing raw XML #2: 26.xml ...
-[ece-import-1] Importing raw XML #3: 24.xml ...
-[ece-import-4] Number of raw XML files processed: 3
-[ece-import-4] Number of raw XML successes: 3
-[ece-import-4] Number of raw XML errors: 0
-[ece-import-4] Finished @ Mon Nov 5 09:36:37 UTC 2012, enjoy thyself!
+Started @ Mon Nov 5 09:36:33 UTC 2012, I'm logging to
+/var/log/escenic/ece-import-root.log
+Publication: mypub
+Import configuration: streaming-video
+Importing raw XML #1: 21.xml ...
+Importing raw XML #2: 26.xml ...
+Importing raw XML #3: 24.xml ...
+Number of raw XML files processed: 3
+Number of raw XML successes: 3
+Number of raw XML errors: 0
+Finished @ Mon Nov 5 09:36:37 UTC 2012, enjoy thyself!
 #+END_SRC
 
 * Structure of an import archive
@@ -90,36 +110,36 @@ When creating a new import configuration for your project, the
 following directory structure is required:
 
 #+BEGIN_SRC text
-<publication>/<import name>
-<publication>/<import name>/transformers/<number>-<transformer task>.xsl
-<publication>/<import name>/cron.hourly/<cron job command>
-<publication>/<import name>/cron.every.five.minutes/<cron job command>
+<pub>/<import name>
+<pub>/<import name>/transformers/<number>-<transformer task>.xsl
+<pub>/<import name>/cron.hourly/<cron job command>
+<pub>/<import name>/cron.every.five.minutes/<cron job command>
 #+END_SRC
 
 - publication name :: the name of the publication for which the import
      job(s) are defined. You can have more than one publication in
-     each =zip= archive.
+     each zip archive.
 - import job name :: lowercase with hyphens between words (if more
      than one)
-- transformers :: directory with files prefixed with =<number>-=, indicating
+- transformers :: directory with files prefixed with <number>-, indicating
                   the order of transformation to apply to your import job. If
-                  this is a =xsl= file, the escenic importer will run
-                  =xsltproc= on the file, whereas =.sh= files will be
-                  run in a =bash= wrapper.
+                  this is a xsl file, the escenic importer will run
+                  xsltproc on the file, whereas .sh files will be
+                  run in a bash wrapper.
 
                   Each of the transformers will be called with one
                   argument, namely the input XML data. Each
                   transformer is responsible to write changes back to
                   the file.
 - cron.hourly :: commands to be run every our. These will be put in
-                 =/etc/cron.hourly= on the import server. Be sure to
+                 /etc/cron.hourly on the import server. Be sure to
                  set the execute bit on the file and note that as with
                  all cron jobs, the file cannot have a file suffix.
 - cron.every.five.minutes :: commands to run every five minutes.
 
-We're calling the import configuration =moo= since we're
+We're calling the import configuration moo since we're
 setting up an import feed from our imaginary content provider, "Moo
-Cool Videos" and our publication is the ubiquitous =mypub=.
+Cool Videos" and our publication is the ubiquitous mypub.
 
 #+BEGIN_SRC text
 $ unzip -t my-great-import-archive.zip.zip
@@ -132,53 +152,60 @@ otherpub/foo/transformers/01-convert-from-foo-to-escenic-xml.xsl
 #+END_SRC
 
 As you can guess from the file names, the
-=02-convert-all-cows-to-ducks.xsl= stylesheet will be first applied to
+02-convert-all-cows-to-ducks.xsl stylesheet will be first applied to
 the incoming data (normally XML) and the
-=02-convert-duck-to-escenic-xml.xsl= will be applied next before the
+02-convert-duck-to-escenic-xml.xsl will be applied next before the
 resulting Escenic XML will be imported into the Escenic Content
 Engine.
 
-
-
 * Creating your own transformers
 You can write a transformer in either XSL, Perl, Python or BASH. You
-put it in =<publication>/<import name>/transformers/<number>-<transformer task>.<{xsl,pl,py,sh}>=
-and specify the order in which it should run by setting the =<number>=
+put it in <publication>/<import name>/transformers/<number>-<transformer task>.<{xsl,pl,py,sh}>
+and specify the order in which it should run by setting the <number>
 before/after your other transformers (if any, many folks only have one
 transformer which is an XSL file).
 
-All transformers are run by the =ece-import= command and they get one
+All transformers are run by the ece-import command and they get one
 argument, namely the raw XML file from the 3rd party system. All
 transformers work on the same XML file, so that changes done in
-e.g. =01-first.sh= are passed on to =02-second.pl=. Each transformer
+e.g. 01-first.sh are passed on to 02-second.pl. Each transformer
 must read the file and write to the same file. That's the contract.
 
 Here's an example of a transformer that downloads all the pictures
-mentioned in the raw XML. =ece-import= will copy any multimedia files
+mentioned in the raw XML. ece-import will copy any multimedia files
 to the ECE import spool for you, so the transformer only needs to
 worry about downloading these to the directory of the incoming XML
-file: 
+file:
 
 #+BEGIN_SRC sh
 #! /usr/bin/env bash
 
-# Command which will download all thumbnails listed in the XML exported
-# from VMEO.
+# Command which will download all thumbnails listed in the XML
+# exported from VMEO.
 #
 # It is normally called from ece-import, but can also be called
 # directly (when debugging).
 
-xpath_to_get_thumbnail_urls="/didl:DIDL/didl:Item/didl:Component/didl:Decommandor/didl:Statement/mpeg7:Mpeg7/mpeg7:Decommandion/mpeg7:Summarization/mpeg7:Summary/mpeg7:VisualSummaryComponent/mpeg7:ImageLocator/mpeg7:MediaUri"
+xpath_to_get_thumbnail_urls"/didl:DIDL/didl:Item/didl:Component/didl:Decommandor/didl:Statement/mpeg7:Mpeg7/mpeg7:Decommandion/mpeg7:Summarization/mpeg7:Summary/mpeg7:VisualSummaryComponent/mpeg7:ImageLocator/mpeg7:MediaUri"
 
 # $1 is the raw XML
-cat "$1" | \
-  xml_grep --nowrap --cond $xpath_to_get_thumbnail_urls | \
-  sed 's/></>\n</g' | \
+cat "$1" | \\
+  xml_grep --nowrap --cond $xpath_to_get_thumbnail_urls | \\
+  sed 's/></>\n</g' | \\
   sed "s#.*>\(.*\)<.*#\1#g" | while read url; do
-  wget \
-    --quiet \
-    --continue \
-    --output-document $(dirname $1)/$(basename $url) \
+  wget \\
+    --quiet \\
+    --continue \\
+    --output-document $(dirname $1)/$(basename $url) \\
     $url;
 done
 #+END_SRC
+
+* COPYRIGHT
+Copyright 2011-2013 Vizrt
+
+Licensed under the Apache License, Version 2.0, see
+https://github.com/vizrt/ece-scripts/COPYING for further details.
+
+* AUTHOR
+Torstein Krause Johansen
