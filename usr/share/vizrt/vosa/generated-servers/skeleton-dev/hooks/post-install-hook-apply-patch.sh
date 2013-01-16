@@ -30,7 +30,10 @@ ssh -F $2/ssh.conf root@guest  \
 
 # change ownership just to be sure
 ssh -F $2/ssh.conf root@guest  \
-   chown -R escenic: /opt/tomcat-*
+   chown -R escenic: /opt/tomcat-engine1
+
+ssh -F $2/ssh.conf root@guest  \
+   chown -R escenic: /opt/tomcat-search1
 
 echo "--- END : post install hook - apply patch ---"
 
