@@ -255,8 +255,7 @@ sub vcl_recv {
   else if (req.http.User-Agent ~ "Opera Mini" ||
            req.http.User-Agent ~ "Opera Mobi") {
     set req.http.User-Agent = "Opera/9.80 (J2ME/MIDP; Opera Mini/4.0.10031/28.3392; U; en) Presto/2.8.119 Version/11.10";
-    set req.http.X-OperaMini-Phone-UA = "NokiaX2-00/5.0 (08.35) Profile/MIDP-2.1 Configuration/CLDC-1.1 Mozilla/5.0 AppleWebKit/420+ (KHTML, like Gecko)
-Safari/420+";
+    set req.http.X-OperaMini-Phone-UA = "NokiaX2-00/5.0 (08.35) Profile/MIDP-2.1 Configuration/CLDC-1.1 Mozilla/5.0 AppleWebKit/420+ (KHTML, like Gecko) Safari/420+";
   }
   else if (req.http.User-Agent ~ "Android") {
     // we don't do anything for Android devices right now since there

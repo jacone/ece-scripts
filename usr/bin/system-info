@@ -5,8 +5,9 @@
 ##
 ## $ system-info -i engine1 | xmllint --format - > /var/www/engine1.html
 ##
-## TODO:
-## Add this to /etc/cronttab
+## Add this to /etc/cronttab if you want it to create an HTML report
+## every minute:
+##
 ## echo '* *     * * *   root    system-info -f html > /var/www/index.html' >> /etc/crontab
 
 ece_user=""
@@ -27,7 +28,7 @@ log=$HOME/.$(basename $0).log
 function init() {
   # first, try to be nice
   ece_scripts_dir=$(dirname $0)/../share/escenic/ece-scripts
-  
+
   # then check the standard location
   if [ ! -d $ece_scripts_dir  ]; then
     ece_scripts_dir=/usr/share/escenic/ece-scripts
@@ -66,7 +67,7 @@ function get_indent() {
   else
     local number_of_indents=$current_indent_level
   fi
-  
+
   for (( i = 0; i < $number_of_indents; i++ )); do
     result="${INDENT}$result"
   done
@@ -76,7 +77,7 @@ function get_indent() {
 
 function create_header() {
   local title="Overview of $HOSTNAME"
-  
+
   if [ $format == "html" ]; then
 cat <<EOF
 
@@ -133,7 +134,7 @@ EOF
 
 function wrap_in_anchor_if_applicable() {
   local result=""
-  
+
   if [ $format == "html" ]; then
     for el in "$@"; do
       if [[ $el == "/"* || $el == "http://"* || $el == "mysql://"* ]]; then
@@ -192,12 +193,12 @@ function print_list_item() {
 function json_escape_string() {
   echo "$@" | sed 's/\"/\\"/g'
 }
- 
+
 function print_pre_text() {
   if [ $format == "org" ]; then
     cat <<EOF
 #+BEGIN_SRC sh
-$@  
+$@
 #+END_SRC
 EOF
   elif [ $format == "html" ]; then
@@ -317,7 +318,7 @@ EOF
     local LINE_WRAP=72
     local line=""
     text=""
-    
+
     for el in $@; do
       local tmp_line="${line} ${el}"
       # wrap the line when it becomes too long
@@ -345,12 +346,9 @@ function get_user_options() {
       exit 0
     fi
   done
-  
+
   while getopts ":d:o:i:f:u:mvst" opt; do
     case $opt in
-      i)
-        instance=${OPTARG}
-        ;;
       v)
         verbose=1
         ;;
@@ -386,7 +384,7 @@ function get_user_options() {
         ;;
     esac
   done
-  
+
 }
 
 init
@@ -394,5 +392,3 @@ get_user_options $@
 create_header
 run_system_info_modules
 create_footer
-
-

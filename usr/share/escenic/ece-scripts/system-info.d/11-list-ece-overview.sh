@@ -1,31 +1,16 @@
 #! /usr/bin/env bash
 
 # by tkj@vizrt.com
-function get_instance_type() {
-  local type="engine"
-
-  if [ -e /etc/default/ece ]; then
-    source /etc/default/ece
-
-    for el in "$analysis_instance_list"; do
-      if [[ "$(ltrim $el)" == "$1" ]]; then
-        type=analysis
-      fi
-    done
-  fi
-  
-  echo $type
-}
 
 ## $1 is the instance name
 function create_ece_overview() {
   local type=$(get_instance_type $1)
-  
+
   if [ $(whoami) == "root" ]; then
     if [ -n "$ece_user" ]; then
       local command="ece -q -i $1 info -t $type"
       local data="$(su - $ece_user -c " $command ")"$'\n'
-      
+
       command="ece -q -i $1 status"
       if [ "UP" == "$(su - $ece_user -c "$command" | cut -d' ' -f1)" ]; then
         command="ece -q -i $1 -t $type versions"
@@ -34,13 +19,13 @@ function create_ece_overview() {
     fi
   else
     local data="$(ece -q -i $1 info)"$'\n'
-    
+
     if [ "UP" == "$(ece -q -i $1 status -t $type | cut -d' ' -f1)" ]; then
       data="$data $(ece -q -i $1 versions -t $type | cut -d'*' -f2-)"
     fi
   fi
-  
-  
+
+
   echo "$data" | while read line; do
     if [[ $line == "|->"* ]]; then
       print_list_item $(wrap_in_anchor_if_applicable ${line:3})
@@ -52,7 +37,7 @@ function create_ece_overview() {
       print_un_ordered_list_start
     fi
   done
-  
+
   print_un_ordered_list_end
 
   if [ ${temporaries-1} -eq 1 ]; then
@@ -79,8 +64,7 @@ function list_error_overview_for_instance() {
 }
 
 function get_overview_of_all_instances() {
-  local instance_list=$(get_instance_list)
-
+  local instance_list=$(get_instance_enabled_list)
   if [ -z "$instance_list" ]; then
     return
   fi
@@ -101,9 +85,9 @@ function check_picture_file() {
 
   if [ ! -e $1 ]; then
     print_p_text "Picture file doesn't exist: $1"
-    return 
+    return
   fi
-  
+
   local alternative=$(find $dir -maxdepth 1 | grep -i "$file_name")
 
   # first check if the image is size=0
@@ -133,29 +117,29 @@ function check_picture_file() {
 function list_sax_errors() {
   local file=/var/log/escenic/${1}-messages
   local result="$(grep ^'Caused by: org.xml.sax.SAXParseException:' $file | sort | uniq)"
-  
+
   if [ -z $result ]; then
     return
   fi
-  
+
   print_p_text "There are illegal elements, attributes" \
     "and/or contents in the XML:"
   print_pre_text "$result"
-}  
+}
 
 function list_import_overview_for_instance() {
   if [ ${generate_import_job_overview-0} -eq 0 ]; then
     return
   fi
-  
+
   local file=/var/log/escenic/${1}-messages
-  
+
   if [ ! -e $file ]; then
     return
   fi
-  
+
   print_h4_header "Overview of ${1}'s import jobs"
-  
+
   grep "Invalid image file" $file | \
     grep ^java.io.IOException | \
     cut -d' ' -f5 | \
@@ -165,9 +149,8 @@ function list_import_overview_for_instance() {
     while read picture_path; do
     check_picture_file "$picture_path"
   done
-  
+
   list_sax_errors "$1"
 }
 
 get_overview_of_all_instances
-

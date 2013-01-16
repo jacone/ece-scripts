@@ -1,6 +1,65 @@
 #+TITLE: User Guide for the ece Command
 #+AUTHOR: Vizrt Online / The SaaS Team
-#+OPTIONS: H:6 num:5 toc:2 
+#+OPTIONS: H:6 num:5 toc:2
+
+* NAME
+ece - command for managing your Escenic Content Engine, Escenic
+Analysis Engine and search instances.
+
+* SYNOPSIS
+ece OPTIONS COMMANDS
+* Description
+** OPTIONS
+*** -t --type type
+      The following types are available:
+      engine  -  The Escenic Content Engine, this is the default
+                 and is the assumed type if none is specified.
+      search  -  A standalone search indexer and solr instance
+      rmi-hub -  The RMI hub responsible for the internal
+                 communication between the ECE instances.
+      analysis - The Escenic Analysis Engine also knows as 'Stats'
+
+*** -i --instance instance
+The type instance, such as editor1, engine1 or search1
+*** -p --publication publication
+Needed only for updating publication resources
+*** -r --resource resource
+Used for updating publication resources.  Must be one of:
+content-type, feature, layout, layout-group image-version, menu
+*** -v --verbose
+Prints out debug statements, useful for debugging.
+** COMMANDS
+*** applog
+The type's app server log
+*** assemble
+Runs the Assembly Tool.
+*** clean
+Removes temporary files created by /home/torstein/bin/ece *)
+*** deploy
+Deploys the assembled EAR if the type is engine
+*** help
+Prints this help screen
+*** kill
+Uses force to stop the type
+*** log
+The type's Log4J log
+*** outlog
+The [ece#engine] command log (system out log)
+*** restart
+Restarts the type
+*** start
+Starts the type
+*** status
+Checks if the type is running
+*** stop
+Stops the type
+*** threaddump
+Write a thread dump to standard out (system out log)
+*** update
+Update publication resources
+*** versions
+Lists the ECE component versions
+
 
 * TAB completion
 The ece command offers TAB completion, given that your version of BASH
@@ -12,16 +71,16 @@ You will find yourself using this regularly, both for speed, but also
 to remember all the different options and their correct wording:
 #+BEGIN_SRC text
 $ ece TAB TAB
-applog      deploy      log         start       threaddump  
-assemble    help        outlog      status      update      
-clean       kill        restart     stop        versions 
+applog      deploy      log         start       threaddump
+assemble    help        outlog      status      update
+clean       kill        restart     stop        versions
 #+END_SRC
 The commands are all described in detail in "ece help"
 
 ** Completing types of servers the ece commands can operate on
 #+BEGIN_SRC text
 $ ece -t TAB TAB
-analysis  engine    rmi-hub   search 
+analysis  engine    rmi-hub   search
 #+END_SRC
 
 ** Completing the publication resources available
@@ -32,57 +91,14 @@ To help selecting the correct publication resource, you can make ece
 list and complete the available resource names:
 #+BEGIN_SRC text
 $ ece -p mypub -r TAB TAB
-content-type   image-version  layout-group   
+content-type   image-version  layout-group
 feature        layout         menu
 #+END_SRC
-* Getting an overview of all available options
+
 #+BEGIN_SRC text
 $ ece help
 Usage: /home/torstein/bin/ece [-t <type>] [-i <instance>] <command>
 
-DECOMMANDION
- -t --type <type>
-      The following types are available:
-      engine  -  The Escenic Content Engine, this is the default
-                 and is the assumed type if none is specified.
-      search  -  A standalone search indexer and solr instance
-      rmi-hub -  The RMI hub responsible for the internal 
-                 communication between the ECE instances.
-      analysis - The Escenic Analysis Engine also knows as 'Stats'
-
- -i --instance <instance>
-      The type instance, such as editor1, engine1 or search1
-
- -p --publication <publication>
-      Needed only for updating publication resources
-
- -r --resource <resource>
-      Used for updating publication resources.
-      Must be one of: content-type, feature, layout, layout-group
-                      image-version, menu
-
- -v --verbose
-      Prints out debug statements, useful for debugging.
-
-The following commands are available:
-   applog     the type's app server log
-   assemble   runs the Assembly Tool *)
-   clean      removes temporary files created by /home/torstein/bin/ece *)
-   deploy     deploys the assembled EAR *)
-   help       prints this help screen
-   kill       uses force to stop the type
-   log        the type's Log4J log
-   outlog     the [ece#engine] command log (system out log)
-   restart    restarts the type
-   start      starts the type
-   status     checks if the type is running
-   stop       stops the type
-   threaddump write a thread dump to standard out (system out log)
-   update     update publication resources
-   versions   lists the ECE component versions
-
-*) only applicable if type is 'engine'
-#+END_SRC
 
 * Tailing log files
 The command has a number of options to let you keep track of what's
@@ -102,7 +118,7 @@ $ ece -i dev1 loglist
 There are three different logs, which ece will let you tail. When
 tailing the log file, ece will also first print out where the file is
 located on the file system so you can open it later for further
-inspection. 
+inspection.
 
 #+BEGIN_SRC text
 $ ece -i dev1 outlog
@@ -111,7 +127,7 @@ $ ece -i dev1 outlog
 
 The available log file commands are:
 - outlog :: the system out log
-- applog :: the app server log 
+- applog :: the app server log
 - log :: the log4j log
 
 ** Piping the log files to another command
@@ -123,14 +139,14 @@ $ ece -i dev1 -q loglist | xargs grep IllegalArgumentException
 #+END_SRC
 
 This approach is also useful if you wish to tail all the log files at
-once: 
+once:
 #+BEGIN_SRC text
 $ ece -i dev1 -q loglist | xargs tail -f
 #+END_SRC
 
 * Assembling a new EAR
 The command will quite happily assemble your EAR file. Please note that
-you need to run 
+you need to run
 #+BEGIN_SRC text
 $ ece -i clean assemble
 #+END_SRC
@@ -197,9 +213,9 @@ It's easy to update the publication resources using the ece command. If
 you have all these publication resources in your current directory,
 you can update them just by:
 #+BEGIN_SRC text
-$ for el in layout* feature teaser-type content-type ; do 
-  ece -i myinstance -p mypub -r $el update; 
-done  
+$ for el in layout* feature teaser-type content-type ; do
+  ece -i myinstance -p mypub -r $el update;
+done
 #+END_SRC
 
 In this connection, it might be of your interest to also flush all the
@@ -245,7 +261,7 @@ $ ece -i engine1 info
 [ece#engine-engine1] |-> Version: mysite.com-1.2.3
 [ece#engine-engine1] |-> EAR used: http://my.build.server.com/engine-mysite.com-1.2.3.ear
 [ece#engine-engine1] |-> MD5 sum: 5881d1895c09c7b35a032806c6249433
-[ece#engine-engine1] |-> Deployment date: Wed Mar 28 18:29:58 CST 2012  
+[ece#engine-engine1] |-> Deployment date: Wed Mar 28 18:29:58 CST 2012
 #+END_SRC
 
 * Installation
@@ -285,7 +301,7 @@ the .conf files mentioned above, namely:
 You may override this list of locations by setting the
 this environment variable in your ~.bashrc~ or similar:
 #+BEGIN_SRC text
-ECE_CONF_LOCATIONS 
+ECE_CONF_LOCATIONS
 #+END_SRC
 
 The reason for having so many options is because various Escenic
@@ -335,7 +351,7 @@ only one instance was installed.
 ** TAB completion
 The ece command offers TAB completion of all commands, options and
 option values. For this to work, you need the completion file loaded
-from your ~.bashrc~. 
+from your ~.bashrc~.
 
 This can either be done by enabling all BASH completions on your
 system (some systems have this set up per default), refer to your OS
@@ -350,7 +366,7 @@ Naturally, the ~bash_comletion.d~ needs to be in the above location :-)
 * Backup
 One of the many features of the ece command, is that you can take a
 snapshot of your current running system, which can then be restored
-using the /usr/sbin/ece-install command. 
+using the /usr/sbin/ece-install command.
 
 The backup will include the database, the Nursery configuration, the
 DB configuration, the Varnish configuration, the nginx congiguration,
@@ -362,7 +378,7 @@ To create the backup, you'll simply do:
 $ ece -i editor1 backup
 #+END_SRC
 
-It will then create tarball with everything and put it in 
+It will then create tarball with everything and put it in
 #+BEGIN_SRC text
 /var/backups/escenic
 #+END_SRC
@@ -405,3 +421,11 @@ $ ece -i engine1 backup
 
 
 
+* COPYRIGHT
+Copyright 2011-2013 Vizrt
+
+Licensed under the Apache License, Version 2.0, see
+https://github.com/vizrt/ece-scripts/COPYING for further details.
+
+* AUTHOR
+Torstein Krause Johansen
