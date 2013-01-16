@@ -1,424 +1,186 @@
-#+TITLE: User Guide for the ece Command
+#+TITLE: ece
 #+AUTHOR: Vizrt Online / The SaaS Team
 #+OPTIONS: H:6 num:5 toc:2
 
 * NAME
-ece - command for managing your Escenic Content Engine, Escenic
-Analysis Engine and search instances.
+ece - command for managing your Escenic instances.
 
 * SYNOPSIS
-ece OPTIONS COMMANDS
-* Description
-** OPTIONS
-*** -t --type type
-      The following types are available:
-      engine  -  The Escenic Content Engine, this is the default
-                 and is the assumed type if none is specified.
-      search  -  A standalone search indexer and solr instance
-      rmi-hub -  The RMI hub responsible for the internal
-                 communication between the ECE instances.
-      analysis - The Escenic Analysis Engine also knows as 'Stats'
+ece [[-i --instance instance]] [[[-t --type type]]] [[[-p --publication
+publication]]] [[[--uri ear-to-deploy]]] COMMAND
 
-*** -i --instance instance
+* DESCRIPTION
+Command which will let you manage your Escenic Content Engine, Escenic
+Analysis Engine and search instances with ease. The script does
+everything from starting & stopping the instance to building &
+deploying EAR files and detailed information about the running
+instances.
+
+* OPTIONS
+** -t --type type
+The following types are available:
+- engine: The Escenic Content Engine, this is the default and is the assumed type if none is specified.
+- search: A standalone search indexer and solr instance
+- rmi-hub: The RMI hub responsible for the internal communication between the ECE instances.
+- analysis: The Escenic Analysis Engine also knows as 'Stats'
+
+** -i --instance instance
 The type instance, such as editor1, engine1 or search1
-*** -p --publication publication
+** -p --publication publication
 Needed only for updating publication resources
-*** -r --resource resource
+** -r --resource resource
 Used for updating publication resources.  Must be one of:
 content-type, feature, layout, layout-group image-version, menu
-*** -v --verbose
+** -v --verbose
 Prints out debug statements, useful for debugging.
-** COMMANDS
-*** applog
+
+* COMMANDS
+You can specify one or more commands. The commands are executed in
+the same order that you pass them to the ece command.
+** applog
 The type's app server log
-*** assemble
+** assemble
 Runs the Assembly Tool.
-*** clean
-Removes temporary files created by /home/torstein/bin/ece *)
-*** deploy
-Deploys the assembled EAR if the type is engine
-*** help
+** backup
+Allows you to create backup of your entire Escenic installation, or
+just specific parts of it. Without any additional options, ece
+backup, will create a backup with:
+- Solar & Nursery configuration (everything in /etc/escenic)
+- DB dump
+- Solar index
+- Multimedia files
+- The entire app server
+- init.d script and its configuration
+- state files
+
+You may exclude any parts you don't want:
+
+| Backup specific option | Explanation          |
+|------------------------+----------------------|
+| --exclude-binaries     | No software binaries |
+| --exclude-solr         | No Solar index       |
+| --exclude-multimedia   | No multimedia files  |
+| --exclude-init         | No init files        |
+| --exclude-state        | No state files       |
+
+** clean
+Clears the temporary files from the instance's application server as
+well as Assembly Tool work files (if available).
+** deploy
+Deploys the locally assembled EAR, available in
+/var/cache/escenic/engine.ear.
+
+Optionally, you can specify an EAR on a remote server by passing the
+--uri parameter. If the server is password protected, you can either
+set builder_http_user and  builder_http_password in ece.conf or pass
+it on the command line:
+
+| Deploy specific option | Explanation                        |
+|------------------------+------------------------------------|
+| --file                 | Local EAR file to deploy           |
+| --uri                  | URI to the EAR to deploy           |
+| --user                 | HTTP User which may access the URI |
+| --password             | HTTP password to the user above.   |
+
+** edit
+Edit a publication resources. This command requires you to specify
+both the publication and the resource which you wish to edit:
+#+BEGIN_SRC sh
+$ ece -i engine1 -p my-pub -r content-type edit
+#+END_SRC
+If you don't change anything, ece will not change the publication
+resource.
+
+** flush
+Clear all the ECE caches of the given instance.
+** help
 Prints this help screen
-*** kill
+** info
+Get information about the instance.
+** kill
 Uses force to stop the type
-*** log
+** list-deployments
+Lists all the deployments done on this instance (granted that you've
+used the ece script to make the deployment).
+** list-instances
+List the instances installed on your machine.
+** list-logs
+List all the log files for a given instance
+** log
 The type's Log4J log
-*** outlog
+** outlog
 The [ece#engine] command log (system out log)
-*** restart
+** restart
 Restarts the type
-*** start
+** start
 Starts the type
-*** status
+** status
 Checks if the type is running
-*** stop
+** stop
 Stops the type
-*** threaddump
+** threaddump
 Write a thread dump to standard out (system out log)
-*** update
+** top
+Watch the JSP top on your instance. Here, you can watch which JSPs
+are consuming the most CPU time.
+
+** update
 Update publication resources
-*** versions
-Lists the ECE component versions
-
-
+** versions
+Lists the version of the ECE and all the plugins.
 * TAB completion
 The ece command offers TAB completion, given that your version of BASH
 supports this and that you have enabled it (some distributions hasn't
 turned on BASH completion per default).
 
-** Completing ece commands
-You will find yourself using this regularly, both for speed, but also
-to remember all the different options and their correct wording:
-#+BEGIN_SRC text
-$ ece TAB TAB
-applog      deploy      log         start       threaddump
-assemble    help        outlog      status      update
-clean       kill        restart     stop        versions
-#+END_SRC
-The commands are all described in detail in "ece help"
+You can auto complete all options and commands, as well as the
+instance names, publication names and resources types.
 
-** Completing types of servers the ece commands can operate on
-#+BEGIN_SRC text
-$ ece -t TAB TAB
-analysis  engine    rmi-hub   search
+* Log files
+There are a number of log files associated with the different
+instances. To get an overview of all the log files for a particular
+instance, do:
+#+BEGIN_SRC sh
+$ ece -i engine1 list-logs
 #+END_SRC
 
-** Completing the publication resources available
-The ece command can update the publication resources for a given
-publication.
-
-To help selecting the correct publication resource, you can make ece
-list and complete the available resource names:
-#+BEGIN_SRC text
-$ ece -p mypub -r TAB TAB
-content-type   image-version  layout-group
-feature        layout         menu
+To tail all of these, pass the -q parameter and pipe it to tail:
+#+BEGIN_SRC sh
+$ ece -i engine1 -q list-logs | xargs tail -f
 #+END_SRC
 
-#+BEGIN_SRC text
-$ ece help
-Usage: /home/torstein/bin/ece [-t <type>] [-i <instance>] <command>
+* Configuration files
+| Path                             | Explanation                 |
+|----------------------------------+-----------------------------|
+| /etc/escenic/ece.conf            | The main configuration file |
+| /etc/escenic/ece-<instance>.conf | Instance specific settings  |
+| $HOME/.ecerc                     | User specific settings.     |
 
-
-* Tailing log files
-The command has a number of options to let you keep track of what's
-going on on your system.
-
-** Getting an overview of the log files
-The ece command will be more than happy to tell you about the log files
-on your system that are of interest to your instance:
-#+BEGIN_SRC text
-$ ece -i dev1 loglist
-[ece#engine-dev1] System out log: /var/log/escenic/engine-dev1.out
-[ece#engine-dev1] App server log: /opt/tomcat-dev1/logs/localhost.2011-09-20.log
-[ece#engine-dev1] log4j log: /var/log/escenic/messages
+* Examples
+Starting an instance:
+#+BEGIN_SRC sh
+$ ece -i engine1 start
 #+END_SRC
 
-** Commands for tailing the log files
-There are three different logs, which ece will let you tail. When
-tailing the log file, ece will also first print out where the file is
-located on the file system so you can open it later for further
-inspection.
-
-#+BEGIN_SRC text
-$ ece -i dev1 outlog
-[ece#engine-dev1] Tailing the system out log /var/log/escenic/engine-dev1.out
+Creating a thread dump from an instance:
+#+BEGIN_SRC sh
+$ ece -i engine1 threaddump
 #+END_SRC
 
-The available log file commands are:
-- outlog :: the system out log
-- applog :: the app server log
-- log :: the log4j log
-
-** Piping the log files to another command
-If you wish to pass the log files onto another pipe, for instance to
-grep all the log files for a certain exception or error message, you
-will find the -q parameter useful:
-#+BEGIN_SRC text
-$ ece -i dev1 -q loglist | xargs grep IllegalArgumentException
+Building a new EAR file using the a locally available Assembly Tool,
+deploy this new EAR and restart the instance:
+#+BEGIN_SRC sh
+$ ece -i engine1 assemble deploy restart
 #+END_SRC
 
-This approach is also useful if you wish to tail all the log files at
-once:
-#+BEGIN_SRC text
-$ ece -i dev1 -q loglist | xargs tail -f
+Stop the instance, deploy an EAR from the build server, clean all app
+server temporary files including the JSP compilation directory and
+start the instance again:
+#+BEGIN_SRC sh
+$ ece -i engine1 \\
+      --uri http://builder.example.com/myproject-1.2.ear \\
+      stop clean deploy start
 #+END_SRC
-
-* Assembling a new EAR
-The command will quite happily assemble your EAR file. Please note that
-you need to run
-#+BEGIN_SRC text
-$ ece -i clean assemble
-#+END_SRC
-whenever you've upgraded either ECE or one of its plugins. The command
-will try to take care of you though and warn you of such duplication:
-#+BEGIN_SRC text
-[ece#engine] Multiple versions of ECE and/or 3rd party libraries found.
-[ece#engine] Remember, you need to run 'ece clean assemble' when
-[ece#engine] upgrading either ECE or one of the plugins.
-[ece#engine] I will now clean it up for you and re-run the assembly.
-[ece#engine] Cleaning up generated files in /opt/escenic/assemblytool ...
-[ece#engine] Assembling your EAR file ...
-#+END_SRC
-
-If you're just re-running the assembly after just adding a new plugin
-or want to re-build your publications after template changes, you can
-omit the clean command and just run:
-#+BEGIN_SRC text
-$ ece assembly
-#+END_SRC
-
-The EAR produced is now ready to be deployed with
-#+BEGIN_SRC text
-$ ece [-i <instance>] deploy
-#+END_SRC
-
-* Deployment
-ece will default wise attempt to deploy the EAR which "ece assemble"
-produces and resides in:
-
-#+BEGIN_SRC text
-/var/cache/escenic/engine.ear
-#+END_SRC
-
-It is also possible to deploy an EAR directly from a local or remote
-URI. This is especially useful where you have a build server and you
-want the ECEs deploy this EAR directly, you can then do:
-#+BEGIN_SRC text
-$ ece -i myinstance deploy --uri http://my.build.server.com/engine-mysite.com-2.314.ear
-#+END_SRC
-
-The following URIs are supported:
-- http://my.build.server.com/engine-mysite.com-2.314.ear
-- https://my.build.server.com/engine-mysite.com-2.314.ear
-- file:///var/cache/escenic/engine-mysite.com-2.314.ear
-
-It is also possible to deploy a local file without the URI protocol
-prefix using the -f (file) parameter:
-#+BEGIN_SRC text
-$ ece -i myinstance deploy -f /tmp/engine-mysite.com-2.314.ear
-#+END_SRC
-
-The URI of the EAR file is completely up to you, but if use the
-pattern
-#+BEGIN_SRC text
-engine-<a string>-<a number>.ear
-#+END_SRC
-ece will understand this as version: mysite.com-2.314 and write this
-to its deployment state file: /var/lib/escenic/<instance>.state, which
-again will be reported by the "ece info" command.
-
-* Updating the Publication Resources
-It's easy to update the publication resources using the ece command. If
-you have all these publication resources in your current directory,
-you can update them just by:
-#+BEGIN_SRC text
-$ for el in layout* feature teaser-type content-type ; do
-  ece -i myinstance -p mypub -r $el update;
-done
-#+END_SRC
-
-In this connection, it might be of your interest to also flush all the
-ECE caches on all the instances, this you can easily do with:
-#+BEGIN_SRC text
-$ ece -i myinstance flush
-#+END_SRC
-
-* Getting information about the ECE instance
-The "ece info" command will give you a lot of useful information about
-the current instance:
-#+BEGIN_SRC text
-$ ece -i engine1 info
-[ece#engine-engine1] Current instance: engine1
-[ece#engine-engine1] Instances available on myhost: engine1
-[ece#engine-engine1] Conf files parsed: /etc/escenic/ece-engine1.conf /etc/escenic/ece.conf
-[ece#engine-engine1] ECE location: /opt/escenic/engine
-[ece#engine-engine1] Assembly Tool location: /opt/escenic/assemblytool
-[ece#engine-engine1] Java location: /usr/lib/jvm/java-6-sun
-[ece#engine-engine1] Log files:
-[ece#engine-engine1] |-> System out log: /var/log/escenic/engine-engine1.out
-[ece#engine-engine1] |-> App server log: /opt/tomcat-engine1/logs/localhost.2012-04-02.log
-[ece#engine-engine1] |-> Log4j log: /var/log/escenic/ece-engine1-messages
-[ece#engine-engine1] |-> GC log: /var/log/escenic/engine-engine1-gc.log
-[ece#engine-engine1] Application server:
-[ece#engine-engine1] |-> Status: DOWN
-[ece#engine-engine1] |-> Port: 8080
-[ece#engine-engine1] |-> Type: tomcat
-[ece#engine-engine1] |-> Tomcat home: /opt/tomcat
-[ece#engine-engine1] |-> Tomcat base: /opt/tomcat-engine1
-[ece#engine-engine1] Application server resources:
-[ece#engine-engine1] |-> escenic/solr-base-uri: http://mysearch:8080/solr/
-[ece#engine-engine1] Database:
-[ece#engine-engine1] |-> name: jdbc/ECE_READ_DS
-[ece#engine-engine1] |-> url: mysql://mydb:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8
-[ece#engine-engine1] |-> username: ece5user
-[ece#engine-engine1] |-> name: jdbc/ECE_UPDATE_DS
-[ece#engine-engine1] |-> url: mysql://mydb:3306/ece5db?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8
-[ece#engine-engine1] |-> username: ece5user
-[ece#engine-engine1] Deployed web applications:
-[ece#engine-engine1] |-> http://myhost:8080/escenic-admin
-[ece#engine-engine1] Deployment state:
-[ece#engine-engine1] |-> Version: mysite.com-1.2.3
-[ece#engine-engine1] |-> EAR used: http://my.build.server.com/engine-mysite.com-1.2.3.ear
-[ece#engine-engine1] |-> MD5 sum: 5881d1895c09c7b35a032806c6249433
-[ece#engine-engine1] |-> Deployment date: Wed Mar 28 18:29:58 CST 2012
-#+END_SRC
-
-* Installation
-The ece command and ece.conf may be used on any Unix like system that
-has a fairly recent version of BASH installed.
-
-** Overview of File Paths Used by the ece command
-These are recommended files and locations for using the ece command:
-
-|------------------------------------+----------------------------------|
-| Path                               | Explanation                      |
-|------------------------------------+----------------------------------|
-| ~/usr/bin/ece~                     | The command itself                |
-| ~/etc/escenic/ece.conf~            | The main configuration file      |
-| ~/etc/escenic/ece-<instance>.conf~ | Instance specific settings       |
-| ~/var/cache/escenic~               | Directory of assembled EAR files |
-| ~/tmp~                             | Directory for temporary files    |
-|------------------------------------+----------------------------------|
-
-As you can see in ece.conf, there are a number of default locations
-dealing with log files, pid files, crash files as well as application
-server files. The defaults all follow the File Hierarchy Standard, but
-you may of course change these to your liking.
-
-If you wish to put the .conf files in other places, you may like to know
-that the ece command has preset list of locations where it looks for
-the .conf files mentioned above, namely:
-
-- current working directory
-- ~/etc/escenic/<type>/instance/<instance name>~
-- ~/etc/escenic/<type>/host/<hostname>~
-- ~/etc/escenic/<type>/common~
-- ~/etc/escenic/<type>~
-- ~/etc/escenic~
-- ~<current working direcotry>/../etc~
-
-You may override this list of locations by setting the
-this environment variable in your ~.bashrc~ or similar:
-#+BEGIN_SRC text
-ECE_CONF_LOCATIONS
-#+END_SRC
-
-The reason for having so many options is because various Escenic
-consultants, partners and customers have requested these locations to
-fit their systems. As you can see, fitting everyone's fancy adds up
-over time :-)
-
-* Running the ece command
-** You must run it as a non-privileged user
-You must be normal user to run the ece command, otherwise it will
-complain:
-#+BEGIN_SRC text
-[ece#engine] Sorry, you cannot be root when running ece
-[ece#engine] The root user can only use /etc/init.d/ece
-#+END_SRC
-
-As it mentions, the root user may use the init.d command and the
-accompanying /etc/default/ece to command the different ECE, EAE and
-RMI hub instances on your system.
-** Specifying the instance
-The command is made for being easy to use with multiple instances on
-the same host. You specify the instance you want to operate on using
-the -i parameter. E.g. to assemble and deploy the editor1 instance, you'd
-do:
-#+BEGIN_SRC text
-$ ece -i editor1 assemble deploy restart
-#+END_SRC
-
-The command's TAB completion will also help you with completing the
-available instances on your system, so you can just type:
-#+BEGIN_SRC text
-$ ece -i TAB TAB
-mypub myotherpub
-#+END_SRC
-
-For this to work, the command assumes that you have installed the
-instance specific configuration in /etc/escenic/engine/instance, as is
-described in the Escenic Content Engine Installation Guide.
-
-If you only have one instance installed, you may omit
-the --instance/-i parameter. However, if you're running ece from another
-command (e.g. an init.d or a deployment command), we recommend you to
-always specify the --instance/-i parameter to make sure that future
-additions of instances don't break your old commands which assumed that
-only one instance was installed.
-
-** TAB completion
-The ece command offers TAB completion of all commands, options and
-option values. For this to work, you need the completion file loaded
-from your ~.bashrc~.
-
-This can either be done by enabling all BASH completions on your
-system (some systems have this set up per default), refer to your OS
-documentation for this.
-
-Alternatively, to just enable the ece completion, simply add the
-following line to your ~.bashrc~:
-#+BEGIN_SRC text
-. /etc/bash_completion.d/ece
-#+END_SRC
-Naturally, the ~bash_comletion.d~ needs to be in the above location :-)
-* Backup
-One of the many features of the ece command, is that you can take a
-snapshot of your current running system, which can then be restored
-using the /usr/sbin/ece-install command.
-
-The backup will include the database, the Nursery configuration, the
-DB configuration, the Varnish configuration, the nginx congiguration,
-all the Escenic software binaries, your publication and your
-application servers.
-
-To create the backup, you'll simply do:
-#+BEGIN_SRC text
-$ ece -i editor1 backup
-#+END_SRC
-
-It will then create tarball with everything and put it in
-#+BEGIN_SRC text
-/var/backups/escenic
-#+END_SRC
-
-Sometimes, you only want to take a backup of the data files and are
-not so concerned with the Escenic and application server binaries as
-these are easily installed from elsewhere. If so, you may do the
-following:
-#+BEGIN_SRC text
-$ ece -i editor1 backup --exclude-binaries
-#+END_SRC
-
-When running in a production environment, it's advised to first stop
-the search instance which runs the Solr indexer, so that the Solr
-index isn't corrupted:
-#+BEGIN_SRC text
-$ ece -i search1 stop
-$ ece -i engine1 backup
-[ece#engine-engine1] Backing up the engine1 instance of engine on raven ...
-[ece#engine-engine1] Cleaning up generated files in /opt/escenic/assemblytool ...
-[ece#engine-engine1] Cleaning up engine1's work directory in /opt/tomcat-engine1/work ...
-[ece#engine-engine1] Cleaning up engine1's temp directory in /opt/tomcat-engine1/temp ...
-[ece#engine-engine1] Database dumped: /var/backups/escenic/ece5db-2012-08-17.sql.gz
-[ece#engine-engine1] Creating snapshot ... (this may take a while)
-[ece#engine-engine1] Backup ready: /var/backups/escenic/engine-engine1-backup-2012-08-17.tar size: 62M
-[ece#engine-engine1] The backup arhcive includes:
-[ece#engine-engine1] - Database snapshot
-[ece#engine-engine1] - All Solr in /var/lib/escenic/solr
-[ece#engine-engine1] - All Escenic data files in /var/lib/escenic/engine
-[ece#engine-engine1] - All app servers in /opt
-[ece#engine-engine1] - All Escenic software binaries in /opt/escenic/engine
-[ece#engine-engine1] - All configuration in /etc/escenic and /etc/default/ece
-[ece#engine-engine1] - All bootstrap commands from /etc/init.d
-[ece#engine-engine1] - All state files in /var/lib/escenic
-[ece#engine-engine1] Enjoy!
-#+END_SRC
-
-
-
-
 
 
 * COPYRIGHT
