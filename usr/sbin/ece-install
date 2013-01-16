@@ -731,20 +731,6 @@ function install_presentation_server()
     install_ece_instance $default_ece_intance_name $PROFILE_PRESENTATION_SERVER
 }
 
-# If the system is installed using the recommended paths, the method
-# will return a list of the instances configured in
-# ${escenic_conf_dir}/engine/instance
-function get_instance_list()
-{
-    local instance_list=""
-
-    if [ -r ${escenic_conf_dir}/engine/instance ]; then
-        instance_list=$(ls ${escenic_conf_dir}/engine/instance)
-    fi
-
-    echo $instance_list
-}
-
 function install_editorial_server()
 {
     print_and_log "Installing an editorial server on $HOSTNAME ..."
@@ -802,11 +788,15 @@ function install_all_in_one_environment()
 }
 
 ## We're adding the ece script to the run levels regardless of the
-## installation profile, since it's possible to install several
-## profiles from the same run of ece-install and then it's not sure
-## the test for a profile that needs the ece init.d script will
-## succeed.
+## installation profile (as long as the init.d script exists) since
+## it's possible to install several profiles from the same run of
+## ece-install and then it's not sure the test for a profile that
+## needs the ece init.d script will succeed.
 function add_ece_init_to_runlevels() {
+  if [ ! -x /etc/init.d/ece ]; then
+    return
+  fi
+
   if [ $on_debian_or_derivative -eq 1 ]; then
     print_and_log "Adding the ece init.d script to the default run levels ..."
     run update-rc.d ece defaults
