@@ -28,6 +28,39 @@ function get_instance_list() {
   echo $instance_list
 }
 
+function get_instance_enabled_list() {
+  if [ ! -r /etc/default/ece ]; then
+    return
+  fi
+
+  echo ${engine_instance_list} \
+    ${search_instance_list} \
+    ${analysis_instance_list}
+}
+
+## $1 :: the instance you want to check which type it is.
+function get_instance_type() {
+  local type="engine"
+
+  if [ -e /etc/default/ece ]; then
+    source /etc/default/ece
+
+    for el in "$analysis_instance_list"; do
+      if [[ "$(ltrim $el)" == "$1" ]]; then
+        type=analysis
+      fi
+    done
+
+    for el in "$search_instance_list"; do
+      if [[ "$(ltrim $el)" == "$1" ]]; then
+        type=search
+      fi
+    done
+  fi
+
+  echo $type
+}
+
 webapps_in_standard_webapps_list="
   dashboard
   escenic
@@ -73,13 +106,13 @@ function get_app_base() {
 }
 
 ## Returns a list of publications on the local host
-## 
+##
 ## $1 :: app server port. Optional, default is 8080.
 function get_publication_list() {
   if [ $(which curl | wc -l) -lt 1 ]; then
     return ""
   fi
-  
+
   curl --silent \
     --connect-timeout 20 \
     http://localhost:${1-8080}/escenic-admin/pages/publication/list.jsp | \
