@@ -1043,7 +1043,7 @@ function do_stop() {
 # Performs a graceful shutdown of the guest
 function shutdown_kvm() {
   local pidfile="$(echo_rundir_of $1)/$1.pid"
-  local pid=$(<$$pidfile)
+  local pid=$(<$pidfile)
   if [ -z "$pid" ] ; then
     rm $pidfile
     return 0
