@@ -5,7 +5,7 @@
 system-info
 
 * SYNOPSIS
-system-info [[[-o output-file]]] [[[-u user]]] [[[-t]]] [[[-m]]] [[[-s]]] [[[-v]]] [[[-V]] | [[-V][--version]]]
+system-info [[[-o output-file]]] [[[-u user]]] [[[-t]]] [[[-m]]] [[[-s]]] [[[-v]]] [[[-V]]] [[[-V][--version]]]
 
 * DESCRIPTION
 system-info is a command that creates an overview of your system,
@@ -25,14 +25,14 @@ The file to output the report t
 The user to run the ece commands. This is required when running
 system-info as root.
 
-* -s
+** -s
 Do not show temporaries, i.e. values that change often, like dates
 and uptime.
 
-* -v
+** -v
 Verbose
 
-* -V
+** -V
 Shows the version of system-info
 
 * Running as a regular user
