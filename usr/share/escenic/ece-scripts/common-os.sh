@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 # Platform/OS specific methods.
-# 
+#
 # by tkj@vizrt.com
 
 # depends on common-bashing
@@ -58,7 +58,7 @@ function has_sun_java_installed() {
 function create_user_and_group_if_not_present() {
   local user=$1
   local group=$1
-  
+
   if [ $(grep $user /etc/passwd | wc -l) -lt 1 ]; then
     print_and_log "Creating UNIX user $user ..."
 
@@ -67,16 +67,16 @@ function create_user_and_group_if_not_present() {
         --disabled-password \
         --gecos "Escenic-user,Room,Work,Home,Other"
     fi
-    
+
     if [ $on_redhat_or_derivative -eq 1 ]; then
       run useradd $user \
         --comment "Escenic-user,Room,Work,Home,Other"
     fi
-    
+
     add_next_step "I created a new UNIX user called $user"
     add_next_step "and you must set a password using: passwd $user"
   fi
-  
+
   if [ $(grep $group /etc/group | wc -l) -lt 1 ]; then
     print_and_log "Creating UNIX group $group ..."
     run addgroup $group
@@ -85,14 +85,14 @@ function create_user_and_group_if_not_present() {
 
 ## Will return the IP of the host name. If not found, the host name
 ## passed to the function will be returned.
-## 
+##
 ## Parameters: $1 the host name
 function get_ip() {
   local ip=$(ping -c 1 $1 2>/dev/null | \
     grep "bytes from" | \
     cut -d'(' -f2 | \
     cut -d ')' -f1)
-  
+
   if [ -z "$ip" ]; then
     echo $1
   fi
@@ -109,7 +109,7 @@ function assert_commands_available() {
   local errors_found=0
   for el in $@; do
     if [ $(which ${el} 2>/dev/null | wc -l) -lt 1 ]; then
-      print_and_log "Please install $1 and then run $(basename $0) again."
+      print_and_log "Please install $el and then run $(basename $0) again."
       errors_found=1
     fi
   done
@@ -141,7 +141,7 @@ function get_tomcat_download_url() {
 ## $1: target directory
 function download_tomcat() {
   local url=$(get_tomcat_download_url)
-  
+
   print_and_log "Downloading Tomcat from $url ..."
   run cd $1
   run wget $wget_opts $url
@@ -224,5 +224,3 @@ function get_memory_summary_of_pid() {
 
   echo "${size} (peaked at: $peak)"
 }
-
-
