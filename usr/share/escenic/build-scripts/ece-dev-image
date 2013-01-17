@@ -1,0 +1,179 @@
+#! /usr/bin/env bash
+
+# common variables
+ece_scripts_version="straight-from-github"
+ece_scripts_home=/usr/share/escenic/ece-scripts
+dir_suffix=escenic
+escenic_log_dir=/var/log/${dir_suffix}
+log=${escenic_log_dir}/$(basename $0).log
+
+# defaults for configuration
+default_builder=builder.vizrtsaas.com
+
+##
+function init
+{
+  # verify initial startup requirements
+  if [ $(whoami) != "root" ]; then
+    echo "You must be root when running $(basename $0)!"
+    exit 1
+  elif [ ! -d $ece_scripts_home ]; then
+    echo "The directory for ece-scripts $ece_scripts_home does not exist, exiting!"
+    exit 1
+  elif [ ! -e $ece_scripts_home/common-bashing.sh ]; then
+    echo "The script $ece_scripts_home/common-bashing.sh does not exist, exiting!"
+    exit 1
+  elif [ ! -e $ece_scripts_home/common-io.sh ]; then
+    echo "The script $ece_scripts_home/common-io.sh does not exist, exiting!"
+    exit 1
+  fi
+  
+  source $ece_scripts_home/common-bashing.sh
+  source $ece_scripts_home/common-io.sh
+
+  # set pid
+  if [ -e $pid_file ]; then
+    echo "Instance of $(basename $0) already running!"
+    exit 1
+  else
+    create_pid
+  fi
+  
+  # shutdown hooks
+  trap common_bashing_exit_hook EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
+}
+
+##
+function process_user_options
+{
+  local argument_requested=0
+  for arg in "$@"; do
+    if [[ "${arg:0:1}" == "-" ]]; then
+      if [ $argument_requested -eq 1 ]; then
+        print_and_log "Invalid argument '$arg' for option '$previous_option'"
+        exit 1
+      else
+        case "$arg" in
+          -v|--verbose)
+            debug=1
+            ;;
+          -V|--version)
+            echo "Version $ece_scripts_version"
+            exit 0
+            ;;
+          -f|--conf-file)
+            local argument_requested=1
+            ;;
+          *)
+            print_and_log "Invalid option '$arg'"
+            exit 1
+        esac
+      fi
+      local previous_option="$arg"
+    elif [ $argument_requested -eq 0 ]; then
+      print_and_log "Invalid input '$arg'"
+      exit 1
+    else
+      case "$previous_option" in
+        -f|--conf-file)
+          if [ -e "$arg" ]; then
+            conf_file=$(readlink -f $arg)
+          else
+            print_and_log "The provided configuration file '$arg' does not exist!"
+            exit 1
+          fi
+          ;;
+        *)
+          print_and_log "The option '$previous_option' received argument '$arg', but something went wrong, exiting!"
+          exit 1
+      esac
+      local argument_requested=0
+    fi
+  done
+  if [ $argument_requested -eq 1 ]; then
+    print_and_log "Option '$previous_option' requires an argument!"
+    exit 1
+  fi
+}
+
+##
+function verify_configuration
+{
+  # source configuration file
+  run source $conf_file
+
+  # mandatory variables
+  ensure_variable_is_set project_key  
+
+  ensure_variable_is_set technet_download_list
+  
+  ensure_variable_is_set technet_user
+  ensure_variable_is_set technet_password
+  
+  ensure_variable_is_set builder_http_user
+  ensure_variable_is_set builder_http_password
+  
+  ensure_variable_is_set escenic_user_password
+  ensure_variable_is_set ubuntu_user_password
+
+  ensure_variable_is_set tomcat_manager_user
+  ensure_variable_is_set tomcat_manager_password
+
+  ensure_variable_is_set analysis_db_password
+ 
+  ensure_variable_is_set spore_signee
+
+  ensure_variable_is_set publication_domain_mapping_list
+  ensure_variable_is_set main_instance_deploy_white_list
+  ensure_variable_is_set secondary_instance_deploy_white_list
+ 
+  # optional variables with defaults
+  project_builder=${project_builder-$default_builder}
+  ensure_variable_is_set project_builder
+  
+  conf_package_deb=${conf_package_deb-http://$project_builder/$project_key/releases/vosa-conf-dev-latest.dev}
+  ensure_variable_is_set conf_package_deb
+  
+  spore_package=${spore_package-http://$project_builder/$project_key/releases/spore-$project_key-development.tar.gz}
+  ensure_variable_is_set spore_package
+
+  project_ear=${project_ear-http://$project_builder/$project_key/releases/latest.ear}
+  ensure_variable_is_set project_ear
+
+  image_hostname=${image_hostname-$project_key-dev}
+  ensure_variable_is_set image_hostname
+}
+
+##
+function phase_startup 
+{
+  init
+  process_user_options "${@}"
+}
+
+##
+function phase_pre_execution
+{
+  verify_configuration
+}
+
+##
+function phase_execution 
+{
+  :
+}
+
+##
+function phase_post_execution 
+{
+  :
+}
+
+## order of execution
+phase_startup "${@}"
+phase_pre_execution
+phase_execution
+phase_post_execution
+
+exit 0
