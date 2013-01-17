@@ -746,11 +746,31 @@ function set_up_content_engine_cron_jobs() {
 # the publication webapp's) web.xml
 
 dir=${escenic_cache_dir}/engine/binary
+log=/var/log/\$(basename \$0).log
 
-if [ -d \$dir  ] ; then
-  nice find \$dir -type f -daystart -atime +15 -delete
-  nice find \$dir -type d -empty -delete
-fi
+function exit_if_dir_doesnt_exist() {
+  if [ ! -d \${dir} ]; then
+    echo \$dir "doesn't exist" >> \${log}
+    exit 0
+  fi
+}
+
+function exit_if_user_doesnt_own_dir() {
+  local user_id=\$(id -u ${ece_user})
+  local dir_owner_id=\$(stat -c "%u" \${dir})
+
+  if [[ \${user_id} != \${dir_owner_id} ]]; then
+    echo ${ece_user} "doesn't own \${dir} skipping \$(basename \$0)" >> \${log}
+    exit 0
+  fi
+}
+
+exit_if_dir_doesnt_exist
+exit_if_user_doesnt_own_dir
+
+echo "Running \$(basename \$0) @ \$(date)" >> \${log}
+su - ${ece_user} -c "nice find \${dir} -type f -daystart -atime +15 -delete"
+su - ${ece_user} -c "nice find \${dir} -type d -empty -delete"
 EOF
 
   run chmod +x $file
