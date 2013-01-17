@@ -748,8 +748,8 @@ function set_up_content_engine_cron_jobs() {
 dir=${escenic_cache_dir}/engine/binary
 
 if [ -d \$dir  ] ; then
-  nice find $dir -type f -daystart -atime +15 -delete
-  nice find $dir -type d -empty -delete
+  nice find \$dir -type f -daystart -atime +15 -delete
+  nice find \$dir -type d -empty -delete
 fi
 EOF
 
