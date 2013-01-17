@@ -70,32 +70,33 @@ function apply_import_archive() {
     remove_pid_and_exit_in_error
   fi
 
-  for el in $publication_list; do
+  for the_publication in $publication_list; do
     local import_job_list=$(
-      find $tmp_dir/$el -maxdepth 1 -type d | sed "s#${tmp_dir}/$el##g" | \
+      find $tmp_dir/$the_publication -maxdepth 1 -type d | \
+        sed "s#${tmp_dir}/$the_publication##g" | \
         sed 's#^/##g'
     )
     if [ -z "$import_job_list" ]; then
       print_and_log "$(red ERROR) No import jobs were defined for publication" \
-        "$el. The import archive isn't in accordance with the import archive" \
-        "specification, so I'll exit :-('"
+        "$the_publication. The import archive isn't in accordance with the " \
+        " import archive specification, so I'll exit :-('"
       remove_pid_and_exit_in_error
     fi
 
     for ele in $import_job_list; do
-      print_and_log "Setting up import job '$ele' for publication '$el' ..."
-      create_import_configuration $el $ele
+      print_and_log "Setting up import job '$ele' for publication '$the_publication' ..."
+      create_import_configuration $the_publication $ele
 
-      local src_dir=$tmp_dir/$el/$ele/transformers
-      local target_dir=$transformers_base_dir/$el/$ele/transformers
+      local src_dir=$tmp_dir/$the_publication/$ele/transformers
+      local target_dir=$transformers_base_dir/$the_publication/$ele/transformers
       if [ -d $src_dir ]; then
         print_and_log "Copying transformers to $target_dir"
         make_dir $target_dir
         run cp $src_dir/[0-9]* $target_dir
       fi
 
-      create_import_cron_jobs $el $ele $tmp_dir/$el/$ele
-      create_import_directories $el $ele
+      create_import_cron_jobs $the_publication $ele $tmp_dir/$the_publication/$ele
+      create_import_directories $the_publication $ele
     done
   done
 
