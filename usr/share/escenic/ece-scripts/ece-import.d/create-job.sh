@@ -7,7 +7,7 @@ function create_import_directories() {
     $(dirname $log)
     $escenic_spool_base_dir/$1/$2/archive
     $escenic_spool_base_dir/$1/$2/error
-    $escenic_spool_base_dir/$1/$2/new 
+    $escenic_spool_base_dir/$1/$2/new
     $raw_spool_base_dir/$1/$2
     $raw_state_base_dir/$1/$2
     $raw_transformation_base_dir/$1/$2 \
@@ -26,7 +26,7 @@ function create_import_directories() {
 function create_import_configuration() {
   local publication_name=$1
   local job_name=$2
-  
+
   print_and_log "Creating import job configuration '${job_name}' for" \
     "publication '${publication_name}' ..."
 
@@ -69,7 +69,7 @@ function apply_import_archive() {
       "and fix your archive structure"
     remove_pid_and_exit_in_error
   fi
-  
+
   for el in $publication_list; do
     local import_job_list=$(
       find $tmp_dir/$el -maxdepth 1 -type d | sed "s#${tmp_dir}/$el##g" | \
@@ -81,7 +81,7 @@ function apply_import_archive() {
         "specification, so I'll exit :-('"
       remove_pid_and_exit_in_error
     fi
-    
+
     for ele in $import_job_list; do
       print_and_log "Setting up import job '$ele' for publication '$el' ..."
       create_import_configuration $el $ele
@@ -115,7 +115,7 @@ function create_import_cron_jobs() {
 
   local file=/etc/cron.d/$1-$2-cron
   echo > $file
-  
+
   # first, set up an y cron.hourly
   find $3 \
     -maxdepth 1 \
@@ -124,13 +124,13 @@ function create_import_cron_jobs() {
     target_dir=$transformers_base_dir/$1/$2
     make_dir $target_dir
     run cp -r $f $target_dir
-    
-    
+
+
     for dir in $f; do
       local type_of_cron=$(basename $dir)
       print_and_log "Setting up ${type_of_cron} for " \
         "import job $2 on publication $1"
-      
+
       if [[ $type_of_cron == "cron.hourly" ]]; then
         cron_pattern='0 * * * *'
       elif [[ $type_of_cron == "cron.daily" ]]; then
@@ -165,22 +165,20 @@ function print_manual_steps() {
   if [ -z "${import_configuration_list}" ]; then
     return
   fi
-    
+
   print_and_log "You must now add your new Nursery components: " \
 
   for el in $import_configuration_list; do
     print_and_log "$(green ADD) /${el}"
   done
-  
+
   print_and_log "to the $(blue importConfigurations) variable in " \
     "your ECE instance's" \
     "/com/escenic/syndication/xml/XMLImportService e.g.:" \
-    "/etc/escenic/engine/server/edit2-engine1/com/escenic/syndication/xml/XMLImportService.properties"
+    "/etc/escenic/engine/server/${HOSTNAME}-engine1/com/escenic/syndication/xml/XMLImportService.properties"
 
   print_and_log "The final step is to add the Nursery service " \
     "service.9.9-xml-import-service=/com/escenic/syndication/xml/XMLImportSchedule" \
     "to your instance's Initial component, e.g.:" \
-    /etc/escenic/engine/server/edit2-engine1/Initial.properties
+    /etc/escenic/engine/server/${HOSTNAME}-engine1/Initial.properties
 }
-
-
