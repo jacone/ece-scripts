@@ -85,6 +85,13 @@ function set_up_analysis_conf() {
   set_conf_file_value pageview.aggr.hour.older.than.hours 2 $file
   set_conf_file_value pageview.maintenance.older.than.days 0 $file
 
+  # Third, configure the EAE query service
+  print_and_log "Configuring EAE query service ..."
+  local war=${escenic_root_dir}/analysis-engine-*/wars/analysis-qs.war
+  local path=WEB-INF/config/qs.cfg
+  local file=${escenic_conf_dir}/analysis/qs.cfg
+  extract_path_from_war_if_target_file_doesnt_exist $war $path $file
+
   # important to turn this off here, it's only for the EAE .cfg
   # files, see above.
   dont_quote_conf_values=0

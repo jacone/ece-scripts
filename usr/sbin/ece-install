@@ -81,6 +81,7 @@ ece_software_setup_completed=0
 # For ECE 5.5
 ############################################################################
 technet_download_list="
+  http://technet.escenic.com/downloads/release/55/analysis-engine-2.5.0.131590.zip
   http://technet.escenic.com/downloads/release/55/assemblytool-2.0.4.jar
   http://technet.escenic.com/downloads/release/55/community-engine-3.8.1.132399.zip
   http://technet.escenic.com/downloads/release/55/engine-5.5.0.131978.zip
