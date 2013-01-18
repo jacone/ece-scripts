@@ -39,23 +39,23 @@ function download_latest_files() {
 
 ## Will only download files which are newer than max_file_age and
 ## which haven't been downloaded before.
-## 
+##
 ## $@ :: list of URIs
 function download_files_if_desired() {
-  for el in $list_of_files; do
-    if [ $(is_already_downloaded $uri/$el) -eq 1 ]; then
+  for the_file in $list_of_files; do
+    if [ $(is_already_downloaded $uri/$the_file) -eq 1 ]; then
       # not logging anything here as this will create log files in
       # production.
       continue
     fi
-    print_and_log "Downloading" $uri/$el "..."
+    print_and_log "Downloading" $uri/$the_file "..."
     download_uri_target_to_dir \
-      $uri/$el \
+      $uri/$the_file \
       $raw_spool_base_dir/$publication_name/$job_name/
-    local result=$raw_spool_base_dir/$publication_name/$job_name/$(basename $el)
+    local result=$raw_spool_base_dir/$publication_name/$job_name/$(basename $the_file)
 
-    log "Downloaded" $(basename $el) "to" $result
-    echo $uri/$el >> $(get_state_file)
+    log "Downloaded" $(basename $the_file) "to" $result
+    echo $uri/$the_file >> $(get_state_file)
   done
 }
 
@@ -76,5 +76,3 @@ function is_already_downloaded() {
 function get_state_file() {
   echo $raw_state_base_dir/$publication_name/$job_name/download.state
 }
-
-
