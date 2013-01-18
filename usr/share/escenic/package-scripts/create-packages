@@ -11,6 +11,7 @@ package_version=$(date +%Y-%m-%d.%H%M%S)
 default_maintainer_name="Torstein Krause Johansen"
 default_maintainer_email=tkj@vizrt.com
 wget_opts="--continue --inet4-only --quiet"
+log=$HOME/.$(basename $0).log
 
 function clean_up() {
   rm -rf $target_dir
@@ -49,7 +50,7 @@ function get_user_options() {
         ;;
     esac
   done
-  
+
 }
 
 function create_target_directory() {
@@ -78,13 +79,36 @@ function create_target_directory() {
   cp debian/${package_name}/* $debian_dir
 }
 
+## $1 :: the org file from which to generate man pages.
+## $2 :: target file of then man page (before gzip-ed)
+function create_man_pages() {
+  local org_file=$1
+  local target_man=$2
+  echo "Converting" $(basename $org_file) to "man ..."
+  emacs --batch \
+    --load emacs/org-export-setup.el \
+    --file ${org_file} \
+    --funcall org-e-man-export-to-man 2&>>$log
+
+  local dot_man_file=$(dirname $org_file)/$(basename $org_file .org).man
+  if [ ! -e $dot_man_file ]; then
+    echo "Man generation failed, see ${log} and run" \
+      "[ bash -x" $(basename $0) "] from the command prompt to figure out why."
+    return
+  fi
+
+  mkdir -p $(dirname ${target_man})
+  mv ${dot_man_file} ${target_man}
+  gzip ${target_man}
+}
+
 function set_up_escenic-content-engine-installer() {
   mkdir -p $target_dir/{etc,usr,/etc/default}
   mkdir -p $target_dir/usr/{bin,sbin,share/doc}
   mkdir -p $target_dir/usr/share/doc/escenic/examples
   mkdir -p $target_dir/usr/share/escenic/ece-scripts
   mkdir -p $target_dir/etc/bash_completion.d
-  
+
   cp ../../../../etc/bash_completion.d/ece-install \
     $target_dir/etc/bash_completion.d/
   cp -r ../../../sbin/ece-install $target_dir/usr/sbin/
@@ -94,6 +118,9 @@ function set_up_escenic-content-engine-installer() {
     $target_dir/usr/share/doc/escenic
   cp -r ../../doc/escenic/examples/ece-install-*.conf \
     $target_dir/usr/share/doc/escenic/examples/
+
+  create_man_pages ../../doc/escenic/ece-install-guide.org \
+    $target_dir/usr/share/man/man1/ece-install.1
 }
 
 function set_up_escenic-build-scripts() {
@@ -137,7 +164,7 @@ function set_up_escenic-content-engine-scripts() {
   mkdir -p $examples_dir
   cp ../../../../etc/default/ece $examples_dir
   cp ../../../../etc/escenic/ece.conf $doc_dir/examples/etc
-  
+
   # cron
   cp -r ../../../../etc/cron.daily/remove-old-escenic-log-files \
     $target_dir/etc/cron.daily/
@@ -153,7 +180,7 @@ function set_up_vosa() {
   mkdir -p $target_dir/usr/share/doc/vosa
   mkdir -p $target_dir/etc/bash_completion.d
   mkdir -p $target_dir/etc/init.d
-  
+
   cp -r ../../../bin/vosa $target_dir/usr/bin/
   cp -r ../../../bin/vosa-push $target_dir/usr/bin/
   cp -r ../../vizrt/ $target_dir/usr/share/
@@ -168,7 +195,7 @@ function set_up_escenic-common-scripts() {
   mkdir -p $target_dir/usr/{bin,sbin,share/doc}
   mkdir -p $target_dir/usr/share/doc/escenic
   mkdir -p $target_dir/usr/share/escenic/ece-scripts
-  
+
   # system-info is useful for all packages, hence goes to
   # escenic-common-scripts.
   cp -r ../../../bin/system-info $target_dir/usr/bin/
@@ -178,7 +205,7 @@ function set_up_escenic-common-scripts() {
   cp ../../../../etc/default/system-info $target_dir/etc/default/
   cp -r ../../doc/escenic/system-info-guide.org \
     $target_dir/usr/share/doc/escenic
-  
+
   # both the installer and ece-scripts use the common scripts and
   # web resources.
   cp -r ../../escenic/ece-scripts/common* \
@@ -211,7 +238,7 @@ function set_up_escenic-munin-plugins() {
     cp $dir/mogsie-escenic-munin*/*_ $target_dir/usr/share/munin/plugins
     cp $dir/mogsie-escenic-munin*/README.md $doc_dir
     cp $dir/mogsie-escenic-munin*/site/* $doc_dir
-    
+
     chmod 755 $file $target_dir/usr/share/munin/plugins
   )
   rm -rf $dir
@@ -222,7 +249,7 @@ function set_up_hugin-node() {
   mkdir -p $target_dir/etc/{cron.d,sudoers.d}
   mkdir -p $target_dir/usr/{bin,share/doc/hugin,share/hugin/plugins,share/hugin/helpers}
   mkdir -p $target_dir/var/lib/hugin
-  
+
   local dir=$(mktemp -d)
   (
     cd $dir
@@ -249,7 +276,7 @@ function set_up_spore() {
   local dir=$(mktemp -d)
   (
     cd $dir
-    wget $wget_opts https://github.com/vizrt/spore/archive/master.tar.gz 
+    wget $wget_opts https://github.com/vizrt/spore/archive/master.tar.gz
     tar xzf master.tar.gz
     cp $dir/spore-master/bin/* $target_dir/usr/bin
     cp $dir/spore-master/sbin/* $target_dir/usr/sbin
@@ -275,12 +302,12 @@ function create_packages() {
     sed -i "s#^ece_scripts_version=.*#ece_scripts_version=${package_version}#g" \
       $f
   done
-  
+
   # fix permissions
   if [ -e $debian_dir/postinst ]; then
     chmod 755 $debian_dir/postinst
   fi
-  
+
   if [ ! -x /usr/bin/dpkg-deb ]; then
     echo "You must have dpkg-deb installed :-("
     exit 1
@@ -289,7 +316,7 @@ function create_packages() {
   fakeroot dpkg-deb --build $target_dir \
     2>&1 > /dev/null
   mv ${target_dir}.deb $target_dir/${package_name}-${package_version}.deb
-  
+
   if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
     (
       cd $target_dir
@@ -301,7 +328,7 @@ function create_packages() {
     echo "You must have 'alien' and 'fakeroot' installed to create RPMs"
     exit 1
   fi
-}  
+}
 
 function list_packages() {
   echo "Sir, the packages are now ready:"
