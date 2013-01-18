@@ -130,7 +130,7 @@ function get_user_input() {
       uri=$el
       next_is_uri=0
     elif [ $next_is_http_proxy -eq 1 ]; then
-      set_http_proxy "$el"
+      the_http_proxy="$el"
       next_is_http_proxy=0
     else
       if [[ "$el" == "create" ]]; then
