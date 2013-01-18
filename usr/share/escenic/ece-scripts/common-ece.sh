@@ -119,3 +119,29 @@ function get_publication_list() {
     grep '/escenic-admin/pages/publication/view.jsp' | \
     sed 's/.*name=\(.*\)".*/\1/g'
 }
+
+## $1 :: the XML
+function is_escenic_xml_ok() {
+  if [ ! -e $1 ]; then
+    echo 0
+    return
+  fi
+
+  # first, check for well formed-ness
+  xmllint --format $1 > /dev/null 2>&1
+  if [ $? -gt 0 ]; then
+    echo 0
+    return
+  fi
+
+  # check for an <escenic/> root element
+  local element_count=$(
+    xml_grep --cond /escenic $1 | wc -l 2>/dev/null
+  )
+  if [ $element_count -gt 0 ]; then
+    echo 1
+    return
+  fi
+
+  echo 0
+}

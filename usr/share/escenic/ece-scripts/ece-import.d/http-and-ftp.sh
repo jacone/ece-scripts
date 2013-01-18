@@ -22,7 +22,7 @@ function download_latest_files() {
   # long sed from
   # http://stackoverflow.com/questions/1881237/easiest-way-to-extract-the-urls-from-an-html-page-using-sed-or-awk-only
   local list_of_files=$(
-    wget $user_and_password \
+    $(get_proxy_settings_if_applicable) wget $user_and_password \
       --quiet \
       --output-document \
       - $uri | \
@@ -35,6 +35,12 @@ function download_latest_files() {
   )
 
   download_files_if_desired $list_of_files
+}
+
+function get_proxy_settings_if_applicable() {
+  if [ -n "${the_http_proxy}" ]; then
+    echo http_proxy=${the_http_proxy}
+  fi
 }
 
 ## Will only download files which are newer than max_file_age and

@@ -17,6 +17,7 @@ function bootstrap_thyself() {
 
   local common_libraries="
     common-bashing.sh
+    common-ece.sh
     common-io.sh
     common-os.sh
   "
@@ -28,7 +29,7 @@ function bootstrap_thyself() {
       exit 1
     }
   done
-  
+
   for el in $dir/$(basename $0).d/*.sh; do
     source $el 2>/dev/null || {
       echo "$(basename $0): Could not load the library $el," \
@@ -73,6 +74,7 @@ function get_user_input() {
   local next_is_user=0
   local next_is_password=0
   local next_is_uri=0
+  local next_is_http_proxy=0
 
   for el in $@; do
     if [[ "$el" == "-n" || "$el" == "--name" ]]; then
@@ -95,6 +97,8 @@ function get_user_input() {
       next_is_uri=1
     elif [[ "$el" == "--directories-only" ]]; then
       directories_only=1
+    elif [[ "$el" == "--http-proxy" ]]; then
+      next_is_http_proxy=1
     elif [ "$el" == "--version" -o "$el" == "-V" ]; then
       echo "Version:" $ece_scripts_version
       exit 0
@@ -125,6 +129,9 @@ function get_user_input() {
     elif [ $next_is_uri -eq 1 ]; then
       uri=$el
       next_is_uri=0
+    elif [ $next_is_http_proxy -eq 1 ]; then
+      set_http_proxy "$el"
+      next_is_http_proxy=0
     else
       if [[ "$el" == "create" ]]; then
         command=$COMMAND_CREATE_IMPORT_CONFIGURATION
@@ -145,13 +152,13 @@ function get_user_input() {
     print_and_log "E.g.: $(basename $0) --publication mypub"
     errors=1
   fi
-  
+
   if [ -n "${import_archive}" -a ! -r "${import_archive}" ]; then
     print_and_log "You have specified an import job archive file" \
       "but it doesn't exist :-("
     errors=1
   fi
-  
+
   if [ $command -eq $COMMAND_DOWNLOAD_RAW_DATA ]; then
     if [ -z "$user" ]; then
       print_and_log "You must specify the the user"
@@ -169,14 +176,14 @@ function get_user_input() {
       errors=1
     fi
   fi
-  
+
   if [ $errors -eq 1 ]; then
     remove_pid_and_exit_in_error
   fi
 }
 
 ## $1 :: the transformer (file name, relative or absoulte)
-function is_trannsformer_supported() {
+function is_transformer_supported() {
   if [ -z $1 ]; then
     return
   fi
@@ -195,7 +202,7 @@ function is_trannsformer_supported() {
 ## $1 :: file
 function perform_transformations() {
   for el in $transformers_base_dir/$publication_name/$job_name/transformers/[0-9]*; do
-    if [ $(is_trannsformer_supported $el) -eq 0 ]; then
+    if [ $(is_transformer_supported $el) -eq 0 ]; then
       log "$(yellow WARNING) The transformer $el isn't supported by $(basename $0)"
       continue
     fi
@@ -295,32 +302,6 @@ function import_raw_files() {
   done
 }
 
-## $1 :: the XML
-function is_escenic_xml_ok() {
-  if [ ! -e $1 ]; then
-    echo 0
-    return
-  fi
-
-  # first, check for well formed-ness
-  xmllint --format $1 > /dev/null 2>&1
-  if [ $? -gt 0 ]; then
-    echo 0
-    return
-  fi
-
-  # check for an <escenic/> root element
-  local element_count=$(
-    xml_grep --cond /escenic $1 | wc -l 2>/dev/null
-  )
-  if [ $element_count -gt 0 ]; then
-    echo 1
-    return
-  fi
-
-  echo 0
-}
-
 function verify_import_job_configuration() {
   verify_writable_dir_list \
     $raw_spool_base_dir/$publication_name/$job_name \
@@ -359,15 +340,14 @@ function print_report() {
   fi
 }
 
-
-assert_commands_available  xsltproc xmllint xml_grep
+assert_commands_available xsltproc xmllint xml_grep
 get_user_input $@
 
 function run_import() {
   pid_file=${pid_file/%.pid/-run-import.pid}
   lock_file=${lock_file/%.lock/-run-import.lock}
   common_pre_run
-  
+
   verify_import_job_configuration
   import_raw_files
   common_post_run
@@ -377,7 +357,7 @@ function run_create_import_configuration() {
   pid_file=${pid_file/%.pid/-create.pid}
   lock_file=${lock_file/%.lock/-create.lock}
   common_pre_run
-  
+
   if [ -z $import_archive ]; then
     if [ ${directories_only-0} -eq 0 ]; then
       create_import_configuration $publication_name $job_name
@@ -409,7 +389,7 @@ function common_pre_run() {
 function common_post_run() {
   print_manual_steps
   print_report
-  
+
   print_and_log "Finished @ $(date), enjoy thyself!"
   remove_pid
   remove_lock
@@ -422,5 +402,3 @@ elif [[ "$command" == $COMMAND_CREATE_IMPORT_CONFIGURATION ]]; then
 elif [[ "$command" == $COMMAND_DOWNLOAD_RAW_DATA  ]]; then
   run_download_raw_data
 fi
-
-
