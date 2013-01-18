@@ -182,6 +182,10 @@ function set_up_vosa() {
   run cp -r ../../../../etc/bash_completion.d/vosa \
     $target_dir/etc/bash_completion.d/
   run cp -r ../../../../etc/init.d/vosa $target_dir/etc/init.d/
+
+  # dev image script
+  run cp ../build-scripts/ece-dev-image $target_dir/usr/bin/ece-dev-image
+
 }
 
 function set_up_escenic-common-scripts() {
