@@ -5,13 +5,14 @@ chmod +x /usr/sbin/ece-install
 
 cat <<EOF
 Thank you for installing ece-install. This is currently un-supported
-software as it's undergoing heavy development. Report any issues to
-https://github.com/vizrt/ece-scripts/issues
+software as it's undergoing heavy development. Be sure to check out
+known issues at
+https://github.com/vizrt/ece-scripts/blob/master/known-issues.org and
+report any issues to https://github.com/vizrt/ece-scripts/issues
 
 Have fun!
 
--Vizrt Online 
+-Vizrt Online
 EOF
 
 exit 0
-
