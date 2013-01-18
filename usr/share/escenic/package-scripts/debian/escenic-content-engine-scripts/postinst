@@ -2,6 +2,4 @@
 # set -e
 
 chmod +x /usr/bin/{ece,system-info}
-
 exit 0
-

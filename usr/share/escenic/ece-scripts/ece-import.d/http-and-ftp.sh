@@ -19,10 +19,16 @@ function download_latest_files() {
   # common-io::download_uri_target_to_dir respects.
   wget_opts="${user_and_password} ${wget_opts}"
 
+  # the the_http_proxy comes from the parameter passed to ece-import,
+  # with --http-proxy. If it's not set, http_proxy will be exported to
+  # an empty string here, which in effect will disable the HTTP proxy
+  # setting in the shell.
+  export http_proxy=${the_http_proxy}
+
   # long sed from
   # http://stackoverflow.com/questions/1881237/easiest-way-to-extract-the-urls-from-an-html-page-using-sed-or-awk-only
   local list_of_files=$(
-    $(get_proxy_settings_if_applicable) wget $user_and_password \
+    wget $user_and_password \
       --quiet \
       --output-document \
       - $uri | \
@@ -35,12 +41,6 @@ function download_latest_files() {
   )
 
   download_files_if_desired $list_of_files
-}
-
-function get_proxy_settings_if_applicable() {
-  if [ -n "${the_http_proxy}" ]; then
-    echo http_proxy=${the_http_proxy}
-  fi
 }
 
 ## Will only download files which are newer than max_file_age and
