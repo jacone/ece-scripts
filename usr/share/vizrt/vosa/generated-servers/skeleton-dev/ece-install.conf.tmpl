@@ -1,9 +1,9 @@
 # technet credentials
-technet_user=$TECHNET_USER
-technet_password=$TECHNET_PASSWORD
+technet_user=$technet_user
+technet_password=$technet_password
 
 # technet download list
-technet_download_list=$TECHNET_DOWNLOAD_LIST
+technet_download_list=\"$technet_download_list\"
 
 # TODO - not sure if these are needed
 nop=
@@ -19,7 +19,7 @@ fai_search_shutdown=8105
 fai_search_redirect=8143
 fai_search_name=search1
 fai_search_indexer_ws_uri=http://localhost:8080/indexer-webservice/index/
-fai_search_ear=$FAI_SEARCH_EAR
+fai_search_ear=$project_ear
 fai_search_for_editor=0
 fai_search_host=localhost
 fai_search_stop_and_clear=1
@@ -35,7 +35,7 @@ fai_analysis_name=\$fai_search_name
 fai_analysis_db_install=1
 fai_analysis_db_schema=analysisdb
 fai_analysis_db_user=analysisdbuser
-fai_analysis_db_password=$FAI_ANALYSIS_DB_PASSWORD
+fai_analysis_db_password=$analysis_db_password
 
 # do not setup the db as content will be recovered from .tar package
 fai_db_install=1
@@ -52,7 +52,6 @@ fai_publication_war_remove_file_list=\"
 fai_restore_from_backup=0
 fai_db_drop_old_db_first=0
 fai_restore_db=0
-fai_restore_from_file=$FAI_RESTORE_FROM_FILE
 
 # install the cache profile
 fai_cache_install=1
@@ -62,12 +61,12 @@ fai_monitoring_node_nagios_skip=1
 fai_monitoring_node_munin_skip=1
 
 # configure the presentation profile
-fai_builder_http_user=$FAI_BUILDER_HTTP_USER
-fai_builder_http_password=$FAI_BUILDER_HTTP_PASSWORD
+fai_builder_http_user=$builder_http_user
+fai_builder_http_password=$builder_http_password
 fai_presentation_install=1
 fai_publication_environment=dev
-fai_presentation_ear=$FAI_PRESENTATION_EAR
-fai_publication_ear=$FAI_PRESENTATION_EAR
+fai_presentation_ear=$project_ear
+fai_publication_ear=$project_ear
 fai_presentation_name=engine1
-fai_publication_domain_mapping_list=$FAI_PUBLICATION_DOMAIN_MAPPING_LIST
-fai_presentation_deploy_white_list=$FAI_PRESENTATION_DEPLOY_WHITE_LIST
+fai_publication_domain_mapping_list=\"$publication_domain_mapping_list\"
+fai_presentation_deploy_white_list=\"$main_instance_deploy_white_list\"

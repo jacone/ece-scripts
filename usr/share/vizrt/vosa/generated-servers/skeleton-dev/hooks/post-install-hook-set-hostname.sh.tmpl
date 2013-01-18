@@ -3,11 +3,11 @@
 echo \"--- START : post install hook - set hostname ---\"
 
 # set dev image hostame
-ssh -F \$2/ssh.conf root@guest 'echo $IMAGE_HOSTNAME > /etc/hostname'
-ssh -F \$2/ssh.conf root@guest 'hostname $IMAGE_HOSTNAME'
+ssh -F \$2/ssh.conf root@guest 'echo $image_hostname > /etc/hostname'
+ssh -F \$2/ssh.conf root@guest 'hostname $image_hostname'
 ssh -F \$2/ssh.conf root@guest 'hostname'
 
 # add hostname to /etc/hosts
-ssh -F \$2/ssh.conf root@guest 'echo \"127.0.0.1	$IMAGE_HOSTNAME\" >> /etc/hosts'
+ssh -F \$2/ssh.conf root@guest 'echo \"127.0.0.1	$image_hostname\" >> /etc/hosts'
 
 echo \"--- END : post install hook - set hostname ---\"

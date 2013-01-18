@@ -7,6 +7,9 @@ dir_suffix=escenic
 escenic_log_dir=/var/log/${dir_suffix}
 log=${escenic_log_dir}/$(basename $0).log
 
+image_config_root=/etc/vizrt/vosa/available.d
+image_config_source=/usr/share/vizrt/vosa/generated-servers/skeleton-dev
+
 # defaults for configuration
 default_builder=builder.vizrtsaas.com
 
@@ -98,6 +101,20 @@ function process_user_options
 }
 
 ##
+function verify_host_system_configuration
+{
+  :
+}
+
+##
+function aquire_and_lock_image_pipeline
+{
+  for pipeline in $pipelines; do
+    :
+  done
+}
+
+##
 function verify_configuration
 {
   # source configuration file
@@ -126,7 +143,6 @@ function verify_configuration
 
   ensure_variable_is_set publication_domain_mapping_list
   ensure_variable_is_set main_instance_deploy_white_list
-  ensure_variable_is_set secondary_instance_deploy_white_list
  
   # optional variables with defaults
   project_builder=${project_builder-$default_builder}
@@ -146,6 +162,32 @@ function verify_configuration
 }
 
 ##
+function generate_image_configuration
+{
+  if [ ! -d $image_config_root ]; then
+    print_and_log "The target directory for image configuration '$image_config_root' does not exist, exiting!"
+    exit 1  
+  elif [ ! -d $image_config_source ]; then
+    print_and_log "The source directory for image configuration '$image_config_source' does not exist, exiting!"
+  else
+    if [ -d $image_config_root/$image_hostname ]; then
+      run rm -rf $image_config_root/$image_hostname
+    fi
+    run mkdir -p $image_config_root/$image_hostname
+    run cp -r $image_config_source/* $image_config_root/$image_hostname/. 
+
+    for f in `find $image_config_root/$image_hostname/. -type f | grep .tmpl`; do
+      echo "$f"
+      echo "$(eval "echo \"$(cat $f)\"")" > ${f%.*}
+      if [[ "${f%.*}" == *.sh ]]; then
+        chmod +x ${f%.*}
+      fi
+      rm -f $f
+    done
+  fi
+}
+
+##
 function phase_startup 
 {
   init
@@ -155,13 +197,15 @@ function phase_startup
 ##
 function phase_pre_execution
 {
+  verify_host_system_configuration
+  aquire_and_lock_image_pipeline
   verify_configuration
 }
 
 ##
 function phase_execution 
 {
-  :
+  generate_image_configuration
 }
 
 ##

@@ -1,7 +1,7 @@
 tomcat_base=\"/opt/tomcat-engine1\"
 tomcat_home=\"/opt/tomcat\"
 appserver_port=\"8080\"
-deploy_webapp_white_list=$DEPLOY_WEBAPP_WHITE_LIST
+deploy_webapp_white_list=\"$main_instance_deploy_white_list\"
 
 #########################################################################
 # JVM related (the Java Virtual Machine)
@@ -26,8 +26,8 @@ enable_remote_debugging=1
 
 ece_environment=dev
 
-builder_http_user=$FAI_BUILDER_HTTP_USER
-builder_http_password=$FAI_BUILDER_HTTP_PASSWORD
+builder_http_user=$builder_http_user
+builder_http_password=$builder_http_password
 
 #########################################################################
 # Settings related to the JVM garbage collection, don't touch these if

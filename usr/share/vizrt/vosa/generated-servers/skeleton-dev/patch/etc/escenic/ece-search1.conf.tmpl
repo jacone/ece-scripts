@@ -1,7 +1,7 @@
 tomcat_base=\"/opt/tomcat-search1\"
 tomcat_home=\"/opt/tomcat\"
 appserver_port=\"8180\"
-deploy_webapp_white_list=\"solr indexer-webapp\"
+deploy_webapp_white_list=\"solr indexer-webapp analysis-logger analysis-qs analysis-reports\"
 
 #########################################################################
 # JVM related (the Java Virtual Machine)
@@ -24,8 +24,8 @@ max_permgen_size=64m
 
 enable_remote_debugging=0
 
-builder_http_user=$FAI_BUILDER_HTTP_USER
-builder_http_password=$FAI_BUILDER_HTTP_PASSWORD
+builder_http_user=$builder_http_user
+builder_http_password=$builder_http_password
 
 #########################################################################
 # Settings related to the JVM garbage collection, don't touch these if

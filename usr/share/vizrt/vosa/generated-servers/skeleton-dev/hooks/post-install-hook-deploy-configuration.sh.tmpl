@@ -3,7 +3,7 @@
 echo "--- START : post install hook - deploy configuration ---"
 
 # fetch latest .deb package from url
-ssh -F \$2/ssh.conf root@guest 'wget --http-user=$FAI_BUILDER_HTTP_USER --http-password=$FAI_BUILDER_HTTP_PASSWORD --quiet --inet4-only $HOOKS_LATEST_CONF_DEB -O conf.deb'
+ssh -F \$2/ssh.conf root@guest 'wget --http-user=$builder_http_user --http-password=$builder_http_password --quiet --inet4-only $conf_package_deb -O conf.deb'
 
 # apply .deb package and force overwrites
 ssh -F \$2/ssh.conf root@guest 'dpkg -i --force-confnew conf.deb'
