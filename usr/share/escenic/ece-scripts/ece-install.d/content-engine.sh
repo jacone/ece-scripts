@@ -730,25 +730,35 @@ function set_up_content_engine_cron_jobs() {
     return
   fi
 
+  # paranoid, if someone/thing has unset this internal, ece-install
+  # variable, we fail here
+  if [ -z "${escenic_cache_dir}" ]; then
+    remove_pid_and_exit_in_error \
+      "Something is serously wrong, escenic_cache_dir is unset"
+  fi
+
   print_and_log "Setting up cron job $file ..."
   cat > $file <<EOF
-#! /usr/bin/env bash
+#! /bin/bash -e
 
 # Created by $(basename $0) @ $(date)
 #
 # cron script to remove old cache files. These are the images that ECE
-# generates whenever someone requests an image version (often refereed
-# to as ALTERNATE int the URL & content-type).
-#
-# This cron job assumes that the ECE
-# com.escenic.presentation.servlet.multimedia.CacheFilter servlet
-# filter has been configrued to write to the path below in (each of
-# the publication webapp's) web.xml
+# generates whenever someone requests an image version (often referred
+# to as ALTERNATE in the URL & content-type).
 
+# This directory should correspond to the path which the
+# com.escenic.presentation.servlet.multimedia.CacheFilter servlet
+# filter writes to. (This needs to be set in each of the publication
+# webapp's web.xml).
 dir=${escenic_cache_dir}/engine/binary
 log=/var/log/\$(basename \$0).log
 
-function exit_if_dir_doesnt_exist() {
+function exit_if_dir_is_unset_or_doesnt_exist() {
+  if [ -z "\${dir}" ]; then
+    echo "The dir varialbe is unset :-(" >> \${log}
+    exit 1
+  fi
   if [ ! -d \${dir} ]; then
     echo \$dir "doesn't exist" >> \${log}
     exit 0
@@ -757,6 +767,7 @@ function exit_if_dir_doesnt_exist() {
 
 function exit_if_user_doesnt_own_dir() {
   local user_id=\$(id -u ${ece_user})
+  # This (stac -c) is Linux specific
   local dir_owner_id=\$(stat -c "%u" \${dir})
 
   if [[ \${user_id} != \${dir_owner_id} ]]; then
@@ -765,7 +776,7 @@ function exit_if_user_doesnt_own_dir() {
   fi
 }
 
-exit_if_dir_doesnt_exist
+exit_if_dir_is_unset_or_doesnt_exist
 exit_if_user_doesnt_own_dir
 
 echo "Running \$(basename \$0) @ \$(date)" >> \${log}
