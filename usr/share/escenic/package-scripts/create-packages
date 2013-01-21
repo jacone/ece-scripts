@@ -10,7 +10,6 @@ package_name=escenic-content-engine-installer
 package_version=$(date +%Y-%m-%d.%H%M%S)
 default_maintainer_name="Torstein Krause Johansen"
 default_maintainer_email=tkj@vizrt.com
-wget_opts="--continue --inet4-only --quiet"
 log=$HOME/.$(basename $0).log
 
 function clean_up() {
@@ -75,169 +74,176 @@ function create_target_directory() {
   fi
 
   debian_dir=$target_dir/DEBIAN
-  mkdir -p $debian_dir
-  cp debian/${package_name}/* $debian_dir
+  make_dir $debian_dir
+  run cp debian/${package_name}/* $debian_dir
 }
 
-## $1 :: the org file from which to generate man pages.
+## $1 :: the directory that holds the org files, from which to
+## generate man pages.
+
 ## $2 :: target file of then man page (before gzip-ed)
 function create_man_pages() {
-  local org_file=$1
-  local target_man=$2
-  echo "Converting" $(basename $org_file) to "man ..."
-  emacs --batch \
-    --load emacs/org-export-setup.el \
-    --file ${org_file} \
-    --funcall org-e-man-export-to-man 2&>>$log
-
-  local dot_man_file=$(dirname $org_file)/$(basename $org_file .org).man
-  if [ ! -e $dot_man_file ]; then
-    echo "Man generation failed, see ${log} and run" \
-      "[ bash -x" $(basename $0) "] from the command prompt to figure out why."
+  if [ ! -d $1 ]; then
     return
   fi
 
-  mkdir -p $(dirname ${target_man})
-  mv ${dot_man_file} ${target_man}
-  gzip ${target_man}
+  for org_file in $(find $1 -name "*-guide.org"); do
+    local org_file=$1
+    local target_man=$2
+    print_and_log "Converting" $(basename $org_file) to "man ..."
+    run emacs --batch \
+      --load emacs/org-export-setup.el \
+      --file ${org_file} \
+      --funcall org-e-man-export-to-man
+
+    local dot_man_file=$(dirname $org_file)/$(basename $org_file .org).man
+    if [ ! -e $dot_man_file ]; then
+      print_and_log "Man generation failed, see ${log} and run" \
+        "[ bash -x" $(basename $0) "] from the command prompt to figure out why."
+      return
+    fi
+
+    make_dir $(dirname ${target_man})
+    run mv ${dot_man_file} ${target_man}
+    run gzip ${target_man}
+  done
 }
 
 function set_up_escenic-content-engine-installer() {
-  mkdir -p $target_dir/{etc,usr,/etc/default}
-  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
-  mkdir -p $target_dir/usr/share/doc/escenic/examples
-  mkdir -p $target_dir/usr/share/escenic/ece-scripts
-  mkdir -p $target_dir/etc/bash_completion.d
+  make_dir $target_dir/{etc,usr,/etc/default}
+  make_dir $target_dir/usr/{bin,sbin,share/doc}
+  make_dir $target_dir/usr/share/doc/escenic/examples
+  make_dir $target_dir/usr/share/escenic/ece-scripts
+  make_dir $target_dir/etc/bash_completion.d
 
-  cp ../../../../etc/bash_completion.d/ece-install \
+  run cp ../../../../etc/bash_completion.d/ece-install \
     $target_dir/etc/bash_completion.d/
-  cp -r ../../../sbin/ece-install $target_dir/usr/sbin/
-  cp -r ../../escenic/ece-scripts/ece-install.d/ \
+  run cp -r ../../../sbin/ece-install $target_dir/usr/sbin/
+  run cp -r ../../escenic/ece-scripts/ece-install.d/ \
     $target_dir/usr/share/escenic/ece-scripts/
-  cp -r ../../doc/escenic/ece-install-guide.org \
+  run cp -r ../../doc/escenic/ece-install-guide.org \
     $target_dir/usr/share/doc/escenic
-  cp -r ../../doc/escenic/examples/ece-install-*.conf \
+  run cp -r ../../doc/escenic/examples/ece-install-*.conf \
     $target_dir/usr/share/doc/escenic/examples/
-
-  create_man_pages ../../doc/escenic/ece-install-guide.org \
-    $target_dir/usr/share/man/man1/ece-install.1
 }
 
 function set_up_escenic-build-scripts() {
-  mkdir -p $target_dir/usr/bin
-  cp ../build-scripts/ece-build $target_dir/usr/bin/ece-build
-  cp ../build-scripts/ece-builder $target_dir/usr/bin/ece-builder
+  make_dir $target_dir/usr/bin
+  run cp ../build-scripts/ece-build $target_dir/usr/bin/ece-build
+  run cp ../build-scripts/ece-builder $target_dir/usr/bin/ece-builder
 }
 
 function set_up_escenic-content-engine-scripts() {
   local doc_dir=$target_dir/usr/share/doc/escenic/escenic-content-engine-scripts
-  mkdir -p $target_dir/etc/bash_completion.d
-  mkdir -p $target_dir/etc/cron.daily/
-  mkdir -p $target_dir/etc/init.d
-  mkdir -p $doc_dir
-  mkdir -p $target_dir/usr/share/escenic/ece-scripts
-  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
-  mkdir -p $target_dir/{etc,usr,/etc/default}
+  make_dir $target_dir/etc/bash_completion.d
+  make_dir $target_dir/etc/cron.daily/
+  make_dir $target_dir/etc/init.d
+  make_dir $doc_dir
+  make_dir $target_dir/usr/share/escenic/ece-scripts
+  make_dir $target_dir/usr/{bin,sbin,share/doc}
+  make_dir $target_dir/{etc,usr,/etc/default}
 
   # bin
   local bin_list='ece ece-import'
   for el in $bin_list; do
-    cp -r ../../../bin/$el $target_dir/usr/bin/
-    cp -r ../../escenic/ece-scripts/${el}.d/ \
+    run cp -r ../../../bin/$el $target_dir/usr/bin/
+    run cp -r ../../escenic/ece-scripts/${el}.d/ \
       $target_dir/usr/share/escenic/ece-scripts/
   done
 
   # sbin
-  cp ../../../sbin/ece-deploy $target_dir/usr/sbin/
+  run cp ../../../sbin/ece-deploy $target_dir/usr/sbin/
 
   # conf
-  cp ../../../../etc/bash_completion.d/{ece,ece-import,ece-deploy} \
+  run cp ../../../../etc/bash_completion.d/{ece,ece-import,ece-deploy} \
     $target_dir/etc/bash_completion.d
   # we don't include /etc/default/ece as this file often is also
   # included in the conf packages.
-  # cp -r ../../../../etc/default/ece $target_dir/etc/default/
-  cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
+  # run cp -r ../../../../etc/default/ece $target_dir/etc/default/
+  run cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
 
   # doc
-  cp ../../doc/escenic/ece-guide.org $doc_dir/
+  run cp ../../doc/escenic/ece-guide.org $doc_dir/
   local examples_dir=$doc_dir/examples/etc/default
-  mkdir -p $examples_dir
-  cp ../../../../etc/default/ece $examples_dir
-  cp ../../../../etc/escenic/ece.conf $doc_dir/examples/etc
+  make_dir $examples_dir
+  run cp ../../../../etc/default/ece $examples_dir
+  run cp ../../../../etc/escenic/ece.conf $doc_dir/examples/etc
 
   # cron
-  cp -r ../../../../etc/cron.daily/remove-old-escenic-log-files \
+  run cp -r ../../../../etc/cron.daily/remove-old-escenic-log-files \
     $target_dir/etc/cron.daily/
 
   # hugin
-  cp -r ../../../../usr/share/hugin \
+  run cp -r ../../../../usr/share/hugin \
     $target_dir/usr/share/
 }
 
 function set_up_vosa() {
-  mkdir -p $target_dir/{etc,usr,/etc/default}
-  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
-  mkdir -p $target_dir/usr/share/doc/vosa
-  mkdir -p $target_dir/etc/bash_completion.d
-  mkdir -p $target_dir/etc/init.d
+  make_dir $target_dir/{etc,usr,/etc/default}
+  make_dir $target_dir/usr/{bin,sbin,share/doc}
+  make_dir $target_dir/usr/share/doc/vosa
+  make_dir $target_dir/etc/bash_completion.d
+  make_dir $target_dir/etc/init.d
 
-  cp -r ../../../bin/vosa $target_dir/usr/bin/
-  cp -r ../../../bin/vosa-push $target_dir/usr/bin/
-  cp -r ../../vizrt/ $target_dir/usr/share/
-  cp -r ../../doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
-  cp -r ../../../../etc/bash_completion.d/vosa \
+  run cp -r ../../../bin/vosa $target_dir/usr/bin/
+  run cp -r ../../../bin/vosa-push $target_dir/usr/bin/
+  run cp -r ../../vizrt/ $target_dir/usr/share/
+  run cp -r ../../doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
+  run cp -r ../../../../etc/bash_completion.d/vosa \
     $target_dir/etc/bash_completion.d/
-  cp -r ../../../../etc/init.d/vosa $target_dir/etc/init.d/
+  run cp -r ../../../../etc/init.d/vosa $target_dir/etc/init.d/
 }
 
 function set_up_escenic-common-scripts() {
-  mkdir -p $target_dir/{etc,usr,/etc/default}
-  mkdir -p $target_dir/usr/{bin,sbin,share/doc}
-  mkdir -p $target_dir/usr/share/doc/escenic
-  mkdir -p $target_dir/usr/share/escenic/ece-scripts
+  make_dir $target_dir/{etc,usr,/etc/default}
+  make_dir $target_dir/usr/{bin,sbin,share/doc}
+  make_dir $target_dir/usr/share/doc/escenic
+  make_dir $target_dir/usr/share/escenic/ece-scripts
 
   # system-info is useful for all packages, hence goes to
   # escenic-common-scripts.
-  cp -r ../../../bin/system-info $target_dir/usr/bin/
-  cp -r ../../../bin/generate-changelog $target_dir/usr/bin/
-  cp -r ../../escenic/ece-scripts/system-info.d \
+  run cp -r ../../../bin/system-info $target_dir/usr/bin/
+  run cp -r ../../../bin/generate-changelog $target_dir/usr/bin/
+  run cp -r ../../escenic/ece-scripts/system-info.d \
     $target_dir/usr/share/escenic/ece-scripts/
-  cp ../../../../etc/default/system-info $target_dir/etc/default/
-  cp -r ../../doc/escenic/system-info-guide.org \
+  run cp ../../../../etc/default/system-info $target_dir/etc/default/
+  run cp -r ../../doc/escenic/system-info-guide.org \
     $target_dir/usr/share/doc/escenic
 
   # both the installer and ece-scripts use the common scripts and
   # web resources.
-  cp -r ../../escenic/ece-scripts/common* \
+  run cp -r ../../escenic/ece-scripts/common* \
     $target_dir/usr/share/escenic/ece-scripts/
-  cp -r ../../escenic/ece-scripts/*.css \
+  run cp -r ../../escenic/ece-scripts/*.css \
     $target_dir/usr/share/escenic/ece-scripts/
-  cp -r ../../escenic/ece-scripts/*.html \
+  run cp -r ../../escenic/ece-scripts/*.html \
     $target_dir/usr/share/escenic/ece-scripts/
 
   # everyone can need some network syncing
-  cp -r ../../../bin/sync-network-drive $target_dir/usr/bin/
+  run cp -r ../../../bin/sync-network-drive $target_dir/usr/bin/
 }
 
 function set_up_escenic-check-mk-plugins() {
-  mkdir -p $target_dir/usr/lib/check_mk_agent/local
-  cp -r ../../../lib/check_mk_agent/local/* \
+  make_dir $target_dir/usr/lib/check_mk_agent/local
+  run cp -r ../../../lib/check_mk_agent/local/* \
     $target_dir/usr/lib/check_mk_agent/local/
 }
 
 function set_up_escenic-munin-plugins() {
-  mkdir -p $target_dir/usr/share/munin/plugins
+  make_dir $target_dir/usr/share/munin/plugins
   local doc_dir=$target_dir/usr/share/doc/escenic/escenic-munin-plugin
-  mkdir -p $doc_dir
+  make_dir $doc_dir
 
   local dir=$(mktemp -d)
   (
+    run download_uri_target_to_dir \
+      https://github.com/mogsie/escenic-munin/tarball/master \
+      $dir
     cd $dir
-    wget $wget_opts https://github.com/mogsie/escenic-munin/tarball/master
     tar xzf master
-    cp $dir/mogsie-escenic-munin*/*_ $target_dir/usr/share/munin/plugins
-    cp $dir/mogsie-escenic-munin*/README.md $doc_dir
-    cp $dir/mogsie-escenic-munin*/site/* $doc_dir
+    run cp $dir/mogsie-escenic-munin*/*_ $target_dir/usr/share/munin/plugins
+    run cp $dir/mogsie-escenic-munin*/README.md $doc_dir
+    run cp $dir/mogsie-escenic-munin*/site/* $doc_dir
 
     chmod 755 $file $target_dir/usr/share/munin/plugins
   )
@@ -245,45 +251,49 @@ function set_up_escenic-munin-plugins() {
 }
 
 function set_up_hugin-node() {
-  mkdir -p $target_dir/etc/hugin/{hugin.often,hugin.hourly,hugin.daily,hugin.weekly}
-  mkdir -p $target_dir/etc/{cron.d,sudoers.d}
-  mkdir -p $target_dir/usr/{bin,share/doc/hugin,share/hugin/plugins,share/hugin/helpers}
-  mkdir -p $target_dir/var/lib/hugin
+  make_dir $target_dir/etc/hugin/{hugin.often,hugin.hourly,hugin.daily,hugin.weekly}
+  make_dir $target_dir/etc/{cron.d,sudoers.d}
+  make_dir $target_dir/usr/{bin,share/doc/hugin,share/hugin/plugins,share/hugin/helpers}
+  make_dir $target_dir/var/lib/hugin
 
   local dir=$(mktemp -d)
   (
+    download_uri_target_to_dir \
+      https://bitbucket.org/mogsie/hugin/get/default.tar.gz \
+      $dir
     cd $dir
-    wget $wget_opts https://bitbucket.org/mogsie/hugin/get/default.tar.gz
-    tar xzf default.tar.gz
-    cp $dir/mogsie-hugin-*/bin/* $target_dir/usr/bin
-    cp $dir/mogsie-hugin-*/helpers/* $target_dir/usr/share/hugin/helpers/
-    cp $dir/mogsie-hugin-*/etc/* $target_dir/etc/hugin/
-    cp $dir/mogsie-hugin-*/sudoers/* $target_dir/etc/sudoers.d/
-    cp $dir/mogsie-hugin-*/cron/* $target_dir/etc/cron.d/
-    cp $dir/mogsie-hugin-*/checks/* $target_dir/usr/share/hugin/plugins/
-    cp $dir/mogsie-hugin-*/*.md $target_dir/usr/share/doc/hugin
-    cp $dir/mogsie-hugin-*/LICENSE $target_dir/usr/share/doc/hugin
+    run tar xzf default.tar.gz
+    run cp $dir/mogsie-hugin-*/bin/* $target_dir/usr/bin
+    run cp $dir/mogsie-hugin-*/helpers/* $target_dir/usr/share/hugin/helpers/
+    run cp $dir/mogsie-hugin-*/etc/* $target_dir/etc/hugin/
+    run cp $dir/mogsie-hugin-*/sudoers/* $target_dir/etc/sudoers.d/
+    run cp $dir/mogsie-hugin-*/cron/* $target_dir/etc/cron.d/
+    run cp $dir/mogsie-hugin-*/checks/* $target_dir/usr/share/hugin/plugins/
+    run cp $dir/mogsie-hugin-*/*.md $target_dir/usr/share/doc/hugin
+    run cp $dir/mogsie-hugin-*/LICENSE $target_dir/usr/share/doc/hugin
 
     # chmod 755 $file $target_dir/usr/bin/*
   )
-  rm -rf $dir
+  run rm -rf $dir
 }
 
 function set_up_spore() {
-  mkdir -p $target_dir/usr/{bin,sbin} \
-           $target_dir/usr/share/doc/spore
+  make_dir $target_dir/usr/{bin,sbin} \
+    $target_dir/usr/share/doc/spore
 
   local dir=$(mktemp -d)
   (
+    download_uri_target_to_dir \
+      https://github.com/vizrt/spore/archive/master.tar.gz \
+      $dir
     cd $dir
-    wget $wget_opts https://github.com/vizrt/spore/archive/master.tar.gz
-    tar xzf master.tar.gz
-    cp $dir/spore-master/bin/* $target_dir/usr/bin
-    cp $dir/spore-master/sbin/* $target_dir/usr/sbin
-    cp $dir/spore-master/README.md $target_dir/usr/share/doc/spore
-    cp -r $dir/spore-master/examples $target_dir/usr/share/doc/spore/examples
+    run tar xzf master.tar.gz
+    run cp $dir/spore-master/bin/* $target_dir/usr/bin
+    run cp $dir/spore-master/sbin/* $target_dir/usr/sbin
+    run cp $dir/spore-master/README.md $target_dir/usr/share/doc/spore
+    run cp -r $dir/spore-master/examples $target_dir/usr/share/doc/spore/examples
   )
-  rm -rf $dir
+  run rm -rf $dir
 }
 
 function get_name() {
@@ -295,9 +305,9 @@ function get_email() {
 }
 
 function create_packages() {
-  sed -i "s#VERSION#${package_version}#g" $debian_dir/control
-  sed -i "s#MAINTAINER_NAME#$(get_name)#g" $debian_dir/control
-  sed -i "s#MAINTAINER_EMAIL#$(get_email)#g" $debian_dir/control
+  run sed -i "s#VERSION#${package_version}#g" $debian_dir/control
+  run sed -i "s#MAINTAINER_NAME#$(get_name)#g" $debian_dir/control
+  run sed -i "s#MAINTAINER_EMAIL#$(get_email)#g" $debian_dir/control
   find ${target_dir}/usr/{bin,sbin}/ -type f 2>/dev/null | while read f; do
     sed -i "s#^ece_scripts_version=.*#ece_scripts_version=${package_version}#g" \
       $f
@@ -305,11 +315,11 @@ function create_packages() {
 
   # fix permissions
   if [ -e $debian_dir/postinst ]; then
-    chmod 755 $debian_dir/postinst
+    run chmod 755 $debian_dir/postinst
   fi
 
   if [ ! -x /usr/bin/dpkg-deb ]; then
-    echo "You must have dpkg-deb installed :-("
+    print_and_log "You must have dpkg-deb installed :-("
     exit 1
   fi
 
@@ -320,23 +330,56 @@ function create_packages() {
   if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
     (
       cd $target_dir
-      fakeroot alien --keep-version --to-rpm --scripts \
-        ${package_name}-${package_version}.deb \
-        2>&1 > /dev/null
+      run fakeroot alien --keep-version --to-rpm --scripts \
+        ${package_name}-${package_version}.deb
     )
   else
-    echo "You must have 'alien' and 'fakeroot' installed to create RPMs"
+    print_and_log "You must have 'alien' and 'fakeroot' installed to create RPMs"
     exit 1
   fi
 }
 
 function list_packages() {
-  echo "Sir, the packages are now ready:"
-  echo $target_dir/*.{deb,rpm}
+  print_and_log "Sir, the packages are now ready:" \
+    $target_dir/*.{deb,rpm}
 }
 
+function bootstrap_thyself() {
+  # first, try to be nice, then check the standard location
+  local dir=$(dirname $0)/../share/escenic/ece-scripts
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
+
+  local common_libraries="
+    common-bashing.sh
+    common-io.sh
+    common-os.sh
+    common-ece.sh
+  "
+
+  for el in $common_libraries; do
+    source $dir/$el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+
+  create_pid
+  create_lock
+
+  # hooks for when the scirpt exits cleanly and when a user or someone
+  # kills the process
+  trap common_bashing_exit_hook EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
+
+}
+
+bootstrap_thyself
 clean_up
 get_user_options $@
 create_target_directory
+create_man_pages
 create_packages
 list_packages
