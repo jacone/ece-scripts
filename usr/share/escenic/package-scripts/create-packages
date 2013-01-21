@@ -83,29 +83,31 @@ function create_target_directory() {
 
 ## $2 :: target file of then man page (before gzip-ed)
 function create_man_pages() {
-  if [ ! -d $1 ]; then
-    return
-  fi
+  for org_file in $(find $target_dir -name "*-guide.org"); do
+    local target_man=$(basename ${org_file})
+    target_man=${target_dir}/usr/share/man/man1/${target_man%-guide.org}.1
 
-  for org_file in $(find $1 -name "*-guide.org"); do
-    local org_file=$1
-    local target_man=$2
-    print_and_log "Converting" $(basename $org_file) to "man ..."
-    run emacs --batch \
+    print_and_log "Generating man pages from" $(basename ${org_file}) "..."
+
+    emacs --batch \
       --load emacs/org-export-setup.el \
       --file ${org_file} \
-      --funcall org-e-man-export-to-man
+      --funcall org-e-man-export-to-man \
+      >> $log \
+      2>> $log
 
     local dot_man_file=$(dirname $org_file)/$(basename $org_file .org).man
     if [ ! -e $dot_man_file ]; then
-      print_and_log "Man generation failed, see ${log} and run" \
+      print_and_log "Man generation $(red failed), see ${log} and run" \
         "[ bash -x" $(basename $0) "] from the command prompt to figure out why."
-      return
+      continue
     fi
 
     make_dir $(dirname ${target_man})
     run mv ${dot_man_file} ${target_man}
     run gzip ${target_man}
+
+    run rm $org_file
   done
 }
 
@@ -164,6 +166,8 @@ function set_up_escenic-content-engine-scripts() {
 
   # doc
   run cp ../../doc/escenic/ece-guide.org $doc_dir/
+  run cp ../../doc/escenic/ece-deploy-guide.org $doc_dir/
+  run cp ../../doc/escenic/ece-import-guide.org $doc_dir/
   local examples_dir=$doc_dir/examples/etc/default
   make_dir $examples_dir
   run cp ../../../../etc/default/ece $examples_dir
@@ -207,7 +211,9 @@ function set_up_escenic-common-scripts() {
   run cp -r ../../escenic/ece-scripts/system-info.d \
     $target_dir/usr/share/escenic/ece-scripts/
   run cp ../../../../etc/default/system-info $target_dir/etc/default/
-  run cp -r ../../doc/escenic/system-info-guide.org \
+  run cp ../../doc/escenic/system-info-guide.org \
+    $target_dir/usr/share/doc/escenic
+  run cp ../../doc/escenic/generate-changelog-guide.org \
     $target_dir/usr/share/doc/escenic
 
   # both the installer and ece-scripts use the common scripts and
