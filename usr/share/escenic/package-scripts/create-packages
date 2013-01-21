@@ -366,8 +366,10 @@ function bootstrap_thyself() {
     }
   done
 
+  # override the default pid file location so that create-packages can
+  # be run as an unprivileged user
+  pid_file=$HOME/.$(basename $0).pid
   create_pid
-  create_lock
 
   # hooks for when the scirpt exits cleanly and when a user or someone
   # kills the process
