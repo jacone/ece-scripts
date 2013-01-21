@@ -2,6 +2,7 @@
 # set -e
 
 chmod +x /usr/bin/{ece,system-info}
+echo "Updating mandb ..."
+mandb -q
 
 exit 0
-

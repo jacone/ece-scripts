@@ -2,6 +2,8 @@
 # set -e
 
 chmod +x /usr/bin/vosa
+echo "Updating mandb ..."
+mandb -q
 
 cat <<EOF
 Thank you for installing the vosa package. This is currently
@@ -10,8 +12,7 @@ issues to https://github.com/vizrt/ece-scripts/issues
 
 Have fun!
 
--Vizrt Online 
+-Vizrt Online
 EOF
 
 exit 0
-
