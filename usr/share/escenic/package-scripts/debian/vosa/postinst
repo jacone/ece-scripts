@@ -2,9 +2,6 @@
 # set -e
 
 chmod +x /usr/bin/vosa
-echo "Updating mandb ..."
-mandb -q
-
 cat <<EOF
 Thank you for installing the vosa package. This is currently
 un-supported software as it's undergoing heavy development. Report any
