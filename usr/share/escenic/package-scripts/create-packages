@@ -53,25 +53,11 @@ function get_user_options() {
 }
 
 function create_target_directory() {
-  if [[ $package_name == "escenic-content-engine-installer" ]]; then
-    set_up_escenic-content-engine-installer
-  elif [[ $package_name == "escenic-content-engine-scripts" ]]; then
-    set_up_escenic-content-engine-scripts
-  elif [[ $package_name == "vosa" ]]; then
-    set_up_vosa
-  elif [[ $package_name == "escenic-build-scripts" ]]; then
-    set_up_escenic-build-scripts
-  elif [[ $package_name == "escenic-common-scripts" ]]; then
-    set_up_escenic-common-scripts
-  elif [[ $package_name == "escenic-munin-plugins" ]]; then
-    set_up_escenic-munin-plugins
-  elif [[ $package_name == "escenic-check-mk-plugins" ]]; then
-    set_up_escenic-check-mk-plugins
-  elif [[ $package_name == "hugin-node" ]]; then
-    set_up_hugin-node
-  elif [[ $package_name == "spore" ]]; then
-    set_up_spore
-  fi
+  print_and_log "Creating package" $package_name "..."
+  set_up_${package_name} 2>/dev/null|| {
+    print_and_log "I don't know how to create package" $package_name ":-("
+    exit 1
+  }
 
   debian_dir=$target_dir/DEBIAN
   make_dir $debian_dir
