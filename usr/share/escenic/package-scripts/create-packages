@@ -346,7 +346,7 @@ function list_packages() {
 
 function bootstrap_thyself() {
   # first, try to be nice, then check the standard location
-  local dir=$(dirname $0)/../share/escenic/ece-scripts
+  local dir=$(dirname $0)/../ece-scripts
   if [ ! -d $dir  ]; then
     dir=/usr/share/escenic/ece-scripts
   fi
