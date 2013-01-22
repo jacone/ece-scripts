@@ -148,7 +148,7 @@ function verify_configuration
   project_builder=${project_builder-$default_builder}
   ensure_variable_is_set project_builder
   
-  conf_package_deb=${conf_package_deb-http://$project_builder/$project_key/releases/vosa-conf-dev-latest.dev}
+  conf_package_deb=${conf_package_deb-http://$project_builder/$project_key/releases/vosa-conf-dev-latest.deb}
   ensure_variable_is_set conf_package_deb
   
   spore_package=${spore_package-http://$project_builder/$project_key/releases/spore-$project_key-development.tar.gz}
