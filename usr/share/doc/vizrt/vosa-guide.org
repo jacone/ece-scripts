@@ -1,3 +1,45 @@
+#+TITLE: The VOSA Guide
+#+AUTHOR: Vizrt Online / The SaaS Team
+#+OPTIONS: H:6 num:5 toc:2
+
+* NAME
+vosa - command to manage KVM and Amazon instances that typically form
+a cluster of servers serving one or more Escenic based web sites.
+
+* SYNOPSIS
+vosa [-i instance-dir] [-v uec-version] [-V] [-d] [-h] COMMAND
+
+* OPTIONS
+** -i instance-dir
+Most [[COMMANDS]] require the *-i* parameter to be set. You pass it the
+path to your VM's configuration like this:
+#+BEGIN_SRC sh
+# vosa -i /etc/vizrt/vosa/available.d/vm03 enable
+#+END_SRC
+** -v uec-version
+Let's you specify the UEC version to use
+** -d
+Make *vosa* more verbose. The more *-d* switches you specify, the
+more verbose it gets.
+** -V
+Print the *vosa* version and exit
+** -h
+Print usage help and exit.
+
+* COMMANDS
+** enable
+Enable a specific VM.
+** disable
+Disable a specific VM.
+** install
+Creates a new disk image etc.
+** uninstall
+Removes the disk image etc.
+** start
+Starts (boots) the VM.
+** status
+Tells you about the VM, if it's enabled, running, alive, its uptime.
+
 * What is VOSA?
 
 Vosa is short for Vizrt Online System Administration, a set of tools
@@ -135,7 +177,10 @@ To make vosa usable, you need to initialize it:
 This will create the /etc/vizrt/vosa directory structure, and a
 skeleton of a virtual machine definition.
 
-   : sudo cp -r /etc/vizrt/vosa/skeleton-amazon /etc/vizrt/vosa/available.d/my-first-vosa
+#+BEGIN_SRC sh
+$ sudo cp -r /etc/vizrt/vosa/skeleton-amazon \\
+  /etc/vizrt/vosa/available.d/my-first-vosa
+#+END_SRC
 
 Configure the my-first-vosa/amazon.conf file as you see fit.  This would include:
 
@@ -154,7 +199,7 @@ things it will
 - create 10 tap interfaces (an arbitrary number, really, see below
   for an explanation).
 - create the same number of "tap*.availablenetwork" files in
-  /var/run/vizrt/vosa/ each one signifying the names of the tap
+  */var/run/vizrt/vosa/* each one signifying the names of the tap
   interfaces that can be used.
 
 So without further ado, let's get started.  First of all, we need to
@@ -194,14 +239,16 @@ doing this temporarily (ca 10 seconds) makes the network go
 completely dark, and so shouldn't happen whenever any virtual
 machines are running.
 
-   : for i in $(seq 1 10) ; do
-   :   tap=$(tunctl -b)
-   :   touch /var/run/vizrt/vosa/$tap.availablenetwork
-   :   brctl addif br0 $tap
-   :   ifconfig $tap up 0.0.0.0
-   : done
+#+BEGIN_SRC sh
+for i in $(seq 1 10) ; do
+  tap=$(tunctl -b)
+  touch /var/run/vizrt/vosa/$tap.availablenetwork
+  brctl addif br0 $tap
+  ifconfig $tap up 0.0.0.0
+done
+#+END_SRC
 
-tunctl creates the tap interface, and we create a file with the name
+*tunctl* creates the tap interface, and we create a file with the name
 of the created tap interface in a directory.  This little snippet
 needs to run every time the host machine boots.
 
@@ -218,12 +265,15 @@ in Amazon EC2, and also in a Eucalyptus private cloud.  This means
 that vosa will be able to control Amazon EC2 images in the same way.
 
 Defining a virtual machine means creating two files (boot.conf and
-install.conf) in a directory.  "vosa init" has already created a
+install.conf) in a directory.  *vosa init* has already created a
 documented skeleton which you can customize as you see fit.
 
-   : mkdir /etc/vizrt/vosa/available.d/my-first-vm &&
-   : cp /etc/vizrt/vosa/skeleton-kvm/* /etc/vizrt/vosa/available.d/my-first-vm/
-   : vi /etc/vizrt/vosa/available.d/my-first-vm/*
+#+BEGIN_SRC sh
+mkdir /etc/vizrt/vosa/available.d/my-first-vm && \\
+cp /etc/vizrt/vosa/skeleton-kvm/* \\
+  /etc/vizrt/vosa/available.d/my-first-vm/
+vi /etc/vizrt/vosa/available.d/my-first-vm/*
+#+END_SRC
 
 Note that the name you choose ("my-first-vm") must be a valid
 internet host name with no domain part.  I.e. only lowercase
@@ -250,11 +300,11 @@ To install the machine, just issue the "install" command:
 
    : vosa -i my-first-vm install
 
-This will copy the disk image to /var/lib/vizrt/vosa/images/my-first-vm/
-and put some more files in there (like the SSH private key), and
-finally it will boot up the image and use the UEC's cloud-init
-support to prime the image and execute any post-installation hooks
-you defined.
+This will copy the disk image
+to */var/lib/vizrt/vosa/images/my-first-vm/* and put some more files
+in there (like the SSH private key), and finally it will boot up the
+image and use the UEC's cloud-init support to prime the image and
+execute any post-installation hooks you defined.
 
 The host name (as the machine sees it, at least) will be the same as
 the name of the virtual machine; in this case "my-first-vm"
@@ -278,7 +328,7 @@ To make this possible, vosa supplies a post-install hook. This hook:
   having to sign or auto-sign the puppets, since that is problematic
   when a machine is re-installed)
 - creates vosa post-installation hook to set up a pre-authenticated
-  puppet in /etc/vizrt/vosa/puppet/<puppetmaster-name>-client.sh
+  puppet in */etc/vizrt/vosa/puppet/<puppetmaster-name>-client.sh*
 
 This makes it possible to define more virtual machines that
 automatically dance to the puppet master's tune.
@@ -287,4 +337,11 @@ Making this useful of course means pushing your puppet configuration
 into the puppet master, but that's outside the scope of this
 document.
 
+* COPYRIGHT
+Copyright 2011-2013 Vizrt
 
+Licensed under the Apache License, Version 2.0, see
+https://github.com/vizrt/ece-scripts/COPYING for further details.
+
+* AUTHOR
+Erik Mogsensen
