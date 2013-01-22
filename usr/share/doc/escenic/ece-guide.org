@@ -19,10 +19,16 @@ instances.
 * OPTIONS
 ** -t --type type
 The following types are available:
-- engine: The Escenic Content Engine, this is the default and is the assumed type if none is specified.
-- search: A standalone search indexer and solr instance
-- rmi-hub: The RMI hub responsible for the internal communication between the ECE instances.
-- analysis: The Escenic Analysis Engine also knows as 'Stats'
+- engine :: The Escenic Content Engine, this is the default and is the
+            assumed type if none is specified.
+
+- search :: A standalone search indexer and solr instance
+
+- analysis :: The Escenic Analysis Engine also knows as 'Stats'
+
+- rmi-hub :: The RMI hub responsible for the internal communication
+             between the ECE instances. This is not needed for ECE >=
+             5.3.
 
 ** -i --instance instance
 The type instance, such as editor1, engine1 or search1
