@@ -1488,8 +1488,9 @@ I know what I'm doing, please do as I say.
 #+END_SRC
 
 * GOALS & DESIGN CHOICES
-These are some of the most important goals and design choices
-of *ece-install*:
+If you are a power user of *ece-install*, if you're just curious or
+indeed wish to extend it, you will find it interesting to read this
+section explaining some of its goals and design choices.
 
 ** As few prerequisites as possible
 The only pre-requisite should be having a Debian or RedHat based
@@ -1500,11 +1501,15 @@ database, no nothing.
 
 ** Run on the latest stable releases of Debian, Ubuntu and RedHat
 It should run on the latest stable release of Debian, Ubuntu LTS and
-RedHat. This means for instance not features only found in BASH 4.x as
-this wasn't available in the latest RedHat/CentOS version at the time.
+RedHat.
 
-This also means not depending on (newer) software packages that
-only exist in e.g. the regular Ubuntu release or Debian testing.
+This applies for instance not features only found in BASH 4.x as this
+wasn't available in the latest RedHat/CentOS version when the bulk
+of *ece-install* was written.
+
+Another implications, is the *ece-install* cannot depend on (newer)
+software packages that only exist in e.g. the regular Ubuntu release,
+Fedora or Debian testing.
 
 ** Make it possible to run ece-install on other UNIX systems too
 Whenever possible, do not assume the system to be Linux, making it
@@ -1520,21 +1525,55 @@ However, there will always be cases were the defaults are not
 sufficient and this is where the myriad of *fai_* configuration
 options have arisen.
 
+** Production ready
+A lot of choices in *ece-install* are made to ensure that
+an *ece-install*-ed machine is production ready, or at the very least
+production "like" (for instance if the machine has too little memory,
+there's no way it'll be production "ready", although it will still be
+set up "like" production).
+
+This means for instance that the application server configuration is
+way more advanced than what you'll find on a regular developer's or
+test system, the same goes for the cache configuration, the JVM
+parameters, the logging configuration, the monitoring setup and many,
+many more things. They are all set up to be ready to go into
+production.
+
+This drive has also another purpose, namely to educate everyone
+involved with the site development, including template & Java
+developers, of the different components that a production environment
+are comprised of. We believe that by having components like monitoring
+and caching servers in place from day one on all systems (also the
+developer's machine and the test servers), the finished web site will
+reach a successful production state faster and more reliably.
+
 ** Fail as fast as possible
 Great heed has been taken to detect errors as fast as possible and
 bail out with a detailed stack trace of where the error occured.
 
 One of the implications of this, is that all commands are executed
-within a wrapper (called *run), which checks the return code of the
+within a wrapper (called *run*), which checks the return code of the
 called command and makes *ece-install* fail if any of its called
 commands failed. Both standard out and error are logged
-to */var/log/escenic/ece-install.log* and a stack trace is provided
-to aid the error hunting.
+to */var/log/escenic/ece-install.log* and a stack trace is provided to
+aid the error hunting.
 
 ** Take care of the user
 Take care of the user: speak clear English in full sentences when
 giving feedback. Write technical details to the log and keep the user
 feedback in standard out as "pleasant" as possible.
+
+** Safe to re-run
+All *ece-install* modules have been written to ensure that it's safe
+to re-run *ece-install* with the same *ece-install.conf*
+file. Anything which may harm your data (that being two things: the
+database data files and the ECE multimedia archive (the Solr index can
+be re-generated, so that's not protected in the same way)) will not
+be run with a second run of *ece-install*.
+
+For the cases were the user really wants this (like wiping out a
+database when re-running an integration test), options are provided
+to override the default behaviour.
 
 ** Modularisation
 The script consists on ~20 modules, ~5 common libraries and the main
@@ -1585,14 +1624,16 @@ Installing a full Escenic production environment has historically
 taken at least a week, with another few to tune all the settings for
 high performance. In the middle of 2011, Torstein Krause Johansen set
 out to remedy this and created *ece-install* as a personal side
-project. From February 2012, he joined the Vizrt Online SaaS team and
-was allowed to work on *ece-install* full time. The command has since
-then been used to install several full scale production environments,
-as well as being used for full scale automatic integration tests,
-development machines, test servers and staging
-environments. *ece-install* is now the preferred way of installing new
-Escenic systems. From February 2013, it has been maintained by Erik
-Mogensen.
+project.
+
+In February 2012, he joined the Vizrt Online SaaS team and was allowed
+to work on *ece-install* full time. The command has since then been
+used to install several full scale production environments, as well as
+being used for full scale automatic integration tests, development
+machines, test servers and staging environments. *ece-install* is now
+the preferred way of installing new Escenic systems.
+
+From February 2013, it has been maintained by Erik Mogensen.
 
 * BUGS
 Report any bugs found on https://github.com/vizrt/ece-scripts/issues.
