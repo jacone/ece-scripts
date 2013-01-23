@@ -2,9 +2,9 @@
 
 # Hugin script to tell hugin how to collect publication resources
 
-# xmllint is needed for this
-if ! which xmllint > /dev/null ; then
-  echo 'xmllint not installed'
+# xml_pp is needed for this
+if ! which xml_pp > /dev/null ; then
+  echo 'xml_pp not installed'
   exit 1
 fi
 

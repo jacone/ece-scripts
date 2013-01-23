@@ -249,7 +249,7 @@ function set_up_escenic-munin-plugins() {
 function set_up_hugin-node() {
   make_dir $target_dir/etc/hugin/{hugin.often,hugin.hourly,hugin.daily,hugin.weekly}
   make_dir $target_dir/etc/{cron.d,sudoers.d}
-  make_dir $target_dir/usr/{bin,share/doc/hugin,share/hugin/plugins,share/hugin/helpers}
+  make_dir $target_dir/usr/{bin,share/doc/hugin,share/hugin/{plugins,helpers,formatters}}
   make_dir $target_dir/var/lib/hugin
 
   local dir=$(mktemp -d)
@@ -265,7 +265,9 @@ function set_up_hugin-node() {
     run cp $dir/mogsie-hugin-*/sudoers/* $target_dir/etc/sudoers.d/
     run cp $dir/mogsie-hugin-*/cron/* $target_dir/etc/cron.d/
     run cp $dir/mogsie-hugin-*/checks/* $target_dir/usr/share/hugin/plugins/
+    run cp $dir/mogsie-hugin-*/formatters/* $target_dir/usr/share/hugin/formatters/
     run cp $dir/mogsie-hugin-*/*.md $target_dir/usr/share/doc/hugin
+    run cp $dir/mogsie-hugin-*/*.org $target_dir/usr/share/doc/hugin
     run cp $dir/mogsie-hugin-*/LICENSE $target_dir/usr/share/doc/hugin
 
     # chmod 755 $file $target_dir/usr/bin/*
