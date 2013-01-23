@@ -61,6 +61,18 @@ function set_up_percona_repository_if_possible() {
       fi
 
       add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
+
+      # prefer packages from the percona repo if it exists
+      local pin_percona_conf_file=/etc/apt/preferences.d/20prefer-percona-packages.conf
+      if [ ! -e $pin_percona_conf_file ]; then
+        cat > $pin_percona_conf_file <<EOF
+# Created by $(basename $0) @ $(date)
+Package: *
+Pin: origin repo.percona.com
+Pin-Priority: 600
+EOF
+      fi
+
       run apt-get update
       mysql_server_packages="percona-server-server"
       mysql_client_packages="percona-server-client"
