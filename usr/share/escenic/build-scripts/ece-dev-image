@@ -13,6 +13,13 @@ image_config_source=/usr/share/vizrt/vosa/generated-servers/skeleton-dev
 # defaults for configuration
 default_builder=builder.vizrtsaas.com
 
+# options for partial execution
+interactive=0
+skip_install=0
+skip_vmdk=0
+skip_ova=0
+
+
 ##
 function init
 {
@@ -67,6 +74,18 @@ function process_user_options
             ;;
           -f|--conf-file)
             local argument_requested=1
+            ;;
+          --skip-install)
+            skip_install=1
+            ;;
+          --skip-vmdk)
+            skip_vmdk=1
+            ;;
+          --skip-ova)
+            skip_ova=1
+            ;;
+          --interactive)
+            interactive=1
             ;;
           *)
             print_and_log "Invalid option '$arg'"
@@ -148,7 +167,7 @@ function verify_configuration
   project_builder=${project_builder-$default_builder}
   ensure_variable_is_set project_builder
   
-  conf_package_deb=${conf_package_deb-http://$project_builder/$project_key/releases/vosa-conf-dev-latest.dev}
+  conf_package_deb=${conf_package_deb-http://$project_builder/$project_key/releases/vosa-conf-dev-latest.deb}
   ensure_variable_is_set conf_package_deb
   
   spore_package=${spore_package-http://$project_builder/$project_key/releases/spore-$project_key-development.tar.gz}
@@ -169,7 +188,9 @@ function generate_image_configuration
     exit 1  
   elif [ ! -d $image_config_source ]; then
     print_and_log "The source directory for image configuration '$image_config_source' does not exist, exiting!"
+    exit 1
   else
+    print_and_log "Generating configuration for $image_hostname based on $image_config_source using configuration file $conf_file."
     if [ -d $image_config_root/$image_hostname ]; then
       run rm -rf $image_config_root/$image_hostname
     fi
@@ -177,13 +198,242 @@ function generate_image_configuration
     run cp -r $image_config_source/* $image_config_root/$image_hostname/. 
 
     for f in `find $image_config_root/$image_hostname/. -type f | grep .tmpl`; do
-      echo "$f"
+      debug "Processing config template $f"
       echo "$(eval "echo \"$(cat $f)\"")" > ${f%.*}
       if [[ "${f%.*}" == *.sh ]]; then
-        chmod +x ${f%.*}
+        run chmod +x ${f%.*}
       fi
-      rm -f $f
+      run rm -f $f
     done
+  fi
+}
+
+##
+function install_image
+{
+  print_and_log "Initiating installation of $image_hostname using 'vosa' command ..."
+  run vosa -i $image_hostname stop destroy create install
+  print_and_log "Installation finished successfully!"
+}
+
+##
+function process_raw_image
+{
+  image_host="ssh -F /var/lib/vizrt/vosa/images/$image_hostname/ssh.conf guest"
+  chroot_image_host="chroot /var/lib/vizrt/vosa/images/$image_hostname/small"
+  vboxmanage_output_dir=/var/www/html/dev
+  
+  cleanup_image_runtime
+  shutdown_image
+
+  create_and_mount_sparse
+  modify_sparse_and_unmount
+
+  export_zerofree_vmdk
+
+}
+
+##
+function cleanup_image_runtime
+{
+  print_and_log "Initiating runtime image cleanup ..."
+  $image_host sudo rm -rf /tmp/ece-downloads
+  $image_host sudo rm -rf /opt/escenic
+  $image_host sudo rm -rf /var/cache/escenic/*
+  $image_host sudo rm -rf /var/cache/ece-install/*
+  print_and_log "Image cleanup done!"
+}
+
+##
+function shutdown_image
+{
+  print_and_log "Shutting down image $image_hostname ..."
+  $image_host sudo shutdown -h now
+  sleep 5;
+  print_and_log "Waiting for image $image_hostname to stop ..."
+  while [ 1 ] ; do
+    local image_dead=$(vosa -i $image_hostname status | awk '{print $4}')
+    [[ "$image_dead" == "dead" ]] && break;
+    sleep 2;
+    echo -n .
+  done
+  print_and_log "Image $image_hostname has been stopped." 
+}
+
+##
+function create_and_mount_sparse
+{
+  print_and_log "Creating sparse copy of the original image ..."
+  run cp --sparse=always /var/lib/vizrt/vosa/images/$image_hostname/disk.img /var/lib/vizrt/vosa/images/$image_hostname/small.img
+  print_and_log "Mounting sparse copy under /var/lib/vizrt/vosa/images/$image_hostname/small ..."
+  run mkdir /var/lib/vizrt/vosa/images/$image_hostname/small
+  run mount -o loop /var/lib/vizrt/vosa/images/$image_hostname/small.img /var/lib/vizrt/vosa/images/$image_hostname/small
+}
+
+##
+function modify_sparse_and_unmount
+{
+  run $chroot_image_host cat /etc/hosts
+  $chroot_image_host <<END_OF_CHROOT
+rm /etc/udev/rules.d/70-persistent-net.rules
+sed -i '/^iface eth0/ s/static/dhcp/p; /^iface eth0/,/^[a-z]/d' /etc/network/interfaces
+(echo; echo '# eth1 is a host-only network'; echo 'auto eth1'; echo 'iface eth1 inet dhcp') | tee > /dev/null -a /etc/network/interfaces
+useradd -d /nonexistent -M --no-user-group --system --shell /usr/local/bin/escenic-top top
+passwd --delete top
+rm -rf /var/lib/puppet/
+apt-get -y remove puppet ruby x11-common
+apt-get -y remove cloud-init
+mkdir -p /usr/lib/cloud-init/
+(echo '#!/bin/sh'; echo 'exec /sbin/init "$@";') |
+tee /usr/lib/cloud-init/uncloud-init
+chmod +x /usr/lib/cloud-init/uncloud-init
+apt-get -y autoremove
+apt-get -y clean
+apt-get -y autoclean
+sync
+END_OF_CHROOT
+
+  run mkdir /var/lib/vizrt/vosa/images/$image_hostname/small/extlinux/
+  run extlinux --install /var/lib/vizrt/vosa/images/$image_hostname/small/extlinux/
+(
+cat <<EOF
+DEFAULT /vmlinuz
+APPEND root=/dev/sda noapic init=/usr/lib/cloud-init/uncloud-init ubuntu-pass=ubuntu ds=nocloud
+EOF
+) |
+tee /var/lib/vizrt/vosa/images/$image_hostname/small/extlinux/extlinux.conf
+
+  run umount /var/lib/vizrt/vosa/images/$image_hostname/small
+  run rm -rf /var/lib/vizrt/vosa/images/$image_hostname/small
+}
+
+##
+function export_zerofree_vmdk
+{
+  run mkdir -p $vboxmanage_output_dir
+  run rm -f $vboxmanage_output_dir/$image_hostname.vmdk
+  local size=$(ls -l /var/lib/vizrt/vosa/images/$image_hostname/small.img | awk '{print $5}')
+  run zerofree /var/lib/vizrt/vosa/images/$image_hostname/small.img
+  cat /var/lib/vizrt/vosa/images/$image_hostname/small.img | $pv vboxmanage convertfromraw stdin $vboxmanage_output_dir/$image_hostname.vmdk $size --format VMDK
+
+}
+
+##
+function export_as_ova
+{
+  if [ ! -e "/var/www/html/dev/$image_hostname.vmdk" ] ; then
+    echo "sparse image /var/www/html/dev/$image_hostname.vmdk does not exist"
+    exit 1
+  fi
+
+  local options=$(cat <<EOF | grep ^[^#]
+--name $image_hostname
+--ostype Ubuntu_64
+--memory 2048
+# --pagefusion on|off
+# --vram <vramsize in MB>
+--acpi on
+#--pciattach 03:04.0
+#--pciattach 03:04.0@02:01.0
+#--pcidetach 03:04.0
+--ioapic on
+--pae on
+#--hpet on|off
+#--hwvirtex on|off
+#--hwvirtexexcl on|off
+#--nestedpaging on|off
+#--largepages on|off
+#--nestedpaging on|off
+#--largepages on|off
+#--vtxvpid on|off
+--synthcpu off
+#--cpuidset <leaf> <eax> <ebx> <ecx> <edx>
+#--cpuidremove <leaf>
+#--cpuidremoveall
+#--hardwareuuid <uuid>
+--cpus 2
+#--cpuhotplug on|off
+#--plugcpu <id>
+#--unplugcpu <id>
+#--cpuexecutioncap <1-100>
+#--rtcuseutc on|off
+#--monitorcount <number>
+#--accelerate3d on|off
+#--accelerate2dvideo on|off
+#--firmware bios|efi|efi32|efi64
+#--chipset ich9|piix3
+#--bioslogofadein on|off
+#--bioslogofadeout on|off
+#--bioslogodisplaytime <msec>
+#--bioslogoimagepath <imagepath>
+#--biosbootmenu disabled|menuonly|messageandmenu
+#--biossystemtimeoffset <msec>
+#--biospxedebug on|off
+--boot1 dvd
+--boot2 disk
+--boot3 none
+--boot4 none
+
+# NIC 1, NAT, for outbound traffic
+--nic1 nat
+--nictype1 virtio
+--cableconnected1 on
+--macaddress1 auto
+
+# NIC 2, Host Only, for inbound connections
+--nic2 hostonly
+--hostonlyadapter2 vboxnet0
+--nictype2 virtio
+--cableconnected2 on
+--macaddress2 auto
+
+--audio none
+--clipboard disabled
+--vrde off
+--usb off
+EOF
+)
+  run vboxmanage createvm --name $image_hostname --basefolder /tmp/$image_hostname --ostype Ubuntu_64 --register
+  
+  run vboxmanage modifyvm $image_hostname $options
+  
+  run vboxmanage storagectl $image_hostname \
+    --name "IDE Controller" \
+    --add ide \
+    --controller PIIX4 \
+    --hostiocache on \
+    --bootable on
+  
+  run vboxmanage storageattach $image_hostname \
+    --storagectl "IDE Controller" \
+    --port 0 \
+    --storagectl "IDE Controller" \
+    --port 0 \
+    --device 0 \
+    --type hdd \
+    --medium /var/www/html/dev/$image_hostname.vmdk
+
+  if [ -e /var/www/html/dev/$image_hostname.ova ]; then
+    run rm -f /var/www/html/dev/$image_hostname.ova
+  fi
+
+  run vboxmanage export $image_hostname \
+     --output /var/www/html/dev/$image_hostname.ova \
+     --vsys 0 \
+     --product "Vizrt Online Development Image" \
+     --producturl "http://www.vizrt.com/" \
+     --eula "You solemnly swear that you are a Vizrt Employee, or have a license agreement with Vizrt."
+#    [--vendor <vendor name>]
+#    [--vendorurl <vendor url>]
+#    [--version <version info>]
+#    [--eulafile <filename>]
+
+  run chmod +r /var/www/html/dev/$image_hostname.ova
+  (cd /var/www/html/dev/; md5sum $image_hostname.ova > $image_hostname.ova.md5)
+  run vboxmanage unregistervm $image_hostname
+  run rm -rf /tmp/$image_hostname
+  if [ -e /var/www/html/dev/$image_hostname.vmdk ]; then
+    run rm -f /var/www/html/dev/$image_hostname.vmdk 
   fi
 }
 
@@ -206,6 +456,53 @@ function phase_pre_execution
 function phase_execution 
 {
   generate_image_configuration
+  install_image
+  if [ $interactive -eq 1 ]; then
+    while [ 1 ]; do
+      echo -n "Do you want to prepare the $image_hostname image for .ova creation? [y/N]:"
+      read input
+      shopt -s nocasematch
+      case "$input" in
+        y|yes)
+          skip_vmdk=0
+          break
+          ;;
+        n|no)
+          skip_vmdk=1
+          break
+          ;;
+        *)
+          echo "Invalid input! Try again."
+          ;;
+        esac
+    done
+  fi 
+  if [ $skip_vmdk -ne 1 ]; then 
+    process_raw_image
+  fi
+  if [ $interactive -eq 1 ]; then
+    while [ 1 ]; do
+      echo -n "Do you want to export $image_hostname as an .ova? [y/N]:"
+      read input
+      shopt -s nocasematch
+      case "$input" in
+        y|yes)
+          skip_ova=0
+          break
+          ;;
+        n|no)
+          skip_ova=1
+          break
+          ;;
+        *)
+          echo "Invalid input! Try again."
+          ;;
+        esac
+    done
+  fi
+  if [ $skip_ova -ne 1 ]; then
+    export_as_ova
+  fi
 }
 
 ##
