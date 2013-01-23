@@ -90,7 +90,7 @@ EOF
       leave_trail "trail_db_vendor=mysql"
     fi
   elif [ $on_redhat_or_derivative -eq 1 ]; then
-    print_and_log "Settnig up the Percona repository ..."
+    print_and_log "Setting up the Percona repository ..."
 
     if [ $(rpm -qa | grep $percona_rpm_release_package_name | wc -l) -lt 1 ]; then
       run rpm -Uhv $percona_rpm_release_url
