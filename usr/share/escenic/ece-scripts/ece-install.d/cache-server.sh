@@ -434,7 +434,7 @@ sub vcl_fetch {
   if (beresp.status == 200) {
     set beresp.grace = 1h;
   }
-  else if (beresp.status >= 500) {
+  else if (beresp.status == 503) {
     /* For this URL, don't ask the backend again for this amount of
      * time. */
     set beresp.saintmode = 60s;
