@@ -220,7 +220,6 @@ function install_image
 function process_raw_image
 {
   image_host="ssh -F /var/lib/vizrt/vosa/images/$image_hostname/ssh.conf guest"
-  chroot_image_host="chroot /var/lib/vizrt/vosa/images/$image_hostname/small"
   vboxmanage_output_dir=/var/www/html/dev
   
   cleanup_image_runtime
@@ -273,8 +272,12 @@ function create_and_mount_sparse
 ##
 function modify_sparse_and_unmount
 {
-  run $chroot_image_host cat /etc/hosts
-  $chroot_image_host <<END_OF_CHROOT
+  
+  # perform image adjustments with chroot
+  debug "Initiating 'chroot' driven adjustments ..."
+  local chroot_image_host="chroot /var/lib/vizrt/vosa/images/$image_hostname/small"
+(
+cat <<END_OF_CHROOT
 rm /etc/udev/rules.d/70-persistent-net.rules
 sed -i '/^iface eth0/ s/static/dhcp/p; /^iface eth0/,/^[a-z]/d' /etc/network/interfaces
 (echo; echo '# eth1 is a host-only network'; echo 'auto eth1'; echo 'iface eth1 inet dhcp') | tee > /dev/null -a /etc/network/interfaces
@@ -292,7 +295,11 @@ apt-get -y clean
 apt-get -y autoclean
 sync
 END_OF_CHROOT
+) | run $chroot_image_host
+  debug "'chroot' driven adjustments done!"
 
+  # perform extlinux adjustments
+  debug "Initiating 'extlinux' adjustments ..."
   run mkdir /var/lib/vizrt/vosa/images/$image_hostname/small/extlinux/
   run extlinux --install /var/lib/vizrt/vosa/images/$image_hostname/small/extlinux/
 (
@@ -300,11 +307,16 @@ cat <<EOF
 DEFAULT /vmlinuz
 APPEND root=/dev/sda noapic init=/usr/lib/cloud-init/uncloud-init ubuntu-pass=ubuntu ds=nocloud
 EOF
-) |
-tee /var/lib/vizrt/vosa/images/$image_hostname/small/extlinux/extlinux.conf
+) | run tee /var/lib/vizrt/vosa/images/$image_hostname/small/extlinux/extlinux.conf
+  debug "'extlinux' adjustments done!"
 
+  # unmount .img
+  debug "Unmounting .img ..." 
   run umount /var/lib/vizrt/vosa/images/$image_hostname/small
-  run rm -rf /var/lib/vizrt/vosa/images/$image_hostname/small
+  
+  # delete mount target directory
+  debug "Removing mount point ..."
+  run rm -r /var/lib/vizrt/vosa/images/$image_hostname/small
 }
 
 ##
