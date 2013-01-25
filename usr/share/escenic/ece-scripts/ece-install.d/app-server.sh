@@ -357,7 +357,7 @@ EOF
         />
       </Host>
 EOF
-      leave_trail "trail_virtual_host_${publication}=${domain}:${appserver_port}"
+      leave_trail "trail_virtual_host_${publication_name}=${domain}:${appserver_port}"
     done
   fi
 
