@@ -275,7 +275,7 @@ function ensure_variable_is_set() {
       continue
     fi
 
-    print_and_log "You need to specifiy '$el' in your $conf_file"
+    print_and_log "You need to specifiy '$el' in $conf_file"
     requirements_failed=1
   done
 

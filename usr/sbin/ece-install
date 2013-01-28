@@ -561,8 +561,7 @@ function check_software_credentials() {
   fi
 }
 
-function common_pre_install()
-{
+function common_pre_install() {
     print "I'm logging to $log"
 
     run source $conf_file
@@ -589,12 +588,8 @@ function common_pre_install()
       $escenic_spool_dir/import
     "
     ece_install_env=${escenic_run_dir}/$(basename $0).env
-
-    if [ -z "$technet_user" -o -z "$technet_password" ]; then
-        print_and_log "Be sure to set technet_user and technet_password "
-        print_and_log "in $conf_file"
-        remove_pid_and_exit_in_error
-    fi
+    ensure_variable_is_set technet_user technet_password
+    wget_auth="--http-user ${technet_user} --http-password ${technet_password}"
 
     if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
         on_debian_or_derivative=1

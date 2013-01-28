@@ -1,12 +1,20 @@
-function install_widget_framework()
-{
-  print_and_log "Installing Widget Framework on $HOSTNAME ..."
-  # TODO java.lang.NoClassDefFoundError:
-  # Lcom/escenic/framework/captcha/ReCaptchaConfig;
-  
-  local wf_user=$(get_conf_value wf_user)
-  local wf_password=$(get_conf_value wf_password)
+function download_and_extract_wf_archives_if_necessary() {
+  for el in $wf_download_list; do
+    # functions bleed even locally scoped variables, so we save a copy
+    # of it here in archive.
+    local archive=$el
+    download_uri_target_to_dir $archive $download_dir
+    local dir=$(get_base_dir_from_bundle $download_dir/$(basename $archive))
 
+    if [ ! -e $escenic_root_dir/$dir ]; then
+      run run unzip -q -u -o \
+        -d $escenic_root_dir \
+        $download_dir/$(basename $archive)
+    fi
+  done
+}
+
+function create_maven_settings_file() {
   print_and_log "Creating a Maven settings file: $HOME/.m2/settings.xml ..."
   make_dir $HOME/.m2
   cat > $HOME/.m2/settings.xml <<EOF
@@ -43,14 +51,6 @@ function install_widget_framework()
 $(get_proxy_conf_if_set)
 </settings>
 EOF
-
-  install_wf_1_if_present
-  install_wf_2_if_present
-  
-  set_up_wf_nursery_config
-
-  add_next_step "Widget Framework has been installed into your " \
-    " Maven repo"
 }
 
 ## Will add Maven HTTP(s) proxy configuration if either of the
@@ -65,7 +65,7 @@ function get_proxy_conf_if_set() {
   <proxies>
 EOF
   fi
-  
+
   if [ -n "$http_proxy" ]; then
     local proxy_host=$(echo $http_proxy | sed 's#http://##g' | cut -d':' -f1)
     local proxy_port=$(echo $http_proxy | sed 's#http://##g' | cut -d':' -f2)
@@ -78,7 +78,7 @@ EOF
     </proxy>
 EOF
   fi
-  
+
   if [ -n "$https_proxy" ]; then
     local proxy_host=$(echo $https_proxy | sed 's#https://##g' | cut -d':' -f1)
     local proxy_port=$(echo $https_proxy | sed 's#https://##g' | cut -d':' -f2)
@@ -91,7 +91,7 @@ EOF
     </proxy>
 EOF
   fi
-  
+
   if [[ -n "$http_proxy" || -n "$https_proxy" ]]; then
     cat <<EOF
   </proxies>
@@ -100,6 +100,20 @@ EOF
   fi
 }
 
+function install_widget_framework() {
+  print_and_log "Installing Widget Framework on $HOSTNAME ..."
+
+  ensure_variable_is_set wf_user wf_password
+  download_and_extract_wf_archives_if_necessary
+  create_maven_settings_file
+
+  install_wf_1_if_present
+  install_wf_2_if_present
+
+  set_up_wf_nursery_config
+
+  add_next_step "Widget Framework has been installed into your Maven repo"
+}
 
 function set_up_wf_nursery_config() {
   for el in $wf_download_list; do
@@ -118,15 +132,15 @@ function set_up_wf_nursery_config() {
 function install_wf_1_if_present() {
   for el in $wf_download_list; do
     local wf_dist_dir=$(basename $el .zip)
-    
+
     if [[ $wf_dist_dir != "widget-framework-[a-z]*-1.1*" ]]; then
       return
     fi
-    
+
     install_packages_if_missing "maven2"
     assert_commands_available mvn
     export JAVA_HOME=$java_home
-    
+
     print_and_log "Installing Widget Framework into your Maven repository ..."
     local wf_maven_dir=$escenic_root_dir/$wf_dist_dir/maven
     run cd $wf_maven_dir
@@ -136,8 +150,8 @@ function install_wf_1_if_present() {
 
 function install_wf_2_if_present() {
   for el in $wf_download_list; do
-    local wf_dist_dir=$(basename $el .zip)
-    
+    local wf_dist_dir=$(get_base_dir_from_bundle $download_dir/$(basename $el))
+
     if [[ $wf_dist_dir == "widget-framework-[a-z]*-1.1*" ]]; then
       return
     fi
@@ -145,12 +159,11 @@ function install_wf_2_if_present() {
     if [ ! -d $escenic_root_dir/assemblytool/plugins ]; then
       return
     fi
-        
+
     run cd $escenic_root_dir/assemblytool/plugins
-    
+
     if [ ! -h $wf_dist_dir ]; then
       ln -s $escenic_root_dir/$wf_dist_dir
     fi
   done
 }
-
