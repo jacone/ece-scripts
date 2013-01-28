@@ -16,6 +16,12 @@ function download_and_extract_wf_archives_if_necessary() {
 
 function create_maven_settings_file() {
   local file=$HOME/.m2/settings.xml
+  if [ -e $file ]; then
+    print_and_log "Maven settings file $file already exists," \
+      "not touching it."
+    return
+  fi
+
   print_and_log "Creating a Maven settings file: $file ..."
   make_dir $(dirname $file)
   cat > $file <<EOF
