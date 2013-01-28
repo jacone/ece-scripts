@@ -137,11 +137,11 @@ is as follows:
     descriptions of all available profiles, see Server Profiles.
  - For each server:
     * Log on to the server.
-    * Install the *ece-install* script (see Get ece-install).
+    * Install the *ece-install* command (see Get ece-install).
     * Become the root user (see Become Root).
     * Create an *ece-install* configuration file (see Create a
        Configuration File).
-    * Run the *ece-install* script, specifying the appropriate
+    * Run the *ece-install* command, specifying the appropriate
       profile (see Run ece-install).
 
 ** <<<Get ece-install>>>
@@ -272,7 +272,7 @@ the BASH interpreter with the -x flag:
 #+END_SRC
 
 Doing this lets you see everything that BASH does while executing the
-script - how wild card variables are  expanded and so on.
+command - how wild card variables are  expanded and so on.
 
 *ece-install* displays a series of progress messages during the
 installation process. you can redirect standard output to a log file
@@ -431,7 +431,7 @@ Given that *mysqld* is installed, this profile will download all the
 Escenic components and install the ECE database schema based from the
 SQL files contained inside the distribution bundles specified with in
 the *technet\_download\_list* and *wf\_dowload\_list* variables. The
-defaults are inside the *ece-install* script itself, but you can
+defaults are inside the *ece-install* command itself, but you can
 overrides these in your *ece-install.conf* if you wish different minor
 versions of the ECE and plugins.
 
@@ -505,7 +505,7 @@ typical requirements of an Escenic site:
 
 #+BEGIN_COMMENT
 TBD:
-- If run on a Linux platform, the script will tweak the kernel
+- If run on a Linux platform, the command will tweak the kernel
   parameters for optimal TCP handling for a web facing server.
 - let the /munin run through on port 80, requiring the connecting IPs
   to be in the staff network ACL, defined in the Varnish
@@ -579,7 +579,7 @@ To use this profile, add *fai\_restore\_from\_backup=1* to your
 
 Unlike all the other profiles, this profile does not install anything
 or create anything new. Instead, it restores a backup you have
-previously created using the *ece* script - like this, for example:
+previously created using the *ece* command - like this, for example:
 #+BEGIN_SRC text
 $ ece -i <instance> backup
 #+END_SRC
@@ -929,7 +929,7 @@ If you do not want ece-install to touch your */etc/hosts*, you can set
 *fai\_keep\_off\_etc\_hosts=1* in your *ece-install.conf*.
 
 ** Overview of All FAI Parameters
-The ece-install script understands the following settings in
+The *ece-install* command understands the following settings in
 the *ece-install.conf*:
 
 - *fai\_all\_conf\_archive* :: *conf.tar.gz* to use for Nursery & JAAS
@@ -1123,7 +1123,7 @@ the *ece-install.conf*:
 
 - *fai\_publication\_ear* :: All publications WARs inside will be used
      for publication creation
-     (assumes *fai\_publication\_create*). Default is "".
+     (requires that *fai\_publication\_create* is 1). Default is "".
 
 - *fai\_publication\_environment* :: The kind of
      environment/habitat. Typical values are: production, staging,
@@ -1245,7 +1245,7 @@ defaults could be used, but the second time you need to override the
 defaults to ensure that the second server gets different values.
 
 * Running More Than One Installation Process
-If the script believes there's already an ece-intall process running,
+If the command believes there's already an ece-intall process running,
 it will abort:
 #+BEGIN_SRC text
 There's already one ece-install process running. If you believe
@@ -1289,7 +1289,7 @@ You can specify a different configuration by using the -f parameter:
 # ece-install -f ece-install-presentation-server.conf
 #+END_SRC
 
-* Overview of File Paths Used by the ece-install script
+* Overview of File Paths Used by the ece-install command
 There are of course other paths involved when setting up your system,
 but these should be the most interesting ones.
 
@@ -1341,10 +1341,10 @@ but these should be the most interesting ones.
 - */opt/tomcat-<instance>* :: Instance specific Tomcat files
      (*catalina\_base*)
 
-- */usr/bin/ece* :: Script for operating all ECE instances + RMI hub
+- */usr/bin/ece* :: Command for operating all ECE instances + RMI hub
                     and EAE
 
-- */usr/sbin/ece-install* :: The installation script described in this
+- */usr/sbin/ece-install* :: The installation command described in this
      guide
 
 - */var/log/escenic/<type>-<instance>.log* :: The instance's log4j log
@@ -1576,8 +1576,8 @@ database when re-running an integration test), options are provided
 to override the default behaviour.
 
 ** Modularisation
-The script consists on ~20 modules, ~5 common libraries and the main
-executable:
+The command consists of around 20 modules, 5 common libraries and the
+main executable:
 - /usr/sbin/ece-install :: Responsible for parsing of arguments and
                  configuration and sending the request off to the
                  right sub module(s).
