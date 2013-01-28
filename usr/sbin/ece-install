@@ -752,22 +752,6 @@ function run_hook()
     fi
 }
 
-# reads the value of the desired setting from $conf_file
-#
-# parameters: $1 : the conf key, see ece-install-guide.txt for an
-# overview of the available keys.
-function get_conf_value()
-{
-    if [ ! -e "$conf_file" ]; then
-        print_and_log $conf_file "doesn't exist."
-        remove_pid_and_exit_in_error
-    fi
-
-    if [ $(grep $1 $conf_file | grep -v ^# | sort | uniq | wc -l) -gt 0 ]; then
-        echo $(grep $1 $conf_file | grep -v ^# | cut -d'=' -f2)
-    fi
-}
-
 # useful for development and test environments.
 function install_all_in_one_environment()
 {
