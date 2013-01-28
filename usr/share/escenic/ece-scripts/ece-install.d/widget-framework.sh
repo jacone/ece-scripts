@@ -15,9 +15,10 @@ function download_and_extract_wf_archives_if_necessary() {
 }
 
 function create_maven_settings_file() {
-  print_and_log "Creating a Maven settings file: $HOME/.m2/settings.xml ..."
-  make_dir $HOME/.m2
-  cat > $HOME/.m2/settings.xml <<EOF
+  local file=$HOME/.m2/settings.xml
+  print_and_log "Creating a Maven settings file: $file ..."
+  make_dir $(dirname $file)
+  cat > $file <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <settings xmlns="http://maven.apache.org/settings/1.0.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -51,6 +52,8 @@ function create_maven_settings_file() {
 $(get_proxy_conf_if_set)
 </settings>
 EOF
+
+  leave_trail trail_wf_maven_settings_file=$file
 }
 
 ## Will add Maven HTTP(s) proxy configuration if either of the
@@ -95,7 +98,6 @@ EOF
   if [[ -n "$http_proxy" || -n "$https_proxy" ]]; then
     cat <<EOF
   </proxies>
-
 EOF
   fi
 }
