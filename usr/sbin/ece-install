@@ -630,6 +630,12 @@ function common_pre_install() {
     install_common_os_packages
     create_user_and_group_if_not_present $ece_user $ece_group
     set_up_user_environment
+
+    if [ ${keep_off_wget_user_agent-0} -eq 0 ]; then
+      wget_opts="${wget_opts}
+        --header User-Agent:wget/$(basename $0)-${ece_scripts_version}
+      "
+    fi
 }
 
 # $1 is the default instance name, the calee is responsible for
