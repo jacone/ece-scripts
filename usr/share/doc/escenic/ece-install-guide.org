@@ -548,12 +548,13 @@ create publication is based on the Widget Framework. Otherwise the
 publication is based on the clean demo WAR supplied with the Content
 Engine.
 
-*ece-install* will create publication of all publication WAR files you
-have in your EAR file if you also define
-*fai\_publication\_domain\_mapping\_list* and *fai\_publication\_ear*.
+*ece-install* will create publications of all the publication WAR
+files in your EAR file if you also
+define *fai\_publication\_domain\_mapping\_list*
+and *fai\_publication\_ear*.
 #+BEGIN_SRC text
 fai_publication_create=1
-fai_publication_ear=/tmp/stoppok-trunk-rev6195-2012-12-04_1134.ear
+fai_publication_ear=/tmp/stoppok-rev6195-2012-12-04_1134.ear
 fai_publication_domain_mapping_list="
   stoppok,st.war#stoppok.example.com#newindian.example.com
   helden#dinamani.example.com#helden.example.com
