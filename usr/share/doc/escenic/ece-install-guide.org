@@ -1,3 +1,4 @@
+
 #+TITLE: Escenic Installer User Guide
 #+AUTHOR: Vizrt Online / The SaaS Team
 #+OPTIONS: H:6 num:5 toc:2
@@ -559,7 +560,7 @@ fai_publication_domain_mapping_list="
 "
 #+END_SRC
 
-See [[Overview of All FAI Parameters]] for further details on the format
+See [[Overview of All Configuration Parameters]] for further details on the format
 of the domain mapping list.
 
 ** <<<fai\_all\_install>>>
@@ -928,9 +929,15 @@ add entries for these domains to the machine's */etc/hosts* file:
 If you do not want ece-install to touch your */etc/hosts*, you can set
 *fai\_keep\_off\_etc\_hosts=1* in your *ece-install.conf*.
 
-** Overview of All FAI Parameters
+** Overview of All Configuration Parameters
 The *ece-install* command understands the following settings in
 the *ece-install.conf*:
+
+- *technet\_user* and *technet\_password* The user name and password
+  used to access Technet for downloading Escenic software.
+
+- *wf\_user* and *wf\_password* The user name and password used for
+  downloading the Widget Framework.
 
 - *fai\_all\_conf\_archive* :: *conf.tar.gz* to use for Nursery & JAAS
      configuration. Default is "".
