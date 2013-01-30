@@ -302,30 +302,26 @@ EOF
 
   make_dir $escenic_root_dir/assemblytool/publications
 
-  # set up user publication definitions
-  if [ -n "${fai_publication_war_uri_list}" ]; then
-    run cd $escenic_root_dir/assemblytool/publications
-
-    wget_auth=$wget_builder_auth
-    for el in ${fai_publication_war_uri_list}; do
-      download_uri_target_to_dir \
-        $el \
-        $escenic_root_dir/assemblytool/publications
-      local download_file=$escenic_root_dir/assemblytool/publications/$(basename $el)
-
-      if [ ! -e $(basename $el) ]; then
-        print_and_log "Failed to get user publication $el." \
-          "I will skip it and continue to the next one."
-        continue
-      fi
-
-      local short_name=$(basename $el .war)
-      cat > ${short_name}.properties <<EOF
-name: ${short_name}
-source-war: ${short_name}.war
-context-root: ${short_name}
+  # Set up a publication definition
+  #
+  # We only support one publication for now as it's becoming more and
+  # more seldom to set up AT with ece-install. Instead, more and more
+  # folks are using pre-built EARs to make the deployment as a part of
+  # the ece-install process). Future enhancement would be to support
+  # fai_publication_domain_mapping_list and
+  # fai_<presentation|editor>_ear for creating publication definitions
+  # and WARs.
+  if [[ -n "${fai_publication_name}" && -n "${fai_publication_war}" ]]; then
+    local file=$escenic_root_dir/assemblytool/publications/${fai_publication_name}.properties
+    print_and_log "Creating a publication definition for publication" \
+      $fai_publication_name "..."
+    run cp ${fai_publication_war} \
+      $escenic_root_dir/assemblytool/publications/${fai_publication_name}.war
+    cat > $file <<EOF
+name: ${fai_publication_name}
+source-war: ${fai_publication_name}.war
+context-root: ${fai_publication_name}
 EOF
-    done
   fi
 }
 

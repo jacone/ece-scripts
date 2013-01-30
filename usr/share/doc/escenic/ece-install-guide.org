@@ -1143,21 +1143,26 @@ the *ece-install.conf*:
      environment/habitat. Typical values are: production, staging,
      testing, development.. Default is "production".
 
-- *fai\_publication\_name* :: Name of the publication. Default is
-     *mypub*.
+- *fai\_publication\_name* :: Name of the publication. Default
+     is *mypub*. When installing an editorial or presentation server
+     and not using an EAR, you can specify *fai\_publication\_name*
+     and *fai\_publication\_war* to have *ece-install* set up the
+     correct publication definition for your Assembly Tool
+     environment.
 
 - *fai\_publication\_use\_instance* :: Name of local instance to use
      for creation. Default is *engine1*.
 
 - *fai\_publication\_war* :: WAR to base the new publication
-     on. Default is "WF or ECE demo WAR".
+     on. Default is WF demo WAR (if present) or the ECE demo
+     WAR. When installing an editorial or presentation server and
+     not using an EAR, you can specify *fai\_publication\_name*
+     and *fai\_publication\_war* to have *ece-install* set up the
+     correct publication definition for your Assembly Tool environment.
 
 - *fai\_publication\_war\_remove\_file\_list* :: File list that should
      be removed from all WARs inside *fai\_publication\_ear*
      or *fai\_publication\_war*. Default is "".
-
-- *fai\_publication\_war\_uri\_list* :: Publication WARs used for
-     setting up Assembly tool.. Default is "".
 
 - *fai\_rmi\_install* :: Install the RMI hub profile. Default is 0.
 
