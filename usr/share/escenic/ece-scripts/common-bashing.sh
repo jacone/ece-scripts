@@ -284,7 +284,7 @@ function ensure_variable_is_set() {
 
 ## $1 : the archive to check, must be a local file
 function is_archive_healthy() {
-  if [[ "$1" == *".ear" || "$1" == *".zip" ]]; then
+  if [[ "$1" == *".ear" || "$1" == *".zip" || "$1" == *".jar" ]]; then
     unzip -t $1 2>/dev/null 1>/dev/null
   elif [[ "$1" == *".tar.gz" ]]; then
     tar tzf $1 2>&1 > /dev/null
