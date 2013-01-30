@@ -940,10 +940,11 @@ the *ece-install.conf*:
 - *wf\_user* and *wf\_password* The user name and password used for
   downloading the Widget Framework.
 
-- *keep\_off\_wget\_user\_agent* Whenever using *wget* to download
-  software, ece-install will add something to the UA string of *wget*
-  so that it's possible to identify what the command downloads. If
-  you wish to turn this feature off, set this to *0*.
+- *keep\_off\_wget\_user\_agent* Whenever *ece-install* uses *wget* to
+  download software, *ece-install* will add something to the user
+  agent string of *wget* so that it's possible to identify what
+  the *ece-install* command downloads. If you wish to turn this
+  feature off, set this to *0*.
 
 - *fai\_all\_conf\_archive* :: *conf.tar.gz* to use for Nursery & JAAS
      configuration. Default is "".
