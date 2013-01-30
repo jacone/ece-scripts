@@ -1146,7 +1146,7 @@ the *ece-install.conf*:
      *mypub*.
 
 - *fai\_publication\_use\_instance* :: Name of local instance to use
-     for creation. Default is dev1.
+     for creation. Default is *engine1*.
 
 - *fai\_publication\_war* :: WAR to base the new publication
      on. Default is "WF or ECE demo WAR".
