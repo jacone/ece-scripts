@@ -1026,6 +1026,10 @@ function do_stop() {
       echo "$instance_name is not installed, it's ${status[2]}. I can't stop it."
       exit 1
     fi
+    if [ "${status[3]}" == "dead" ] ; then
+      local pidfile=$(echo_rundir_of ${status[0]})/${status[0]}.pid
+      rm -f $pidfile
+    fi
     if [ "${status[3]}" == "alive" -o "${status[3]}" == "running" ] ; then
       shutdown "${status[0]}"
       # should now be "dead" if we asked it.
