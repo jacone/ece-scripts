@@ -10,11 +10,11 @@
 
 debug=0
 
-## basename $0 will resolve to the file name of the calling script,
-## not common-bashing itself.
+# basename $0 will resolve to the file name of the calling script,
+# not common-bashing itself.
 lock_file=/var/run/escenic/$(basename $0 .sh).lock
 
-## Same comment as for the lock file :-)
+# Same comment as for the lock file :-)
 pid_file=/var/run/escenic/$(basename $0 .sh).pid
 
 function common_bashing_is_loaded() {
@@ -155,6 +155,7 @@ function fail_safe_run() {
 }
 
 ## Returns 1 if the passed argument is a number, 0 if not.
+##
 ## $1: the value you wish to test.
 function is_number() {
   for (( i = 0; i < ${#1}; i++ )); do
@@ -181,8 +182,6 @@ function get_escaped_bash_string() {
 
 # Munin nodes need the IP of the munin gatherer to be escaped. Hence
 # this function.
-#
-# Parameters:
 #
 # $1 : the IP
 function get_perl_escaped() {
@@ -262,11 +261,10 @@ function get_base_dir_from_bundle()
 }
 
 ## Will assert that all the passed variable names are set, if not, it
-## will exit in error.
+## Requires $conf_file to be set.  will exit in error.
 ##
 ## $@ : a list of variable names
 ##
-## Requires $conf_file to be set.
 function ensure_variable_is_set() {
   local requirements_failed=0
 
@@ -302,6 +300,8 @@ function is_archive_healthy() {
   fi
 }
 
+## Extracts any of the following archives: tar.gz, tgz, zip, tar.bz2
+##
 ## $1 :: the archive
 ## $2 :: optionally, the target directory
 function extract_archive() {
@@ -330,7 +330,9 @@ function extract_archive() {
 # components.
 next_steps=()
 
-## Parameters:
+## Adds a next step for the user to do after finishing running your
+## command.
+##
 ## $1 : your added line
 function add_next_step() {
   next_steps[${#next_steps[@]}]="$@"
@@ -351,6 +353,7 @@ function print_next_step_list() {
 
 ## Method will return 1 if the user/pass is unauthorized to access the
 ## URL in question. Hence, a 0 means that the user CAN access the URL.
+##
 ## $1 user
 ## $2 pass
 ## $3 URL
@@ -362,6 +365,7 @@ function is_unauthorized_to_access_url() {
 }
 
 ## Will return 1 if the user can access the URL.
+##
 ## $1 user
 ## $2 pass
 ## $3 URL
@@ -378,6 +382,9 @@ function ltrim() {
   echo $1 | sed 's/^[ ]*//g'
 }
 
+## Splits a string based on a delimter, just like you're used to from
+## Python, Java++
+##
 ## $1    : the character on to wich to split it
 ## $@[1] : the rest of the arguments is the string(s) you want to have
 ##         splitted.
