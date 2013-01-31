@@ -30,7 +30,7 @@ function create_publication() {
     if [ -n "${fai_publication_ear}" ]; then
       print_and_log "I will create all publications in" \
         $fai_publication_ear "using the the domain mapping list ..."
-      
+
       ensure_variable_is_set fai_publication_domain_mapping_list
       local the_tmp_dir=$(mktemp -d)
 
@@ -48,7 +48,7 @@ function create_publication() {
         run cd $the_tmp_dir
         run jar xf $download_dir/$(basename $fai_publication_ear)
       )
-      
+
       for el in ${fai_publication_domain_mapping_list}; do
         local old_ifs=$IFS
         # the entries in the fai_publication_domain_mapping_list are on
@@ -62,7 +62,7 @@ function create_publication() {
         if [ -z "${publication_war}" ]; then
           publication_war=${publication_name}.war
         fi
-        
+
         create_the_publication $publication_name $the_tmp_dir/$publication_war
       done
 
@@ -70,7 +70,7 @@ function create_publication() {
       run rm -rf $the_tmp_dir
     else
       local publication_name=${fai_publication_name-mypub}
-      
+
       if [ -z "${fai_publication_war}" ]; then
         # if the user hasn't set the fai_publication_war, see if the
         # demo-clean.war is available on the system.
@@ -97,7 +97,7 @@ function create_publication() {
 function create_the_publication() {
   local publication_name=$1
   local publication_war=$2
-  
+
   print_and_log "Creating a publication with name" $publication_name \
     "using the publication resources from" $(basename $publication_war)
 
@@ -118,11 +118,11 @@ function create_the_publication() {
 function add_publication_to_deployment_lists() {
   run source /etc/default/ece
   local please_add=1
-  
+
   for el in $engine_instance_list; do
     local file=/etc/escenic/ece-${el}.conf
     run source $file
-    
+
     for ele in $deploy_webapp_white_list; do
       if [[ "$ele" == "$1" ]]; then
         please_add=0
@@ -134,7 +134,7 @@ function add_publication_to_deployment_lists() {
         "instance" $el
       deploy_webapp_white_list="$deploy_webapp_white_list $1"
     fi
-    
+
     set_conf_file_value \
       deploy_webapp_white_list \
       $deploy_webapp_white_list \
@@ -144,37 +144,40 @@ function add_publication_to_deployment_lists() {
 
 ## $1 :: the instance name
 function ensure_that_instance_is_running() {
-  return
-  
   local ece_command="ece -i $1 -t $type status"
   if [ $(su - $ece_user -c "$ece_command" | grep UP | wc -l) -lt 1 ]; then
     ece_command="ece -i $1 -t $type start"
     su - $ece_user -c "$ece_command" 1>>$log 2>>$log
-    # TODO improve this by adding a timed while loop
-    sleep 60
   fi
+
+  # This is a hack, but this ensures that the ECE is bootstrapped
+  # properly and can respond fast enough to the session setup for the
+  # publication creation.
+  ece_command="ece -i $1 -t $type versions"
+  su - $ece_user -c "$ece_command" 1>>$log 2>>$log
+  sleep 60
 }
 
 ## $1 :: publication name
 ## $2 :: publication war
 ## $3 :: instance name
-## 
+##
 ## Based on Erik Mogensen's work:
 ## //depot/branches/personal/mogsie/fromscratch/create-publication.sh
 function create_publication_in_db() {
   local publication_name=$1
   local publication_war=$2
   local instance_name=$3
-  
+
   print_and_log "Creating publication" ${publication_name} \
     "using instance" $instance_name "..."
-  
+
   # sourcing the instance's ECE configuration to get the app server
   # port.
   run source /etc/escenic/ece-${instance_name}.conf
 
   local ece_admin_uri=http://localhost:${appserver_port}/escenic-admin
-  
+
   local cookie=$(curl ${curl_opts} -I ${ece_admin_uri}/ | \
     grep -i "^Set-Cookie" | \
     sed s/.*'JSESSIONID=\([^;]*\).*'/'\1'/)
@@ -189,7 +192,7 @@ function create_publication_in_db() {
     -F "resourceFile=@${publication_war}" \
     --cookie JSESSIONID="$cookie" \
     "${ece_admin_uri}/do/publication/resource"
-  
+
   run curl ${curl_opts}  \
     -F "name=${publication_name}" \
     -F "publisherName=Escenic" \
