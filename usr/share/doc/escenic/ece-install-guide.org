@@ -975,6 +975,9 @@ the *ece-install.conf*:
 - *fai\_analysis\_db\_user* :: For the EAE DB (different from
      ECE's). Default is ece5user.
 
+- *fai\_analysis\_heap\_size* :: The JVM heap size in megabytes. The
+     default is *2048*.
+
 - *fai\_analysis\_install* :: Will install the Escenic Analysis
      Engine, aka Stats, EAE.. Default is 0.
 
@@ -1032,6 +1035,9 @@ the *ece-install.conf*:
 
 - *fai\_editor\_ear* :: EAR to use instead of the Escenic
      binaries. Default is "".
+
+- *fai\_editor\_heap\_size* :: The JVM heap size in megabytes. The
+     default is *2048*.
 
 - *fai\_editor\_install* :: Install the editorial profile. Default
      is 0.
@@ -1103,6 +1109,9 @@ the *ece-install.conf*:
 
 - *fai\_presentation\_ear* :: EAR to use instead of the Escenic
      binaries. Default is "".
+
+- *fai\_presentation\_heap\_size* :: The JVM heap size in megabytes. The
+     default is *2048*.
 
 - *fai\_presentation\_install* :: Install the presentation server
      profile. Default is 0.
@@ -1178,6 +1187,9 @@ the *ece-install.conf*:
 - *fai\_search\_for\_editor* :: If 1, will configure Solr for use with
      an editorial server, if not for presentation servers.. Default
      is 0.
+
+- *fai\_search\_heap\_size* :: The JVM heap size in megabytes. The
+     default is *2048*.
 
 - *fai\_search\_indexer\_ws\_uri* :: URI of the indexer-webservice
      that the search instance shall use for knowing what to
