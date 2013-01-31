@@ -2,6 +2,7 @@
 
 # by tkj@vizrt.com
 
+### get_instance_list
 ## If the system is installed using the recommended paths, the method
 ## will return a list of the instances configured in
 ## ${escenic_conf_dir}/ece-*.conf
@@ -28,6 +29,7 @@ function get_instance_list() {
   echo $instance_list
 }
 
+### get_instance_enabled_list
 function get_instance_enabled_list() {
   if [ ! -r /etc/default/ece ]; then
     return
@@ -38,6 +40,7 @@ function get_instance_enabled_list() {
     ${analysis_instance_list}
 }
 
+### get_instance_tpe
 ## $1 :: the instance you want to check which type it is.
 function get_instance_type() {
   local type="engine"
@@ -73,6 +76,7 @@ webapps_in_standard_webapps_list="
   webservice
 "
 
+### is_webapp_a_publication
 ## $1 :: the war file (or just the name of the war file, without the
 ##       file suffix)
 function is_webapp_a_publication() {
@@ -86,6 +90,7 @@ function is_webapp_a_publication() {
   echo 1
 }
 
+### get_app_base
 ## Will return the app base for the passwed WAR name.
 ##
 ## $1 :: the name of the war file
@@ -105,6 +110,7 @@ function get_app_base() {
   echo webapps-${war}
 }
 
+### get_publication_list
 ## Returns a list of publications on the local host
 ##
 ## $1 :: app server port. Optional, default is 8080.
@@ -120,6 +126,8 @@ function get_publication_list() {
     sed 's/.*name=\(.*\)".*/\1/g'
 }
 
+### is_escenic_xml_ok
+##
 ## $1 :: the XML
 function is_escenic_xml_ok() {
   if [ ! -e $1 ]; then

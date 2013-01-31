@@ -1,5 +1,3 @@
-#! /usr/bin/env bash
-
 # by tkj@vizrt.com
 
 # depends on common-bashing
@@ -17,11 +15,12 @@ function pulse() {
   echo -ne "\b${pulse_bits: i++ % ${#pulse_bits}: 1}"
 }
 
-## $1:     the PID of the process on which you want to view the pulse.
-## $2...n: Strings to display while the pulse is running.
+### show_pulse
+## $1 :: the PID of the process on which you want to view the pulse.
+## $2 .. $n :: Strings to display while the pulse is running.
 function show_pulse() {
   printne "${@: 2: $(( $# - 1 ))} ...."
-  
+
   local pulse_pid=$1
   while true; do
     kill -0 $pulse_pid 2>/dev/null
@@ -43,9 +42,8 @@ function show_pulse() {
         # terminate the main ece script process.
         kill $$ 2>/dev/null
       fi
-      
+
       break
     fi
   done
 }
-

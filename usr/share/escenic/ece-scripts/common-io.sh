@@ -11,21 +11,16 @@ function common_io_is_loaded() {
   echo 1
 }
 
-## Parameters:
-## $1 is the property
-## $2 ... to the (last - 1) is the value
-## $n -1: The last argument is the file
+### set_conf_file_value
 ##
-## e.g.:
-## set_conf_file_value \
-##   mykey \
-##   myvalue1 myvalue2 myvalue3 \
-##   /etc/myfile.conf
+## $1 :: is the property
+## $2 ... :: to the (last - 1) is the value
+## $n -1 :: The last argument is the file
 function set_conf_file_value() {
   if [ $# -lt 3 ]; then
     return
   fi
-  
+
   local file=${@:${#@}}
   local key=${@:1:1}
   local value_end_index=$(( $# - 2 ))
@@ -36,21 +31,21 @@ function set_conf_file_value() {
     print ${parent_dir} "doesn't exist, something is wrong :-("
     remove_pid_and_exit_in_error
   fi
-  
+
   if [ -r $file ]; then
     if [ $(grep ^$1 $file | wc -l) -gt 0 ]; then
       if [ $dont_quote_conf_values -eq 0 ]; then
         sed -i "s~$key=.*~$key=\"$value\"~g" $file
       else
         sed -i "s~$key=.*~$key=$value~g" $file
-      fi    
+      fi
     else
       if [ $dont_quote_conf_values -eq 0 ]; then
         echo "$key=\"$value\"" >> $file
       else
         echo "$key=$value" >> $file
       fi
-      
+
     fi
   else
     if [ $dont_quote_conf_values -eq 0 ]; then
@@ -61,6 +56,12 @@ function set_conf_file_value() {
   fi
 }
 
+### make_dir
+## Will create the directory/directories if they don't already
+## exist. If the calling user doesn't have access rights to create the
+## directory(ies), this function will make your script fail.
+##
+## $@ :: a list of directories
 function make_dir() {
   for el in $@; do
     if [ ! -d $el ]; then
@@ -69,12 +70,23 @@ function make_dir() {
   done
 }
 
+### remove_dir
+## Will remove the directory if it exists. Safe to call if the
+## directory doesn't exist.
+##
+## $1 :: the dir
 function remove_dir() {
   if [ -d $1 ]; then
     run rmdir $1
   fi
 }
 
+### make_ln
+## Will create the symbolic, if the target exists. If not, the command
+## will make your command exist in error.
+##
+## $1 :: target (or, if $2 is specified, $1 is the source)
+## $2 :: the target, optional.
 function make_ln() {
   if [ $2 ]; then
     if [ -e $1 -a ! -h $2 ]; then
@@ -93,18 +105,20 @@ function make_ln() {
   fi
 }
 
-## $1 : the URI, can be file:///tmp/file, http://server/file or
+### download_uri_target_to_dir
+## Returns the local, downloaded file with absolute path.
+##
+## $1 :: the URI, can be file:///tmp/file, http://server/file or
 ##      https://file. If $1 is a local file reference, it's used as it
 ##      is.
-## $2 : the target dir
-## returns : the local, downloaded file with absolute path
+## $2 :: the target dir
 function download_uri_target_to_dir() {
   local uri=$1
   local target_dir=$2
   make_dir $target_dir
-  
+
   if [[ $uri == "http://"* || $uri == "https://"* ]]; then
-    log "Downloading" $uri "to" $target_dir "..." 
+    log "Downloading" $uri "to" $target_dir "..."
     run cd $target_dir
     run wget \
       $wget_opts \
@@ -122,6 +136,7 @@ function download_uri_target_to_dir() {
   fi
 }
 
+### verify_that_archive_is_ok
 ## Will verify that the archive passed to the function is ok. If it's
 ## not, the function will terminate the calling script, exiting in
 ## error.
@@ -137,24 +152,26 @@ function verify_that_archive_is_ok() {
     remove_pid_and_exit_in_error
   fi
 
-  if [[ $1 == *.zip ]]; then
+  if [[ $1 == *.zip || $1 == *.jar || $1 == *.ear ]]; then
     unzip -t $1 > /dev/null 2>&1
   elif [[ $1 == *.tar.gz || $1 == *.tgz ]]; then
     tar tzf $1 > /dev/null 2>&1
   fi
-  
+
   if [ $? -gt 0 ]; then
     print_and_log $1 "is a corrupt archive :-("
     remove_pid_and_exit_in_error
   fi
 }
 
-# verifies that the passed file(s) exist and are readable, depends on
-# set_archive_files_depending_on_profile
+## verifies that the passed file(s) exist and are readable, depends on
+## set_archive_files_depending_on_profile
+##
+## $@ :: a list of files
 function verify_that_files_exist_and_are_readable()
 {
   debug "Verifying that the file(s) exist(s) and are readable: $@"
-  
+
   for el in $@; do
     if [[ $el == http* ]]; then
       if [ $(curl -s -I $el | wc -l) -gt 0 ]; then
@@ -162,9 +179,9 @@ function verify_that_files_exist_and_are_readable()
       else
         print_and_log "The URI $el doesn't exist, I will exit now."
         remove_pid_and_exit_in_error
-      fi  
+      fi
     fi
-    
+
     if [ ! -e $el ]; then
       print_and_log "The file" $el "doesn't exist. I will exit now."
       remove_pid_and_exit_in_error
@@ -175,6 +192,9 @@ function verify_that_files_exist_and_are_readable()
   done
 }
 
+## Verifies that both the file and its parent directory are writeable.
+##
+## $@ :: the file
 function verify_that_directory_and_file_are_writeable() {
   local dir=`dirname $1`
   if [ ! -e $dir ]; then
@@ -195,8 +215,10 @@ function verify_that_directory_and_file_are_writeable() {
   fi
 }
 
+### get_file_age_in_seconds
 ## Returns the number of seconds since the file was changed.
-## $1 the file
+##
+## $1 :: the file
 function get_file_age_in_seconds() {
   if [ ! $1 ]; then
     return
@@ -206,35 +228,36 @@ function get_file_age_in_seconds() {
 
   local changed=$(stat -c %Y "$1")
   local now=$(date +%s)
-  
+
   echo $(( now - changed ))
 }
 
+### verify_writable_dir_list
 ## Verifies that the passed list of directories exist and are
 ## writeable by $USER. If not, the program will exit.
 ##
-## $@ : a list of directories
+## $@ :: a list of directories
 function verify_writable_dir_list() {
   for dir in "$@"; do
     if [ ! -w $dir ]; then
       print_and_log "The directory $dir must exist and be writable by" \
-        "by $USER for $(basename $0) to work" 
+        "by $USER for $(basename $0) to work"
       remove_pid_and_exit_in_error
     fi
   done
 }
 
+### verify_readable_dir_list
 ## Verifies that the passed list of directories exist and are
 ## readable by $USER. If not, the program will exit.
 ##
-## $@ : a list of directories
+## $@ :: a list of directories
 function verify_readable_dir_list() {
   for dir in "$@"; do
     if [ ! -r $dir ]; then
       print_and_log "The directory $dir must exist and be readable by" \
-        "by $USER for $(basename $0) to work" 
+        "by $USER for $(basename $0) to work"
       remove_pid_and_exit_in_error
     fi
   done
 }
-

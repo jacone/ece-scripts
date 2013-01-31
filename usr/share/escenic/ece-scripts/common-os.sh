@@ -16,19 +16,19 @@ function common_os_is_loaded() {
   echo 1
 }
 
+### get_user_home_directory
 ## Method which will try its best to find the home diretory of
 ## existing users and probable home directories of new users.
 ##
-## (1) On Darwin/Mac OS X, it will return /Users/<user>
-## (2) On systems using /etc/passwd, it will search there to find the
-##     home dir of existing users.
-## (3) For new users, it will check the configuration of adduser (if
-##     present).
-## (4) If all of thes above fails, it will return /home/<user>
+## - On Darwin/Mac OS X, it will return /Users/<user>
+## - On systems using /etc/passwd, it will search there to find the
+##   home dir of existing users.
+## - For new users, it will check the configuration of adduser (if
+##   present).
+## - If all of thes above fails, it will return /home/<user>
 ##
-## Arguments:
-## $1 : the user name, can either be an existing user or a non-yet
-## created user.
+## $1 :: the user name, can either be an existing user or a non-yet
+##       created user.
 function get_user_home_directory() {
   if [ $(uname -s) = "Darwin" ]; then
     echo /Users/$1
@@ -42,6 +42,8 @@ function get_user_home_directory() {
   fi
 }
 
+### has_sun_java_installed
+## Will return 1 if the system has Sun/Oracle Java installed.
 function has_sun_java_installed() {
   if [[ -x /usr/lib/jvm/java-6-sun/bin/java || \
     $(java -version 2>&1 > /dev/null | grep HotSpot | wc -l) -gt 0 ]]; then
@@ -51,8 +53,9 @@ function has_sun_java_installed() {
   fi
 }
 
-## $1 user name
-## $2 group name
+### create_user_and_group_if_not_present
+## $1 :: user name
+## $2 :: group name
 function create_user_and_group_if_not_present() {
   local user=$1
   local group=$1
@@ -81,10 +84,11 @@ function create_user_and_group_if_not_present() {
   fi
 }
 
+### get_ip
 ## Will return the IP of the host name. If not found, the host name
 ## passed to the function will be returned.
 ##
-## Parameters: $1 the host name
+## $1 :: the host name
 function get_ip() {
   local ip=$(ping -c 1 $1 2>/dev/null | \
     grep "bytes from" | \
@@ -98,11 +102,12 @@ function get_ip() {
   echo $ip
 }
 
+### assert_commands_available
 ## Asserts that the passed command/program is indeed accessible in the
 ## current context. If it is not, the program aborts and removes the
 ## PID.
 ##
-## $@: a list of the binary/executable/program
+## $@ :: a list of the binary/executable/program
 function assert_commands_available() {
   local errors_found=0
   for el in $@; do
@@ -134,9 +139,10 @@ function get_tomcat_download_url() {
 }
 
 
+### download_tomcat
 ## Downloads Tomcat from the regional mirror
 ##
-## $1: target directory
+## $1 :: target directory
 function download_tomcat() {
   local url=$(get_tomcat_download_url)
 
@@ -144,6 +150,7 @@ function download_tomcat() {
   download_uri_target_to_dir $url $1
 }
 
+### get_free_memory_in_mega_bytes
 function get_free_memory_in_mega_bytes() {
   if [ $(uname -s) == "Linux" ]; then
     local free_in_kb=$(
@@ -156,6 +163,7 @@ function get_free_memory_in_mega_bytes() {
   fi
 }
 
+### get_total_memory_in_mega_bytes
 function get_total_memory_in_mega_bytes() {
   if [ $(uname -s) == "Linux" ]; then
     local total_in_kb=$(
@@ -168,6 +176,9 @@ function get_total_memory_in_mega_bytes() {
   fi
 }
 
+### add_apt_source
+##
+## $@ :: the apt line to be added if it's not already present.
 function add_apt_source() {
   # first, check that the base URL in the sources list returns 200,
   # only allow 20 seconds for this test. If the URL doesn't return
@@ -195,6 +206,8 @@ function add_apt_source() {
   fi
 }
 
+### get_memory_usage_of_pid
+## Only works on Linux
 function get_memory_usage_of_pid() {
   local file=/proc/$1/status
   if [ ! -e $file ]; then
@@ -205,6 +218,8 @@ function get_memory_usage_of_pid() {
   grep VmSize $file | cut -d ":" -f2 | sed 's/^[ \t]*//g'
 }
 
+### get_memory_usage_of_pid
+## Only works on Linux
 function get_memory_summary_of_pid() {
   local file=/proc/$1/status
   if [ ! -e $file ]; then
