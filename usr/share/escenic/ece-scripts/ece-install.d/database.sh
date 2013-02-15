@@ -8,78 +8,147 @@ if [[ $(uname -m) != "x86_64" ]]; then
   percona_rpm_release_url=http://www.percona.com/downloads/percona-release/$percona_rpm_release_package_name.i386.rpm
 fi
 
-function get_percona_supported_list() {
-  curl -s http://repo.percona.com/apt/dists/ | \
-    grep "DIR" | \
-    sed -e 's#.*href=\"\(.*\)\">.*</a>.*#\1#' -e 's#/##g' | \
-    grep -v apt
+percona_ubuntu_gpg_key=1C4CBDCDCD2EFD2A
+mariadb_ubuntu_gpg_key=CBCB082A1BB943DB
+
+function get_ubuntu_supported_list() {
+  local url=$1
+  curl -s $url | \
+      grep "DIR" | \
+      sed -e 's#.*href=\"\(.*\)\">.*</a>.*#\1#' -e 's#/##g' | \
+      grep -v apt
 }
 
-function set_up_percona_repository_if_possible() {
-  if [ $on_debian_or_derivative -eq 1 -a ${fai_db_sql_only-0} -eq 0 ]; then
-    local code_name=$(lsb_release -s -c)
-    local supported_code_name=0
-    local supported_list=$(get_percona_supported_list)
+function get_percona_supported_list() {
+  get_ubuntu_supported_list "http://repo.percona.com/apt/dists/";
+}
+
+function get_mariadb_supported_list() {
+  get_ubuntu_supported_list "http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/ubuntu/dists/";
+}
+
+function set_up_redhat_repository_if_possible() {
+  print_and_log "Setting up the Percona repository ..."
+  
+  if [ $(rpm -qa | grep $percona_rpm_release_package_name | wc -l) -lt 1 ]; then
+    run rpm -Uhv $percona_rpm_release_url
+  fi
+  
+  mysql_server_packages="Percona-Server-server-55 Percona-Server-shared-compat"
+  mysql_client_packages="Percona-Server-client-55 Percona-Server-shared-compat"
+}
+
+function is_supported() {
+  local code_name=$1
+  local supported_code_name=1
+  local supported_list=""
+  
+  if [ $db_vendor = "mariadb" ]; then
+    supported_list=$(get_mariadb_supported_list)
+  else
+    supported_list=$(get_percona_supported_list)
+  fi
+  
+  for el in $supported_list; do
+    if [[ $code_name == $el ]]; then
+      supported_code_name=0
+    fi
+  done
+  return $supported_code_name
+}
+
+function add_gpg_key() {
+  local key=$percona_ubuntu_gpg_key
+  if [ $db_vendor = "mariadb" ]; then
+    key=$mariadb_ubuntu_gpg_key
+  fi
+  if [ $(apt-key list| grep ${key: -8} | wc -l) -lt 1 ]; then
+        # this CANNOT be run in the run wrapper since it often fails,
+        # see comment below.
+    gpg --keyserver hkp://keys.gnupg.net:80 \
+        --recv-keys $key \
+        1>>$log 2>>$log
     
-    for el in $supported_list; do
-      if [[ $code_name == $el ]]; then
-        supported_code_name=1
-      fi
-    done
+        # There has been three times now, during six months, that the
+        # key cannot be retrieved from keys.gnupg.net. Therefore,
+        # we're checking if it failed and if yes, force the package
+        # installation.
+    if [ $? -gt 0 ]; then
+      print_and_log "Failed retrieving the gpg key for $db_vendor from keys.gnupg.net." \
+          "Will install the database packages without the GPG key"
+      force_packages=1
+    else
+      gpg --armor \
+          -a \
+          --export $key | \
+          apt-key add - \
+          1>>$log 2>>$log
+    fi
+    
+  fi
+}
+
+function pin_percona() {
+  # prefer packages from the percona repo if it exists
+  local pin_percona_conf_file=/etc/apt/preferences.d/20prefer-percona-packages
+  if [ ! -e $pin_percona_conf_file ]; then
+    cat > $pin_percona_conf_file <<EOF
+# Created by $(basename $0) @ $(date)
+Package: *
+Pin: origin repo.percona.com
+Pin-Priority: 600
+EOF
+  fi
+}
+
+function pin_mariadb() {
+  # prefer packages from the mariadb repo if it exists
+  local pin_mariadb_conf_file=/etc/apt/preferences.d/20prefer-mariadb-packages
+  if [ ! -e $pin_mariadb_conf_file ]; then
+    cat > $pin_mariadb_conf_file <<EOF
+# Created by $(basename $0) @ $(date)
+Package: *
+Pin: origin ftp.heanet.ie
+Pin-Priority: 600
+EOF
+  fi
+}
+
+function set_up_repository_if_possible() {
+  db_vendor=${fai_db_vendor:-percona}
+  if [ $on_debian_or_derivative -eq 1 -a ${fai_db_sql_only-0} -eq 0 ]; then
+    
+    local code_name=$(lsb_release -s -c)
 
     # some how, this is to install Percona 5.5
     if [ -e /var/lib/mysql/debian-*.flag ]; then
       run rm /var/lib/mysql/debian-*.flag
     fi
 
-    if [ $supported_code_name -eq 1 ]; then
-      print_and_log "Setting Up the Percona Repository ..."
+    if is_supported $code_name; then
+      print_and_log "Setting Up the $db_vendor Repository ..."
+      add_gpg_key
 
-      if [ $(apt-key list| grep CD2EFD2A | wc -l) -lt 1 ]; then
-        # this CANNOT be run in the run wrapper since it often fails,
-        # see comment below.
-        gpg --keyserver hkp://keys.gnupg.net:80 \
-          --recv-keys 1C4CBDCDCD2EFD2A \
-          1>>$log 2>>$log
-
-        # There has been three times now, during six months, that the
-        # key cannot be retrieved from keys.gnupg.net. Therefore,
-        # we're checking if it failed and if yes, force the package
-        # installation.
-        if [ $? -gt 0 ]; then
-          print_and_log "Failed retrieving the Percona key from keys.gnupg.net" \
-            "Will install the Percona packages without the GPG key"
-          force_packages=1
-        else
-          gpg --armor \
-            -a \
-            --export 1C4CBDCDCD2EFD2A | \
-            apt-key add - \
-            1>>$log 2>>$log
-        fi
-
-      fi
-
-      add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
-
-      # prefer packages from the percona repo if it exists
-      local pin_percona_conf_file=/etc/apt/preferences.d/20prefer-percona-packages
-      if [ ! -e $pin_percona_conf_file ]; then
-        cat > $pin_percona_conf_file <<EOF
-# Created by $(basename $0) @ $(date)
-Package: *
-Pin: origin repo.percona.com
-Pin-Priority: 600
-EOF
+      if [ $db_vendor = "mariadb" ]; then
+        add_apt_source "deb http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/ubuntu ${code_name} main"
+        pin_mariadb
+      else
+        add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
+        pin_percona
       fi
 
       run apt-get update
-      mysql_server_packages="percona-server-server"
-      mysql_client_packages="percona-server-client"
-      
-      leave_trail "trail_db_vendor=percona"
-    else
-      print_and_log "The Percona APT repsository doesn't have packages" \
+      if [ $db_vendor = "mariadb" ]; then
+        mysql_server_packages="mariadb-server"
+        mysql_client_packages="mariadb-client"
+        leave_trail "trail_db_vendor=mariadb"
+      else 
+        mysql_server_packages="percona-server-server"
+        mysql_client_packages="percona-server-client"
+        leave_trail "trail_db_vendor=percona"
+      fi
+    elif [ -z $fai_db_vendor ]; then
+      print_and_log "The $fai_db_vendor APT repsository doesn't have packages" \
         "for your Debian (or derivative) version with code" \
         "name $code_name. " \
         "I will use vanilla MySQL instead."
@@ -90,19 +159,12 @@ EOF
       leave_trail "trail_db_vendor=mysql"
     fi
   elif [ $on_redhat_or_derivative -eq 1 ]; then
-    print_and_log "Setting up the Percona repository ..."
-
-    if [ $(rpm -qa | grep $percona_rpm_release_package_name | wc -l) -lt 1 ]; then
-      run rpm -Uhv $percona_rpm_release_url
-    fi
-
-    mysql_server_packages="Percona-Server-server-55 Percona-Server-shared-compat"
-    mysql_client_packages="Percona-Server-client-55 Percona-Server-shared-compat"
+    set_up_redhat_repository_if_possible
   fi
 }
 
 function install_mysql_server_software() {
-  set_up_percona_repository_if_possible
+  set_up_repository_if_possible
 
   if [ ${fai_db_sql_only-0} -eq 0 ]; then
     install_packages_if_missing $mysql_server_packages
@@ -122,7 +184,7 @@ function install_mysql_server_software() {
 }
 
 function install_mysql_client_software() {
-  set_up_percona_repository_if_possible
+  set_up_repository_if_possible
   install_packages_if_missing $mysql_client_packages
   assert_commands_available mysql
 }
