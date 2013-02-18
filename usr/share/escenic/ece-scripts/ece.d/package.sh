@@ -51,7 +51,7 @@ EOF
             # war
       run mkdir -p ${tomcat_base_dir}/webapps
       run cd ${tomcat_base_dir}/webapps
-      for el in $(jar tf ${ear} | grep .war$); do
+      for el in $($java_home/bin/jar tf ${ear} | grep .war$); do
         if [ -n "${deploy_webapp_white_list}" ]; then
           for ele in $deploy_webapp_white_list; do
             if [ ${el} == ${ele}.war ]; then
