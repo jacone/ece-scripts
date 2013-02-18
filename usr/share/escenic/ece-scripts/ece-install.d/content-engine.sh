@@ -184,10 +184,28 @@ function set_up_engine_and_plugins() {
   ece_software_setup_completed=1
 }
 
+function set_up_jdbc_library() {
+  print_and_log "Setting up the jdbc driver"
+  make_dir $escenic_root_dir/assemblytool/lib
+  cd $escenic_root_dir/assemblytool/lib
+  if [ -n "$jdbc_driver" -a -e "$jdbc_driver" ]; then
+    make_ln $jdbc_driver
+  elif [ $fai_db_vendor = "mariadb" ]; then
+    print_and_log "Downloading MariaDB jdbc driver."
+    download_uri_target_to_dir \
+        https://downloads.mariadb.org/f/mariadb-java-client-1.1.0/mariadb-java-client-1.1.0.jar/from/http:/ftp.heanet.ie/mirrors/mariadb \
+        .
+    mv mariadb mariadb-java-client-1.1.0.jar
+  else
+    make_ln /usr/share/java/mysql-connector-java.jar      
+  fi
+}
+
 function set_up_assembly_tool() {
   print_and_log "Setting up the Assembly Tool ..."
 
   make_dir $escenic_root_dir/assemblytool/
+  set_up_jdbc_library
   cd $escenic_root_dir/assemblytool/
 
   if [ -e $download_dir/assemblytool*zip ]; then

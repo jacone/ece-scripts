@@ -139,7 +139,6 @@ function set_up_app_server() {
   set_http_auth_credentials_if_needed
 
   run cd $tomcat_base/lib
-  make_ln $jdbc_driver
 
   # it's important to append (and not pre-pend) the ECE libraries so
   # that things put it in the standard loader behaves as expected,
@@ -152,6 +151,11 @@ function set_up_app_server() {
   new=${escaped_common_loader}$(get_escaped_bash_string ${escenic_loader})
   run sed -i "s#${old}#${new}#g" $file
 
+  local jdbc_package_name=com.mysql.jdbc.Driver
+  if [ $fai_db_vendor = "mariadb" ]; then
+    jdbc_package_name=org.mariadb.jdbc.Driver
+  fi
+  
   cat > $tomcat_base/conf/server.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
 <Server port="$shutdown_port" shutdown="SHUTDOWN">
@@ -183,7 +187,7 @@ EOF
         initialSize="20"
         username="${db_user}"
         password="${db_password}"
-        driverClassName="com.mysql.jdbc.Driver"
+        driverClassName="${jdbc_package_name}"
         url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
         removeAbandoned="true"
         removeAbandonedTimeout="120"
@@ -206,7 +210,7 @@ EOF
         initialSize="20"
         username="${db_user}"
         password="${db_password}"
-        driverClassName="com.mysql.jdbc.Driver"
+        driverClassName="${jdbc_package_name}"
         url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
         removeAbandoned="true"
         removeAbandonedTimeout="120"
@@ -232,7 +236,7 @@ EOF
         initialSize="20"
         username="${db_user}"
         password="${db_password}"
-        driverClassName="com.mysql.jdbc.Driver"
+        driverClassName="${jdbc_package_name}"
         url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
         removeAbandoned="true"
         removeAbandonedTimeout="120"
@@ -255,7 +259,7 @@ EOF
         initialSize="20"
         username="${db_user}"
         password="${db_password}"
-        driverClassName="com.mysql.jdbc.Driver"
+        driverClassName="${jdbc_package_name}"
         url="jdbc:mysql://${db_host}:${db_port}/${db_schema}?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8&amp;characterSetResults=UTF-8"
         removeAbandoned="true"
         removeAbandonedTimeout="120"
