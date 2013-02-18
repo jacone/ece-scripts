@@ -19,7 +19,13 @@
 #####################################################################
 ece_user=escenic
 ece_group=escenic
-jdbc_driver=/usr/share/java/mysql-connector-java.jar
+
+#Specify the jdbc_driver variable if you want to use something else
+#than the default. For MySQL and Percona the default is
+#/usr/share/java/mysql-connector-java.jar from the libmysql-java
+#package. For MariaDB the driver is downloaded from
+#downloads.mariadb.org.
+#jdbc_driver=/usr/share/java/mysql-connector-java.jar
 debug=0
 
 # These variables govern where software is installed and data and run
@@ -107,6 +113,10 @@ escenic_sources=/etc/apt/sources.list.d/escenic.list
 # possible. I.e. not actually install things, but only download and
 # prepare the pre-requisites.
 dry_run=0
+
+if [ -n $JAVA_HOME ]; then
+  java_home=$JAVA_HOME
+fi
 
 ## Bootstrapping, load files from /usr/share/escenic/ece-scripts The
 ## method will first try to be smart, in case the user has copied the
