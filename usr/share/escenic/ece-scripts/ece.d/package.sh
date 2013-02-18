@@ -46,7 +46,7 @@ EOF
             # lib
       run mkdir -p ${tomcat_escenic_dir}
       run cd ${tomcat_escenic_dir}
-      run jar xf ${ear} lib
+      run $java_home/bin/jar xf ${ear} lib
 
             # war
       run mkdir -p ${tomcat_base_dir}/webapps
@@ -55,11 +55,11 @@ EOF
         if [ -n "${deploy_webapp_white_list}" ]; then
           for ele in $deploy_webapp_white_list; do
             if [ ${el} == ${ele}.war ]; then
-              run jar xf ${ear} ${el}
+              run $java_home/bin/jar xf ${ear} ${el}
             fi
           done
         else
-          run jar xf ${ear} ${el}
+          run $java_home/bin/jar xf ${ear} ${el}
         fi
       done
 
