@@ -1,6 +1,6 @@
-sun_java_bin_url=http://download.oracle.com/otn-pub/java/jdk/6u31-b04/jdk-6u31-linux-i586.bin
+sun_java_bin_url=http://download.oracle.com/otn-pub/java/jdk/6u39-b04/jdk-6u39-linux-i586.bin
 if [[ $(uname -m) == "x86_64" ]]; then
-  sun_java_bin_url=http://download.oracle.com/otn-pub/java/jdk/6u31-b04/jdk-6u31-linux-x64.bin
+  sun_java_bin_url=http://download.oracle.com/otn-pub/java/jdk/6u39-b04/jdk-6u39-linux-x64.bin
 fi
   
 function create_java_deb_packages_and_repo() {
@@ -43,18 +43,18 @@ function install_sun_java_on_redhat() {
   
   print_and_log "Downloading Sun Java from download.oracle.com ..."
   run cd $download_dir
-  run wget $wget_opts $sun_java_bin_url
+  local file_name=$(basename $sun_java_bin_url)
+  run wget --no-cookies --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com" -O $file_name $wget_opts $sun_java_bin_url
 
   # calculating start and stop offset from where to extract the zip
   # from the java data blob. calculation taken from
   # git://github.com/rraptorr/sun-java6.git
   local tmp_jdk=jdk-tmp.zip
-  local file_name=$(basename $sun_java_bin_url)
   local binsize=$(wc -c $file_name | awk '{print $1}');
-	local zipstart=$(unzip -ql $file_name 2>&1 >/dev/null | \
-    sed -n -e 's/.* \([0-9][0-9]*\) extra bytes.*/\1/p');
-	tail -c $(expr $binsize - $zipstart) $file_name > $tmp_jdk
-
+  local zipstart=$(unzip -ql $file_name 2>&1 >/dev/null | \
+      sed -n -e 's/.* \([0-9][0-9]*\) extra bytes.*/\1/p');
+  tail -c $(expr $binsize - $zipstart) $file_name > $tmp_jdk
+  
   run cd /opt
   run unzip -q -o $download_dir/$tmp_jdk
   local latest_jdk=$(find . -maxdepth 1 -type d -name "jdk*" | sort -r | head -1)
