@@ -28,15 +28,46 @@ function get_mariadb_supported_list() {
   get_ubuntu_supported_list "http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/$distributor/dists/"
 }
 
-function set_up_redhat_repository_if_possible() {
-  print_and_log "Setting up the Percona repository ..."
-  
-  if [ $(rpm -qa | grep $percona_rpm_release_package_name | wc -l) -lt 1 ]; then
-    run rpm -Uhv $percona_rpm_release_url
+function set_up_mariadb_yum_repo() {
+  local maria_db_repo=/etc/yum.repos.d/mariadb.repo
+  if [ ! -e $maria_db_repo ]; then
+    print_and_log "Setting up the MariaDB repository ..."
+    local distributor=$(lsb_release -i -s | tr '[A-Z]' '[a-z]')
+    local release=$(lsb_release -r -s | sed -e 's/\([0-9]*\).*/\1/')
+    local arch=amd64
+    if [[ $(uname -m) != "x86_64" ]]; then
+      arch=x86
+    fi  
+    if [ $distributor = "redhatenterpriseserver" ]; then
+      $distributor=rhel
+    fi
+    local yum_url=http://yum.mariadb.org/5.5/${distributor}${release}-${arch}
+    cat > $maria_db_repo <<EOF
+# Created by $(basename $0) @ $(date)
+# http://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = ${yum_url}
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF
   fi
+}
+
+function set_up_redhat_repository_if_possible() {
+  if [ $db_vendor = "mariadb" ]; then
+    set_up_mariadb_yum_repo  
+    mysql_server_packages="MariaDB-server"
+    mysql_client_packages="MariaDB-client"
+  else
+    print_and_log "Setting up the Percona repository ..."
   
-  mysql_server_packages="Percona-Server-server-55 Percona-Server-shared-compat"
-  mysql_client_packages="Percona-Server-client-55 Percona-Server-shared-compat"
+    if [ $(rpm -qa | grep $percona_rpm_release_package_name | wc -l) -lt 1 ]; then
+      run rpm -Uhv $percona_rpm_release_url
+    fi
+    mysql_server_packages="Percona-Server-server-55 Percona-Server-shared-compat"
+    mysql_client_packages="Percona-Server-client-55 Percona-Server-shared-compat"
+  fi  
 }
 
 function is_supported() {
