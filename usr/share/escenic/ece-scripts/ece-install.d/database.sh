@@ -20,11 +20,12 @@ function get_ubuntu_supported_list() {
 }
 
 function get_percona_supported_list() {
-  get_ubuntu_supported_list "http://repo.percona.com/apt/dists/";
+  get_ubuntu_supported_list "http://repo.percona.com/apt/dists/"
 }
 
 function get_mariadb_supported_list() {
-  get_ubuntu_supported_list "http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/ubuntu/dists/";
+  local distributor=$(lsb_release -i -s | tr '[A-Z]' '[a-z]')
+  get_ubuntu_supported_list "http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/$distributor/dists/"
 }
 
 function set_up_redhat_repository_if_possible() {
@@ -117,7 +118,7 @@ EOF
 function set_up_repository_if_possible() {
   db_vendor=${fai_db_vendor:-percona}
   if [ $on_debian_or_derivative -eq 1 -a ${fai_db_sql_only-0} -eq 0 ]; then
-    
+
     local code_name=$(lsb_release -s -c)
 
     # some how, this is to install Percona 5.5
@@ -130,7 +131,8 @@ function set_up_repository_if_possible() {
       add_gpg_key
 
       if [ $db_vendor = "mariadb" ]; then
-        add_apt_source "deb http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/ubuntu ${code_name} main"
+        local distributor=$(lsb_release -i -s | tr '[A-Z]' '[a-z]')
+        add_apt_source "deb http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/$distributor ${code_name} main"
         pin_mariadb
       else
         add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
