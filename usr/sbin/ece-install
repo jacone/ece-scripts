@@ -243,6 +243,8 @@ function install_common_os_packages()
       git_package=git-core
     fi
     packages="${packages} bind9-host"
+  elif [ $on_redhat_or_derivative -eq 1 ]; then
+    packages="${packages} bind-utils"
   fi
 
   install_packages_if_missing $packages $git_package
