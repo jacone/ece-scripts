@@ -1,0 +1,42 @@
+* Amazon Instance
+(Ignore this chapter for if you have KVM implementation)
+
+This chapter tells you about dealing with amazon instances in your installation.
+
+** Resize disk (EBS Volume) in an Amazon instance
+
+To resize an EBS Volume using the AWS GUI console
+
+1. Shut down the machine/instance.
+2. Detach it from the instance, while detaching NOTE DOWN the exact device name where the volume had been attached 
+3. Take a snapshot of the EBS Volume
+4. Go to your snapshots listing and detect your newly created snapshot and create a new volume of your desired size from the snapshot 
+5. You have now successfully re-sized your volume.
+6. Now attach it to your instances, while attaching use the exact device name you noted while detaching, this is important while you are resizing the root device
+7. Start the machine and associate elastic ip (if it had one before)
+8. You will still see you volume with the previous size. You have to run resize2fs on the device to get the new size effective
+     #+BEGIN_SRC text
+      $ sudo resize2fs /dev/xvda1
+     #+END_SRC
+
+
+** Add a new EBS volume in a Amazon machine instance:
+
+From Amazon EC2 Management Console
+1. Create the volume of desired size
+2. Attach the volume as device with the desired instance (same zone as the volume)
+
+From the ec2 instance
+1. ssh into it as root
+2. format the device
+     #+BEGIN_SRC text
+      $ mkfs.ext4 /dev/xvdf
+     #+END_SRC
+3. Put the mount entry in /etc/fstab
+     #+BEGIN_SRC text
+      /dev/xvdf  /var/exports auto    defaults,nobootwait,comment=cloudconfig 0 2
+     #+END_SRC
+4. Then mount it
+     #+BEGIN_SRC text
+      $ mount -a    
+     #+END_SRC

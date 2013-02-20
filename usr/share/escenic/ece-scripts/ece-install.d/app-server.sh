@@ -152,7 +152,7 @@ function set_up_app_server() {
   run sed -i "s#${old}#${new}#g" $file
 
   local jdbc_package_name=com.mysql.jdbc.Driver
-  if [ $fai_db_vendor = "mariadb" ]; then
+  if [ $fai_db_vendor == "mariadb" ]; then
     jdbc_package_name=org.mariadb.jdbc.Driver
   fi
   
