@@ -123,12 +123,16 @@ function assert_commands_available() {
 }
 
 function get_tomcat_download_url() {
-  local url=$(
-    curl -s http://tomcat.apache.org/download-60.cgi | \
-      grep tar.gz | \
-      head -1 | \
-      cut -d'"' -f2
-  )
+  if [ -n $tomcat_download ]; then  [15:28]
+    local url=$tomcat_download
+  else
+    local url=$(
+        curl -s http://tomcat.apache.org/download-60.cgi | \
+            grep tar.gz | \
+            head -1 | \
+            cut -d'"' -f2
+    )
+  fi
 
   if [ -z $url ]; then
     url=$fallback_tomcat_url
