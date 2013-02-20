@@ -123,7 +123,7 @@ function assert_commands_available() {
 }
 
 function get_tomcat_download_url() {
-  if [ -n $tomcat_download ]; then  [15:28]
+  if [ -n $tomcat_download ]; then
     local url=$tomcat_download
   else
     local url=$(
