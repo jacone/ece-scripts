@@ -15,7 +15,7 @@ To resize an EBS Volume using the AWS GUI console
 6. Now attach it to your instances, while attaching use the exact device name you noted while detaching, this is important while you are resizing the root device
 7. Start the machine and associate elastic ip (if it had one before)
 8. You will still see you volume with the previous size. You have to run resize2fs on the device to get the new size effective
-     #+BEGIN_SRC
+     #+BEGIN_SRC text
       $ sudo resize2fs /dev/xvda1
      #+END_SRC
 
@@ -29,14 +29,14 @@ From Amazon EC2 Management Console
 From the ec2 instance
 1. ssh into it as root
 2. format the device
-     #+BEGIN_SRC
+     #+BEGIN_SRC text
       $ mkfs.ext4 /dev/xvdf
      #+END_SRC
 3. Put the mount entry in /etc/fstab
-     #+BEGIN_SRC
+     #+BEGIN_SRC text
       /dev/xvdf  /var/exports auto    defaults,nobootwait,comment=cloudconfig 0 2
      #+END_SRC
 4. Then mount it
-     #+BEGIN_SRC
+     #+BEGIN_SRC text
       $ mount -a    
      #+END_SRC
