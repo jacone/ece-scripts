@@ -7,6 +7,7 @@
 #+TEXT: <%= trail_service_header_org %>
 #+TEXT: [TABLE-OF-CONTENTS]
 #+INCLUDE: "overview.org"
+#+INCLUDE: "admin-pac.org"
 #+INCLUDE: "operating-system-maintenance.org" 
 #+INCLUDE: "deployment.org"
 #+INCLUDE: "content-engine.org"
