@@ -31,7 +31,7 @@ Escenic-based sites, such as:
 
  - Java
  - Tomcat application server
- - MySQL/Percona database server
+ - MariaDB/MySQL/Percona database server
  - Varnish cache server
  - Icinga & Munin monitoring server
  - NFS server and clients
@@ -401,9 +401,17 @@ To use this profile, add *fai\_db\_install=1* to your
 
 When this profile is used on a supported version of Debian or Ubuntu,
 *ece-install* installs all the components needed to create an Escenic
-database, based on the Percona distribution of MySQL. On any other
-platform you must install either Percona or a standard MySQL
-distribution yourself before running *ece-install*.
+database, based on the MariaDB fork of MySQL or the Percona
+distribution of MySQL. On any other platform you must install either
+MariaDB, Percona or a standard MySQL distribution yourself before running
+*ece-install*.
+
+The default is to install MariaDB unless this setting is added to to
+*ece-install.conf* before you run *ece-install*.
+
+#+BEGIN_SRC conf
+db_vendor=percona
+#+END_SRC
 
 Otherwise, this profile contains all the Escenic components needed on
 a database server plus the correct database schema for the Content
@@ -1348,7 +1356,7 @@ but these should be the most interesting ones.
 
 - */etc/escenic/solr* :: ECE specific Solr configuration
 
-- */etc/init.d/mysql[d]* :: For starting and stopping MySQL/Percona
+- */etc/init.d/mysql[d]* :: For starting and stopping MariaDB/MySQL/Percona
 
 - */etc/init.d/varnish* :: For starting and stopping Varnish
 
