@@ -120,34 +120,24 @@ function add_gpg_key() {
   fi
 }
 
-function pin_percona() {
-  # prefer packages from the percona repo if it exists
-  local pin_percona_conf_file=/etc/apt/preferences.d/20prefer-percona-packages
-  if [ ! -e $pin_percona_conf_file ]; then
-    cat > $pin_percona_conf_file <<EOF
-# Created by $(basename $0) @ $(date)
-Package: *
-Pin: origin repo.percona.com
-Pin-Priority: 600
-EOF
+function pin() {
+  local origin=ftp.heanet.ie
+  if [ $db_vendor = "percona" ]; then
+    local origin=repo.percona.com
   fi
-}
-
-function pin_mariadb() {
-  # prefer packages from the mariadb repo if it exists
-  local pin_mariadb_conf_file=/etc/apt/preferences.d/20prefer-mariadb-packages
-  if [ ! -e $pin_mariadb_conf_file ]; then
-    cat > $pin_mariadb_conf_file <<EOF
+  # prefer packages from the percona repo if it exists
+  local pin_conf_file=/etc/apt/preferences.d/20prefer-${db_vendor}-packages
+  if [ ! -e $pin_conf_file ]; then
+    cat > $pin_conf_file <<EOF
 # Created by $(basename $0) @ $(date)
 Package: *
-Pin: origin ftp.heanet.ie
+Pin: origin ${origin}
 Pin-Priority: 600
 EOF
   fi
 }
 
 function set_up_repository_if_possible() {
-  db_vendor=${fai_db_vendor:-percona}
   if [ $on_debian_or_derivative -eq 1 -a ${fai_db_sql_only-0} -eq 0 ]; then
 
     local code_name=$(lsb_release -s -c)
@@ -164,24 +154,19 @@ function set_up_repository_if_possible() {
       if [ $db_vendor = "mariadb" ]; then
         local distributor=$(lsb_release -i -s | tr '[A-Z]' '[a-z]')
         add_apt_source "deb http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/$distributor ${code_name} main"
-        pin_mariadb
-      else
-        add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
-        pin_percona
-      fi
-
-      run apt-get update
-      if [ $db_vendor = "mariadb" ]; then
         mysql_server_packages="mariadb-server"
         mysql_client_packages="mariadb-client"
         leave_trail "trail_db_vendor=mariadb"
-      else 
+      else
+        add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
         mysql_server_packages="percona-server-server"
         mysql_client_packages="percona-server-client"
         leave_trail "trail_db_vendor=percona"
       fi
-    elif [ -z $fai_db_vendor ]; then
-      print_and_log "The $fai_db_vendor APT repsository doesn't have packages" \
+      pin
+      run apt-get update
+    else
+      print_and_log "The $db_vendor APT repsository doesn't have packages" \
         "for your Debian (or derivative) version with code" \
         "name $code_name. " \
         "I will use vanilla MySQL instead."

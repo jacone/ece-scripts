@@ -54,6 +54,9 @@ java_home=/usr/lib/jvm/java-6-sun
 # This variable is updated by the package build scripts.
 ece_scripts_version="straight-from-github"
 
+#Set the default database vendor. Possible values are mariadb and percona
+db_vendor=mariadb
+
 #####################################################################
 
 download_dir=${escenic_cache_dir}/$(basename $0)
@@ -113,10 +116,6 @@ escenic_sources=/etc/apt/sources.list.d/escenic.list
 # possible. I.e. not actually install things, but only download and
 # prepare the pre-requisites.
 dry_run=0
-
-if [ -n $JAVA_HOME ]; then
-  java_home=$JAVA_HOME
-fi
 
 ## Bootstrapping, load files from /usr/share/escenic/ece-scripts The
 ## method will first try to be smart, in case the user has copied the
@@ -856,6 +855,13 @@ function un_install_everything() {
     percona-server-server-5.5
     varnish
     sun-java6-jdk
+    mariadb-client
+    mariadb-client-5.5
+    mariadb-client-core-5.5
+    mariadb-server
+    mariadb-server-5.5
+    mariadb-server-core-5.5
+    mariadb-common
   "
   local file_to_remove_list="
     $escenic_conf_dir
@@ -870,8 +876,9 @@ function un_install_everything() {
   local key_to_remove_list="
     C4DEFFEB
     CD2EFD2A
+    1BB943DB
   "
-  print_and_log "You have set fai_un_install_everything=1 in your ${conf_file}"
+print_and_log "You have set fai_un_install_everything=1 in your ${conf_file}"
   print_and_log "This will $(red uninstall the following on $HOSTNAME):"
   print_and_log "Packages to be removed:" $(echo $package_to_remove_list)
   print_and_log "Files & directories to be removed:" $file_to_remove_list

@@ -190,7 +190,7 @@ function set_up_jdbc_library() {
   cd $escenic_root_dir/assemblytool/lib
   if [ -n "$jdbc_driver" -a -e "$jdbc_driver" ]; then
     make_ln $jdbc_driver
-  elif [ $fai_db_vendor = "mariadb" ]; then
+  elif [ $db_vendor = "mariadb" ]; then
     print_and_log "Downloading MariaDB jdbc driver."
     download_uri_target_to_dir \
         https://downloads.mariadb.org/f/mariadb-java-client-1.1.0/mariadb-java-client-1.1.0.jar/from/http:/ftp.heanet.ie/mirrors/mariadb \
