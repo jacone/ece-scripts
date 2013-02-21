@@ -2,4 +2,4 @@
 Users access our servers on well known ports like 80 or 443. These ports are usually shared with the Internet without any filter.
 We also use webbrowsers to view admin userinterfaces on strange ports like 8080 and 5678. To make this possible in a reasonably secure way we make use of a proxy.
 Vizrt maintains an "Automatic proxy confuguration URL". As you can only have one such URL in your browser, Vizrt maintains a "PAC" resource on the Internet that contains valid settings for many of her customers. This pac URL is http://vizrtsaas.com/gk.pac. 
-The proxy for <%=trail_customer_shortname%> requires a password that you can see [[<%25%3Dtrail_secret_adminproxy%25>][here]]
+The proxy for <%=trail_customer_shortname%> requires a password that you can see <%=trail_secret_adminproxy%>
