@@ -663,7 +663,7 @@ function add_customer_chapters() {
     grep .org$ | \
     wc -l) -gt 0 ]; then
     echo "Applying customer overrides ..."
-#    cp $target_dir/customer/*.org $target_dir
+    cp $target_dir/customer/*.org $target_dir
   fi
 
   if [ $(ls $target_dir/customer/extra-chapters/ 2>/dev/null | \
@@ -795,6 +795,7 @@ echo "Building the $trail_customer_shortname VOSA Guide"
 get_user_input $@
 set_up_build_directory
 set_customer_specific_variables
+add_customer_chapters
 generate_architecture_diagram
 generate_overview_org
 generate_content_engine_org
@@ -804,7 +805,6 @@ generate_nfs_org
 generate_backup_org
 generate_virtualization_overview_org
 generate_aws_overview_org
-add_customer_chapters
 generate_html_from_org
 generate_svg_from_blockdiag
 echo "done: http://start.vizrtsaas.com/${trail_customer_acronym}/" 
