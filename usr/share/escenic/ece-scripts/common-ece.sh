@@ -35,6 +35,11 @@ function get_instance_enabled_list() {
     return
   fi
 
+  eval "$(
+    source /etc/default/ece &> /dev/null
+    declare -p engine_instance_list search_instance_list analysis_instance_list
+  )"
+
   echo ${engine_instance_list} \
     ${search_instance_list} \
     ${analysis_instance_list}
