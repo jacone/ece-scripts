@@ -342,7 +342,7 @@ EOF
 | $(get_fqdn $trail_monitoring_host) | \
   [[$(get_link ${trail_monitoring_host}):${trail_monitoring_port-80}/munin/][munin]] \
   [[$(get_link ${trail_monitoring_host}):${trail_monitoring_port-80}/icinga/][icinga]] \
-  [[$(get_link ${trail_monitoring_host}):${trail_monitoring_port-5679}][hugin]] \
+  [[$(get_link ${trail_monitoring_host}):5679][hugin]] \
 |
 #EOF
 #  fi
