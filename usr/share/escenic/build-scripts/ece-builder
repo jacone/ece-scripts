@@ -9,7 +9,6 @@
 ece_scripts_version="straight-from-github"
 ece_scripts_home=/usr/share/escenic/ece-scripts
 log=/var/log/ece-builder.log
-pid_file=/var/run/ece-builder.pid
 
 # script dependencies
 dependencies="tar
@@ -63,11 +62,12 @@ function verify_root_privilege
 ##
 function set_pid 
 {
+  # set pid
   if [ -e $pid_file ]; then
     echo "Instance of $(basename $0) already running!"
     exit 1
   else
-    echo $BASHPID > $pid_file
+    create_pid
   fi
 }
 
