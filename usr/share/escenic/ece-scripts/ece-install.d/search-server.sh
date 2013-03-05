@@ -33,15 +33,16 @@ function set_up_solr() {
       run tar xzf $(basename $ece_instance_conf_archive) engine/solr/conf
       run cp -r engine/solr/conf $escenic_conf_dir/solr
 
-      # ECE 5.6 has one additional configuration file!
-      if [ -e engine/solr/solr.xml ]; then
-        run cp -r engine/solr/solr.xml $escenic_conf_dir/. 
-      fi
-
       run rm -r $a_tmp_dir
     else
       print_and_log "Installing default Solr conf shipped with ECE ..."
       run cp -r $escenic_root_dir/engine/solr/conf $escenic_conf_dir/solr
+      
+      # ECE 5.6 has one additional configuration file!
+      if [ -e $escenic_root_dir/engine/solr/solr.xml ]; then
+        run cp -r $escenic_root_dir/engine/solr/solr.xml $escenic_conf_dir/. 
+      fi
+
     fi
   else
     print_and_log "$escenic_conf_dir/solr already exists, not touching it."
@@ -55,8 +56,8 @@ function set_up_solr() {
 
   # ECE 5.6 has one additional configuration file!
   if  [ ! -h solr.xml ]; then
-    if [ -e $escenic_conf_dir/solr/solr.xml ]; then
-      run ln -s $escenic_conf_dir/solr/solr.xml solr.xml
+    if [ -e $escenic_conf_dir/solr.xml ]; then
+      run ln -s $escenic_conf_dir/solr.xml solr.xml
     fi
   fi
 
