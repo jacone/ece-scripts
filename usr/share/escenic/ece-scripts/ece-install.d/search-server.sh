@@ -32,6 +32,12 @@ function set_up_solr() {
       run cd $a_tmp_dir
       run tar xzf $(basename $ece_instance_conf_archive) engine/solr/conf
       run cp -r engine/solr/conf $escenic_conf_dir/solr
+
+      # ECE 5.6 has one additional configuration file!
+      if [ -e engine/solr/solr.xml ]; then
+        run cp -r engine/solr/solr.xml $escenic_conf_dir/. 
+      fi
+
       run rm -r $a_tmp_dir
     else
       print_and_log "Installing default Solr conf shipped with ECE ..."
@@ -45,6 +51,13 @@ function set_up_solr() {
   run cd $escenic_data_dir/solr/
   if  [ ! -h conf ]; then
     run ln -s $escenic_conf_dir/solr conf
+  fi
+
+  # ECE 5.6 has one additional configuration file!
+  if  [ ! -h solr.xml ]; then
+    if [ -e $escenic_conf_dir/solr/solr.xml ]; then
+      run ln -s $escenic_conf_dir/solr/solr.xml solr.xml
+    fi
   fi
 
   local editorial_search_instance=${fai_search_for_editor-0}
