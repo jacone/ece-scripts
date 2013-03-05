@@ -418,16 +418,7 @@ EOF
 
   file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
   
-  # As of engine 5.6 we set this to 1.7+
-  local studio_jre=1.6
-  if [ -n $fai_studio_jre ] && [ "$fai_studio_jre" == "1.7+" ]; then
-    local studio_jre=$fai_studio_jre
-  fi  
-
   cat >> $file <<EOF
-# As of engine 5.6 we set this to 1.7+. For versions <5.6 ECS insists on JRE = 1.6.
-jreRequirement=$studio_jre
-
 # We set this to get around a missing feature in Varnish, see:
 # https://www.varnish-cache.org/trac/wiki/Future_Feature#Chunkedencodingclientrequests
 # For Escenic-ites, see: VF-3480
