@@ -334,7 +334,7 @@ function get_link() {
 
 function get_generated_overview() {
   cat <<EOF
-** Production Habitat :: Machines & Their Services
+** Machines & Their Services
 EOF
   get_machine_matrix_header
   if [ -n "${trail_monitoring_host}" ]; then
@@ -404,19 +404,14 @@ EOF
       get_simple_host_overview $el
     )
   done
-  get_machine_matrix_footer
 
   if [ -n "$trail_staging_editor_host" ]; then
-    cat <<EOF 
-** Staging Habitat :: Machines & Their Services
-EOF
-    get_machine_matrix_header
     echo $(get_editor_host_overview \
       $trail_staging_editor_host \
       $trail_staging_editor_port
     )
-    get_machine_matrix_footer
   fi
+
 }
 
 function get_machine_matrix_header() {

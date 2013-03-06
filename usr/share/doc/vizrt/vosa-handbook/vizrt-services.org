@@ -1,0 +1,25 @@
+* Vizrt SaaS Services
+
+|----------------+---------------------------------+-----------------------------+--------------------------|
+| Service        | Production                      | Staging                     | Test                     |
+|----------------+---------------------------------+-----------------------------+--------------------------|
+| Website        | <%=trail_production_websites %> | <%=trail_staging_websites%> | <%=trail_test_websites%> |
+|----------------+---------------------------------+-----------------------------+--------------------------|
+| Content Studio | <%=trail_production_studio%>    | <%=trail_staging_studio%>   | <%=trail_test_studio%>   |
+|----------------+---------------------------------+-----------------------------+--------------------------|
+| Jira           | https://vizrtcustomers.jira.com/browse/<%=trail_vizrtcustomer_jira_name%>                |
+|----------------+------------------------------------------------------------------------------------------|
+| SVN            | https://vizrtcustomers.jira.com/svn/<%=trail_vizrtcustomer_jira_name%>                   |
+|----------------+------------------------------------------------------------------------------------------|
+| Hipchat        | https://vizrtcustomers.hipchat.com/chat                                                  |
+|----------------+------------------------------------------------------------------------------------------|
+| Dev Image      | <%=trail_dev_image_location%>                                                            |
+|----------------+------------------------------------------------------------------------------------------|
+
+Content Studio service is special because -
+1. It usually requires to run on port 80 or 443
+2. It usually requires to have a nice hostname aliasing
+3. It does not run over a proxy server
+
+We strongly recommend to setup SSL with authorized certificate for this service.
+
