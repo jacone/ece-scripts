@@ -337,6 +337,14 @@ function get_generated_overview() {
 ** Machines & Their Services
 EOF
   get_machine_matrix_header
+
+  if [ -n "$trail_staging_editor_host" ]; then
+    echo $(get_editor_host_overview \
+      $trail_staging_editor_host \
+      $trail_staging_editor_port
+    )
+  fi
+
   if [ -n "${trail_monitoring_host}" ]; then
     cat <<EOF 
 | $(get_fqdn $trail_monitoring_host) | \
@@ -404,14 +412,6 @@ EOF
       get_simple_host_overview $el
     )
   done
-
-  if [ -n "$trail_staging_editor_host" ]; then
-    echo $(get_editor_host_overview \
-      $trail_staging_editor_host \
-      $trail_staging_editor_port
-    )
-  fi
-
 }
 
 function get_machine_matrix_header() {
