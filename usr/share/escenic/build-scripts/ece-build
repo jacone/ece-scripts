@@ -57,7 +57,8 @@ ant
 svn
 mvn
 unzip
-wget"
+wget
+xml2"
 
 ##
 function init
