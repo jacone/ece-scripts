@@ -322,8 +322,25 @@ function verify_requested_versions
 function verify_maven_proxy
 {
   if [ -e $maven_conf_file ]; then
-    maven_user=`sed "/<username>/!d;s/ *<\/\?username> *//g" $maven_conf_file | tr -d $'\r' `
-    maven_password=`sed "/<password>/!d;s/ *<\/\?password> *//g" $maven_conf_file | tr -d $'\r' `
+    maven_credentials=`xml2 < $maven_conf_file | grep '^/settings/servers'`
+    stable=vizrt-repo
+    process=0
+    for f in $maven_credentials; do
+      if [[ "$f" == *id=* ]]; then
+        local server=`echo $f | sed -n -e 's,.*id=,,p'`
+        if [[ "$server" == "$stable" ]]; then
+          process=1
+        else
+          process=0
+        fi
+      elif [ $process -eq 1 ]; then
+        if [[ "$f" == *username=* ]]; then
+          maven_user=`echo $f | sed -n -e 's,.*username=,,p'`
+        elif [[ "$f" == *password=* ]]; then
+          maven_password=`echo $f | sed -n -e 's,.*password=,,p'`
+        fi
+      fi
+    done
     if [[ $maven_user = "" ]] || [[ $maven_password = "" ]]; then
       print_and_log "Your $maven_conf_file is missing the username and/or the password for the maven proxy, exiting!"
       remove_pid_and_exit_in_error
