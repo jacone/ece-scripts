@@ -365,12 +365,16 @@ function set_up_basic_nursery_configuration() {
     fi
 
     run cp -r engine/siteconfig/config-skeleton/* $common_nursery_dir/
-  else
+  elif [ -d $escenic_root_dir/engine/siteconfig/config-skeleton ] ; then
     print_and_log "I'm using Nursery & JAAS configuration (skeleton) " \
       "from $escenic_root_dir/engine"
     run cp -r $escenic_root_dir/engine/siteconfig/config-skeleton/* \
       $common_nursery_dir/
     run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/
+  else
+    print_and_log "I'm creating an empty config tree for you, since" \
+      "no content engine was downloaded."
+    run mkdir -p $common_nursery_dir
   fi
 
   if [ -n "${a_tmp_dir}" ]; then
