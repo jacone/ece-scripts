@@ -82,6 +82,8 @@ function install_ece_instance() {
 
   set_archive_files_depending_on_profile
 
+  create_ear_download_list
+
   download_escenic_components
   check_for_required_downloads
   set_up_engine_and_plugins
@@ -137,6 +139,72 @@ function install_ece_instance() {
   add_next_step "Type 'ece help' to see all the options of this script"
   add_next_step "Read its guide: /usr/share/doc/escenic/ece-guide.txt"
   add_next_step "/etc/default/ece lists all instances started at boot time"
+}
+
+function create_ear_download_list() {
+  # sane default
+  ear_download_list=
+
+  if [ $(is_installing_from_ear) -eq 0 ]; then
+    return;
+  fi
+
+  if [[ -n "${fai_builder_http_user}" && \
+      -n "${fai_builder_http_password}" ]]; then
+      local wget_auth="
+          --http-user $fai_builder_http_user
+          --http-password $fai_builder_http_password
+        "
+  fi
+
+  # TODO: do I need to make this here?  Shouldn't it be here already?
+  if [ ! -d $escenic_cache_dir ] ; then
+    mkdir -p $escenic_cache_dir
+  fi
+
+  local ear_file=$escenic_cache_dir/$(basename $ece_instance_ear_file)
+
+  if [ ! -s $ear_file ] ; then
+    run wget $wget_auth $wget_opts $ece_instance_ear_file \
+      -O $ear_file
+  fi
+
+  if [ ! -s $ear_file ] ; then
+    rm $ear_file
+    print_and_log "Unable to download EAR file $ece_instance_ear_file," \
+      "aborting."
+    remove_pid_and_exit_in_error
+  fi
+
+  effective_pom=META-INF/effective-pom.xml
+
+  # Verify that the ZIP file has an effective-pom.xml file
+  run unzip -t -q $ear_file
+
+  if ! unzip -t -q $ear_file $effective_pom ; then
+    print_and_log "EAR file is missing $effective_pom. Not resolving artifacts."
+    return 0
+  fi
+
+  local props=$(unzip -qc $ear_file $effective_pom |
+    xmlstarlet sel -N "pom=http://maven.apache.org/POM/4.0.0" \
+      -t -m '/projects/pom:project/pom:properties/*' \
+      -v 'concat(name(), " ", text())' -nl)
+  if [ $? != 0 ] ; then
+    print_and_log "Unable to understand the effective pom"
+    return 0
+  fi
+
+  local gavs=$(sort <<< "$props" -u | grep '^escenic\.[^\.]*\.distribution ' | cut -d ' ' -f 2 )
+  if [ $? != 0 ] ; then
+    print_and_log "EAR's effective pom had no escenic.xxx.distribution properties.  Ignoring."
+    return 0
+  fi
+
+  local coordinate
+  for coordinate in $gavs; do
+    # populate ear_download_list with URLs
+  done
 }
 
 function set_up_engine_and_plugins() {
