@@ -164,7 +164,10 @@ function create_ear_download_list() {
 
   local ear_file=$escenic_cache_dir/$(basename $ece_instance_ear_file)
 
-  if [ ! -s $ear_file ] ; then
+  if [ -s $ear_file ] ; then
+    print_and_log "Using previously downloaded EAR file $ear_file"
+  else
+    print_and_log "Downloading $ece_instance_ear_file to $ear_file"
     run wget $wget_auth $wget_opts $ece_instance_ear_file \
       -O $ear_file
   fi
@@ -176,34 +179,79 @@ function create_ear_download_list() {
     remove_pid_and_exit_in_error
   fi
 
-  effective_pom=META-INF/effective-pom.xml
+  local effective_pom=META-INF/effective-pom.xml
 
   # Verify that the ZIP file has an effective-pom.xml file
   run unzip -t -q $ear_file
+  log "$ear_file was a valid ZIP file"
 
-  if ! unzip -t -q $ear_file $effective_pom ; then
+  if ! unzip &> /dev/null -t -q $ear_file $effective_pom ; then
     print_and_log "EAR file is missing $effective_pom. Not resolving artifacts."
     return 0
   fi
 
   local props=$(unzip -qc $ear_file $effective_pom |
     xmlstarlet sel -N "pom=http://maven.apache.org/POM/4.0.0" \
-      -t -m '/projects/pom:project/pom:properties/*' \
-      -v 'concat(name(), " ", text())' -nl)
+      -t -m '/pom:project/pom:properties/*|/projects/pom:project/pom:properties/*' \
+      -v 'concat(name(), " ", text())' \
+      -nl)
   if [ $? != 0 ] ; then
     print_and_log "Unable to understand the effective pom"
     return 0
   fi
 
   local gavs=$(sort <<< "$props" -u | grep '^escenic\.[^\.]*\.distribution ' | cut -d ' ' -f 2 )
-  if [ $? != 0 ] ; then
+  if ! grep -q . <<< "$gavs" ; then
     print_and_log "EAR's effective pom had no escenic.xxx.distribution properties.  Ignoring."
+    log props=$props
     return 0
   fi
 
+  log "Found these artifacts: " $gavs
+
   local coordinate
   for coordinate in $gavs; do
-    # populate ear_download_list with URLs
+    local groupid
+    local artifactid
+    local version
+    local packaging
+    local classifier
+    # coordinate is e.g. com.escenic:engine-dist:zip:bin:5.5.2.137014
+    # or com.escenic.plugins.forum:forum:zip:3.2.1.132293
+    # groupid:artifactid:[packaging:[classifier:]]version
+
+    # chomp groupid: --> artifactid:[packaging:[classifier:]]version 
+    groupid=${coordinate/:*}
+    coordinate=${coordinate#${groupid}:}
+
+    # chomp artifactid: --> [packaging:[classifier:]]version
+    artifactid=${coordinate/:*}
+    coordinate=${coordinate#${artifactid}:}
+
+    # chomp version --> [packaging[:classifier]]
+    version=${coordinate/*:}
+    coordinate=${coordinate%${version}}
+    coordinate=${coordinate%:}
+
+    classifier=
+    packaging=
+
+    if [ ! -z "$coordinate" ] ; then
+      # chomp packaging --> [classifier]
+      packaging=${coordinate/:*}
+      coordinate=${coordinate#${packaging}}
+      coordinate=${coordinate#:}
+    fi
+
+    if [ ! -z "$coordinate" ] ; then
+      # chomp classifier
+      classifier=$coordinate
+      coordinate=
+    fi
+
+    ear_download_list="$ear_download_list \
+       ${groupid//.//}/${artifactid}/$version/${artifactid}-${version}${classifier:+-${classifier}}.$packaging"
+
   done
 }
 
@@ -216,14 +264,15 @@ function set_up_engine_and_plugins() {
   make_dir $escenic_root_dir
   run cd $escenic_root_dir/
 
-  for el in $technet_download_list; do
-    verify_that_archive_is_ok $download_dir/$(basename $el)
+  for el in $technet_download_list $ear_download_list; do
+    local file=$(basename $el)
+    verify_that_archive_is_ok $download_dir/$file
 
-    if [ $(basename $el | \
+    if [ $(echo $file | \
       grep -E "^engine-[0-9]|^engine-trunk-SNAPSHOT|^engine-dist" | \
       wc -l) -gt 0 ]; then
-      engine_dir=$(get_base_dir_from_bundle $download_dir/$(basename $el))
-      engine_file=$(basename $el)
+      engine_dir=$(get_base_dir_from_bundle $download_dir/$file)
+      engine_file=$file
     fi
   done
 
@@ -241,8 +290,10 @@ function set_up_engine_and_plugins() {
   # we now extract all the plugins. We extract them in $escenic_root_dir
   # as we want to re-use them between minor updates of ECE.
   run cd $escenic_root_dir/
-  for el in $technet_download_list $wf_download_list; do
+  for el in $technet_download_list $wf_download_list $ear_download_list; do
     local file=$(basename $el)
+    # FIXME el will never be engine-* because it's the technet download list.  Should
+    # this be [[ "$file" == ....
     if [[ "$el" == engine-* ]]; then
       continue
     fi
@@ -625,6 +676,7 @@ function install_ece_third_party_packages
       memcached
       xml-twig-tools
       wget
+      xmlstarlet
     "
   elif [ $on_redhat_or_derivative -eq 1 ]; then
     packages="
@@ -635,6 +687,7 @@ function install_ece_third_party_packages
       memcached
       mysql-connector-java
       wget
+      xmlstarlet
     "
 
     # TODO no tomcat APR wrappers in official repositories
