@@ -6,23 +6,29 @@
 #
 ################################################################################
 
-# Common variables
+# common variables
 ece_scripts_version="straight-from-github"
+ece_scripts_home=/usr/share/escenic/ece-scripts
 log=~/ece-build.log
+
+# build related variables
 build_date=`date +%F_%H%M`
-builder_root_dir=/home/builder
-builder_engine_dir=$builder_root_dir/engine
-builder_plugins_dir=$builder_root_dir/plugins
-assemblytool_root_dir=~/assemblytool
-assemblytool_pub_dir=$assemblytool_root_dir/publications
-assemblytool_lib_dir=$assemblytool_root_dir/lib
-svn_src_dir=~/src
-maven_conf_file=~/.m2/settings.xml
 maven_build_offline=0
 maven_opts="clean install"
 skip_ear=0
-project_assembly_dir=$svn_src_dir/project-assembly
-project_assembly_target_dir=$project_assembly_dir/target
+project_pom_versions=""
+
+# ece-build platform dependencies
+dependencies="tar
+sed
+ant
+svn
+mvn
+unzip
+wget
+xml2"
+
+# plugins available for inclusion in project build
 escenic_identifiers="engine
 community-engine
 forum
@@ -46,19 +52,27 @@ widget-framework-community
 widget-framework-syndication
 mobile-expansion
 "
+
+# root folders for engine and plugin distributions
+builder_root_dir=/home/builder
+builder_engine_dir=$builder_root_dir/engine
+builder_plugins_dir=$builder_root_dir/plugins
+builder_assemblytool_dir=$builder_root_dir/assemblytool
+
+# assemblytool root folders
+assemblytool_root_dir=~/assemblytool
+assemblytool_pub_dir=$assemblytool_root_dir/publications
+assemblytool_lib_dir=$assemblytool_root_dir/lib
+
+# user specific variables
+conf_file=~/.build/build.conf
+maven_conf_file=~/.m2/settings.xml
+svn_src_dir=~/src
+project_assembly_dir=$svn_src_dir/project-assembly
+project_assembly_target_dir=$project_assembly_dir/target
 release_dir=~/releases
 plugin_dir=~/plugins
 engine_root_dir=~/engine
-ece_scripts_home=/usr/share/escenic/ece-scripts
-conf_file=~/.build/build.conf
-dependencies="tar
-sed
-ant
-svn
-mvn
-unzip
-wget
-xml2"
 
 ##
 function init
@@ -172,12 +186,72 @@ function get_user_options
 }
 
 ##
+function symlink_assemblytool
+{
+  # try and retrieve assemblytool version from project
+  for f in $project_pom_versions; do
+    if [[ $f == assemblytool=* ]]; then
+      local assemblytool_link_target=`echo $f | sed 's/=/-/g'`
+      break
+    fi
+  done
+  
+  # differenciate between the old and new setup of assemblytool on builder  
+  if [ -d $assemblytool_root_dir ] && [ ! -h $assemblytool_root_dir ]; then
+ 
+    # identify and migrate projects still using the old assemblytool setup
+    if [ -z $assemblytool_link_target ]; then
+      print_and_log "Your project should start using <escenic.assemblytool.version> in your pom.xml to be compatible with newer versions of Escenic Content Engine!"
+    else
+      run rm -rf $assemblytool_root_dir
+    fi
+
+  else
+    
+    # remove assemblytool symlink if present
+    if [ -h $assemblytool_root_dir ]; then
+      run rm -f $assemblytool_root_dir
+    fi
+
+    # fail if assemblytool version has not been specified in pom.xml
+    if [ -z $assemblytool_link_target ]; then
+      print_and_log "You need to specify the <escenic.assemblytool.version> in your pom.xml, exiting!"
+      exit 1
+    elif [ ! -d $assemblytool_link_target ];
+      print_and_log "Your project requires $assemblytool_link_target, but it's not present in your home directory, I will try to fetch it from builder..."
+      if [ -d $builder_assemblytool_dir/$assemblytool_link_target ]; then
+        run cp -r $builder_assemblytool_dir/$assemblytool_link_target ~/.
+        print_and_log "The request $assemblytool_link_target has been added to your users home directory."
+      else
+        print_and_log "The requested $assemblytool_link_target does not exist on the platform and needs to be added by an operator, exiting!"
+        exit 1
+      fi
+    else
+      run ln -s $assemblytool_link_target assemblytool      
+    fi
+  fi
+}
+
+##
+function clean_assemblytool
+{
+  if [ -e "$assemblytool_pub_dir" ]; then
+    run rm -f $assemblytool_pub_dir/*
+  fi
+  if [ ! -d $assemblytool_pub_dir ]; then
+    make_dir $assemblytool_pub_dir
+  fi
+  if [ -e "$assemblytool_lib_dir" ]; then
+    run rm -f $assemblytool_lib_dir/*
+  fi
+  if [ ! -d $assemblytool_lib_dir ]; then
+    make_dir $assemblytool_lib_dir
+  fi
+}
+
+##
 function verify_assemblytool
 {
-  if [ ! -d $assemblytool_root_dir ]; then
-    print_and_log "$assemblytool_root_dir is required, but it doesn't exist!"
-    exit 1
-  fi
   if [ ! -d $assemblytool_pub_dir ]; then
     make_dir $assemblytool_pub_dir
     print_and_log "$assemblytool_pub_dir did not exist so it has been created."
@@ -195,31 +269,22 @@ function verify_assemblytool
 ## 
 function clean_customer_home
 {
+  # clean up plugin directory if it exists
   if [ -d "$plugin_dir" ]; then
     run rm -f $plugin_dir/*
-  fi
-  if [ ! -d $plugin_dir ]; then
+  else
     make_dir $plugin_dir
   fi
+
+  # remove engine symlink if it exists 
   if [ -h "$engine_root_dir" ]; then
     run rm -f $engine_root_dir
   fi
-  if [ -e "$assemblytool_pub_dir" ]; then
-    run rm -f $assemblytool_pub_dir/*
-  fi
-  if [ ! -d $assemblytool_pub_dir ]; then
-    make_dir $assemblytool_pub_dir
-  fi
-  if [ -e "$assemblytool_lib_dir" ]; then
-    run rm -f $assemblytool_lib_dir/*
-  fi
-  if [ ! -d $assemblytool_lib_dir ]; then
-    make_dir $assemblytool_lib_dir
-  fi
-  if [ -e "$svn_src_dir" ]; then
+
+  # drop and recreate svn src directory if it exists
+  if [ -d "$svn_src_dir" ]; then
     run rm -rf $svn_src_dir
-  fi
-  if [ ! -d $svn_src_dir ]; then
+  else
     make_dir $svn_src_dir
   fi
 }
@@ -270,6 +335,17 @@ function svn_verify_assembly
 }
 
 ##
+function retrieve_project_pom_versions
+{
+  if [ -e $svn_src_dir/pom.xml ];then
+    project_pom_versions=`xml2 < src/pom.xml | grep '^/project/properties/escenic\.' | sed -n -e 's,.*properties/escenic\.,,' -e 's,\.version,,p'`
+  else
+    print_and_log "Your projects pom.xml is missing, exiting!"
+    exit 1
+  fi
+}
+
+##
 function symlink_ece_components
 {
   for f in $escenic_identifiers
@@ -302,7 +378,7 @@ function verify_requested_versions
       verification_failed=1
     fi
   done
-  if [ $verification_failed -eq 1 ]; then
+  if [ $verification_failed -eq 1 ]; thevn_src_dir/pom.xml
     print_and_log "You have broken symlinks indicating that some requested version(s) of engine and/or plugins are missing!"
     print_and_log "BUILD FAILED!"
     exit 1
@@ -667,7 +743,6 @@ function phase_verify_user
 {
   verify_maven_proxy
   verify_configuration
-  verify_assemblytool
 }
 
 ##
@@ -681,6 +756,9 @@ function phase_verify_project
 {
   svn_fail_early
   svn_verify_assembly
+  symlink_assemblytool
+  clean_assemblytool
+  verify_assemblytool
   symlink_ece_components
   verify_requested_versions
   add_global_libs
