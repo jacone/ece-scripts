@@ -445,84 +445,6 @@ function publish_ear
   fi
 }
 
-##
-function print_result
-{
-  print_and_log "BUILD SUCCESSFUL! @ $(date)"
-  if [ $skip_ear -eq 1 ]; then
-    print_and_log "Only configuration packages has been created in this release!"
-  else
-    print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
-  fi
-}
-
-##
-function phase_startup {
-  init
-  fetch_configuration
-}
-
-##
-function phase_verify_platform
-{
-  verify_dependencies
-  verify_java
-}
-
-##
-function phase_verify_user
-{
-  verify_maven_proxy
-  verify_configuration
-  verify_assemblytool
-}
-
-##
-function phase_clean_up
-{
-  clean_customer_home
-}
-
-##
-function phase_verify_project
-{
-  svn_fail_early
-  svn_verify_assembly
-  symlink_ece_components
-  verify_requested_versions
-  add_global_libs
-}
-
-function generate_new_changelog() {
-  print_and_log "Generating change log for revision $revision" ...
-  (
-    cd ${svn_src_dir}
-    local previous_revision=PREV
-    previous_revision=$(
-      ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
-        grep -v latest | \
-        sed 's/.*r\([0-9]*\).deb/\1/g' | \
-        sort | \
-        uniq | \
-        tail -1
-    )
-
-    # in case we don't have any previous builds, we don't pass
-    # anything in the from parameters.
-    local from_option=""
-    if [ -n "${previous_revision}" ]; then
-      from_option="--from $previous_revision"
-    fi
-    
-    run generate-changelog \
-      --project $(basename $svn_base) \
-      --user $svn_user \
-      --password $svn_password \
-      ${from_option} \
-      --to $revision
-  )
-}
-
 ## creates DEB and RPM packages with the server configuration for all
 ## of the machines available in <project>/server-admin/<machine
 ## instance>
@@ -646,6 +568,37 @@ EOF
     $machine_list "] for the other machines' conf packages."
 }
 
+##
+function generate_new_changelog() {
+  print_and_log "Generating change log for revision $revision" ...
+  (
+    cd ${svn_src_dir}
+    local previous_revision=PREV
+    previous_revision=$(
+      ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
+        grep -v latest | \
+        sed 's/.*r\([0-9]*\).deb/\1/g' | \
+        sort | \
+        uniq | \
+        tail -1
+    )
+
+    # in case we don't have any previous builds, we don't pass
+    # anything in the from parameters.
+    local from_option=""
+    if [ -n "${previous_revision}" ]; then
+      from_option="--from $previous_revision"
+    fi
+    
+    run generate-changelog \
+      --project $(basename $svn_base) \
+      --user $svn_user \
+      --password $svn_password \
+      ${from_option} \
+      --to $revision
+  )
+}
+
 ## Generates the /etc/hosts file for the given machine.
 ## 
 ## $1 :: the machine name
@@ -693,6 +646,54 @@ $(cat $f)
 
 EOF
   done
+}
+
+##
+function print_result
+{
+  print_and_log "BUILD SUCCESSFUL! @ $(date)"
+  if [ $skip_ear -eq 1 ]; then
+    print_and_log "Only configuration packages has been created in this release!"
+  else
+    print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
+  fi
+}
+
+##
+function phase_startup {
+  init
+  fetch_configuration
+}
+
+##
+function phase_verify_platform
+{
+  verify_dependencies
+  verify_java
+}
+
+##
+function phase_verify_user
+{
+  verify_maven_proxy
+  verify_configuration
+  verify_assemblytool
+}
+
+##
+function phase_clean_up
+{
+  clean_customer_home
+}
+
+##
+function phase_verify_project
+{
+  svn_fail_early
+  svn_verify_assembly
+  symlink_ece_components
+  verify_requested_versions
+  add_global_libs
 }
 
 ##
