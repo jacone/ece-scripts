@@ -197,6 +197,7 @@ function get_user_options
 ##
 function symlink_assemblytool
 {
+
   # try and retrieve assemblytool version from project
   for f in $project_pom_versions; do
     if [[ $f == assemblytool=* ]]; then
@@ -206,22 +207,20 @@ function symlink_assemblytool
   done
   
   # differenciate between the old and new setup of assemblytool on builder  
-  if [ -d $assemblytool_root_dir ] && [ ! -h $assemblytool_root_dir ]; then
- 
+  if [ -d $assemblytool_root_dir ] && [ ! -h $assemblytool_root_dir ]; then 
     # identify and migrate projects still using the old assemblytool setup
     if [ -z $assemblytool_link_target ]; then
       print_and_log "Your project should start using <escenic.assemblytool.version> in your pom.xml to be compatible with newer versions of Escenic Content Engine!"
     else
       run rm -rf $assemblytool_root_dir
     fi
-
-  else
-    
+  elif [ -h $assemblytool_root_dir ]; then
     # remove assemblytool symlink if present
-    if [ -h $assemblytool_root_dir ]; then
-      run rm -f $assemblytool_root_dir
-    fi
-
+    run rm -f $assemblytool_root_dir
+  fi
+  
+  # standard execution with the assemblytool directory link not yet present
+  if [ ! -d $assemblytool_root_dir ]; then
     # fail if assemblytool version has not been specified in pom.xml
     if [ -z $assemblytool_link_target ]; then
       print_and_log "You need to specify the <escenic.assemblytool.version> in your pom.xml, exiting!"
@@ -235,9 +234,9 @@ function symlink_assemblytool
         print_and_log "The requested $assemblytool_link_target does not exist on the platform and needs to be added by an operator, exiting!"
         exit 1
       fi
-    else
-      run ln -s $assemblytool_link_target assemblytool      
     fi
+    # create assemblytool symlink based on the request project version
+    run ln -s $assemblytool_link_target assemblytool      
   fi
 }
 
