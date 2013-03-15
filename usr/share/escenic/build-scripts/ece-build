@@ -101,17 +101,22 @@ function fetch_configuration
 }
 
 ##
+function verify_configuration {
+  enforce_variable customer "Your $conf_file is missing the variable 'customer', exiting!"
+  enforce_variable svn_base "Your $conf_file is missing the variable 'svn_base', exiting!"
+  enforce_variable svn_user "Your $conf_file is missing the variable 'svn_base', exiting!"
+  enforce_variable svn_password "Your $conf_file is missing the variable 'svn_password', exiting!"
+  # append a / to svn_base if not present
+  [[ $svn_base != */ ]] && svn_base="$svn_base"/
+}
+
+##
 function enforce_variable
 {
   if [ ! -n "$(eval echo $`echo $1`)" ]; then
     print_and_log "$2"
     remove_pid_and_exit_in_error
   fi
-}
-
-##
-function verify_command {
-  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; remove_pid_and_exit_in_error; }
 }
 
 ##
@@ -124,22 +129,8 @@ function verify_java
 }
 
 ##
-function verify_dependencies
-{
-  for f in $dependencies
-  do
-    verify_command $f
-  done
-}
-
-##
-function verify_configuration {
-  enforce_variable customer "Your $conf_file is missing the variable 'customer', exiting!"
-  enforce_variable svn_base "Your $conf_file is missing the variable 'svn_base', exiting!"
-  enforce_variable svn_user "Your $conf_file is missing the variable 'svn_base', exiting!"
-  enforce_variable svn_password "Your $conf_file is missing the variable 'svn_password', exiting!"
-  # append a / to svn_base if not present
-  [[ $svn_base != */ ]] && svn_base="$svn_base"/
+function verify_command {
+  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; remove_pid_and_exit_in_error; }
 }
 
 ##
