@@ -96,7 +96,7 @@ function fetch_configuration
     source $conf_file
   else
     print_and_log "Your user is missing the $conf_file, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi 
 }
 
@@ -115,7 +115,7 @@ function enforce_variable
 {
   if [ ! -n "$(eval echo $`echo $1`)" ]; then
     print_and_log "$2"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
@@ -124,13 +124,13 @@ function verify_java
 {
   if !dpkg-query -W sun-java6-jdk > /dev/null 2>&1; then
     print_and_log "Required package sun-java6-jdk is not installed, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
 ##
 function verify_command {
-  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; remove_pid_and_exit_in_error; }
+  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; exit 1; }
 }
 
 ##
@@ -161,15 +161,14 @@ function get_user_options
         ;;
       \?)
         print "Invalid option: -$OPTARG" >&2
-        remove_pid_and_exit_in_error
+        exit 1
         ;;
       :)
         print "Option -$OPTARG requires an argument." >&2
-        remove_pid_and_exit_in_error
+        exit 1
         ;;
     esac
   done
-
 }
 
 ##
@@ -177,7 +176,7 @@ function verify_assemblytool
 {
   if [ ! -d $assemblytool_root_dir ]; then
     print_and_log "$assemblytool_root_dir is required, but it doesn't exist!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
   if [ ! -d $assemblytool_pub_dir ]; then
     make_dir $assemblytool_pub_dir
@@ -232,7 +231,7 @@ function add_global_libs
     run ln -s $builder_root_dir/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
   else
     print_and_log "The global library $builder_root_dir/lib/java_memcached-release_2.0.1.jar is missing, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
   local engine_version=`readlink $engine_root_dir`
   if [ $(echo "$engine_version" | grep "engine-5.3" | wc -l) -gt 0 ]; then
@@ -240,7 +239,7 @@ function add_global_libs
       run ln -s $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
     else
       print_and_log "The global library $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar is missing, exiting!"
-      remove_pid_and_exit_in_error
+      exit 1
     fi
   fi
 }
@@ -263,10 +262,10 @@ function svn_verify_assembly
   run svn update --non-interactive --set-depth infinity $svn_src_dir/pom.xml $svn_src_dir/project-assembly 
   if [ ! -d $project_assembly_dir ]; then
     print_and_log "Your project does not contain the project-assembly module and is thereby not certified to use the ece-builder, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   elif [ ! -e $project_assembly_dir/src/main/assembly/assembly.xml ]; then
     print_and_log "Your project does not have a $project_assembly_dir/src/main/assembly/assembly.xml and is thereby not certified to use the ece-builder, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
@@ -306,7 +305,7 @@ function verify_requested_versions
   if [ $verification_failed -eq 1 ]; then
     print_and_log "You have broken symlinks indicating that some requested version(s) of engine and/or plugins are missing!"
     print_and_log "BUILD FAILED!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
@@ -335,7 +334,7 @@ function verify_maven_proxy
     done
     if [[ $maven_user = "" ]] || [[ $maven_password = "" ]]; then
       print_and_log "Your $maven_conf_file is missing the username and/or the password for the maven proxy, exiting!"
-      remove_pid_and_exit_in_error
+      exit 1
     else
       if [ $maven_build_offline -eq 1 ]; then
         print_and_log "Skipping maven proxy verification as you've chosen offline mode!"
@@ -344,25 +343,24 @@ function verify_maven_proxy
         RETVAL=$?
         if [ $RETVAL -ne 0 ]; then
           print_and_log "Your user can't reach http://maven.vizrt.com, exiting!"
-          remove_pid_and_exit_in_error
+          exit 1
         fi
       fi
     fi
   else
     print_and_log "Your user does not have a ~/.m2/settings.xml, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
 ## 
 function svn_checkout
 {
-  #run svn update --non-interactive --set-depth infinity $svn_src_dir
   run svn checkout --non-interactive --depth infinity --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
   revision=`svn info $svn_src_dir | grep -i Revision | awk '{print $2}'`
   if [[ $revision = "" ]]; then    
     print_and_log "Failed to fetch current revision number, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
@@ -432,7 +430,7 @@ function publish_ear
     run ln -fs $release_dir/$resulting_ear $release_dir/latest.ear
   else
     print_and_log "I'm done, but the .ear is still missing, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
