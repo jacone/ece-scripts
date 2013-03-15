@@ -765,6 +765,7 @@ function phase_verify_project
 {
   svn_fail_early
   svn_verify_assembly
+  retrieve_project_pom_versions
   symlink_assemblytool
   clean_assemblytool
   verify_assemblytool
