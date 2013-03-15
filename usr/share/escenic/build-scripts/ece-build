@@ -90,6 +90,17 @@ function init
 }
 
 ##
+function fetch_configuration
+{
+  if [ -e $conf_file ]; then
+    source $conf_file
+  else
+    print_and_log "Your user is missing the $conf_file, exiting!"
+    remove_pid_and_exit_in_error
+  fi 
+}
+
+##
 function enforce_variable
 {
   if [ ! -n "$(eval echo $`echo $1`)" ]; then
@@ -119,17 +130,6 @@ function verify_dependencies
   do
     verify_command $f
   done
-}
-
-##
-function fetch_configuration
-{
-  if [ -e $conf_file ]; then
-    source $conf_file
-  else
-    print_and_log "Your user is missing the $conf_file, exiting!"
-    remove_pid_and_exit_in_error
-  fi 
 }
 
 ##
@@ -459,6 +459,7 @@ function print_result
 ##
 function phase_startup {
   init
+  fetch_configuration
 }
 
 ##
@@ -472,7 +473,6 @@ function phase_verify_platform
 function phase_verify_user
 {
   verify_maven_proxy
-  fetch_configuration
   verify_configuration
   verify_assemblytool
 }
