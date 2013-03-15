@@ -134,17 +134,26 @@ function enforce_variable
 }
 
 ##
+function verify_dependencies
+{
+  for f in $dependencies
+  do
+    verify_command $f
+  done
+}
+
+##
+function verify_command {
+  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; exit 1; }
+}
+
+##
 function verify_java 
 {
   if !dpkg-query -W sun-java6-jdk > /dev/null 2>&1; then
     print_and_log "Required package sun-java6-jdk is not installed, exiting!"
     exit 1
   fi
-}
-
-##
-function verify_command {
-  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; exit 1; }
 }
 
 ##
@@ -217,7 +226,7 @@ function symlink_assemblytool
     if [ -z $assemblytool_link_target ]; then
       print_and_log "You need to specify the <escenic.assemblytool.version> in your pom.xml, exiting!"
       exit 1
-    elif [ ! -d $assemblytool_link_target ];
+    elif [ ! -d $assemblytool_link_target ]; then
       print_and_log "Your project requires $assemblytool_link_target, but it's not present in your home directory, I will try to fetch it from builder..."
       if [ -d $builder_assemblytool_dir/$assemblytool_link_target ]; then
         run cp -r $builder_assemblytool_dir/$assemblytool_link_target ~/.
@@ -378,7 +387,7 @@ function verify_requested_versions
       verification_failed=1
     fi
   done
-  if [ $verification_failed -eq 1 ]; thevn_src_dir/pom.xml
+  if [ $verification_failed -eq 1 ]; then
     print_and_log "You have broken symlinks indicating that some requested version(s) of engine and/or plugins are missing!"
     print_and_log "BUILD FAILED!"
     exit 1
