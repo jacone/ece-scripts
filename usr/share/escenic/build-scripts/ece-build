@@ -18,6 +18,10 @@ maven_opts="clean install"
 skip_ear=0
 project_pom_versions=""
 
+# standard java locations
+java_6_sun=/usr/lib/jvm/java-6-sun
+java_7_oracle=/usr/lib/jvm/java-7-oracle
+
 # ece-build platform dependencies
 dependencies="tar
 sed
@@ -346,10 +350,36 @@ function svn_verify_assembly
 function retrieve_project_pom_versions
 {
   if [ -e $svn_src_dir/pom.xml ];then
-    project_pom_versions=`xml2 < src/pom.xml | grep '^/project/properties/escenic\.' | sed -n -e 's,.*properties/escenic\.,,' -e 's,\.version,,p'`
+    project_pom_versions=`xml2 < $svn_src_dir/pom.xml | grep '^/project/properties/escenic\.' | sed -n -e 's,.*properties/escenic\.,,' -e 's,\.version,,p'`
   else
     print_and_log "Your projects pom.xml is missing, exiting!"
     exit 1
+  fi
+}
+
+##
+function set_java_home
+{
+  project_java_version=`xml2 < $svn_src_dir/pom.xml | grep '^/project/build/plugins/plugin/configuration/target=' | sed -n -e 's,.*project/build/plugins/plugin/configuration/target=,,p'`
+  if [ -z $project_java_version ]; then
+    print_and_log "You need to specify the java taget version for the maven-compiler-plugin in your pom.xml as this is used by this script to determine which java to use, exiting!"
+    exit 1
+  elif [[ $project_java_version == "1.6" ]]; then
+    if [ -d $java_6_sun ]; then
+      export JAVA_HOME=$java_6_sun
+    else
+      print_and_log "The expected home directory, $java_6_sun, for you requested java version does not exist on the platform and needs to be added, exiting!"
+      exit 1
+    fi
+  elif [[ $project_java_version == "1.7" ]]; then
+    if [ -d $java_7_oracle ]; then
+      export JAVA_HOME=$java_7_oracle
+    else
+      print_and_log "The expected home directory, $java_7_oracle, for you requested java version does not exist on the platform and needs to be added, exiting!"
+      exit 1
+    fi
+  else
+    print_and_log "The requested java version $project_java_version is not supported or has been specified using an incorrect format, exiting!"
   fi
 }
 
@@ -765,6 +795,7 @@ function phase_verify_project
   svn_fail_early
   svn_verify_assembly
   retrieve_project_pom_versions
+  set_java_home
   symlink_assemblytool
   clean_assemblytool
   verify_assemblytool
