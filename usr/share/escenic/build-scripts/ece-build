@@ -766,6 +766,8 @@ function print_result
 ##
 function phase_startup {
   init
+  print_and_log "Starting release creation! @ $(date)"
+  print_and_log "Additional output can be found in $log"
   fetch_configuration
   get_user_options "${@}"
 }
@@ -808,8 +810,6 @@ function phase_verify_project
 ##
 function phase_release
 {
-  print_and_log "Starting release creation! @ $(date)"
-  print_and_log "Additional output can be found in $log"
   svn_checkout
   if [ $skip_ear -eq 0 ]; then
     maven_build
