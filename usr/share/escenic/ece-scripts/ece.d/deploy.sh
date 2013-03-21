@@ -97,7 +97,7 @@ function deploy() {
   (
     run mkdir -p $dir
     run cd $dir
-    run unzip $ear
+    run unzip -q $ear
   )
 
   print "Deploying $ear on $appserver ..."
@@ -166,7 +166,7 @@ function deploy() {
 
         make_dir $tomcat_base/$app_base/$name
         run cd $tomcat_base/$app_base/$name
-        run unzip $war
+        run unzip -q $war
 
         if [ ${enable_memcached_support-1} -eq 1 ]; then
           add_memcached_support $tomcat_base/$app_base/$name
