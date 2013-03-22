@@ -846,30 +846,25 @@ The inclusion of the engine/solr directory makes it easy for users to
 provide their own, optimised Solr configuration. In this context, also
 note that a post install hook, *set\_up\_solr.postinst*, is available.
 
-If you use maven to build your projects, you can put an effective pom
-into the /META-INF/effective-pom.xml file of your EAR, with properties
-that signal to ece-install what files to download, by specifying the
-maven coordinates of the artifact.
+If you want the EAR file to dictate the production environment, set up
+the build environment to create a file META-INF/distributions.txt in
+your EAR, and put the maven coordinates needed by the run-time in it.
+This will tell ece-install what files to download.
 
-Include these coordinates as properties that start with *escenic.* and
-end with *.distribution* to get ece-install to download them from a
-maven repository.
-
-#+BEGIN_SRC nxml
-<properties>
-  <escenic.engine.distribution>com.escenic:engine-dist:zip:bin:${engine-version}</escenic.engine.distribution>
-  <escenic.someplugin.distribution>com.escenic.plugins.someplugin:someplugin-dist:zip:${someplugin-version}</escenic.someplugin.distribution>
-</properties>
+#+BEGIN_SRC text
+com.escenic:engine-dist:zip:bin:5.5.2.123456
+com.escenic.plugins.someplugin:someplugin-dist:zip:1.2.134
 #+END_SRC
 
 In your ece-install.conf file, specify *fai_maven_repositories* as a
-whitespace separated list of repositories that may hold these binaries,
-and ece-install will try each repository in order to download the arifacts.
+whitespace separated list of repositories that may hold these artifacts,
+and ece-install will try each repository in order to download the
+arifacts.
 
 #+BEGIN_SRC conf
 fai_maven_repositories="
-  http://example.org/nexus/content/groups/trunk/
-  http://mybuildserver/
+  http://example.org/nexus/content/groups/trunk
+  http://builder:secretpassword@mybuildserver.internal/trunk
 "
 #+END_SRC
 
