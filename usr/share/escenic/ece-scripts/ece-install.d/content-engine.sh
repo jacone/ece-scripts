@@ -179,30 +179,20 @@ function create_ear_download_list() {
     remove_pid_and_exit_in_error
   fi
 
-  local effective_pom=META-INF/effective-pom.xml
+  local distributions_txt=META-INF/escenic-distributions.txt
 
   # Verify that the ZIP file has an effective-pom.xml file
   run unzip -t -q $ear_file
   log "$ear_file was a valid ZIP file"
 
-  if ! unzip &> /dev/null -t -q $ear_file $effective_pom ; then
-    print_and_log "EAR file is missing $effective_pom. Not resolving artifacts."
+  if ! unzip &> /dev/null -t -q $ear_file $distributions_txt; then
+    print_and_log "EAR file is missing $distributions_txt. Not resolving artifacts."
     return 0
   fi
 
-  local props=$(unzip -qc $ear_file $effective_pom |
-    xmlstarlet sel -N "pom=http://maven.apache.org/POM/4.0.0" \
-      -t -m '/pom:project/pom:properties/*|/projects/pom:project/pom:properties/*' \
-      -v 'concat(name(), " ", text())' \
-      -nl)
-  if [ $? != 0 ] ; then
-    print_and_log "Unable to understand the effective pom"
-    return 0
-  fi
-
-  local gavs=$(sort <<< "$props" -u | grep '^escenic\.[^\.]*\.distribution ' | cut -d ' ' -f 2 )
+  local gavs=$(unzip -qc $ear_file $distributions_txt | grep '^[a-z]')
   if ! grep -q . <<< "$gavs" ; then
-    print_and_log "EAR's effective pom had no escenic.xxx.distribution properties.  Ignoring."
+    print_and_log "EAR's $distributions_txt had no maven artifacts in it properties.  Ignoring."
     log props=$props
     return 0
   fi
