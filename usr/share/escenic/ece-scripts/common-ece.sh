@@ -79,6 +79,12 @@ webapps_in_standard_webapps_list="
   solr
   studio
   webservice
+  webservice-extensions
+  newsgate-webservice
+  wf-update-service
+  video-webservice
+  video-webservice-extensions
+  poll-ws
 "
 
 ### is_webapp_a_publication
