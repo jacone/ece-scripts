@@ -536,6 +536,35 @@ function ant_build
 }
 
 ##
+function add_distributions_to_ear
+{
+  if [ -e $assemblytool_root_dir/dist/engine.ear ]; then
+    if [ -e $assemblytool_root_dir/dist/effective-pom.xml ]; then
+      run rm -f $assemblytool_root_dir/dist/effective-pom.xml
+    fi
+    run cd $svn_src_dir
+    run mvn -Doutput=$assemblytool_root_dir/dist/effective-pom.xml help:effective-pom   
+    local pom_properties=$(cat $assemblytool_root_dir/dist/effective-pom.xml | xmlstarlet sel -N "pom=http://maven.apache.org/POM/4.0.0" \
+      -t -m '/projects/pom:project/pom:properties/*' \
+      -v 'concat(name(), " ", text())' -nl)
+    if [ $? != 0 ] ; then
+      print_and_log "Unable to understand $assemblytool_root_dir/dist/effective-pom.xml, exiting!"
+      return 1
+    fi
+    local pom_distributions=$(sort <<< "$pom_properties" -u | grep '^escenic\.[^\.]*\.distribution ' | cut -d ' ' -f 2 )
+    if [ -z pom_distributions ] ; then
+      log "The projects effective pom had no escenic.xxx.distribution properties, ignoring."
+    else
+      echo "$pom_distributions" >> $assemblytool_root_dir/dist/escenic-distributions.txt
+      run jar uvf $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt
+    fi
+  else
+    print_and_log "Assemblytool finished, but the .ear is missing, exiting!"
+    exit 1
+  fi
+}
+
+##
 function publish_ear 
 {
   resulting_ear=$customer-$release_label-rev$revision-$build_date.ear
@@ -822,6 +851,7 @@ function phase_release
     symlink_project_assembly
     generate_publication_properties
     ant_build
+    add_distributions_to_ear
     publish_ear
   else
     print_and_log "Creation of .ear file skipped as requested!"    
