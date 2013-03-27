@@ -47,6 +47,7 @@ lucy
 reporter
 video
 newsroom
+newsgate
 vcpeditor
 online-graphics
 widget-framework-core
@@ -519,6 +520,11 @@ context-root:/${f%.war}" > $assemblytool_pub_dir/${f%.war}.properties
     log "Adding an assembly descriptor for Dashboard ..."
     echo "source-war: ../../plugins/dashboard/wars/dashboard-webapp.war
 context-root: /dashboard" > $assemblytool_pub_dir/dashboard.properties
+  fi
+  if [ -d $plugin_dir/newsgate ]; then
+    log "Adding an assembly descriptor for Newsgate Webservice ..."
+    echo "source-war: ../../plugins/newsgate/webapps/newsgate-webservice.war
+context-root: /newsgate-webservice" > $assemblytool_pub_dir/newsgate-webservice.properties
   fi
 }
 
