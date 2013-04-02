@@ -55,7 +55,7 @@ java_home=/usr/lib/jvm/java-6-sun
 ece_scripts_version="straight-from-github"
 
 #Set the default database vendor. Possible values are mariadb and percona
-db_vendor=mariadb
+db_vendor=percona
 
 #####################################################################
 
