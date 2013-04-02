@@ -846,6 +846,82 @@ The inclusion of the engine/solr directory makes it easy for users to
 provide their own, optimised Solr configuration. In this context, also
 note that a post install hook, *set\_up\_solr.postinst*, is available.
 
+If you want the EAR file to dictate the production environment, set up
+the build environment to create a file META-INF/distributions.txt in
+your EAR, and put the maven coordinates needed by the run-time in it.
+This will tell ece-install what files to download.
+
+#+BEGIN_SRC text
+com.escenic:engine-dist:zip:bin:5.5.2.123456
+com.escenic.plugins.someplugin:someplugin-dist:zip:1.2.134
+#+END_SRC
+
+In your ece-install.conf file, specify *fai_maven_repositories* as a
+whitespace separated list of repositories that may hold these artifacts,
+and ece-install will try each repository in order to download the
+arifacts.
+
+#+BEGIN_SRC conf
+fai_maven_repositories="
+  http://example.org/nexus/content/groups/trunk
+  http://builder:secretpassword@mybuildserver.internal/trunk
+"
+#+END_SRC
+
+If you wish to provide Nursery configuration for the plugins, you
+simply put them in engine/siteconfig/config-skeleton inside your
+tarball, together with the other Nursery configuration files.
+
+The *fai\_presentation\_conf\_archive* and *fai\_presentation\_ear* variables
+both accept the following types of value (here using the value of
+*fai\_presentation\_ear* as an example):
+- *http://build.server/stable/engine-mysite.com-1.2.3.ear*
+- *https://build.server/stable/engine-mysite.com-1.2.3.ear*
+- *file:///var/lib/build/stable/engine-mysite.com-1.2.3.ear*
+- */var/lib/build/stable/engine-mysite.com-1.2.3.ear*
+
+** Setting up virtual hosts
+Setting up virtual host definitions in the application server makes a
+some things easier, such as ECE plugins which set cookies based on
+information they get from the app server.
+
+ece-install can set up the virtual hosts configuration for Tomcat
+application servers if the profile is *editor*, *all* or
+*presentation*.
+
+To use this feature, you must define one domain for each publication
+in the following FAI parameter:
+#+BEGIN_SRC conf
+fai_publication_domain_mapping_list="
+  firepub#fire.escenic.com
+  ildpub#ild.escenic.com#feuer.escenic.com,fuego.escenic.com
+"
+#+END_SRC
+
+This will produce the following stanzas in *server.xml*:
+
+#+BEGIN_SRC nxml
+<Host
+  name="fire.escenic.com"
+  appBase="webapps-fire"
+  autoDeploy="false">
+  <Context displayName="fire.escenic.com"
+           docBase="firepub"
+           path=""
+  />
+</Host>
+<Host
+  name="ild.escenic.com"
+  appBase="webapps-ildpub"
+  autoDeploy="false">
+  <Alias>feuer.escenic.com</Alias>
+  <Alias>fuego.escenic.com</Alias>
+  <Context displayName="ild.escenic.com"
+           docBase="ildpub"
+           path=""
+  />
+</Host>
+#+END_SRC
 If you wish to provide Nursery configuration for the plugins, you
 simply put them in engine/siteconfig/config-skeleton inside your
 tarball, together with the other Nursery configuration files.

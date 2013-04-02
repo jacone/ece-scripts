@@ -64,12 +64,16 @@ function deploy() {
 
   if [ -n "$file" ]; then
     print_and_log "Deploying $file on $instance ..."
-
+    
     # wget_auth is needed for download_uri_target_to_dir
     wget_auth=$wget_builder_auth
-    download_uri_target_to_dir $file $cache_dir
     ear=$cache_dir/$(basename $file)
-    
+    if [ -e "$ear" ] && [ $(is_archive_healthy $ear) -eq 1 ]; then
+      print_and_log "If found a healthy $ear locally so I will not fetch it again."
+    else
+      download_uri_target_to_dir $file $cache_dir
+    fi
+
     if [ ! -e "$ear" ]; then
       print_and_log "The EAR $ear_uri specified in $file could" \
         "not be retrieved. I will exit now. :-("
@@ -93,7 +97,7 @@ function deploy() {
   (
     run mkdir -p $dir
     run cd $dir
-    run $java_home/bin/jar xf $ear
+    run unzip -q $ear
   )
 
   print "Deploying $ear on $appserver ..."
@@ -162,7 +166,7 @@ function deploy() {
 
         make_dir $tomcat_base/$app_base/$name
         run cd $tomcat_base/$app_base/$name
-        run $java_home/bin/jar xf $war
+        run unzip -q $war
 
         if [ ${enable_memcached_support-1} -eq 1 ]; then
           add_memcached_support $tomcat_base/$app_base/$name

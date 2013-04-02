@@ -82,6 +82,8 @@ function install_ece_instance() {
 
   set_archive_files_depending_on_profile
 
+  create_ear_download_list
+
   download_escenic_components
   check_for_required_downloads
   set_up_engine_and_plugins
@@ -139,6 +141,110 @@ function install_ece_instance() {
   add_next_step "/etc/default/ece lists all instances started at boot time"
 }
 
+function create_ear_download_list() {
+  # sane default
+  ear_download_list=
+
+  if [ $(is_installing_from_ear) -eq 0 ]; then
+    return;
+  fi
+
+  if [[ -n "${fai_builder_http_user}" && \
+      -n "${fai_builder_http_password}" ]]; then
+      local wget_auth="
+          --http-user $fai_builder_http_user
+          --http-password $fai_builder_http_password
+        "
+  fi
+
+  # TODO: do I need to make this here?  Shouldn't it be here already?
+  if [ ! -d $escenic_cache_dir ] ; then
+    mkdir -p $escenic_cache_dir
+  fi
+
+  local ear_file=$escenic_cache_dir/$(basename $ece_instance_ear_file)
+
+  if [ -s $ear_file ] ; then
+    print_and_log "Using previously downloaded EAR file $ear_file"
+  else
+    print_and_log "Downloading $ece_instance_ear_file to $ear_file"
+    run wget $wget_auth $wget_opts $ece_instance_ear_file \
+      -O $ear_file
+  fi
+
+  if [ ! -s $ear_file ] ; then
+    rm $ear_file
+    print_and_log "Unable to download EAR file $ece_instance_ear_file," \
+      "aborting."
+    remove_pid_and_exit_in_error
+  fi
+
+  local distributions_txt=META-INF/escenic-distributions.txt
+
+  # Verify that the ZIP file has an effective-pom.xml file
+  run unzip -t -q $ear_file
+  log "$ear_file was a valid ZIP file"
+
+  if ! unzip &> /dev/null -t -q $ear_file $distributions_txt; then
+    print_and_log "EAR file is missing $distributions_txt. Not resolving artifacts."
+    return 0
+  fi
+
+  local gavs=$(unzip -qc $ear_file $distributions_txt | grep '^[a-z]')
+  if ! grep -q . <<< "$gavs" ; then
+    print_and_log "EAR's $distributions_txt had no maven artifacts in it properties.  Ignoring."
+    log props=$props
+    return 0
+  fi
+
+  log "Found these artifacts: " $gavs
+
+  local coordinate
+  for coordinate in $gavs; do
+    local groupid
+    local artifactid
+    local version
+    local packaging
+    local classifier
+    # coordinate is e.g. com.escenic:engine-dist:zip:bin:5.5.2.137014
+    # or com.escenic.plugins.forum:forum:zip:3.2.1.132293
+    # groupid:artifactid:[packaging:[classifier:]]version
+
+    # chomp groupid: --> artifactid:[packaging:[classifier:]]version 
+    groupid=${coordinate/:*}
+    coordinate=${coordinate#${groupid}:}
+
+    # chomp artifactid: --> [packaging:[classifier:]]version
+    artifactid=${coordinate/:*}
+    coordinate=${coordinate#${artifactid}:}
+
+    # chomp version --> [packaging[:classifier]]
+    version=${coordinate/*:}
+    coordinate=${coordinate%${version}}
+    coordinate=${coordinate%:}
+
+    classifier=
+    packaging=
+
+    if [ ! -z "$coordinate" ] ; then
+      # chomp packaging --> [classifier]
+      packaging=${coordinate/:*}
+      coordinate=${coordinate#${packaging}}
+      coordinate=${coordinate#:}
+    fi
+
+    if [ ! -z "$coordinate" ] ; then
+      # chomp classifier
+      classifier=$coordinate
+      coordinate=
+    fi
+
+    ear_download_list="$ear_download_list \
+       ${groupid//.//}/${artifactid}/$version/${artifactid}-${version}${classifier:+-${classifier}}.$packaging"
+
+  done
+}
+
 function set_up_engine_and_plugins() {
   if [ $ece_software_setup_completed -eq 1 ]; then
     return
@@ -148,14 +254,15 @@ function set_up_engine_and_plugins() {
   make_dir $escenic_root_dir
   run cd $escenic_root_dir/
 
-  for el in $technet_download_list; do
-    verify_that_archive_is_ok $download_dir/$(basename $el)
+  for el in $technet_download_list $ear_download_list; do
+    local file=$(basename $el)
+    verify_that_archive_is_ok $download_dir/$file
 
-    if [ $(basename $el | \
+    if [ $(echo $file | \
       grep -E "^engine-[0-9]|^engine-trunk-SNAPSHOT|^engine-dist" | \
       wc -l) -gt 0 ]; then
-      engine_dir=$(get_base_dir_from_bundle $download_dir/$(basename $el))
-      engine_file=$(basename $el)
+      engine_dir=$(get_base_dir_from_bundle $download_dir/$file)
+      engine_file=$file
     fi
   done
 
@@ -173,8 +280,10 @@ function set_up_engine_and_plugins() {
   # we now extract all the plugins. We extract them in $escenic_root_dir
   # as we want to re-use them between minor updates of ECE.
   run cd $escenic_root_dir/
-  for el in $technet_download_list $wf_download_list; do
+  for el in $technet_download_list $wf_download_list $ear_download_list; do
     local file=$(basename $el)
+    # FIXME el will never be engine-* because it's the technet download list.  Should
+    # this be [[ "$file" == ....
     if [[ "$el" == engine-* ]]; then
       continue
     fi
@@ -365,12 +474,16 @@ function set_up_basic_nursery_configuration() {
     fi
 
     run cp -r engine/siteconfig/config-skeleton/* $common_nursery_dir/
-  else
+  elif [ -d $escenic_root_dir/engine/siteconfig/config-skeleton ] ; then
     print_and_log "I'm using Nursery & JAAS configuration (skeleton) " \
       "from $escenic_root_dir/engine"
     run cp -r $escenic_root_dir/engine/siteconfig/config-skeleton/* \
       $common_nursery_dir/
     run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/
+  else
+    print_and_log "I'm creating an empty config tree for you, since" \
+      "no content engine was downloaded."
+    run mkdir -p $common_nursery_dir
   fi
 
   if [ -n "${a_tmp_dir}" ]; then
@@ -417,10 +530,8 @@ EOF
   fi
 
   file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
+  
   cat >> $file <<EOF
-# Currently (2012-08-15), ECS insists on JRE = 1.6.
-jreRequirement=1.6
-
 # We set this to get around a missing feature in Varnish, see:
 # https://www.varnish-cache.org/trac/wiki/Future_Feature#Chunkedencodingclientrequests
 # For Escenic-ites, see: VF-3480
@@ -555,6 +666,7 @@ function install_ece_third_party_packages
       memcached
       xml-twig-tools
       wget
+      xmlstarlet
     "
   elif [ $on_redhat_or_derivative -eq 1 ]; then
     packages="
@@ -565,6 +677,7 @@ function install_ece_third_party_packages
       memcached
       mysql-connector-java
       wget
+      xmlstarlet
     "
 
     # TODO no tomcat APR wrappers in official repositories

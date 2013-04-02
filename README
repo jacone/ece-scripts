@@ -1,4 +1,9 @@
 ========
+Note!
+========
+This version of ece-scripts is currently being modified to support java7, tomcat7 and content engine 5.6. During this transition the latest version of ece-scripts will not work correctly for previously released engine versions.
+
+========
 Overview
 ========
 These are scripts to help template developers and administrators
@@ -41,3 +46,5 @@ come hither!
 
 tkj@vizrt.com
 (From February 2013 Torstein will/has move(d) on and you can send email to thv@vizrt.com untill we do the impossible and find a suitable replacement for Torstein)
+
+Commits to this repo will also show in our vosa hipchat room

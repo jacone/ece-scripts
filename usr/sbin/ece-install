@@ -183,6 +183,20 @@ function download_escenic_components()
         --http-password $technet_password \
         $el
     done
+
+    for el in $ear_download_list ; do
+      if [ -s $(basename $el) ]; then
+        continue;
+      fi
+      local repo
+      for repo in $fai_maven_repositories; do
+        if curl -s -I $repo/$el | grep -q '^HTTP[^ ]* 200' ; then
+          log "Downloading $(basename $el) ..."
+          run wget $wget_opts $repo/$el
+          break
+        fi
+      done
+    done
 }
 
 # we need to do one apt-get update to be sure the package list is
@@ -402,7 +416,8 @@ function check_for_required_downloads()
   fi
 
   print_and_log "Asserting that required downloads succeeded ..."
-  local required_escenic_packages="engine assemblytool"
+  local required_escenic_packages="engine"
+  # TODO: make assembly tool required if not using an EAR.
   if [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
     required_escenic_packages="analysis-engine"
   fi

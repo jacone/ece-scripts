@@ -6,23 +6,33 @@
 #
 ################################################################################
 
-# Common variables
+# common variables
 ece_scripts_version="straight-from-github"
+ece_scripts_home=/usr/share/escenic/ece-scripts
 log=~/ece-build.log
+
+# build related variables
 build_date=`date +%F_%H%M`
-builder_root_dir=/home/builder
-builder_engine_dir=$builder_root_dir/engine
-builder_plugins_dir=$builder_root_dir/plugins
-assemblytool_root_dir=~/assemblytool
-assemblytool_pub_dir=$assemblytool_root_dir/publications
-assemblytool_lib_dir=$assemblytool_root_dir/lib
-svn_src_dir=~/src
-maven_conf_file=~/.m2/settings.xml
 maven_build_offline=0
 maven_opts="clean install"
 skip_ear=0
-project_assembly_dir=$svn_src_dir/project-assembly
-project_assembly_target_dir=$project_assembly_dir/target
+project_pom_versions=""
+
+# standard java locations
+java_6_sun=/usr/lib/jvm/java-6-sun
+java_7_oracle=/usr/lib/jvm/java-7-oracle
+
+# ece-build platform dependencies
+dependencies="tar
+sed
+ant
+svn
+mvn
+unzip
+wget
+xml2"
+
+# plugins available for inclusion in project build
 escenic_identifiers="engine
 community-engine
 forum
@@ -37,6 +47,7 @@ lucy
 reporter
 video
 newsroom
+newsgate
 vcpeditor
 online-graphics
 widget-framework-core
@@ -46,18 +57,27 @@ widget-framework-community
 widget-framework-syndication
 mobile-expansion
 "
+
+# root folders for engine and plugin distributions
+builder_root_dir=/home/builder
+builder_engine_dir=$builder_root_dir/engine
+builder_plugins_dir=$builder_root_dir/plugins
+builder_assemblytool_dir=$builder_root_dir/assemblytool
+
+# assemblytool root folders
+assemblytool_root_dir=~/assemblytool
+assemblytool_pub_dir=$assemblytool_root_dir/publications
+assemblytool_lib_dir=$assemblytool_root_dir/lib
+
+# user specific variables
+conf_file=~/.build/build.conf
+maven_conf_file=~/.m2/settings.xml
+svn_src_dir=~/src
+project_assembly_dir=$svn_src_dir/project-assembly
+project_assembly_target_dir=$project_assembly_dir/target
 release_dir=~/releases
 plugin_dir=~/plugins
 engine_root_dir=~/engine
-ece_scripts_home=/usr/share/escenic/ece-scripts
-conf_file=~/.build/build.conf
-dependencies="tar
-sed
-ant
-svn
-mvn
-unzip
-wget"
 
 ##
 function init
@@ -89,25 +109,32 @@ function init
 }
 
 ##
+function fetch_configuration
+{
+  if [ -e $conf_file ]; then
+    source $conf_file
+  else
+    print_and_log "Your user is missing the $conf_file, exiting!"
+    exit 1
+  fi 
+}
+
+##
+function verify_configuration {
+  enforce_variable customer "Your $conf_file is missing the variable 'customer', exiting!"
+  enforce_variable svn_base "Your $conf_file is missing the variable 'svn_base', exiting!"
+  enforce_variable svn_user "Your $conf_file is missing the variable 'svn_base', exiting!"
+  enforce_variable svn_password "Your $conf_file is missing the variable 'svn_password', exiting!"
+  # append a / to svn_base if not present
+  [[ $svn_base != */ ]] && svn_base="$svn_base"/
+}
+
+##
 function enforce_variable
 {
   if [ ! -n "$(eval echo $`echo $1`)" ]; then
     print_and_log "$2"
-    remove_pid_and_exit_in_error
-  fi
-}
-
-##
-function verify_command {
-  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; remove_pid_and_exit_in_error; }
-}
-
-##
-function verify_java 
-{
-  if !dpkg-query -W sun-java6-jdk > /dev/null 2>&1; then
-    print_and_log "Required package sun-java6-jdk is not installed, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
@@ -121,24 +148,17 @@ function verify_dependencies
 }
 
 ##
-function fetch_configuration
-{
-  if [ -e $conf_file ]; then
-    source $conf_file
-  else
-    print_and_log "Your user is missing the $conf_file, exiting!"
-    remove_pid_and_exit_in_error
-  fi 
+function verify_command {
+  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; exit 1; }
 }
 
 ##
-function verify_configuration {
-  enforce_variable customer "Your $conf_file is missing the variable 'customer', exiting!"
-  enforce_variable svn_base "Your $conf_file is missing the variable 'svn_base', exiting!"
-  enforce_variable svn_user "Your $conf_file is missing the variable 'svn_base', exiting!"
-  enforce_variable svn_password "Your $conf_file is missing the variable 'svn_password', exiting!"
-  # append a / to svn_base if not present
-  [[ $svn_base != */ ]] && svn_base="$svn_base"/
+function verify_java 
+{
+  if !dpkg-query -W sun-java6-jdk > /dev/null 2>&1; then
+    print_and_log "Required package sun-java6-jdk is not installed, exiting!"
+    exit 1
+  fi
 }
 
 ##
@@ -169,24 +189,83 @@ function get_user_options
         ;;
       \?)
         print "Invalid option: -$OPTARG" >&2
-        remove_pid_and_exit_in_error
+        exit 1
         ;;
       :)
         print "Option -$OPTARG requires an argument." >&2
-        remove_pid_and_exit_in_error
+        exit 1
         ;;
     esac
   done
+}
 
+##
+function symlink_assemblytool
+{
+
+  # try and retrieve assemblytool version from project
+  for f in $project_pom_versions; do
+    if [[ $f == assemblytool=* ]]; then
+      local assemblytool_release=`echo $f | sed 's/=/-/g'`
+      local assemblytool_link_target=~/$assemblytool_release
+      break
+    fi
+  done
+
+  # differentiate between the old and new setup of assemblytool on builder
+  if [ -d $assemblytool_root_dir ] && [ ! -h $assemblytool_root_dir ]; then
+    # identify and migrate projects still using the old assemblytool setup
+    if [ -z $assemblytool_release ]; then
+      print_and_log "Your project should start using <escenic.assemblytool.version> in your pom.xml to be compatible with newer versions of Escenic Content Engine!"
+    else
+      run rm -rf $assemblytool_root_dir
+    fi
+  elif [ -h $assemblytool_root_dir ]; then
+    # remove assemblytool symlink if present
+    run rm -f $assemblytool_root_dir
+  fi
+
+  # standard execution with the assemblytool directory link not yet present
+  if [ ! -d $assemblytool_root_dir ]; then
+    # fail if assemblytool version has not been specified in pom.xml
+    if [ -z $assemblytool_release ]; then
+      print_and_log "You need to specify the <escenic.assemblytool.version> in your pom.xml, exiting!"
+      exit 1
+    elif [ ! -d $assemblytool_link_target ]; then
+      print_and_log "Your project requires $assemblytool_release, but it's not present in your home directory, I will try to fetch it from builder..."
+      if [ -d $builder_assemblytool_dir/$assemblytool_release ]; then
+        run cp -r $builder_assemblytool_dir/$assemblytool_release ~/.
+        print_and_log "The request $assemblytool_release has been added to your users home directory."
+      else
+        print_and_log "The requested $assemblytool_release does not exist on the platform and needs to be added by an operator, exiting!"
+        exit 1
+      fi
+    fi
+    # create assemblytool symlink based on the request project version
+    run ln -s $assemblytool_link_target $assemblytool_root_dir
+  fi
+}
+
+##
+function clean_assemblytool
+{
+  if [ -e "$assemblytool_pub_dir" ]; then
+    run rm -f $assemblytool_pub_dir/*
+  fi
+  if [ ! -d $assemblytool_pub_dir ]; then
+    make_dir $assemblytool_pub_dir
+  fi
+  if [ -e "$assemblytool_lib_dir" ]; then
+    run rm -f $assemblytool_lib_dir/*
+  fi
+  if [ ! -d $assemblytool_lib_dir ]; then
+    make_dir $assemblytool_lib_dir
+  fi
 }
 
 ##
 function verify_assemblytool
 {
-  if [ ! -d $assemblytool_root_dir ]; then
-    print_and_log "$assemblytool_root_dir is required, but it doesn't exist!"
-    remove_pid_and_exit_in_error
-  fi
   if [ ! -d $assemblytool_pub_dir ]; then
     make_dir $assemblytool_pub_dir
     print_and_log "$assemblytool_pub_dir did not exist so it has been created."
@@ -204,31 +283,22 @@ function verify_assemblytool
 ## 
 function clean_customer_home
 {
+  # clean up plugin directory if it exists
   if [ -d "$plugin_dir" ]; then
     run rm -f $plugin_dir/*
-  fi
-  if [ ! -d $plugin_dir ]; then
+  else
     make_dir $plugin_dir
   fi
+
+  # remove engine symlink if it exists 
   if [ -h "$engine_root_dir" ]; then
     run rm -f $engine_root_dir
   fi
-  if [ -e "$assemblytool_pub_dir" ]; then
-    run rm -f $assemblytool_pub_dir/*
-  fi
-  if [ ! -d $assemblytool_pub_dir ]; then
-    make_dir $assemblytool_pub_dir
-  fi
-  if [ -e "$assemblytool_lib_dir" ]; then
-    run rm -f $assemblytool_lib_dir/*
-  fi
-  if [ ! -d $assemblytool_lib_dir ]; then
-    make_dir $assemblytool_lib_dir
-  fi
-  if [ -e "$svn_src_dir" ]; then
+
+  # drop and recreate svn src directory if it exists
+  if [ -d "$svn_src_dir" ]; then
     run rm -rf $svn_src_dir
-  fi
-  if [ ! -d $svn_src_dir ]; then
+  else
     make_dir $svn_src_dir
   fi
 }
@@ -240,7 +310,7 @@ function add_global_libs
     run ln -s $builder_root_dir/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
   else
     print_and_log "The global library $builder_root_dir/lib/java_memcached-release_2.0.1.jar is missing, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
   local engine_version=`readlink $engine_root_dir`
   if [ $(echo "$engine_version" | grep "engine-5.3" | wc -l) -gt 0 ]; then
@@ -248,7 +318,7 @@ function add_global_libs
       run ln -s $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
     else
       print_and_log "The global library $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar is missing, exiting!"
-      remove_pid_and_exit_in_error
+      exit 1
     fi
   fi
 }
@@ -271,10 +341,47 @@ function svn_verify_assembly
   run svn update --non-interactive --set-depth infinity $svn_src_dir/pom.xml $svn_src_dir/project-assembly 
   if [ ! -d $project_assembly_dir ]; then
     print_and_log "Your project does not contain the project-assembly module and is thereby not certified to use the ece-builder, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   elif [ ! -e $project_assembly_dir/src/main/assembly/assembly.xml ]; then
     print_and_log "Your project does not have a $project_assembly_dir/src/main/assembly/assembly.xml and is thereby not certified to use the ece-builder, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
+  fi
+}
+
+##
+function retrieve_project_pom_versions
+{
+  if [ -e $svn_src_dir/pom.xml ];then
+    project_pom_versions=`xml2 < $svn_src_dir/pom.xml | grep '^/project/properties/escenic\.' | sed -n -e 's,.*properties/escenic\.,,' -e 's,\.version,,p'`
+  else
+    print_and_log "Your projects pom.xml is missing, exiting!"
+    exit 1
+  fi
+}
+
+##
+function set_java_home
+{
+  project_java_version=`xml2 < $svn_src_dir/pom.xml | grep '^/project/build/plugins/plugin/configuration/target=' | sed -n -e 's,.*project/build/plugins/plugin/configuration/target=,,p'`
+  if [ -z $project_java_version ]; then
+    print_and_log "You need to specify the java taget version for the maven-compiler-plugin in your pom.xml as this is used by this script to determine which java to use, exiting!"
+    exit 1
+  elif [[ $project_java_version == "1.6" ]]; then
+    if [ -d $java_6_sun ]; then
+      export JAVA_HOME=$java_6_sun
+    else
+      print_and_log "The expected home directory, $java_6_sun, for you requested java version does not exist on the platform and needs to be added, exiting!"
+      exit 1
+    fi
+  elif [[ $project_java_version == "1.7" ]]; then
+    if [ -d $java_7_oracle ]; then
+      export JAVA_HOME=$java_7_oracle
+    else
+      print_and_log "The expected home directory, $java_7_oracle, for you requested java version does not exist on the platform and needs to be added, exiting!"
+      exit 1
+    fi
+  else
+    print_and_log "The requested java version $project_java_version is not supported or has been specified using an incorrect format, exiting!"
   fi
 }
 
@@ -314,7 +421,7 @@ function verify_requested_versions
   if [ $verification_failed -eq 1 ]; then
     print_and_log "You have broken symlinks indicating that some requested version(s) of engine and/or plugins are missing!"
     print_and_log "BUILD FAILED!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
@@ -322,11 +429,28 @@ function verify_requested_versions
 function verify_maven_proxy
 {
   if [ -e $maven_conf_file ]; then
-    maven_user=`sed "/<username>/!d;s/ *<\/\?username> *//g" $maven_conf_file | tr -d $'\r' `
-    maven_password=`sed "/<password>/!d;s/ *<\/\?password> *//g" $maven_conf_file | tr -d $'\r' `
+    maven_credentials=`xml2 < $maven_conf_file | grep '^/settings/servers'`
+    stable=vizrt-repo
+    process=0
+    for f in $maven_credentials; do
+      if [[ "$f" == *id=* ]]; then
+        local server=`echo $f | sed -n -e 's,.*id=,,p'`
+        if [[ "$server" == "$stable" ]]; then
+          process=1
+        else
+          process=0
+        fi
+      elif [ $process -eq 1 ]; then
+        if [[ "$f" == *username=* ]]; then
+          maven_user=`echo $f | sed -n -e 's,.*username=,,p'`
+        elif [[ "$f" == *password=* ]]; then
+          maven_password=`echo $f | sed -n -e 's,.*password=,,p'`
+        fi
+      fi
+    done
     if [[ $maven_user = "" ]] || [[ $maven_password = "" ]]; then
       print_and_log "Your $maven_conf_file is missing the username and/or the password for the maven proxy, exiting!"
-      remove_pid_and_exit_in_error
+      exit 1
     else
       if [ $maven_build_offline -eq 1 ]; then
         print_and_log "Skipping maven proxy verification as you've chosen offline mode!"
@@ -335,25 +459,24 @@ function verify_maven_proxy
         RETVAL=$?
         if [ $RETVAL -ne 0 ]; then
           print_and_log "Your user can't reach http://maven.vizrt.com, exiting!"
-          remove_pid_and_exit_in_error
+          exit 1
         fi
       fi
     fi
   else
     print_and_log "Your user does not have a ~/.m2/settings.xml, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
 ## 
 function svn_checkout
 {
-  #run svn update --non-interactive --set-depth infinity $svn_src_dir
   run svn checkout --non-interactive --depth infinity --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
   revision=`svn info $svn_src_dir | grep -i Revision | awk '{print $2}'`
   if [[ $revision = "" ]]; then    
     print_and_log "Failed to fetch current revision number, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
 }
 
@@ -398,6 +521,11 @@ context-root:/${f%.war}" > $assemblytool_pub_dir/${f%.war}.properties
     echo "source-war: ../../plugins/dashboard/wars/dashboard-webapp.war
 context-root: /dashboard" > $assemblytool_pub_dir/dashboard.properties
   fi
+  if [ -d $plugin_dir/newsgate ]; then
+    log "Adding an assembly descriptor for Newsgate Webservice ..."
+    echo "source-war: ../../plugins/newsgate/webapps/newsgate-webservice.war
+context-root: /newsgate-webservice" > $assemblytool_pub_dir/newsgate-webservice.properties
+  fi
 }
 
 ##
@@ -405,6 +533,35 @@ function ant_build
 {
   run cd $assemblytool_root_dir
   run ant -q clean ear -DskipRedundancyCheck=true
+}
+
+##
+function add_distributions_to_ear
+{
+  if [ -e $assemblytool_root_dir/dist/engine.ear ]; then
+    if [ -e $assemblytool_root_dir/dist/effective-pom.xml ]; then
+      run rm -f $assemblytool_root_dir/dist/effective-pom.xml
+    fi
+    run cd $svn_src_dir
+    run mvn -Doutput=$assemblytool_root_dir/dist/effective-pom.xml help:effective-pom   
+    local pom_properties=$(cat $assemblytool_root_dir/dist/effective-pom.xml | xmlstarlet sel -N "pom=http://maven.apache.org/POM/4.0.0" \
+      -t -m '/projects/pom:project/pom:properties/*' \
+      -v 'concat(name(), " ", text())' -nl)
+    if [ $? != 0 ] ; then
+      print_and_log "Unable to understand $assemblytool_root_dir/dist/effective-pom.xml, exiting!"
+      return 1
+    fi
+    local pom_distributions=$(sort <<< "$pom_properties" -u | grep '^escenic\.[^\.]*\.distribution ' | cut -d ' ' -f 2 )
+    if [ -z pom_distributions ] ; then
+      log "The projects effective pom had no escenic.xxx.distribution properties, ignoring."
+    else
+      echo "$pom_distributions" >> $assemblytool_root_dir/dist/escenic-distributions.txt
+      run jar uvf $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt
+    fi
+  else
+    print_and_log "Assemblytool finished, but the .ear is missing, exiting!"
+    exit 1
+  fi
 }
 
 ##
@@ -423,86 +580,8 @@ function publish_ear
     run ln -fs $release_dir/$resulting_ear $release_dir/latest.ear
   else
     print_and_log "I'm done, but the .ear is still missing, exiting!"
-    remove_pid_and_exit_in_error
+    exit 1
   fi
-}
-
-##
-function print_result
-{
-  print_and_log "BUILD SUCCESSFUL! @ $(date)"
-  if [ $skip_ear -eq 1 ]; then
-    print_and_log "Only configuration packages has been created in this release!"
-  else
-    print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
-  fi
-}
-
-##
-function phase_startup {
-  init
-}
-
-##
-function phase_verify_platform
-{
-  verify_dependencies
-  verify_java
-}
-
-##
-function phase_verify_user
-{
-  verify_maven_proxy
-  fetch_configuration
-  verify_configuration
-  verify_assemblytool
-}
-
-##
-function phase_clean_up
-{
-  clean_customer_home
-}
-
-##
-function phase_verify_project
-{
-  svn_fail_early
-  svn_verify_assembly
-  symlink_ece_components
-  verify_requested_versions
-  add_global_libs
-}
-
-function generate_new_changelog() {
-  print_and_log "Generating change log for revision $revision" ...
-  (
-    cd ${svn_src_dir}
-    local previous_revision=PREV
-    previous_revision=$(
-      ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
-        grep -v latest | \
-        sed 's/.*r\([0-9]*\).deb/\1/g' | \
-        sort | \
-        uniq | \
-        tail -1
-    )
-
-    # in case we don't have any previous builds, we don't pass
-    # anything in the from parameters.
-    local from_option=""
-    if [ -n "${previous_revision}" ]; then
-      from_option="--from $previous_revision"
-    fi
-    
-    run generate-changelog \
-      --project $(basename $svn_base) \
-      --user $svn_user \
-      --password $svn_password \
-      ${from_option} \
-      --to $revision
-  )
 }
 
 ## creates DEB and RPM packages with the server configuration for all
@@ -628,6 +707,37 @@ EOF
     $machine_list "] for the other machines' conf packages."
 }
 
+##
+function generate_new_changelog() {
+  print_and_log "Generating change log for revision $revision" ...
+  (
+    cd ${svn_src_dir}
+    local previous_revision=PREV
+    previous_revision=$(
+      ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
+        grep -v latest | \
+        sed 's/.*r\([0-9]*\).deb/\1/g' | \
+        sort | \
+        uniq | \
+        tail -1
+    )
+
+    # in case we don't have any previous builds, we don't pass
+    # anything in the from parameters.
+    local from_option=""
+    if [ -n "${previous_revision}" ]; then
+      from_option="--from $previous_revision"
+    fi
+    
+    run generate-changelog \
+      --project $(basename $svn_base) \
+      --user $svn_user \
+      --password $svn_password \
+      ${from_option} \
+      --to $revision
+  )
+}
+
 ## Generates the /etc/hosts file for the given machine.
 ## 
 ## $1 :: the machine name
@@ -678,6 +788,61 @@ EOF
 }
 
 ##
+function print_result
+{
+  print_and_log "BUILD SUCCESSFUL! @ $(date)"
+  if [ $skip_ear -eq 1 ]; then
+    print_and_log "Only configuration packages has been created in this release!"
+  else
+    print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
+  fi
+}
+
+##
+function phase_startup {
+  init
+  print_and_log "Starting release creation! @ $(date)"
+  print_and_log "Additional output can be found in $log"
+  fetch_configuration
+  get_user_options "${@}"
+}
+
+##
+function phase_verify_platform
+{
+  verify_dependencies
+  verify_java
+}
+
+##
+function phase_verify_user
+{
+  verify_maven_proxy
+  verify_configuration
+}
+
+##
+function phase_clean_up
+{
+  clean_customer_home
+}
+
+##
+function phase_verify_project
+{
+  svn_fail_early
+  svn_verify_assembly
+  retrieve_project_pom_versions
+  set_java_home
+  symlink_assemblytool
+  clean_assemblytool
+  verify_assemblytool
+  symlink_ece_components
+  verify_requested_versions
+  add_global_libs
+}
+
+##
 function phase_release
 {
   svn_checkout
@@ -686,6 +851,7 @@ function phase_release
     symlink_project_assembly
     generate_publication_properties
     ant_build
+    add_distributions_to_ear
     publish_ear
   else
     print_and_log "Creation of .ear file skipped as requested!"    
@@ -697,14 +863,11 @@ function phase_release
 ##
 function phase_shutdown
 {
-  echo nothing > /dev/null
+  :
 }
 
 ## ece-build execution
-phase_startup
-get_user_options $@
-print_and_log "Starting release creation! @ $(date)"
-print_and_log "Additional output can be found in $log"
+phase_startup "${@}"
 phase_verify_platform
 phase_verify_user
 phase_clean_up

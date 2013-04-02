@@ -334,23 +334,32 @@ function get_link() {
 
 function get_generated_overview() {
   cat <<EOF
-** Production Habitat :: Machines & Their Services
+** Machines & Their Services
 EOF
   get_machine_matrix_header
+
+  if [ -n "$trail_staging_editor_host" ]; then
+    echo $(get_editor_host_overview \
+      $trail_staging_editor_host \
+      $trail_staging_editor_port
+    )
+  fi
+
   if [ -n "${trail_monitoring_host}" ]; then
     cat <<EOF 
 | $(get_fqdn $trail_monitoring_host) | \
   [[$(get_link ${trail_monitoring_host}):${trail_monitoring_port-80}/munin/][munin]] \
   [[$(get_link ${trail_monitoring_host}):${trail_monitoring_port-80}/icinga/][icinga]] \
+  [[$(get_link ${trail_monitoring_host}):5679][hugin]] \
 |
-EOF
-  fi
-  
-  if [ -n "${trail_control_host}" ]; then
-    cat <<EOF 
-| $(get_fqdn $trail_control_host) | \
-  [[$(get_link $trail_control_host):5679][hugin]] \
-|
+#EOF
+#  fi
+#  
+#  if [ -n "${trail_control_host}" ]; then
+#    cat <<EOF 
+#| $(get_fqdn $trail_control_host) | \
+#  [[$(get_link $trail_control_host):5679][hugin]] \
+#|
 EOF
   fi
 
@@ -403,19 +412,6 @@ EOF
       get_simple_host_overview $el
     )
   done
-  get_machine_matrix_footer
-
-  if [ -n "$trail_staging_editor_host" ]; then
-    cat <<EOF 
-** Staging Habitat :: Machines & Their Services
-EOF
-    get_machine_matrix_header
-    echo $(get_editor_host_overview \
-      $trail_staging_editor_host \
-      $trail_staging_editor_port
-    )
-    get_machine_matrix_footer
-  fi
 }
 
 function get_machine_matrix_header() {

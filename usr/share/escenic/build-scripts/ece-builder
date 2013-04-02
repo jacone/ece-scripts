@@ -9,7 +9,6 @@
 ece_scripts_version="straight-from-github"
 ece_scripts_home=/usr/share/escenic/ece-scripts
 log=/var/log/ece-builder.log
-pid_file=/var/run/ece-builder.pid
 
 # script dependencies
 dependencies="tar
@@ -61,17 +60,6 @@ function verify_root_privilege
 }
 
 ##
-function set_pid 
-{
-  if [ -e $pid_file ]; then
-    echo "Instance of $(basename $0) already running!"
-    exit 1
-  else
-    echo $BASHPID > $pid_file
-  fi
-}
-
-##
 function init
 {
   init_failed=0
@@ -92,6 +80,18 @@ function init
     echo "$error_message"
     exit 1
   fi
+
+  # set pid
+  if [ -e $pid_file ]; then
+    echo "Instance of $(basename $0) already running!"
+    exit 1
+  else
+    create_pid
+  fi
+
+  # shutdown hooks
+  trap common_bashing_exit_hook EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
 }
 
 ##
@@ -415,8 +415,8 @@ function add_artifact
   engine_found=0
   plugin_found=0
   unsupported_plugin_found=0
-  artifact_version=`echo $artifact_path | sed "s/.*-\(.*\)\.[a-zA-Z0-9]\{3\}$/\1/"`
-  duplicate_found=0  
+  artifact_version=`echo $artifact_path | sed -n "s/.*-.*\([0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+\).*/\1/p"`
+  duplicate_found=0
 
   if [ ! -d $builder_engine_dir ]; then
     run mkdir $builder_engine_dir
@@ -446,6 +446,14 @@ function add_artifact
     if [[ "$artifact_path" == *$f* ]]; then
       plugin_found=1
       plugin_pattern=$f
+      # Workaround for widget-framework naming convention
+      if [[ $plugin_pattern == "framework-dist" ]]; then
+        plugin_pattern=widget-framework-core
+      elif [[ $plugin_pattern == "framework-community-dist" ]]; then
+        plugin_pattern=widget-framework-community
+      elif [[ $plugin_pattern == "framework-mobile-dist" ]]; then
+        plugin_pattern=widget-framework-mobile
+      fi
     fi
   done
 
@@ -477,6 +485,7 @@ function add_artifact
 ##
 function process_artifact
 {
+  echo $plugin_pattern
   # identify type
   if [ $engine_found -eq 1 ]; then
     artifact_pattern=engine
@@ -498,19 +507,19 @@ function process_artifact
     artifact_filename=$(basename "$f")
     echo "$artifact_filename" | grep '[0-9]' | grep -q "$artifact_pattern"
     if [ $? = 0 ]; then
-      log "The resulting directory contains numbers and \"$artifact_pattern\" so it is most likely valid."
+      print_and_log "The resulting directory contains numbers and \"$artifact_pattern\" so it is most likely valid."
     else
       echo "$artifact_filename" | grep -q "$artifact_pattern"
       if [ $? = 0 ]; then
-        log "$artifact_path was identified as $artifact_pattern, but failed the naming convention test after being unpacked, trying to recover..."
+        print_and_log "$artifact_path was identified as $artifact_pattern, but failed the naming convention test after being unpacked, trying to recover..."
         if [ ! -d $target_path/$artifact_pattern-$artifact_version ]; then
-          log "$artifact_path was recovered as a $artifact_pattern and will be added as $artifact_pattern-$artifact_version"
+          print_and_log "$artifact_path was recovered as a $artifact_pattern and will be added as $artifact_pattern-$artifact_version"
         else
-          log "$artifact_path was identified as $artifact_pattern, but $artifact_pattern-$artifact_version already exists so it will not be added."
+          print_and_log "$artifact_path was identified as $artifact_pattern, but $artifact_pattern-$artifact_version already exists so it will not be added."
           skip_artifact=1
         fi
       else
-        log "$f is not a valid artifact, ignoring."
+        print_and_log "$f is not a valid artifact, ignoring."
         skip_artifact=1
       fi
     fi
@@ -560,7 +569,6 @@ function common_post_build {
 ##
 function phase_startup {
   verify_root_privilege
-  set_pid
   init
   verify_dependencies
 }
