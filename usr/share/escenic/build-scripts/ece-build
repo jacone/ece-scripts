@@ -56,6 +56,7 @@ widget-framework-mobile
 widget-framework-community
 widget-framework-syndication
 mobile-expansion
+semantic-cxense
 "
 
 # root folders for engine and plugin distributions
@@ -555,7 +556,9 @@ function add_distributions_to_ear
     if [ -z pom_distributions ] ; then
       log "The projects effective pom had no escenic.xxx.distribution properties, ignoring."
     else
-      echo "$pom_distributions" >> $assemblytool_root_dir/dist/escenic-distributions.txt
+      run mkdir $assemblytool_root_dir/dist/META-INF
+      echo "$pom_distributions" >> $assemblytool_root_dir/dist/META-INF/escenic-distributions.txt
+      run cd $assemblytool_root_dir/dist
       run jar uvf $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt
     fi
   else
