@@ -517,7 +517,7 @@ function generate_publication_properties
     echo "source-war:$f
 context-root:/${f%.war}" > $assemblytool_pub_dir/${f%.war}.properties
   done
-  if [ -d ${plugins/dashboard} ]; then
+  if [ -d $plugin_dir/dashboard ]; then
     log "Adding an assembly descriptor for Dashboard ..."
     echo "source-war: ../../plugins/dashboard/wars/dashboard-webapp.war
 context-root: /dashboard" > $assemblytool_pub_dir/dashboard.properties
