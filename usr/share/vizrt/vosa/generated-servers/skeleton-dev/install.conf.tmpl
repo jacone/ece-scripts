@@ -3,9 +3,11 @@ ip_address $IP_ADDRESS
 netmask $NETMASK
 gateway $GATEWAY
 
+mirror http://no.archive.ubuntu.com/ubuntu/
+
 original_image /var/lib/vizrt/vosa/uec-images/current/disk.img
 kernel /var/lib/vizrt/vosa/uec-images/current/vmlinuz
-initial_disk_size 15
+initial_disk_size 50
 overlay /etc/vizrt/vosa/overlay/common
 timezone Europe/Oslo
 
@@ -27,3 +29,4 @@ postinstall ./hooks/post-install-hook-set-password.sh
 postinstall ./hooks/post-install-hook-apply-patch.sh
 postinstall ./hooks/post-install-hook-deploy-configuration.sh
 postinstall ./hooks/post-install-hook-restart-tomcats.sh
+postinstall ./hooks/post-install-hook-deploy-ear.sh
