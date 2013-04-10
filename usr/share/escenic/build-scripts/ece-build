@@ -105,8 +105,55 @@ function init
   pid_file=~/ece-build.pid
   create_pid
   
-  trap common_bashing_exit_hook EXIT
+  trap common_bashing_exit_hook_with_log_recap EXIT
   trap common_bashing_user_cancelled_hook SIGINT SIGHUP
+}
+
+## To make your script call this whenever it does a controlled exit,
+## either by running through the script, call this hook.
+##
+## Put this line at the start of your script:
+##
+## trap common_bashing_exit_hooki_with_log_recap EXIT
+##
+## $@ :: signal
+function common_bashing_exit_hook_with_log_recap() {
+  local RETVAL=$?
+  if [ $RETVAL -ne 0 ]; then
+    print "BUILD FAILED/CANCELED"
+    print "### start tail review of $log ###"
+    tail -n 25 $log
+    print "### end of review ###"
+  fi
+  remove_pid
+  remove_lock
+  kill $$
+}
+
+### run
+## Runs the passed command & arguments and log both standard error and
+## standard out. If the command exits cleanly, the calling code will
+## continue, however, if the command you passed to run failed, the run
+## wrapper will log the call stack and exit in error.
+##
+## $@ :: list of strings making up your command. Everything except
+##       pipes can be bassed
+function run_wrapper() {
+  if [ ! -e $log ]; then
+    touch $log || {
+      echo "Couldn't create $log"
+      exit 1
+    }
+  fi
+
+  "${@}" 1>>$log 2>>$log
+  
+  local RETVAL=$?
+  if [ $RETVAL -ne 0 ]; then
+    print_and_log "The command <${@}> run as user $USER $(red FAILED)" \
+      "(the command exited with code ${code}), I'll exit now :-("
+    exit 1 
+  fi
 }
 
 ##
@@ -219,11 +266,11 @@ function symlink_assemblytool
     if [ -z $assemblytool_release ]; then
       print_and_log "Your project should start using <escenic.assemblytool.version> in your pom.xml to be compatible with newer versions of Escenic Content Engine!"
     else
-      run rm -rf $assemblytool_root_dir
+      run_wrapper rm -rf $assemblytool_root_dir
     fi
   elif [ -h $assemblytool_root_dir ]; then
     # remove assemblytool symlink if present
-    run rm -f $assemblytool_root_dir
+    run_wrapper rm -f $assemblytool_root_dir
   fi
 
   # standard execution with the assemblytool directory link not yet present
@@ -235,7 +282,7 @@ function symlink_assemblytool
     elif [ ! -d $assemblytool_link_target ]; then
       print_and_log "Your project requires $assemblytool_release, but it's not present in your home directory, I will try to fetch it from builder..."
       if [ -d $builder_assemblytool_dir/$assemblytool_release ]; then
-        run cp -r $builder_assemblytool_dir/$assemblytool_release ~/.
+        run_wrapper cp -r $builder_assemblytool_dir/$assemblytool_release ~/.
         print_and_log "The request $assemblytool_release has been added to your users home directory."
       else
         print_and_log "The requested $assemblytool_release does not exist on the platform and needs to be added by an operator, exiting!"
@@ -243,7 +290,7 @@ function symlink_assemblytool
       fi
     fi
     # create assemblytool symlink based on the request project version
-    run ln -s $assemblytool_link_target $assemblytool_root_dir
+    run_wrapper ln -s $assemblytool_link_target $assemblytool_root_dir
   fi
 }
 
@@ -251,13 +298,13 @@ function symlink_assemblytool
 function clean_assemblytool
 {
   if [ -e "$assemblytool_pub_dir" ]; then
-    run rm -f $assemblytool_pub_dir/*
+    run_wrapper rm -f $assemblytool_pub_dir/*
   fi
   if [ ! -d $assemblytool_pub_dir ]; then
     make_dir $assemblytool_pub_dir
   fi
   if [ -e "$assemblytool_lib_dir" ]; then
-    run rm -f $assemblytool_lib_dir/*
+    run_wrapper rm -f $assemblytool_lib_dir/*
   fi
   if [ ! -d $assemblytool_lib_dir ]; then
     make_dir $assemblytool_lib_dir
@@ -286,19 +333,19 @@ function clean_customer_home
 {
   # clean up plugin directory if it exists
   if [ -d "$plugin_dir" ]; then
-    run rm -f $plugin_dir/*
+    run_wrapper rm -f $plugin_dir/*
   else
     make_dir $plugin_dir
   fi
 
   # remove engine symlink if it exists 
   if [ -h "$engine_root_dir" ]; then
-    run rm -f $engine_root_dir
+    run_wrapper rm -f $engine_root_dir
   fi
 
   # drop and recreate svn src directory if it exists
   if [ -d "$svn_src_dir" ]; then
-    run rm -rf $svn_src_dir
+    run_wrapper rm -rf $svn_src_dir
   else
     make_dir $svn_src_dir
   fi
@@ -308,7 +355,7 @@ function clean_customer_home
 function add_global_libs
 {
   if [ -e $builder_root_dir/lib/java_memcached-release_2.0.1.jar ]; then
-    run ln -s $builder_root_dir/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
+    run_wrapper ln -s $builder_root_dir/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
   else
     print_and_log "The global library $builder_root_dir/lib/java_memcached-release_2.0.1.jar is missing, exiting!"
     exit 1
@@ -316,7 +363,7 @@ function add_global_libs
   local engine_version=`readlink $engine_root_dir`
   if [ $(echo "$engine_version" | grep "engine-5.3" | wc -l) -gt 0 ]; then
     if [ -e $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar ]; then
-      run ln -s $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
+      run_wrapper ln -s $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
     else
       print_and_log "The global library $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar is missing, exiting!"
       exit 1
@@ -333,13 +380,13 @@ function svn_fail_early
     release_label=$svn_path
     log "No svn path chosen, will use 'trunk'."
   fi
-  run svn checkout --non-interactive --depth empty --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
+  run_wrapper svn checkout --non-interactive --depth empty --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
 }
 
 ##
 function svn_verify_assembly
 {
-  run svn update --non-interactive --set-depth infinity $svn_src_dir/pom.xml $svn_src_dir/project-assembly 
+  run_wrapper svn update --non-interactive --set-depth infinity $svn_src_dir/pom.xml $svn_src_dir/project-assembly 
   if [ ! -d $project_assembly_dir ]; then
     print_and_log "Your project does not contain the project-assembly module and is thereby not certified to use the ece-builder, exiting!"
     exit 1
@@ -394,9 +441,9 @@ function symlink_ece_components
     version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
     if [[ ! $version = "" ]]; then
       if [[ "$f" = "engine" ]]; then
-        run ln -s $builder_engine_dir/$f-$version $engine_root_dir 
+        run_wrapper ln -s $builder_engine_dir/$f-$version $engine_root_dir 
       else
-        run ln -s $builder_plugins_dir/$f-$version $plugin_dir/$f 
+        run_wrapper ln -s $builder_plugins_dir/$f-$version $plugin_dir/$f 
       fi
     fi
   done
@@ -473,7 +520,7 @@ function verify_maven_proxy
 ## 
 function svn_checkout
 {
-  run svn checkout --non-interactive --depth infinity --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
+  run_wrapper svn checkout --non-interactive --depth infinity --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
   revision=`svn info $svn_src_dir | grep -i Revision | awk '{print $2}'`
   if [[ $revision = "" ]]; then    
     print_and_log "Failed to fetch current revision number, exiting!"
@@ -484,20 +531,20 @@ function svn_checkout
 ##
 function maven_build
 {
-  run cd $svn_src_dir
-  run mvn $maven_opts
+  run_wrapper cd $svn_src_dir
+  run_wrapper mvn $maven_opts
 }
 
 ##
 function symlink_project_assembly
 {
-  run cd $project_assembly_target_dir
-  run unzip project-assembly.zip
+  run_wrapper cd $project_assembly_target_dir
+  run_wrapper unzip project-assembly.zip
   # global classpath
   if [ -e "$project_assembly_target_dir/lib" ]; then
     for f in $(ls -d $project_assembly_target_dir/lib/* | grep .jar);
     do 
-      run ln -s $f $assemblytool_lib_dir;
+      run_wrapper ln -s $f $assemblytool_lib_dir;
     done
   fi
   # publications
@@ -532,8 +579,8 @@ context-root: /newsgate-webservice" > $assemblytool_pub_dir/newsgate-webservice.
 ##
 function ant_build
 {
-  run cd $assemblytool_root_dir
-  run ant -q clean ear -DskipRedundancyCheck=true
+  run_wrapper cd $assemblytool_root_dir
+  run_wrapper ant -q clean ear -DskipRedundancyCheck=true
 }
 
 ##
@@ -541,10 +588,10 @@ function add_distributions_to_ear
 {
   if [ -e $assemblytool_root_dir/dist/engine.ear ]; then
     if [ -e $assemblytool_root_dir/dist/effective-pom.xml ]; then
-      run rm -f $assemblytool_root_dir/dist/effective-pom.xml
+      run_wrapper rm -f $assemblytool_root_dir/dist/effective-pom.xml
     fi
-    run cd $svn_src_dir
-    run mvn -Doutput=$assemblytool_root_dir/dist/effective-pom.xml help:effective-pom   
+    run_wrapper cd $svn_src_dir
+    run_wrapper mvn -Doutput=$assemblytool_root_dir/dist/effective-pom.xml help:effective-pom   
     local pom_properties=$(cat $assemblytool_root_dir/dist/effective-pom.xml | xmlstarlet sel -N "pom=http://maven.apache.org/POM/4.0.0" \
       -t -m '/projects/pom:project/pom:properties/*' \
       -v 'concat(name(), " ", text())' -nl)
@@ -556,10 +603,10 @@ function add_distributions_to_ear
     if [ -z pom_distributions ] ; then
       log "The projects effective pom had no escenic.xxx.distribution properties, ignoring."
     else
-      run mkdir $assemblytool_root_dir/dist/META-INF
+      run_wrapper mkdir $assemblytool_root_dir/dist/META-INF
       echo "$pom_distributions" >> $assemblytool_root_dir/dist/META-INF/escenic-distributions.txt
-      run cd $assemblytool_root_dir/dist
-      run jar uvf $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt
+      run_wrapper cd $assemblytool_root_dir/dist
+      run_wrapper jar uvf $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt
     fi
   else
     print_and_log "Assemblytool finished, but the .ear is missing, exiting!"
@@ -572,15 +619,15 @@ function publish_ear
 {
   resulting_ear=$customer-$release_label-rev$revision-$build_date.ear
   if [ -e $assemblytool_root_dir/dist/engine.ear ]; then 
-    run cp $assemblytool_root_dir/dist/engine.ear $release_dir/$resulting_ear
+    run_wrapper cp $assemblytool_root_dir/dist/engine.ear $release_dir/$resulting_ear
     
     # remove old style latest link
     if [ -e $release_dir/latest ]; then
-      run rm -f $release_dir/latest
+      run_wrapper rm -f $release_dir/latest
     fi
     
     # add new latest.ear link
-    run ln -fs $release_dir/$resulting_ear $release_dir/latest.ear
+    run_wrapper ln -fs $release_dir/$resulting_ear $release_dir/latest.ear
   else
     print_and_log "I'm done, but the .ear is still missing, exiting!"
     exit 1
@@ -623,7 +670,7 @@ function create_machine_conf_packages() {
     for el in common ${machine}; do
       if [[ -d $conf_dir/$el && \
         $(find $conf_dir/$el -maxdepth 1 | egrep -v ".git|.svn" | wc -l) -gt 1 ]]; then
-        run cp -rf $conf_dir/$el/* $target_dir/
+        run_wrapper cp -rf $conf_dir/$el/* $target_dir/
       fi
     done
 
@@ -634,13 +681,13 @@ function create_machine_conf_packages() {
     local file=$svn_src_dir/doc/vosa-handbook/create-handbook.conf
     if [ -e $file ]; then
       local dir=$target_dir/etc/vizrt
-      run mkdir -p $dir
-      run cp $file $dir/truth.conf
+      run_wrapper mkdir -p $dir
+      run_wrapper cp $file $dir/truth.conf
     fi
     
     # mark all files as conf files
     local conffiles_file=$target_dir/DEBIAN/conffiles
-    run mkdir -p $(dirname $conffiles_file)
+    run_wrapper mkdir -p $(dirname $conffiles_file)
     find $target_dir -type f | \
       egrep "etc|conf" | \
       egrep -v DEBIAN | \
@@ -671,7 +718,7 @@ EOF
     local change_log_dir=$HOME/.generate-changelog/${svn_base_dir}/${svn_path}
     
     if [ -d  $change_log_dir ]; then
-      run cp ${change_log_dir}/* $package_changelog_dir
+      run_wrapper cp ${change_log_dir}/* $package_changelog_dir
     fi
 
     # build the package
@@ -680,13 +727,13 @@ EOF
       return
     fi
     
-    run dpkg-deb --build $target_dir
+    run_wrapper dpkg-deb --build $target_dir
     mv ${target_dir}.deb $target_dir/${package_name}-${package_version}.deb
     
     if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
       (
-        run cd $target_dir
-        run fakeroot alien --keep-version --to-rpm --scripts \
+        run_wrapper cd $target_dir
+        run_wrapper fakeroot alien --keep-version --to-rpm --scripts \
           ${package_name}-${package_version}.deb
       )
     else
@@ -694,14 +741,14 @@ EOF
     fi
 
     # move the machine's DEB and RPM packges to the release directory
-    run mv $target_dir/*.{deb,rpm} $release_dir/
+    run_wrapper mv $target_dir/*.{deb,rpm} $release_dir/
    
     # adding latest links for conf packages
-    run ln -sf $release_dir/${package_name}-${package_version}.deb $release_dir/${package_name}-latest.deb
-    run ln -sf $release_dir/${package_name}-${package_version}.rpm $release_dir/${package_name}-latest.rpm
+    run_wrapper ln -sf $release_dir/${package_name}-${package_version}.deb $release_dir/${package_name}-latest.deb
+    run_wrapper ln -sf $release_dir/${package_name}-${package_version}.rpm $release_dir/${package_name}-latest.rpm
  
     # remove work directory
-    run rm -rf $target_dir
+    run_wrapper rm -rf $target_dir
   done
 
   print_and_log "Configuration packages available here: " \
@@ -732,7 +779,7 @@ function generate_new_changelog() {
       from_option="--from $previous_revision"
     fi
     
-    run generate-changelog \
+    run_wrapper generate-changelog \
       --project $(basename $svn_base) \
       --user $svn_user \
       --password $svn_password \
