@@ -191,9 +191,16 @@ function verify_builder_conf
 {
   enforce_variable technet_user "Your builder configuration file is missing the variable technet_user, exiting!"
   enforce_variable technet_user "Your builder configuration file is missing the variable technet_password, exiting!"
+  enforce_variable maven_vizrt_user "Your builder configuration file is missing the variable maven_vizrt_user, exiting!"
+  enforce_variable maven_vizrt_password "Your builder configuration file is missing the variable maven_vizrt_password, exiting!"
   wget --http-user $technet_user --http-password $technet_password http://technet.escenic.com/ -qO /dev/null
   if [ $? -ne 0 ]; then
     print_and_log "Your user can't reach http://technet.escenic.com/, exiting!"
+    remove_pid_and_exit_in_error
+  fi
+  wget --http-user $maven_vizrt_user --http-password $maven_vizrt_password http://maven.vizrt.com/ -qO /dev/null
+  if [ $? -ne 0 ]; then
+    print_and_log "Your user can't reach http://maven.vizrt.com/, exiting!"
     remove_pid_and_exit_in_error
   fi
   enforce_variable escenic_plugin_indentifiers "You need to configure a list of supported plugins in you builder configuration file using the variable escenic_plugin_indentifiers, exiting!"
@@ -496,7 +503,14 @@ function process_artifact
   fi
 
   # fetch and unpack resource
-  run wget --http-user $technet_user --http-password $technet_password $artifact_path -O $download_dir/unpack/artifact.zip
+  if [[ "${artifact_path}" == *maven.vizrt.com* ]]; then
+    local http_user=$maven_vizrt_user
+    local http_password=$maven_vizrt_password
+  elif [[ "${artifact_path}" == *technet* ]]; then
+    local http_user=$technet_user
+    local http_password=$technet_password
+  fi  
+  run wget --http-user $http_user --http-password $http_password $artifact_path -O $download_dir/unpack/artifact.zip
   run cd $download_dir/unpack
   run unzip $download_dir/unpack/artifact.zip
   
