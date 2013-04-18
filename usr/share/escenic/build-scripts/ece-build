@@ -665,7 +665,7 @@ function create_machine_conf_packages() {
     # /etc/hosts
     mkdir -p $target_dir/etc
     local hosts_output="$(get_etc_hosts_for_machine ${machine} $conf_dir)"
-    if [ ! -z $hosts_output ]; then
+    if [ ! -z "$hosts_output" ]; then
       echo "$hosts_output" > $target_dir/etc/hosts
     fi
 
