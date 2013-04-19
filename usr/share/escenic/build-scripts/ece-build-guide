@@ -1,0 +1,78 @@
+#! /usr/bin/env bash
+
+source /usr/share/escenic/ece-scripts/common-bashing.sh || {
+    echo "Couldn't find common-bashing library"
+    exit 1
+}
+
+log=$HOME/$(basename $0 .sh).log
+log "$USER is building his/her handbook @ $(date)"
+
+source ~/.build/build.conf
+
+# TODO move to the builder itself once this matures, 2012-08-20
+handbook_dir=~/handbook/
+if [ -e $handbook_dir ]; then
+    echo building the guide
+else
+    echo building the guide from scratch
+    run mkdir $handbook_dir
+    echo '/usr/bin/ece-build-guide' > $handbook_dir/create-my-handbook.sh
+    chmod 777 $handbook_dir/create-my-handbook.sh
+fi
+
+handbook_target_dir=/var/www/$USER
+
+svn_sdp_repo=${svn_base}sdp
+svn_sdp_dir=${handbook_dir}sdp
+handbook_conf_file=$svn_sdp_dir/vosa-handbook/create-handbook.conf
+
+svn_handbook_repo=https://vizrtcustomers.jira.com/svn/VIZRTSAAS/trunk/doc
+svn_handbook_dir=${handbook_dir}VIZRTSAAS/doc
+
+
+# set up PROJECT doc scripts and standard content
+if [ -e $svn_sdp_dir ]; then
+    run cd $svn_sdp_dir
+    echo getting latest from $svn_sdp_repo
+    run svn update
+else
+    run cd ${handbook_dir}
+    echo svn checkout $svn_sdp_repo $svn_sdp_dir --username $svn_user
+    run svn checkout $svn_sdp_repo $svn_sdp_dir --username $svn_user
+fi
+
+
+# set up VIZRTSAAS doc scripts and standard content
+if [ -e $svn_handbook_dir ]; then
+    run cd $svn_handbook_dir
+    echo getting latest from $svn_handbook_repo
+    run svn update
+else
+    run cd ${handbook_dir}
+    echo svn checkout $svn_handbook_repo $svn_handbook_dir --username $svn_user
+    run svn checkout $svn_handbook_repo $svn_handbook_dir --username $svn_user
+fi
+
+
+
+# verify that the current project has its trails
+if [ ! -e $handbook_conf_file ]; then
+    echo $handbook_conf_file "doesn't exist :-("
+    exit 1
+fi
+
+(
+    run cd $svn_handbook_dir
+    run bash vosa-handbook/create-handbook.sh \
+	--conf-file $handbook_conf_file \
+	--doc-dir $svn_sdp_dir/vosa-handbook
+
+    find $handbook_target_dir -type d -name ".svn" | xargs rm -rf
+    run cp ~/tmp/create-handbook-$(date --iso)/vosa-handbook.html \
+	$handbook_target_dir/index.html 
+    run cp -r ~/tmp/create-handbook-$(date --iso)/graphics $handbook_target_dir/
+    run cp -r ~/tmp/create-handbook-$(date --iso)/customer $handbook_target_dir/
+)
+
+log "$USER finished building his/her handbook @ $(date)"
