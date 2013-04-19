@@ -542,6 +542,10 @@ function check_software_credentials() {
     return
   fi
 
+  if [ ${fai_skip_password_checks-0} -eq 1 ]; then
+    return
+  fi
+
   print_and_log "Verifying that Technet credentials are OK ..."
 
   local url=http://technet.escenic.com
