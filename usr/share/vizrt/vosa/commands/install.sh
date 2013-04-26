@@ -177,18 +177,35 @@ EOF
 
   cat > ${tempdir}/overlay/updates.script <<EOF
 # Reset permissions on files created above (might not belong to root etc):
-chown --recursive ubuntu: /home/ubuntu/
+if [ -d /home/ubuntu ] ; then
+  chown --recursive ubuntu: /home/ubuntu/
+fi
 
 # Remove DHCP defaults
-perl -pi -e 's/iface eth0.*//' /etc/network/interfaces
-
-# Add static IP configuration
-cat >> /etc/network/interfaces <<END
+if [ -r /etc/network/interfaces ] ; then
+  perl -pi -e 's/iface eth0.*//' /etc/network/interfaces
+  cat >> /etc/network/interfaces <<END
 iface eth0 inet static
     address ${install_config_ip_address}
     netmask ${install_config_netmask}
     gateway ${install_config_gateway}
 END
+fi
+
+# Add static IP configuration
+if [ -r /etc/sysconfig/network-scripts/ifcfg-eth0 ] ; then
+  cat > /etc/sysconfig/network-scripts/ifcfg-eth0 <<END
+DEVICE="eth0"
+BOOTPROTO="static"
+ONBOOT="yes"
+IPADDR=${install_config_ip_address}
+NETMASK=${install_config_netmask}
+GATEWAY=${install_config_gateway}
+DELAY=0
+END
+fi
+
+
 EOF
 
   chmod 755 ${tempdir}/overlay/updates.script
