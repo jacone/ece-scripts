@@ -223,7 +223,7 @@ function boot_kvm() {
 
   updates=${image}/updates.iso
   if [ -r "${updates}" ] ; then
-    startupcmd=("${startupcmd[@]}" -drive "file=${updates},if=virtio")
+    startupcmd=("${startupcmd[@]}" -drive "file=${updates},if=virtio,media=disk")
     xupdate="xupdate=vdb:mnt"
   fi
 
