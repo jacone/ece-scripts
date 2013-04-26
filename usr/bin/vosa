@@ -121,6 +121,7 @@ function do_init() {
 
 original_image /var/lib/vizrt/vosa/uec-images/current/disk.img
 kernel /var/lib/vizrt/vosa/uec-images/current/vmlinuz
+initrd /var/lib/vizrt/vosa/uec-images/current/initrd
 
 # Initial disk size for its own storage, in Gigabytes: Disk will be
 # reized to this size on installation.
@@ -146,7 +147,7 @@ gateway 172.24.1.1
 # address of mirror and/or proxy to use (defaults to mirror://mirrors.ubuntu.com/mirrors.txt)
 # mirror http://no.archive.ubuntu.com/ubuntu
 # proxy http://my-local-proxy:3142/
-user_data /etc/vizrt/vosa/user-data/puppet-client.txt
+# user_data /etc/vizrt/vosa/user-data/puppet-client.txt
 
 # Host name give to the machine. defaults to the name of the vm instance
 # hostname some-vm03
@@ -1056,10 +1057,10 @@ function shutdown_kvm() {
     echo "Sending ACPI shutdown signal to guest ($pid) ($(echo_rundir_of $1)/$1.monitor)"
     echo 'system_powerdown' | nc -U $(echo_rundir_of $1)/$1.monitor
     echo
-    echo -n "Waiting 15 seconds for it to shut down"
+    echo -n "Waiting up to 60 for it to shut down gracefully."
   }
   local a;
-  for a in $(seq 1 15) ; do
+  for a in $(seq 1 60) ; do
     echo -n '.'
     sleep 1
     ps > /dev/null $pid || {

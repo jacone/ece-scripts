@@ -97,8 +97,12 @@ function copy_original_image() {
   fi
   img="$image/disk.img"
   kernel="$image/vmlinuz"
+  initrd="$image/initrd"
   cp "$install_config_original_image" "$img"
   cp "$install_config_kernel" "$kernel"
+  if [ ! -z "$install_config_initrd" ] && [ -s "$install_config_initrd" ] ; then
+    cp "$install_config_initrd" "$initrd"
+  fi
 }
 
 function resize_original_image() {

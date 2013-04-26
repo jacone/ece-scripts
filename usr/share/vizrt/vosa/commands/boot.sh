@@ -188,6 +188,12 @@ function boot_kvm() {
   fi
   kernel=${image}/vmlinuz
   img=${image}/disk.img
+  initrd=${image}/initrd
+  if [ -e $initrd ] ; then
+    initrd="-initrd $initrd"
+  else
+    initrd=""
+  fi
   cloud_param="nocloud;h=${hostname};s=file:///var/lib/cloud/data/cache/nocloud/"
 
   # should _maybe_ be put in some other script?  Needed by e.g. vosa start too.
@@ -204,8 +210,9 @@ function boot_kvm() {
   -enable-kvm
   -monitor unix:${rundir}/${hostname}.monitor,server,nowait
   -balloon "virtio"
-  -drive "file=${img},if=virtio,cache=none"
+  -drive "file=${img},if=virtio,cache=none,media=disk,format=raw"
   -kernel ${kernel}
+  $initrd
   -device "virtio-net-pci,mac=${install_config_macaddr},netdev=net0"
   -netdev "tap,id=net0,ifname=$tapinterface,script=no,downscript=no,vhost=on")
   
