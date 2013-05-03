@@ -232,6 +232,8 @@ function install_database_server() {
   assert_commands_available mysql
 
   if [ -z "$1" ]; then
+    set_archive_files_depending_on_profile
+    create_ear_download_list
     download_escenic_components
     set_up_engine_and_plugins
     set_up_ecedb
