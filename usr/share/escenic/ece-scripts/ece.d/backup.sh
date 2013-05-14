@@ -1,7 +1,6 @@
 function backup_type() {
   local message="Backing up the $instance instance of $type on $HOSTNAME ..."
   print_and_log $message
-  clean_up
 
   if [ "$type" == "rmi-hub" ]; then
     ensure_that_required_fields_are_set $hub_required_fields
@@ -96,7 +95,9 @@ ${tomcat_base}/conf
   
   print "Creating snapshot ... (this may take a while)"
   run tar cf $archive_file \
-    $actual_backup
+    $actual_backup \
+    --exclude $tomcat_base/work \
+    --exclude $tomcat_base/temp
 
   local size=$(du -h $archive_file | cut -d'/' -f1)
   message="Backup ready: $archive_file size: $size"
