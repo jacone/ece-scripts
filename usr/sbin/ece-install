@@ -1021,7 +1021,6 @@ if [ ${fai_enabled-0} -eq 1 ]; then
     if [ ${fai_cache_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_CACHE_SERVER
         install_cache_server
-        install_web_server 0
         no_fai_profile=0
     fi
 
@@ -1099,7 +1098,6 @@ else
             ;;
         $PROFILE_CACHE_SERVER)
             install_cache_server
-            install_web_server 0
             ;;
         $PROFILE_DB_SERVER)
             install_database_server
