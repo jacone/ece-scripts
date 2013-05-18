@@ -60,11 +60,42 @@ semantic-cxense
 snapshot
 "
 
+declare -A project_distributions=()
+
+declare -A maven_coordinates=(
+["assemblytool"]="com.escenic.tools:assemblytool:jar"
+["engine"]="com.escenic:engine-dist:zip:bin"
+["analysis-engine"]="com.escenic.plugins.analysis:analysis-engine:zip"
+["dashboard"]="com.escenic.plugins.dashboard:dashboard:zip"
+["forum"]="com.escenic.plugins.forum:forum:zip"
+["geocode"]="com.escenic.plugins.geocode:geocode-dist:zip"
+["lucy"]="com.escenic.plugins.lucy:lucy-dist:zip"
+["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor-dist:zip"
+["newsroom"]="com.escenic.plugins.newsroom:newsroom-dist:zip"
+["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
+["poll"]="com.escenic.plugins.poll:poll:zip"
+["section-feed"]="com.escenic.plugins.section-feed:section-feed-dist:zip"
+["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense-dist:zip"
+["snapshot"]="com.escenic.plugins.snapshot:snapshot-dist:zip"
+["community-engine"]="com.escenic.plugins.community-engine:community-engine:zip"
+["online-graphics"]="com.escenic.plugins.online-graphics:online-graphics:zip"
+["video"]="com.escenic.plugins.video:video:zip"
+["xml-editor"]="com.escenic.plugins.xml-editor:xml-editor-dist:zip"
+["vcpeditor"]="com.escenic.plugins.vcpeditor:vcpeditor-dist:zip"
+["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
+["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
+["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
+)
+
 # root folders for engine and plugin distributions
 builder_root_dir=/home/builder
 builder_engine_dir=$builder_root_dir/engine
 builder_plugins_dir=$builder_root_dir/plugins
 builder_assemblytool_dir=$builder_root_dir/assemblytool
+
+# local folders for engine and plugin distributions
+dists_root_dir=~/.dists
+dists_tmp_dir=$dists_root_dir/tmp
 
 # assemblytool root folders
 assemblytool_root_dir=~/assemblytool
@@ -103,8 +134,15 @@ function init
     exit 1
   fi
 
+  # set pid
   pid_file=~/ece-build.pid
-  create_pid
+
+  if [ -e $pid_file ]; then
+    echo "Instance of $(basename $0) already running!"
+    exit 1
+  else
+    create_pid
+  fi
   
   trap common_bashing_exit_hook_with_log_recap EXIT
   trap common_bashing_user_cancelled_hook SIGINT SIGHUP
@@ -381,13 +419,13 @@ function svn_fail_early
     release_label=$svn_path
     log "No svn path chosen, will use 'trunk'."
   fi
-  run_wrapper svn checkout --non-interactive --depth empty --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
+  run_wrapper svn checkout --quiet --non-interactive --depth empty --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
 }
 
 ##
 function svn_verify_assembly
 {
-  run_wrapper svn update --non-interactive --set-depth infinity $svn_src_dir/pom.xml $svn_src_dir/project-assembly 
+  run_wrapper svn update --quiet --non-interactive --set-depth infinity $svn_src_dir/pom.xml $svn_src_dir/project-assembly 
   if [ ! -d $project_assembly_dir ]; then
     print_and_log "Your project does not contain the project-assembly module and is thereby not certified to use the ece-builder, exiting!"
     exit 1
@@ -402,10 +440,68 @@ function retrieve_project_pom_versions
 {
   if [ -e $svn_src_dir/pom.xml ];then
     project_pom_versions=`xml2 < $svn_src_dir/pom.xml | grep '^/project/properties/escenic\.' | sed -n -e 's,.*properties/escenic\.,,' -e 's,\.version,,p'`
+    for f in $project_pom_versions; do
+      for g in $escenic_identifiers; do
+        if [[ $f == $g=* ]]; then
+          project_distributions+=(["$g"]=${f//*=})
+        fi
+      done
+    done
   else
     print_and_log "Your projects pom.xml is missing, exiting!"
     exit 1
   fi
+}
+
+##
+function mvn_coordinate_to_url
+{
+  # url to be returned
+  local url
+
+  # coordinate is e.g. com.escenic:engine-dist:zip:bin:5.5.2.137014
+  # or com.escenic.plugins.forum:forum:zip:3.2.1.132293
+  # groupid:artifactid:[packaging:[classifier:]]version
+  local coordinate=$1
+
+  # local variables parsed from coordinate
+  local groupid
+  local artifactid
+  local version
+  local packaging
+  local classifier
+
+  # chomp groupid: --> artifactid:[packaging:[classifier:]]version
+  groupid=${coordinate/:*}
+  coordinate=${coordinate#${groupid}:}
+
+  # chomp artifactid: --> [packaging:[classifier:]]version
+  artifactid=${coordinate/:*}
+  coordinate=${coordinate#${artifactid}:}
+
+  # chomp version --> [packaging[:classifier]]
+  version=${coordinate/*:}
+  coordinate=${coordinate%${version}}
+  coordinate=${coordinate%:}
+
+  classifier=
+  packaging=
+
+  if [ ! -z "$coordinate" ] ; then
+    # chomp packaging --> [classifier]
+    packaging=${coordinate/:*}
+    coordinate=${coordinate#${packaging}}
+    coordinate=${coordinate#:}
+  fi
+
+  if [ ! -z "$coordinate" ] ; then
+    # chomp classifier
+    classifier=$coordinate
+    coordinate=
+  fi
+
+  echo "${groupid//.//}/${artifactid}/$version/${artifactid}-${version}${classifier:+-${classifier}}.$packaging"
+
 }
 
 ##
@@ -435,6 +531,148 @@ function set_java_home
 }
 
 ##
+function fetch_distributions
+{
+  # create $dists_root_dir if needed
+  if [ ! -d $dists_root_dir ]; then
+    run_wrapper mkdir -p $dists_root_dir
+  fi
+  
+  # iterate over all known distribution identifiers
+  for f in $escenic_identifiers
+  do
+
+    # try and fetch the version for the distribution from the pom.xml
+    local dist_version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
+    
+    # check if a version was returned from the pom.xml
+    if [[ ! $dist_version = "" ]]; then
+      
+      # check if the distribution is already present in the local dists directory
+      if [ ! -d $dists_root_dir/$f-$dist_version ]; then
+
+        # create a url from the maven coordinate of the distribution
+        local dist_path=`mvn_coordinate_to_url ${maven_coordinates["$f"]}:$dist_version`
+        local artifact_pattern=$f
+        local artifact_version=$dist_version
+        local target_path=$dists_root_dir
+        
+        # try and add the distribution
+        request_distribution $dist_path
+        if [ -e $dists_tmp_dir/distribution.zip ]; then
+          run_wrapper cd $dists_tmp_dir
+          run_wrapper unzip -q $dists_tmp_dir/distribution.zip
+          run_wrapper rm -f $dists_tmp_dir/distribution.zip
+
+          # analyze unpacked resource
+          for g in $(ls -d $dists_tmp_dir/*);
+          do
+            local skip_artifact=0
+            local artifact_filename=$(basename "$g")
+            echo "$artifact_filename" | grep '[0-9]' | grep -q "$artifact_pattern"
+            if [ $? = 0 ]; then
+              log "The resulting directory contains numbers and \"$artifact_pattern\" so it is most likely valid."
+            else
+              echo "$artifact_filename" | grep -q "$artifact_pattern"
+              if [ $? = 0 ]; then
+                log "$artifact_path was identified as $artifact_pattern, but failed the naming convention test after being unpacked, trying to recover..."
+                if [ ! -d $dists_root_dir/$artifact_pattern-$dist_version ]; then
+                  log "$artifact_path was recovered as a $artifact_pattern and will be added as $artifact_pattern-$dist_version"
+                else
+                  log "$artifact_path was identified as $artifact_pattern, but $artifact_pattern-$dist_version already exists so it will not be added."
+                  skip_artifact=1
+                fi
+              else
+                log "$g is not a valid artifact, ignoring."
+                skip_artifact=1
+              fi
+            fi
+            if [ $skip_artifact -eq 0 ]; then
+              run_wrapper mv $g $target_path/$artifact_pattern-$artifact_version
+              log "Distribution $artifact_pattern-$artifact_version sucessfully added."
+            fi
+          done
+        else
+          log "Download failed! - trying to fallback to old school..."
+          if [ -d $builder_plugins_dir/$artifact_pattern-$artifact_version ]; then
+            run_wrapper cp -R $builder_plugins_dir/$artifact_pattern-$artifact_version $target_path/$artifact_pattern-$artifact_version
+            log "Distribution $artifact_pattern-$artifact_version sucessfully added."
+          elif [ -d $builder_engine_dir/$artifact_pattern-$artifact_version ]; then
+            run_wrapper cp -R $builder_engine_dir/$artifact_pattern-$artifact_version $target_path/$artifact_pattern-$artifact_version
+            log "Distribution $artifact_pattern-$artifact_version sucessfully added."
+          else
+            print_and_log "Download failed! The distribution named $f with relative path - $dist_path could not be found in any of the repositories. This must be handled by an operator."
+            exit 1 
+          fi
+        fi
+      fi
+    fi
+  done
+}
+
+##
+function request_distribution
+{
+  local dist_path=$1
+  if [ ! -z $dist_path ]; then
+    distribution_exists http://maven.vizrt.com/$dist_path  
+    local ret_val=$?
+    if [ $ret_val -eq 0 ]; then
+      download_distribution http://maven.vizrt.com/$dist_path
+    else
+      distribution_exists http://maven.vizrt.com/unstable/$dist_path
+      local ret_val=$?
+      if [ $ret_val -eq 0 ]; then
+        download_distribution http://maven.vizrt.com/unstable/$dist_path
+      fi      
+    fi
+  fi
+}
+
+##
+function distribution_exists
+{
+  local url=$1
+  log "Trying to download - $url"
+  wget --spider -q --http-user $maven_user --http-password $maven_password $url
+}
+
+##
+function download_distribution
+{
+  # url to download
+  local url=$1
+
+  # clean up tmp directory
+  if [ -d $dists_tmp_dir ]; then
+    run_wrapper rm -rf $dists_tmp_dir
+  fi
+ 
+  # re-create tmp directory
+  run_wrapper mkdir -p $dists_tmp_dir
+
+  # download the distribution
+  run_wrapper wget -q --http-user $maven_user --http-password $maven_password $url -O $dists_tmp_dir/distribution.zip
+}
+
+##
+function print_unstable_distributions
+{
+  for f in ${!project_distributions[@]}; do
+    local dist_path=`mvn_coordinate_to_url ${maven_coordinates["$f"]}:${project_distributions["$f"]}`
+    if [ ! -z $dist_path ]; then
+      distribution_exists http://maven.vizrt.com/$dist_path
+      if [ $? -ne 0 ]; then
+        distribution_exists http://maven.vizrt.com/unstable/$dist_path
+        if [ $? -eq 0 ]; then
+          print_and_log "WARNING - $f version ${project_distributions["$f"]} is unstable!"
+        fi
+      fi
+    fi
+  done
+}
+
+##
 function symlink_ece_components
 {
   for f in $escenic_identifiers
@@ -442,9 +680,9 @@ function symlink_ece_components
     version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
     if [[ ! $version = "" ]]; then
       if [[ "$f" = "engine" ]]; then
-        run_wrapper ln -s $builder_engine_dir/$f-$version $engine_root_dir 
+        run_wrapper ln -s $dists_root_dir/$f-$version $engine_root_dir 
       else
-        run_wrapper ln -s $builder_plugins_dir/$f-$version $plugin_dir/$f 
+        run_wrapper ln -s $dists_root_dir/$f-$version $plugin_dir/$f 
       fi
     fi
   done
@@ -521,9 +759,9 @@ function verify_maven_proxy
 ## 
 function svn_checkout
 {
-  run_wrapper svn checkout --non-interactive --depth infinity --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
+  run_wrapper svn checkout --quiet --non-interactive --depth infinity --username $svn_user --password $svn_password $svn_base$svn_path $svn_src_dir/.
   revision=`svn info $svn_src_dir | grep -i Revision | awk '{print $2}'`
-  if [[ $revision = "" ]]; then    
+  if [[ $revision = "" ]]; then
     print_and_log "Failed to fetch current revision number, exiting!"
     exit 1
   fi
@@ -533,14 +771,14 @@ function svn_checkout
 function maven_build
 {
   run_wrapper cd $svn_src_dir
-  run_wrapper mvn $maven_opts
+  run_wrapper mvn -q $maven_opts
 }
 
 ##
 function symlink_project_assembly
 {
   run_wrapper cd $project_assembly_target_dir
-  run_wrapper unzip project-assembly.zip
+  run_wrapper unzip -q project-assembly.zip
   # global classpath
   if [ -e "$project_assembly_target_dir/lib" ]; then
     for f in $(ls -d $project_assembly_target_dir/lib/* | grep .jar);
@@ -588,27 +826,20 @@ function ant_build
 function add_distributions_to_ear
 {
   if [ -e $assemblytool_root_dir/dist/engine.ear ]; then
-    if [ -e $assemblytool_root_dir/dist/effective-pom.xml ]; then
-      run_wrapper rm -f $assemblytool_root_dir/dist/effective-pom.xml
-    fi
-    run_wrapper cd $svn_src_dir
-    run_wrapper mvn -Doutput=$assemblytool_root_dir/dist/effective-pom.xml help:effective-pom   
-    local pom_properties=$(cat $assemblytool_root_dir/dist/effective-pom.xml | xmlstarlet sel -N "pom=http://maven.apache.org/POM/4.0.0" \
-      -t -m '/projects/pom:project/pom:properties/*' \
-      -v 'concat(name(), " ", text())' -nl)
-    if [ $? != 0 ] ; then
-      print_and_log "Unable to understand $assemblytool_root_dir/dist/effective-pom.xml, exiting!"
-      return 1
-    fi
-    local pom_distributions=$(sort <<< "$pom_properties" -u | grep '^escenic\.[^\.]*\.distribution ' | cut -d ' ' -f 2 )
-    if [ -z pom_distributions ] ; then
-      log "The projects effective pom had no escenic.xxx.distribution properties, ignoring."
-    else
-      run_wrapper mkdir $assemblytool_root_dir/dist/META-INF
-      echo "$pom_distributions" >> $assemblytool_root_dir/dist/META-INF/escenic-distributions.txt
-      run_wrapper cd $assemblytool_root_dir/dist
-      run_wrapper jar uvf $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt
-    fi
+    run_wrapper mkdir $assemblytool_root_dir/dist/META-INF
+    # iterate over all known distribution identifiers
+    for f in $escenic_identifiers
+    do
+      # try and fetch the version for the distribution from the pom.xml
+      local dist_version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
+
+      # check if a version was returned from the pom.xml
+      if [[ ! $dist_version = "" ]]; then
+        echo "${maven_coordinates["$f"]}:$dist_version" >> $assemblytool_root_dir/dist/META-INF/escenic-distributions.txt
+      fi
+    done
+    run_wrapper cd $assemblytool_root_dir/dist
+    run_wrapper jar uvf $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt
   else
     print_and_log "Assemblytool finished, but the .ear is missing, exiting!"
     exit 1
@@ -887,10 +1118,12 @@ function phase_verify_project
   svn_fail_early
   svn_verify_assembly
   retrieve_project_pom_versions
+  print_unstable_distributions
   set_java_home
   symlink_assemblytool
   clean_assemblytool
   verify_assemblytool
+  fetch_distributions
   symlink_ece_components
   verify_requested_versions
   add_global_libs
