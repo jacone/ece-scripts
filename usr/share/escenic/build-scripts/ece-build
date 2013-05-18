@@ -665,7 +665,7 @@ function print_unstable_distributions
       if [ $? -ne 0 ]; then
         distribution_exists http://maven.vizrt.com/unstable/$dist_path
         if [ $? -eq 0 ]; then
-          print_and_log "WARNING - $f version ${project_distributions["$f"]} is unstable!"
+          print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
         fi
       fi
     fi
