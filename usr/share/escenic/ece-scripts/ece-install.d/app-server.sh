@@ -396,7 +396,7 @@ EOF
   xmlstarlet ed -P -L \
      -s /Context -t elem -n WatchedResource -v WEB-INF/web.xml \
      $tomcat_base/conf/context.xml
-
+  fi
 
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
     $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
