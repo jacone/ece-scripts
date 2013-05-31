@@ -318,6 +318,7 @@ EOF
              suffix=".log"
              pattern="common"/>
       <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+             digest="md5"
              resourceName="UserDatabase"/>
       <Host name="localhost"
             appBase="webapps"
