@@ -115,6 +115,13 @@ function install_ece_instance() {
       deploy_webapp_white_list \
       $(get_deploy_white_list) \
       $file
+    if [ ! -z "$fai_environment" ] ; then
+      set_conf_file_value \
+        ece_environment \
+        "$fai_environment" \
+        $file
+      
+    fi
   fi
 
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
