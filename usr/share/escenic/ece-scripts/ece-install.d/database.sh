@@ -148,7 +148,6 @@ function set_up_repository_if_possible() {
     fi
 
     if is_supported $code_name; then
-      print_and_log "Setting Up the $db_vendor Repository ..."
       add_gpg_key
 
       if [ $db_vendor = "mariadb" ]; then
@@ -165,6 +164,7 @@ function set_up_repository_if_possible() {
       fi
       pin
       if ! apt-cache > /dev/null show $mysql_server_packages; then
+        print_and_log "Setting Up the $db_vendor Repository ..."
         run apt-get update
       fi
     else
