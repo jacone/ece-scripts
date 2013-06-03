@@ -164,7 +164,9 @@ function set_up_repository_if_possible() {
         leave_trail "trail_db_vendor=percona"
       fi
       pin
-      run apt-get update
+      if ! apt-cache > /dev/null show $mysql_server_packages; then
+        run apt-get update
+      fi
     else
       print_and_log "The $db_vendor APT repsository doesn't have packages" \
         "for your Debian (or derivative) version with code" \
