@@ -146,9 +146,13 @@ function restore_from_backup()
     install_database_server "binaries_only"
     print_and_log "Restoring the database contents on $HOSTNAME ..."
     run cd $dir
-    run tar xf $backup_file --wildcards var/backups/escenic/*.sql.gz
+    if [[ $backup_file == *.sql.gz ]] ; then
+      sql_file=$backup_file
+    else
+      run tar xf $backup_file --wildcards var/backups/escenic/*.sql.gz
         # picking the DB backup file to restore
-    sql_file=$(ls -tra var/backups/escenic/*.sql.gz | tail -1)
+      sql_file=$(ls -tra var/backups/escenic/*.sql.gz | tail -1)
+    fi
     print_and_log "Selecting database dump: $(basename $sql_file)"
 
     # methods in database.sh to set up the database schema & user
