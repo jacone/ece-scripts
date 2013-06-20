@@ -28,6 +28,7 @@ sed
 ant
 svn
 mvn
+zip
 unzip
 wget
 xml2"
@@ -846,7 +847,7 @@ function add_distributions_to_ear
       fi
     done
     run_wrapper cd $assemblytool_root_dir/dist
-    run_wrapper jar uvf $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt
+    run_wrapper zip -u $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt
   else
     print_and_log "Assemblytool finished, but the .ear is missing, exiting!"
     exit 1
