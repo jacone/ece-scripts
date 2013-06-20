@@ -364,6 +364,7 @@ function verify_assemblytool
   fi
   if [ ! -d $release_dir ]; then
     make_dir $release_dir
+    run_wrapper chmod 775 $release_dir
     print_and_log "$release_dir did not exist so it has been created."
   fi
 }
