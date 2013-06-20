@@ -372,7 +372,7 @@ function clean_customer_home
 {
   # clean up plugin directory if it exists
   if [ -d "$plugin_dir" ]; then
-    run_wrapper rm -f $plugin_dir/*
+    run_wrapper rm -rf $plugin_dir/*
   else
     make_dir $plugin_dir
   fi
@@ -790,7 +790,14 @@ function symlink_project_assembly
   if [ -e "$project_assembly_target_dir/wars" ]; then
     for f in $(ls -d $project_assembly_target_dir/wars/* | grep .war);
     do
-      ln -s $f $assemblytool_pub_dir;
+      run_wrapper ln -s $f $assemblytool_pub_dir;
+    done
+  fi
+  # custom plugins
+  if [ -e "$project_assembly_target_dir/plugins" ]; then
+    for f in $(ls -d $project_assembly_target_dir/plugins/* | grep .zip);
+    do
+      run_wrapper unzip $f -d $plugin_dir
     done
   fi
 }
