@@ -4,7 +4,13 @@
 # arguments $2 -- /var/lib/vizrt/vosa/images/imagename
 
 # mandatory sdp.conf parameter
-#  REALM
+#  REALM=development
+
+# optional sdp.conf parameter (default shown below)
+SDP_BOOTSTRAPPER=
+
+# if SDP_BOOTSTRAPPER is set to anything, it is assumed to be the URL
+# from which to download a source tar.gz file.
 
 # "old style" sdp.conf parameters (going away in the autom 2013)
 #  ROLE        corresponds to sdp-bootstrap-instance --role
@@ -125,6 +131,18 @@ fi
 # Install pystache (mandatory for vosa-sdp-bootstrapper)
 $guest pip install pystache
 
+# experimental: remove the vosa-sdp-bootstrapper, then download a
+# source package and use that instead.
+if [ ! -z "${SDP_BOOTSTRAPPER}" ] ; then
+  if $guest [ -d /etc/yum.repos.d ] ; then
+    $guest yum -y remove vosa-sdp-bootstrapper
+  else
+    $guest apt-get -y remove vosa-sdp-bootstrapper
+  fi
+  tmpdir=$($guest mktemp -d)
+  curl -s $SDP_BOOTSTRAPPER | $guest tar xz -C $tmpdir
+  $guest cp -rp $tmpdir/*/usr /
+fi
 
 # ask the instance to bootstrap itself.
 $guest sdp-bootstrap-instance \
@@ -140,7 +158,7 @@ if [ ! -r $conf/sdp.xml ] ; then
   exit 0 
 fi
 
-$guest tee /etc/sdp.xml < $1/sdp.xml
+$guest tee /etc/sdp.xml < $1/sdp.xml > /dev/null
 
 
 # copy private key from host to guest, if present
