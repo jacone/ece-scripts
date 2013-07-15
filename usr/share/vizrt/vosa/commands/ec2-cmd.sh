@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # Boots an amazon instance.
 
@@ -19,14 +19,26 @@ if [ -z "$cmd" ] ; then
   exit 3
 fi
 
-if [ -z "$EC2_BINARY" ] ; then
-  EC2_BINARY=$(which 2>/dev/null ec2-$cmd)
-fi
+if $USE_AWS_CLI ; then
+  if [ -z "$EC2_BINARY" ] ; then
+    EC2_BINARY=$(which 2>/dev/null aws)
+  fi
 
-if [ -z "$EC2_BINARY" -o ! -x "$EC2_BINARY" ] ; then
-  echo "Unable to figure out where ec2-$cmd is installed."
-  echo "export EC2_BINARY to make it work."
-  exit 2
+  if [ -z "$EC2_BINARY" -o ! -x "$EC2_BINARY" ] ; then
+    echo "Unable to figure out where aws is installed."
+    echo "export EC2_BINARY to make it work."
+    exit 2
+  fi
+else
+  if [ -z "$EC2_BINARY" ] ; then
+    EC2_BINARY=$(which 2>/dev/null ec2-$cmd)
+  fi
+
+  if [ -z "$EC2_BINARY" -o ! -x "$EC2_BINARY" ] ; then
+    echo "Unable to figure out where ec2-$cmd is installed."
+    echo "export EC2_BINARY to make it work."
+    exit 2
+  fi
 fi
 
 debug=3
@@ -91,10 +103,28 @@ function read_amazon_config() {
   have_read_amazon_config=1
 }
 
+# Example output from AWS CLI
+cat > /dev/null <<EOF
+390962791497	r-2db4d467
+RESPONSEMETADATA	168ad1ba-8a7a-4419-9c1a-7f85d2d5a466
+default	sg-65258a12
+None	aki-75665e01	False	2013-07-15T08:16:27.000Z	None	i-04e0e849	ami-ab6170df	None	None	m1.small	xen	i386	paravirtual	instance-store	0
+MONITORING	disabled
+STATE	0	pending
+default	sg-65258a12
+PLACEMENT	default	None	eu-west-1a
+STATEREASON	pending	pending
+EOF
+
+
 function get_aws_instance() {
   bootstatefile=$image/amazon.initialstate
   if [ -r $bootstatefile ] ; then
     aws_instance=$(awk < "$bootstatefile" -F '\t' '/^INSTANCE/ { print $2 }')
+  fi
+  if [ -z "$aws_instance" ] && [ -r $bootstatefile ] ; then
+    # Hope that the 6th field continues to provide "i-"...
+    aws_instance=$(cut < "$bootstatefile" -f 6 | grep 'i-')
   fi
 }
 
@@ -125,7 +155,12 @@ function invoke_ec2() {
 }
 
 
-read_amazon_config $1/amazon.conf
+if $USE_AWS_CLI ; then
+  AWS_COMMON_OPTIONS="--output text ec2 $cmd"
+else
+  # Assume that the AWS_ACCESS_KEY and SECRET_KEY and REGION are set...
+  read_amazon_config $1/amazon.conf
+fi
 get_aws_instance
 shift
 shift

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # /usr/bin/vosa --- command to manage vizrt on-line system-administration
 # managed instances of virtual machines.
@@ -255,25 +255,17 @@ EOF
 # will be appended in the order they appear in the file.
 
 
-# EC2 SIGNING KEYS --------------------------------------------
-# Private key.  The file should only be readable by the user
-# designated to run the vosa commands.
-#
-# To create a private key, use the following command:
-#   openssl genrsa -out private-key.pem 1024
-#
-key /var/lib/vizrt/vosa/credentials/private-key.pem
+# AWS KEYS --------------------------------------------
+# Access Key ID from Amazon.
+access_key_id ABC123547389245738290
 
-# Public certificate.  The certificate must be uploaded to amazon. All
-# interactions with the server will be signed with the private key; and
-# Amazon will use the certificate to verify that the request is legitimate.
-#
-# To create the certificate, use the following commands:
-#   openssl req -new -key private-key.pem -out certificate-request.pem
-#   openssl x509 -req -in signing-request.pem -signkey private-key.pem
-#            -out certificate.pem
-#
-certificate /var/lib/vizrt/vosa/credentials/certificate.pem
+# Secret Access Key file. The file must contain only the secret access
+# key, and no other information.  The secret access key must
+# correspond to the access key id listed in access_key_id.
+
+# This file should be well protected, and readable only by those who
+# need to run commands against amazon
+secret_access_key_file /var/lib/vizrt/vosa/credentials/secret-access-key.txt
 
 
 # REGION ------------------------------------------------------
@@ -370,63 +362,6 @@ ssh_keypair control-key
 #
 ssh_private_key /var/lib/vizrt/vosa/credentials/ssh-private-key.pem
 
-EOF
-  fi
-  mkdir -p /etc/vizrt/vosa/user-data || exit 2
-  if [ ! -r /etc/vizrt/vosa/user-data/puppetmaster.pp ] ; then
-    cat > /etc/vizrt/vosa/user-data/puppetmaster.pp <<EOF
-#cloud-config
-
-#------------------------------------------------------------------------#
-# This file is a User Data file to set up a puppet master.
-#
-# It installs a base set of packages and configures the puppet master to
-# create a self signed certificate.
-
-manage_etc_hosts: false
-timezone: Europe/Oslo
-
-apt_update: true
-apt_upgrade: true
-apt_mirror: http://no.archive.ubuntu.com/ubuntu
-
-# ACPID installed before puppet, because it ensures clean shutdowns, even if something goes wrong.
-packages:
- - acpid
- - mercurial
- - ruby-activerecord
-
-puppet:
-  conf:
-    master:
-      certname: "puppetmaster"
-      node_name: "facter"
-      storeconfigs: "true"
-
-# Patch the oneiric auth.conf to allow the cert called "generic-puppetmaster-client"
-# to access the guest.
-# Other versions of guests might need a different patch file...
-# Note that dollar-signs need to be escaped.
-runcmd:
- - |
-   apt-get -y install puppetmaster
-   cat > /tmp/auth.patch <<EOF
-   --- /etc/puppet/auth.conf    2011-06-27 16:50:51.000000000 +0200
-   +++ /etc/puppet/auth.conf.orig       2012-02-21 07:26:54.361610001 +0100
-   @@ -51,7 +51,9 @@
-    # allow nodes to retrieve their own catalog (ie their configuration)
-    path ~ ^/catalog/([^/]+)\\$
-    method find
-   -allow \\\$1
-   +#allow \\\$1
-   +# allow the generic cert to retrieve any node's catalog
-   +allow generic-puppetmaster-client
-
-    # allow nodes to retrieve their own node definition
-    path ~ ^/node/([^/]+)\\$
-   EOF
-   patch /etc/puppet/auth.conf < /tmp/auth.patch
-   puppet cert --generate generic-puppetmaster-client
 EOF
   fi
 
@@ -613,9 +548,18 @@ function read_amazon_config() {
   parse_config_file $1 amazon_config_
 
   unset AWS_COMMON_OPTIONS
-  AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --private-key $amazon_config_key "
-  AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --cert $amazon_config_certificate "
-  AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --region $amazon_config_region "
+  if [ ! -z "$amazon_config_key" ] ; then
+    AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --private-key $amazon_config_key "
+    AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --cert $amazon_config_certificate "
+    AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --region $amazon_config_region "
+    export USE_AWS_CLI=false
+  else
+    export AWS_ACCESS_KEY_ID=$amazon_config_access_key_id
+    export AWS_SECRET_ACCESS_KEY="$(cat $amazon_config_secret_access_key_file)"
+    export AWS_DEFAULT_REGION="$amazon_config_region"
+    export USE_AWS_CLI=true
+    AWS_COMMON_OPTIONS="${AWS_COMMON_OPTIONS} --output text "
+  fi
   have_read_amazon_config=1
 }
 
@@ -672,6 +616,9 @@ function really_do_status () {
           if [ -r $bootstatefile ] ; then
             aws_instance=$(awk < "$bootstatefile" -F '\t' '/^INSTANCE/ { print $2 }')
           fi
+          if [ -z $aws_instance ] && [ -r $bootstatefile ] ; then
+            aws_instance=$(cut < "$bootstatefile" -f 6 | grep 'i-')
+          fi
 
           if [ -z "$aws_instance" ] ; then
             output=( ${output[@]} invalid );
@@ -697,17 +644,26 @@ function really_do_status () {
         local rc=0
         # Update the aws statefile
         if [ -w $statefile ] ; then
-          ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance > $statefile
-          #echo ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance
+          if $USE_AWS_CLI ; then
+            aws $AWS_COMMON_OPTIONS ec2 describe-instances --instance-ids $aws_instance > $statefile
+          else
+            ec2-describe-instances $AWS_COMMON_OPTIONS $aws_instance > $statefile
+          fi
           local rc=$?
         fi
         if [ ! -r $statefile ] ; then
           statefile=$bootstatefile
           local stale=1
         fi
-        aws_state=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $6 }')
-        aws_zone=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $12 }')
-        aws_start=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $11 }')
+        if $USE_AWS_CLI ; then
+          aws_state=$(awk < "$statefile" -F '\t' '/^STATE/ { print $3 }')
+          aws_zone=$(awk < "$statefile" -F '\t' '/^PLACEMENT/ { print $4 }')
+          aws_start=$(awk < "$statefile" -F '\t' "/$aws_instance/"' { print $4 }')
+        else
+          aws_state=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $6 }')
+          aws_zone=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $12 }')
+          aws_start=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $11 }')
+        fi
         if [ -z "$aws_state" ] ; then
           output=( ${output[@]} unknown $aws_instance )
         else
@@ -826,10 +782,10 @@ function do_destroy() {
       echo "$instance_name is not enabled"
       exit 1
     fi
+    read_amazon_config $instance_dir/amazon.conf
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[3]}" == "alive" -o "${status[3]}" == "running" ] ; then
-      echo "$instance_name is alive. Stop it first. Exiting."
-      exit 1
+      echo "$instance_name is alive. You might want to stop instances before destroying them."
     fi
     if [ "${status[3]}" == "dead" ] ; then
       echo "$instance_name is dead, but supposed to be running. Stop it first. Exiting!"
@@ -842,7 +798,7 @@ function do_destroy() {
       ${commands}/ec2-cmd.sh \
         "$instance_dir" \
         "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
-        "terminate-instances" "INSTANCE" || exit $?
+        "terminate-instances" $($USE_AWS_CLI && echo "--instance-ids") "INSTANCE" || exit $?
       # If the terminate-instances command fails, don't remove the instance directory
       # But what if it's terminated twice?
     fi
@@ -889,10 +845,24 @@ function do_create() {
       mkdir "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" || exit 2
       read_amazon_config $instance_dir/amazon.conf
       # TODO: sanitize "required" variables
-      ${commands}/ec2-cmd.sh \
-        "$instance_dir" \
-        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
-        run-instances \
+      if $USE_AWS_CLI ; then
+        opts=( "--image-id" ${amazon_config_image}
+               "--min-count" "1"
+               "--max-count" "1"
+        ${amazon_config_availability_zone/#/--placement availability_zone=}  \
+        ${amazon_config_type/#/--instance-type }  \
+        ${amazon_config_ssh_keypair/#/--key-name }  \
+        ${amazon_config_group[@]/#/--security-groups } \
+        ${amazon_config_subnet/#/--subnet-id }
+      )
+      if [ ! -z ${amazon_config_user_data} ] ; then
+        opts=( "${opts[@]}"
+           --user-data "$(cat $amazon_config_user_data)"
+        )
+      fi
+
+      else
+        opts=(
         ${amazon_config_image} \
         ${amazon_config_availability_zone/#/--availability-zone }  \
         ${amazon_config_type/#/--instance-type }  \
@@ -900,6 +870,15 @@ function do_create() {
         ${amazon_config_group[@]/#/--group } \
         ${amazon_config_user_data/#/--user-data-file } \
         ${amazon_config_subnet/#/--subnet }
+        )
+      fi
+
+
+      ${commands}/ec2-cmd.sh \
+        "$instance_dir" \
+        "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+        run-instances \
+        "${opts[@]}"
 
       if [ ! -z "${amazon_config_ip_address}" ] ; then
         echo "Associating IP $amazon_config_ip_address..."
@@ -907,8 +886,11 @@ function do_create() {
           "$instance_dir" \
           "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
           associate-address \
+          $($USE_AWS_CLI && echo "--public-ip") \
           ${amazon_config_ip_address} \
-          --instance INSTANCE
+          $($USE_AWS_CLI && echo "--instance-id") \
+          $($USE_AWS_CLI || echo "--instance") \
+          INSTANCE
       fi
       
       ${commands}/ec2-determine-ip.sh \
@@ -989,7 +971,9 @@ function do_start() {
       ${commands}/ec2-cmd.sh \
         "$instance_dir" \
         "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
-        "start-instances" INSTANCE
+        "start-instances" \
+        $($USE_AWS_CLI && echo "--instance-ids") \
+        INSTANCE
 
       if [ ! -z "${amazon_config_ip_address}" ] ; then
         echo "Associating IP $amazon_config_ip_address..."
@@ -997,8 +981,11 @@ function do_start() {
           "$instance_dir" \
           "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
           associate-address \
+          $($USE_AWS_CLI && echo "--public-ip") \
           ${amazon_config_ip_address} \
-          --instance INSTANCE
+          $($USE_AWS_CLI && echo "--instance-id") \
+          $($USE_AWS_CLI || echo "--instance") \
+          INSTANCE
       fi
 
       # The word INSTANCE is replaced with the instance.
@@ -1105,7 +1092,9 @@ function shutdown_kvm() {
 }
 
 function shutdown_aws() {
-  ${commands}/ec2-cmd.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" "stop-instances" INSTANCE
+  read_amazon_config $instance_dir/amazon.conf
+  ${commands}/ec2-cmd.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" "stop-instances" \
+      $($USE_AWS_CLI && echo "--instance-ids") INSTANCE
 }
 
 # Shuts

@@ -31,6 +31,9 @@ function read_amazon_config() {
 
 read_amazon_config $config/amazon.conf
 
+if $USE_AWS_CLI ; then
+  AWS_COMMON_OPTIONS="--output text ec2"  # ignore other options...
+fi
 
 statefile="${image}/amazon.state"
 
@@ -44,20 +47,31 @@ if [ -r ${statefile} -a ! -w  "${statefile}" ] ; then
   exit 2
 fi
 
+# Try 10 times to get an IP
 for a in 1 2 3 4 5 6 7 8 9 10 ; do
   output="$($(dirname $0)/ec2-cmd.sh \
     "$config" \
     "$image" \
-    "describe-instances" "INSTANCE")"
+    "describe-instances" \
+    $( $USE_AWS_CLI && echo "--instance-ids") \
+    "INSTANCE")"
 
   if [ ! -z "$output" ] ; then
     echo "$output" > "$statefile"
   fi
 
-  if [ "$amazon_config_ssh_access" == "public" ] ; then
-    ip_address=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $17 }')
+  if $USE_AWS_CLI ; then
+    if [ "$amazon_config_ssh_access" == "public" ] ; then
+      ip_address=$(grep $'\ti-' $statefile | cut -f 5)
+    else
+      ip_address=$(grep $'\ti-' $statefile | cut -f 6)
+    fi
   else
-    ip_address=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $18 }')
+    if [ "$amazon_config_ssh_access" == "public" ] ; then
+      ip_address=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $17 }')
+    else
+      ip_address=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $18 }')
+    fi
   fi
   if [ ! -z "$ip_address" ] ; then
     break;
