@@ -1025,10 +1025,14 @@ EOF
     run_wrapper rm -rf $target_dir
   done
 
-  print_and_log "Configuration packages available here: " \
-    "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-\${HOSTNAME}-${package_version}.deb"
-  print_and_log "Replace '\${HOSTNAME}' with any of: [" \
-    $machine_list "] for the other machines' conf packages."
+  print_and_log "--- .deb configuration packages ---"  
+  for machine in $machine_list; do 
+    print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-${package_version}.deb"
+  done
+  print_and_log "--- .rpm configuration packages ---"
+  for machine in $machine_list; do
+    print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm"
+  done
 }
 
 ##
