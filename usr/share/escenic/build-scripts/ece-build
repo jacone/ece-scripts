@@ -414,15 +414,6 @@ function add_global_libs
     print_and_log "The global library $builder_root_dir/lib/java_memcached-release_2.0.1.jar is missing, exiting!"
     exit 1
   fi
-  local engine_version=`readlink $engine_root_dir`
-  if [ $(echo "$engine_version" | grep "engine-5.3" | wc -l) -gt 0 ]; then
-    if [ -e $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar ]; then
-      run_wrapper ln -s $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar $assemblytool_lib_dir/
-    else
-      print_and_log "The global library $builder_root_dir/lib/engine-backport-1.0-SNAPSHOT.jar is missing, exiting!"
-      exit 1
-    fi
-  fi
 }
 
 
