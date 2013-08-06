@@ -26,6 +26,7 @@ java_7_oracle=/usr/lib/jvm/java-7-oracle
 dependencies="tar
 sed
 ant
+git
 svn
 mvn
 zip
@@ -106,8 +107,8 @@ assemblytool_lib_dir=$assemblytool_root_dir/lib
 # user specific variables
 conf_file=~/.build/build.conf
 maven_conf_file=~/.m2/settings.xml
-svn_src_dir=~/src
-project_assembly_dir=$svn_src_dir/project-assembly
+project_src_dir=~/src
+project_assembly_dir=$project_src_dir/project-assembly
 project_assembly_target_dir=$project_assembly_dir/target
 release_dir=~/releases
 plugin_dir=~/plugins
@@ -210,11 +211,23 @@ function fetch_configuration
 ##
 function verify_configuration {
   enforce_variable customer "Your $conf_file is missing the variable 'customer', exiting!"
-  enforce_variable svn_base "Your $conf_file is missing the variable 'svn_base', exiting!"
-  enforce_variable svn_user "Your $conf_file is missing the variable 'svn_base', exiting!"
-  enforce_variable svn_password "Your $conf_file is missing the variable 'svn_password', exiting!"
-  # append a / to svn_base if not present
-  [[ $svn_base != */ ]] && svn_base="$svn_base"/
+  if [ -z $src_control ]; then
+    log "No source control system chosen, I will assume that you are using subversion."
+    src_control=svn
+    
+    enforce_variable svn_base "Your $conf_file is missing the variable 'svn_base', exiting!"
+    enforce_variable svn_user "Your $conf_file is missing the variable 'svn_base', exiting!"
+    enforce_variable svn_password "Your $conf_file is missing the variable 'svn_password', exiting!"
+    
+    # append a / to svn_base if not present
+    [[ $svn_base != */ ]] && svn_base="$svn_base"/
+  elif [[ "$src_control" = "git" ]]; then
+    enforce_variable git_base "Your $conf_file is missing the variable 'git_base', exiting!"
+    enforce_variable git_user "Your $conf_file is missing the variable 'git_base', exiting!"
+    enforce_variable git_password "Your $conf_file is missing the variable 'git_password', exiting!"  
+  else
+    print_and_log "The chosen source control system $src_control is NOT supported, exiting!"
+  fi
 }
 
 ##
@@ -384,11 +397,11 @@ function clean_customer_home
     run_wrapper rm -f $engine_root_dir
   fi
 
-  # drop and recreate svn src directory if it exists
-  if [ -d "$svn_src_dir" ]; then
-    run_wrapper rm -rf $svn_src_dir
+  # drop and recreate project src directory if it exists
+  if [ -d "$project_src_dir" ]; then
+    run_wrapper rm -rf $project_src_dir
   else
-    make_dir $svn_src_dir
+    make_dir $project_src_dir
   fi
 }
 
@@ -421,13 +434,28 @@ function svn_fail_early
     release_label=$svn_path
     log "No svn path chosen, will use 'trunk'."
   fi
-  run_wrapper svn checkout --quiet --non-interactive --depth empty --username $svn_user  --password $svn_password $svn_base$svn_path $svn_src_dir/.
+  run_wrapper svn checkout --quiet --non-interactive --depth empty --username $svn_user  --password $svn_password $svn_base$svn_path $project_src_dir/.
 }
 
 ##
-function svn_verify_assembly
+function git_checkout
 {
-  run_wrapper svn update --quiet --non-interactive --set-depth infinity $svn_src_dir/pom.xml $svn_src_dir/project-assembly 
+  run_wrapper git clone https://$git_user:$git_password@$git_base $project_src_dir
+  cd $project_src_dir
+  revision=`git describe --always`
+  release_label=git
+  if [[ $revision = "" ]]; then
+    print_and_log "Failed to fetch current revision number, exiting!"
+    exit 1
+  fi
+}
+
+##
+function project_verify_assembly
+{
+  if [[ "$src_control" = "svn" ]]; then
+    run_wrapper svn update --quiet --non-interactive --set-depth infinity $project_src_dir/pom.xml $project_src_dir/project-assembly 
+  fi
   if [ ! -d $project_assembly_dir ]; then
     print_and_log "Your project does not contain the project-assembly module and is thereby not certified to use the ece-builder, exiting!"
     exit 1
@@ -440,8 +468,8 @@ function svn_verify_assembly
 ##
 function retrieve_project_pom_versions
 {
-  if [ -e $svn_src_dir/pom.xml ];then
-    project_pom_versions=`xml2 < $svn_src_dir/pom.xml | grep '^/project/properties/escenic\.' | sed -n -e 's,.*properties/escenic\.,,' -e 's,\.version,,p'`
+  if [ -e $project_src_dir/pom.xml ];then
+    project_pom_versions=`xml2 < $project_src_dir/pom.xml | grep '^/project/properties/escenic\.' | sed -n -e 's,.*properties/escenic\.,,' -e 's,\.version,,p'`
     for f in $project_pom_versions; do
       for g in $escenic_identifiers; do
         if [[ $f == $g=* ]]; then
@@ -509,7 +537,7 @@ function mvn_coordinate_to_url
 ##
 function set_java_home
 {
-  project_java_version=`xml2 < $svn_src_dir/pom.xml | grep '^/project/build/plugins/plugin/configuration/target=' | sed -n -e 's,.*project/build/plugins/plugin/configuration/target=,,p'`
+  project_java_version=`xml2 < $project_src_dir/pom.xml | grep '^/project/build/plugins/plugin/configuration/target=' | sed -n -e 's,.*project/build/plugins/plugin/configuration/target=,,p'`
   if [ -z $project_java_version ]; then
     print_and_log "You need to specify the java taget version for the maven-compiler-plugin in your pom.xml as this is used by this script to determine which java to use, exiting!"
     exit 1
@@ -545,7 +573,7 @@ function fetch_distributions
   do
 
     # try and fetch the version for the distribution from the pom.xml
-    local dist_version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
+    local dist_version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $project_src_dir/pom.xml | tr -d $'\r' `
     
     # check if a version was returned from the pom.xml
     if [[ ! $dist_version = "" ]]; then
@@ -679,7 +707,7 @@ function symlink_ece_components
 {
   for f in $escenic_identifiers
   do
-    version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
+    version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $project_src_dir/pom.xml | tr -d $'\r' `
     if [[ ! $version = "" ]]; then
       if [[ "$f" = "engine" ]]; then
         run_wrapper ln -s $dists_root_dir/$f-$version $engine_root_dir 
@@ -761,8 +789,8 @@ function verify_maven_proxy
 ## 
 function svn_checkout
 {
-  run_wrapper svn checkout --quiet --non-interactive --depth infinity --username $svn_user --password $svn_password $svn_base$svn_path $svn_src_dir/.
-  revision=`svn info $svn_src_dir | grep -i Revision | awk '{print $2}'`
+  run_wrapper svn checkout --quiet --non-interactive --depth infinity --username $svn_user --password $svn_password $svn_base$svn_path $project_src_dir/.
+  revision=`svn info $project_src_dir | grep -i Revision | awk '{print $2}'`
   if [[ $revision = "" ]]; then
     print_and_log "Failed to fetch current revision number, exiting!"
     exit 1
@@ -772,7 +800,7 @@ function svn_checkout
 ##
 function maven_build
 {
-  run_wrapper cd $svn_src_dir
+  run_wrapper cd $project_src_dir
   run_wrapper mvn -q $maven_opts
 }
 
@@ -840,7 +868,7 @@ function add_distributions_to_ear
     for f in $escenic_identifiers
     do
       # try and fetch the version for the distribution from the pom.xml
-      local dist_version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $svn_src_dir/pom.xml | tr -d $'\r' `
+      local dist_version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $project_src_dir/pom.xml | tr -d $'\r' `
 
       # check if a version was returned from the pom.xml
       if [[ ! $dist_version = "" ]]; then
@@ -883,13 +911,15 @@ function publish_ear
 ##
 ## If <project>/server-admin doesn't exist, the method simply returns.
 function create_machine_conf_packages() {
-  local conf_dir=$svn_src_dir/server-admin
+  local conf_dir=$project_src_dir/server-admin
   
   if [ ! -d $conf_dir ]; then
     return
   fi
 
-  generate_new_changelog
+  if [[ "$src_control" = svn ]]; then
+    generate_new_changelog
+  fi
 
   local machine_list=$(
     find $conf_dir -maxdepth 1 -type d | \
@@ -922,7 +952,7 @@ function create_machine_conf_packages() {
     find $target_dir -name .svn -type d | xargs rm -rf
 
     # add the truth
-    local file=$svn_src_dir/doc/vosa-handbook/create-handbook.conf
+    local file=$project_src_dir/doc/vosa-handbook/create-handbook.conf
     if [ -e $file ]; then
       local dir=$target_dir/etc/vizrt
       run_wrapper mkdir -p $dir
@@ -1005,7 +1035,7 @@ EOF
 function generate_new_changelog() {
   print_and_log "Generating change log for revision $revision" ...
   (
-    cd ${svn_src_dir}
+    cd ${project_src_dir}
     local previous_revision=PREV
     previous_revision=$(
       ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
@@ -1124,8 +1154,12 @@ function phase_clean_up
 ##
 function phase_verify_project
 {
-  svn_fail_early
-  svn_verify_assembly
+  if [[ "$src_control" = "git" ]]; then
+    git_checkout
+  else
+    svn_fail_early
+  fi
+  project_verify_assembly
   retrieve_project_pom_versions
   print_unstable_distributions
   set_java_home
@@ -1141,7 +1175,9 @@ function phase_verify_project
 ##
 function phase_release
 {
-  svn_checkout
+  if [[ "$src_control" = "svn" ]]; then
+    svn_checkout
+  fi
   if [ $skip_ear -eq 0 ]; then
     maven_build
     symlink_project_assembly
