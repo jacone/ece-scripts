@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 # /usr/bin/vosa --- command to manage vizrt on-line system-administration
 # managed instances of virtual machines.
@@ -619,6 +619,10 @@ function really_do_status () {
           if [ -z $aws_instance ] && [ -r $bootstatefile ] ; then
             aws_instance=$(cut < "$bootstatefile" -f 6 | grep 'i-')
           fi
+          if [ -z "$aws_instance" ] && [ -r $bootstatefile ] ; then
+            # Hope that the 6th field continues to provide "i-"...
+            aws_instance=$(cut < "$bootstatefile" -f 8 | grep 'i-')
+          fi
 
           if [ -z "$aws_instance" ] ; then
             output=( ${output[@]} invalid );
@@ -656,8 +660,8 @@ function really_do_status () {
           local stale=1
         fi
         if $USE_AWS_CLI ; then
-          aws_state=$(awk < "$statefile" -F '\t' '/^STATE/ { print $3 }')
-          aws_zone=$(awk < "$statefile" -F '\t' '/^PLACEMENT/ { print $4 }')
+          aws_state=$(awk < "$statefile" -F '\t' $'/^STATE\t/ { print $3 }')
+          aws_zone=$(awk < "$statefile" -F '\t' $'/^PLACEMENT\t/ { print $4 }')
           aws_start=$(awk < "$statefile" -F '\t' "/$aws_instance/"' { print $4 }')
         else
           aws_state=$(awk < "$statefile" -F '\t' '/^INSTANCE/ { print $6 }')
@@ -882,15 +886,18 @@ function do_create() {
 
       if [ ! -z "${amazon_config_ip_address}" ] ; then
         echo "Associating IP $amazon_config_ip_address..."
-        ${commands}/ec2-cmd.sh \
-          "$instance_dir" \
-          "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
-          associate-address \
-          $($USE_AWS_CLI && echo "--public-ip") \
-          ${amazon_config_ip_address} \
-          $($USE_AWS_CLI && echo "--instance-id") \
-          $($USE_AWS_CLI || echo "--instance") \
-          INSTANCE
+        for a in 1 2 3 4 5 6 7 8 9 10; do
+          sleep 4;
+          ${commands}/ec2-cmd.sh \
+            "$instance_dir" \
+            "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" \
+            associate-address \
+            $($USE_AWS_CLI && echo "--public-ip") \
+            ${amazon_config_ip_address} \
+            $($USE_AWS_CLI && echo "--instance-id") \
+            $($USE_AWS_CLI || echo "--instance") \
+            INSTANCE && break
+        done
       fi
       
       ${commands}/ec2-determine-ip.sh \
