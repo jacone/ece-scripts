@@ -1,16 +1,17 @@
 * How to add jar files to your project
-First of all there's a pre-requisite for jar files you want to add to a publication .war or to escenic/lib/ and that is that the jar file has to be part of the overall project build. For your own jars this means they need to have a module under i.e. libraries, which is the case for your newsletter plugin, and for third party jars they have to be listed as a dependency.
+
+First of all there is a pre-requisite for all types of jar files you want to add to a publication .war file or to the escenic/lib/ folder which requires the jar file to be part of the overall project build. For jar built within your project this means they need to have a module under i.e. libraries, which is the setup used most frequently, and for third party jars they have to be listed as a dependency.
  
-** Case 1 - add a jar file to a publication .war
+** Case I - how to add a jar file to a publication .war
  
-- if you add a dependency, with scope compile or no scope, to the pom.xml of publication x the dependency will go into x.war
+- if you add a jar dependency, with scope compile or no scope at all, to the pom.xml of the publication x module the jar file will go into x.war
  
-- if you add a dependency, with scope compile or no scope, to the pom.xml of shared-war the the dependency will go into all .war files depending on shared-war
+- if you add a jar dependency, with scope compile or no scope at all, to the pom.xml of the shared-war module the jar file will go into all .war files depending on shared-war
  
-** Case 2 - add my own jar to escenic/lib/
+** Case II - how to add a jar built in the project to escenic/lib/
  
-- open project-assembly/src/main/assembly/assembly.xml and locate the include statements for jar files, i.e <include>*:some-module-name:jar</include>. if you add another line with the name of your jar, i.e. <include>*:expatliving-newsletter-plugin:jar</include> in both places then the next build on the SaaS builder will include your jar in the .ear file and it will be deployed to escenic/lib when you ece-deploy the .ear file. 
+- open project-assembly/src/main/assembly/assembly.xml and locate the include statements for jar files, i.e <include>*:some-module-name:jar</include>. If you add another line with the name of your jar, i.e. <include>*:my-new-plugin:jar</include>, in both places, then the next build on the SaaS builder will include your jar in the .ear file and it will be deployed to escenic/lib when you ece-deploy the .ear file. 
  
-** Case 3 - add third-party jars to escenic/lib/
+** Case III - how to add third-party jars to escenic/lib/
  
-- make sure the third-party jar you want to add is present in your project as a dependency with scope provided!!! open project-assembly/src/main/assembly/assembly.xml and locate the include statements for jar files, i.e <include>*:some-module-name:jar</include>. if you add another line with the name of your third-party jar, i.e. <include>*:xmlrpc-server:jar</include> in both places then the next build on the SaaS builder will include your jar in the .ear file and it will be deployed to escenic/lib when you ece-deploy the .ear file.
+- make sure the third-party jar you want to add is present in your project as a dependency with scope provided!!! Open project-assembly/src/main/assembly/assembly.xml and locate the include statements for jar files, i.e <include>*:some-module-name:jar</include>. If you add another line with the name of your third-party jar, i.e. <include>*:xmlrpc-server:jar</include>, in both places, then the next build on the SaaS builder will include your jar in the .ear file and it will be deployed to escenic/lib when you ece-deploy the .ear file.
