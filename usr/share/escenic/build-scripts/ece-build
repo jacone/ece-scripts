@@ -792,7 +792,7 @@ function svn_checkout
 function maven_build
 {
   run_wrapper cd $project_src_dir
-  run_wrapper mvn -q $maven_opts
+  run_wrapper mvn $maven_opts
 }
 
 ##
