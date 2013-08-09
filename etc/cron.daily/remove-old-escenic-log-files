@@ -22,8 +22,8 @@ fi
 # Added to take care of left over ear files in escenic cache by ece-install and ece-deploy
 if [ -r /etc/escenic/ece.conf ]; then
   source /etc/escenic/ece.conf
-  if [ -d ${cache_dir} ] ; then
-    nice find ${cache_dir} -maxdepth 1 -type f -mtime +5 -delete
+  if [ ! -z "${cache_dir}" ] && [ -d "${cache_dir}" ] ; then
+    nice find "${cache_dir}" -maxdepth 1 -type f -mtime +5 -delete
   fi
 
 fi
