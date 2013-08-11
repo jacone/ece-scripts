@@ -114,7 +114,7 @@ function create_import_cron_jobs() {
     return
   fi
 
-  local file=/etc/cron.d/$1-$2-cron
+  local file=/etc/cron.d/${1//./-}-${2//./-}-cron
   echo > $file
 
   # first, set up an y cron.hourly
