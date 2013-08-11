@@ -158,6 +158,7 @@ function create_import_cron_jobs() {
   if [ $(wc -c $file | cut -d' ' -f1) -lt 2 ]; then
     run rm $file
   else
+    sed -i "1i# Crontab installed by ece-import $(date --rfc-2822)\nSHELL=/bin/bash\nPATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n" $file
     print_and_log $(green NEW) "cron job(s) set up in $file"
   fi
 }
