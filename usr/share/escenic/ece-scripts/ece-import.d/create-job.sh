@@ -147,7 +147,7 @@ function create_import_cron_jobs() {
       for cron_script in $(find $f -type f); do
         local the_script=$target_dir/$type_of_cron/$(basename $cron_script)
         run chmod +x $the_script
-        echo "$cron_pattern" bash $the_script \
+        echo "$cron_pattern" ${escenic_user} bash $the_script \
           '>>' $log_base_dir/$(basename $file).log \
           >> $file
       done
