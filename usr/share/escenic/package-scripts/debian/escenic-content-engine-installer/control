@@ -12,4 +12,4 @@ Description: The Escenic Content Engine Installer.
   .
   The script can run in both interactive or full automatic mode (FAI). See the
   documentation in /usr/share/doc/escenic/ for further details.
- 
+
