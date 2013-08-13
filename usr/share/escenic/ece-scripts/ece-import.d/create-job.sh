@@ -161,6 +161,9 @@ function create_import_cron_jobs() {
     sed -i "1i# Crontab installed by ece-import $(date --rfc-2822)\nSHELL=/bin/bash\nPATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin\n" $file
     print_and_log $(green NEW) "cron job(s) set up in $file"
   fi
+  if [ -f $log_base_dir/ece-import.log ] ; then
+    chown ${escenic_user}: $log_base_dir/ece-import.log
+  fi
 }
 
 function print_manual_steps() {
