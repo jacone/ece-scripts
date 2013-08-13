@@ -153,5 +153,5 @@ function is_escenic_xml_ok() {
     return
   fi
 
-  echo 0
+  echo 1
 }
