@@ -302,7 +302,7 @@ EOF
                protocol="HTTP/1.1"
                connectionTimeout="20000"
                URIEncoding="UTF-8"
-               compression="on"
+               compression="off"
                redirectPort="${redirect_port}"
     />
     <Connector port="${redirect_port}"
