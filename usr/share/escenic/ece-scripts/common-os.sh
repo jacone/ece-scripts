@@ -8,7 +8,7 @@
 common_bashing_is_loaded > /dev/null 2>&1 || source $(pwd)/common-bashing.sh
 
 ## Only used if the Tomcat download mirror couldn't be determined
-fallback_tomcat_url="http://apache.komsys.org/tomcat/tomcat-6/v6.0.36/bin/apache-tomcat-6.0.36.tar.gz"
+fallback_tomcat_url="http://apache.komsys.org/tomcat/tomcat-6/v6.0.37/bin/apache-tomcat-6.0.37.tar.gz"
 
 # Can be used like this:
 # common_io_os_loaded 2>/dev/null || source common-os.sh

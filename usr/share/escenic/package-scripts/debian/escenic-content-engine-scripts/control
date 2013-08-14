@@ -1,6 +1,6 @@
 Package: escenic-content-engine-scripts
 Version: VERSION
-Depends: escenic-common-scripts (>= VERSION)
+Depends: escenic-common-scripts (>= VERSION), libxml2-utils
 Section: base
 Priority: optional
 Architecture: all
@@ -13,4 +13,4 @@ Description: Scripts for operating the Escenic Content Engine.
   .
   See the documentation in /usr/share/doc/escenic/ for further
   details.
- 
+

@@ -24,6 +24,14 @@ function amazon_config_certificate() {
   amazon_config_certificate=$1
 }
 
+function amazon_config_access_key_id() {
+  amazon_config_access_key_id=$1
+}
+
+function amazon_config_secret_access_key_file() {
+  amazon_config_secret_access_key_file=$1
+}
+
 function amazon_config_user_data() {
   amazon_config_user_data=$1
 }

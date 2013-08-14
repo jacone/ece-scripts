@@ -232,7 +232,7 @@ function perform_transformations() {
         return
       fi
     elif [[ "$el" == *".py" ]]; then
-      python $el $f >> $log 2>> $log
+      python $el $1 >> $log 2>> $log
       if [ $? -gt 0 ]; then
         handle_transformation_error $el $1
         return

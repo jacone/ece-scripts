@@ -19,14 +19,26 @@ if [ -z "$cmd" ] ; then
   exit 3
 fi
 
-if [ -z "$EC2_BINARY" ] ; then
-  EC2_BINARY=$(which 2>/dev/null ec2-$cmd)
-fi
+if $USE_AWS_CLI ; then
+  if [ -z "$EC2_BINARY" ] ; then
+    EC2_BINARY=$(which 2>/dev/null aws)
+  fi
 
-if [ -z "$EC2_BINARY" -o ! -x "$EC2_BINARY" ] ; then
-  echo "Unable to figure out where ec2-$cmd is installed."
-  echo "export EC2_BINARY to make it work."
-  exit 2
+  if [ -z "$EC2_BINARY" -o ! -x "$EC2_BINARY" ] ; then
+    echo "Unable to figure out where aws is installed."
+    echo "export EC2_BINARY to make it work."
+    exit 2
+  fi
+else
+  if [ -z "$EC2_BINARY" ] ; then
+    EC2_BINARY=$(which 2>/dev/null ec2-$cmd)
+  fi
+
+  if [ -z "$EC2_BINARY" -o ! -x "$EC2_BINARY" ] ; then
+    echo "Unable to figure out where ec2-$cmd is installed."
+    echo "export EC2_BINARY to make it work."
+    exit 2
+  fi
 fi
 
 debug=3
@@ -91,10 +103,47 @@ function read_amazon_config() {
   have_read_amazon_config=1
 }
 
+# Example output from AWS CLI
+cat > /dev/null <<EOF
+390962791497   r-2db4d467
+RESPONSEMETADATA       168ad1ba-8a7a-4419-9c1a-7f85d2d5a466
+default        sg-65258a12
+None   aki-75665e01    False   2013-07-15T08:16:27.000Z        None    i-04e0e849
+MONITORING     disabled
+STATE  0       pending
+default        sg-65258a12
+PLACEMENT      default None    eu-west-1a
+STATEREASON    pending pending
+EOF
+
+# Example output from AWS CLI when booting into a VPC
+cat > /dev/null <<EOF
+866410366134	r-c3284b89
+RESPONSEMETADATA	00ee4d6c-cf38-4ab4-ad4e-32caec6d5659
+None	aki-71665e05	False	2013-07-15T12:13:52.000Z	172.31.34.128	vpc-011dbf6a	None	i-2c1d1661	ami-57b0a223	ip-172-31-34-128.eu-west-1.compute.internal	builder-root	None	subnet-061dbf6d	m1.medium	True	xen	x86_64	paravirtual	instance-store	0
+MONITORING	disabled
+STATE	0	pending
+default	sg-923dd0fd
+in-use	True	vpc-011dbf6a	None	eni-cfeb46a4	ip-172-31-34-128.eu-west-1.compute.internal	subnet-061dbf6d	866410366134	172.31.34.128
+ip-172-31-34-128.eu-west-1.compute.internal	True	172.31.34.128
+ATTACHMENT	attaching	0	True	eni-attach-6355ac0b	2013-07-15T12:13:52.000Z
+default	sg-923dd0fd
+PLACEMENT	default	None	eu-west-1b
+STATEREASON	pending	pending
+EOF
+
 function get_aws_instance() {
   bootstatefile=$image/amazon.initialstate
   if [ -r $bootstatefile ] ; then
     aws_instance=$(awk < "$bootstatefile" -F '\t' '/^INSTANCE/ { print $2 }')
+  fi
+  if [ -z "$aws_instance" ] && [ -r $bootstatefile ] ; then
+    # Hope that the 6th field continues to provide "i-"...
+    aws_instance=$(cut < "$bootstatefile" -f 6 | grep 'i-')
+  fi
+  if [ -z "$aws_instance" ] && [ -r $bootstatefile ] ; then
+    # Hope that the 6th field continues to provide "i-"...
+    aws_instance=$(cut < "$bootstatefile" -f 8 | grep 'i-')
   fi
 }
 
@@ -125,7 +174,12 @@ function invoke_ec2() {
 }
 
 
-read_amazon_config $1/amazon.conf
+if $USE_AWS_CLI ; then
+  AWS_COMMON_OPTIONS="--output text ec2 $cmd"
+else
+  # Assume that the AWS_ACCESS_KEY and SECRET_KEY and REGION are set...
+  read_amazon_config $1/amazon.conf
+fi
 get_aws_instance
 shift
 shift

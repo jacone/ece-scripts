@@ -24,6 +24,11 @@ Features of the /usr/bin/ece script
 ===================================
 https://github.com/vizrt/ece-scripts/blob/master/usr/share/doc/escenic/ece-guide.org
 
+===================================
+Features of the /usr/bin/ece-import script
+===================================
+https://github.com/vizrt/ece-scripts/blob/master/usr/share/doc/escenic/ece-import-guide.org
+
 ============================================
 Features of the /usr/sbin/ece-install script
 ============================================
@@ -45,7 +50,8 @@ Feedback
 Hope you enjoy the ece /usr/bin and intit.d scripts. All feedback,
 come hither!
 
-tkj@vizrt.com
-(From February 2013 Torstein will/has move(d) on and you can send email to thv@vizrt.com untill we do the impossible and find a suitable replacement for Torstein)
+Thomas Velthoven tvelthoven(at)vizrt.com
+
+(The founder of this repo , Torstein, has move(d) on to other challenges)
 
 Commits to this repo will also show in our vosa hipchat room

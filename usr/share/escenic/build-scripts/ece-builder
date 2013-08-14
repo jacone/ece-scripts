@@ -492,7 +492,6 @@ function add_artifact
 ##
 function process_artifact
 {
-  echo $plugin_pattern
   # identify type
   if [ $engine_found -eq 1 ]; then
     artifact_pattern=engine

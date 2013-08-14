@@ -115,8 +115,12 @@ EOF
     echo "You must have dpkg-deb installed :-("
     exit 1
   fi
+  if [ ! -x /usr/bin/fakeroot ]; then
+    echo "You must have fakeroot installed :-("
+    exit 1
+  fi
 
-  dpkg-deb --build $conf_package_build_dir 2>&1 > /dev/null
+  fakeroot dpkg-deb --build $conf_package_build_dir 2>&1 > /dev/null
   mv ${conf_package_build_dir}.deb \
     $conf_package_build_dir/${package_name}-${package_version}.deb
   

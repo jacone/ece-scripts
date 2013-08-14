@@ -153,14 +153,5 @@ function is_escenic_xml_ok() {
     return
   fi
 
-  # check for an <escenic/> root element
-  local element_count=$(
-    xml_grep --cond /escenic $1 | wc -l 2>/dev/null
-  )
-  if [ $element_count -gt 0 ]; then
-    echo 1
-    return
-  fi
-
-  echo 0
+  echo 1
 }

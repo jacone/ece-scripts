@@ -22,4 +22,5 @@
 #+INCLUDE: "privatekeys.org"
 #+INCLUDE: "host-naming.org"
 #+INCLUDE: "development-process.org"
+#+INCLUDE: "jarfiles.org"
 #+INCLUDE: "amazon.org"
