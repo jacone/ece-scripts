@@ -631,7 +631,7 @@ function create_ecedb() {
   run_db_scripts $ece_home/database/$db_product
   
   # ... then, find the plugins and run their SQL scripts
-  for archive in $technet_download_list; do
+  for archive in $technet_download_list $ear_download_list; do
     # don't re-run the engine scripts
     if [[ $(basename ${archive}) == engine* ]]; then
       continue
@@ -643,7 +643,7 @@ function create_ecedb() {
         head -2 | \
         awk '{print $2}' | \
         tail -1 | \
-        cut -d'/' -f1      
+        cut -d'/' -f1
     )
 
     # should always be one
