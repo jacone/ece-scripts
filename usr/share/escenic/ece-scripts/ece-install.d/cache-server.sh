@@ -220,10 +220,12 @@ acl staff {
 sub vcl_recv {
   if (!client.ip ~ staff &&
       (req.url ~ "^/escenic/" ||
-       req.url ~ "^/studio" ||
-       req.url ~ "^/munin" ||
-       req.url ~ "^/webservice" ||
-       req.url ~ "^/escenic-admin")) {
+       req.url ~ "^/studio/" ||
+       req.url ~ "^/munin/" ||
+       req.url ~ "^/icinga/" ||
+       req.url ~ "^/webservice/" ||
+       req.url ~ "^/webservice-extensions/" ||
+       req.url ~ "^/escenic-admin/")) {
     error 405 "Not allowed.";
   }
 }
