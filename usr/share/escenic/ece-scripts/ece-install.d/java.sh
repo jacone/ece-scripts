@@ -1,38 +1,37 @@
+default_java_version=1.6
 sun_java_bin_url=http://download.oracle.com/otn-pub/java/jdk/6u39-b04/jdk-6u39-linux-i586.bin
 if [[ $(uname -m) == "x86_64" ]]; then
   sun_java_bin_url=http://download.oracle.com/otn-pub/java/jdk/6u39-b04/jdk-6u39-linux-x64.bin
 fi
   
-function create_java_deb_packages_and_repo() {
-  print_and_log $(lsb_release -i | cut -d':' -f2) \
-    $(lsb_release -r | cut -d':' -f2) \
-    "doesn't have official Oracle/Sun Java packages,"
-  print_and_log "creating packages & local repo for you ..."
-  
-  local tmp_dir=$(mktemp -d)
-  run cd $tmp_dir
-  run git clone https://github.com/flexiondotorg/oab-java6.git
-  run cd oab-java6
+# Install oracle java from webupd8
+# http://www.webupd8.org/2012/01/install-oracle-java-jdk-7-in-ubuntu-via.html
+function install_oracle_java(){
+  # First get the java version
+  server_java_version=${fai_server_java_version-${default_java_version}}
+  debian_package_name=""
 
-  # oab fails regularly, every 2-3 months or so, so we must take extra
-  # heed here.
-  bash oab-java.sh 1>> $log 2>> $log
-  if [ $? -gt 0 ]; then
-    print_and_log "Creating Oracle/Sun Java packages failed. This is probably" \
-      "because of a 3rd party script, oab-java6, which fails" \
-      "whenever Oracle changes their website. To continue, please" \
-      "go to http://www.oracle.com/technetwork/java/javase/downloads" \
-      "and download the full Java 6 JDK and be sure to add it first" \
-      "in PATH. Then re-run $(basename $0)."
-    remove_pid_and_exit_in_error
+  if [ $server_java_version = "1.6" ]; then
+    debian_package_name="oracle-java6-installer"
+    java_home="/usr/lib/jvm/java-6-oracle"
+  elif [ $server_java_version = "1.7" ]; then
+    debian_package_name="oracle-java7-installer"
+    java_home="/usr/lib/jvm/java-7-oracle"
+  #elif [ $server_java_version = "1.8" ]; then
+  #  debian_package_name="oracle-java8-installer"
+  #  java_home="/usr/lib/jvm/java-8-oracle"
+  else
+    # Error: Invalid java version
+    print_and_log "Unsupported Java version. Cannot proceed. Exiting ...."
+    return 0
   fi
-  run rm -rf $tmp_dir
-    
-  add_next_step "Local APT repository with Sun/Oracle Java packages" \
-    "has been installed at /var/local/oab/deb and added" \
-    "to your APT system with /etc/apt/sources.list.d/oab.list"
-}
 
+  install_packages_if_missing python-software-properties software-properties-common
+  run add-apt-repository -y ppa:webupd8team/java
+  run apt-get update
+  echo "$debian_package_name shared/accepted-oracle-license-v1-1 boolean true" | debconf-set-selections
+  install_packages_if_missing $debian_package_name
+}
 
 function install_sun_java_on_redhat() {
   if [[ $(${java_home}/bin/java -version 2>&1 | \
