@@ -560,11 +560,11 @@ function fetch_distributions
   fi
   
   # iterate over all known distribution identifiers
-  for f in $escenic_identifiers
+  for f in ${!project_distributions[@]};
   do
 
     # try and fetch the version for the distribution from the pom.xml
-    local dist_version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $project_src_dir/pom.xml | tr -d $'\r' `
+    local dist_version=${project_distributions["$f"]}
     
     # check if a version was returned from the pom.xml
     if [[ ! $dist_version = "" ]]; then
@@ -573,13 +573,18 @@ function fetch_distributions
       if [ ! -d $dists_root_dir/$f-$dist_version ]; then
 
         # create a url from the maven coordinate of the distribution
-        local dist_path=`mvn_coordinate_to_url ${maven_coordinates["$f"]}:$dist_version`
         local artifact_pattern=$f
         local artifact_version=$dist_version
         local target_path=$dists_root_dir
         
-        # try and add the distribution
-        request_distribution $dist_path
+        for h in ${maven_coordinates["$f"]};
+        do
+          local dist_path=`mvn_coordinate_to_url ${h}:$dist_version`
+
+          # try and add the distribution
+          request_distribution $dist_path
+        done
+
         if [ -e $dists_tmp_dir/distribution.zip ]; then
           run_wrapper cd $dists_tmp_dir
           run_wrapper unzip -q $dists_tmp_dir/distribution.zip
@@ -680,16 +685,19 @@ function download_distribution
 function print_unstable_distributions
 {
   for f in ${!project_distributions[@]}; do
-    local dist_path=`mvn_coordinate_to_url ${maven_coordinates["$f"]}:${project_distributions["$f"]}`
-    if [ ! -z $dist_path ]; then
-      distribution_exists http://maven.vizrt.com/$dist_path
-      if [ $? -ne 0 ]; then
-        distribution_exists http://maven.vizrt.com/unstable/$dist_path
-        if [ $? -eq 0 ]; then
-          print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+    for g in ${maven_coordinates["$f"]}
+    do
+      local dist_path=`mvn_coordinate_to_url ${g}:${project_distributions["$f"]}`
+      if [ ! -z $dist_path ]; then
+        distribution_exists http://maven.vizrt.com/$dist_path
+        if [ $? -ne 0 ]; then
+          distribution_exists http://maven.vizrt.com/unstable/$dist_path
+          if [ $? -eq 0 ]; then
+            print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+          fi
         fi
       fi
-    fi
+    done
   done
 }
 
