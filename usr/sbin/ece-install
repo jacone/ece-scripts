@@ -684,6 +684,8 @@ function ask_for_instance_name()
             instance_name=${fai_presentation_name-$1}
         elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
             instance_name=${fai_search_name-$1}
+        elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+            instance_name=${fai_all_name-$1}
         elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
             instance_name=${fai_analysis_name-$1}
         fi

@@ -1044,6 +1044,9 @@ the *ece-install.conf*:
 - *fai\_all\_install* :: Install all components on your
      server.. Default is 0.
 
+- *fai\_all\_name* :: Instance name for the all install
+     server.. Default is engine1.
+
 - *fai\_all\_stop\_and\_clear* :: After installation, stop the
      instance and clear its work & log files.. Default is 0.
 
