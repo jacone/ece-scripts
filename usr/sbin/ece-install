@@ -186,10 +186,28 @@ function download_escenic_components()
       fi
       local repo
       for repo in $fai_maven_repositories; do
+        # Special handling for snapshots
+        if [[ "$el" == *-SNAPSHOT* ]] ; then
+          # If snapshot file is not available, try to see if there's a maven-metadata file
+          if ! curl -s -I $repo/$el | grep -q '^HTTP[^ ]* 200' ; then
+            if curl -s -I $repo/$(dirname $el)/maven-metadata.xml | grep -q '^HTTP[^ ]* 200' ; then
+              local metadata;
+              local name=$(basename $el)
+              metadata=$(curl -s $repo/$(dirname $el)/maven-metadata.xml)
+              local timestamp=$(xmlstarlet <<< "$metadata" sel -t -m /metadata/versioning/snapshot/timestamp -c 'text()')
+              local buildnumber=$(xmlstarlet <<< "$metadata"  sel -t -m /metadata/versioning/snapshot/buildNumber -c 'text()')
+              log "Found SNAPSHOT with $timestamp-$buildnumber in $el"
+              el=$(dirname $el)/${name/SNAPSHOT/$timestamp-$buildnumber}
+              log "Downloading $el from $repo".
+            fi
+          fi
+        fi
         if curl -s -I $repo/$el | grep -q '^HTTP[^ ]* 200' ; then
           log "Downloading $(basename $el) ..."
           run wget $wget_opts $repo/$el
           break
+        else
+          log "$(basename $el) not found"
         fi
       done
     done
