@@ -185,7 +185,7 @@ function download_escenic_components()
         continue;
       fi
       local repo
-      local targetname=$(basename el)
+      local targetname=$(basename $el)
       for repo in $fai_maven_repositories; do
         # Special handling for snapshots
         if [[ "$el" == *-SNAPSHOT* ]] ; then
