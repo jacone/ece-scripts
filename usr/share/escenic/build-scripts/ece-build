@@ -66,21 +66,53 @@ declare -A project_distributions=()
 
 project_maven_coordinates=""
 
+declare -A maven_snapshot_coordinates=(
+["assemblytool"]="com.escenic.tools:assemblytool:jar"
+["engine"]="com.escenic:engine-dist:zip:bin"
+["analysis-engine"]="com.escenic.plugins.analysis:analysis-engine:zip"
+["dashboard"]="com.escenic.plugins.dashboard:dashboard:zip"
+["forum"]="com.escenic.plugins.forum:forum:zip"
+["geocode"]="com.escenic.plugins.geocode:geocode:zip"
+["lucy"]="com.escenic.plugins.lucy:lucy:zip"
+["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor:zip"
+["newsroom"]="com.escenic.plugins.newsroom:newsroom:zip"
+["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
+["poll"]="com.escenic.plugins.poll:poll:zip"
+["section-feed"]="com.escenic.plugins.section-feed:section-feed:zip"
+["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense:zip"
+["snapshot"]="com.escenic.plugins.snapshot:snapshot:zip"
+["community-engine"]="com.escenic.plugins.community:community-engine:zip"
+["online-graphics"]="com.escenic.plugins.online-graphics:online-graphics:zip"
+["video"]="com.escenic.plugins.video:video:zip"
+["xml-editor"]="com.escenic.plugins.xml-editor:xml-editor:zip"
+["vcpeditor"]="com.escenic.plugins.vcpeditor:vcpeditor:zip"
+["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
+["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
+["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
+)
+
 declare -A maven_coordinates=(
 ["assemblytool"]="com.escenic.tools:assemblytool:jar"
 ["engine"]="com.escenic:engine-dist:zip:bin"
 ["analysis-engine"]="com.escenic.plugins.analysis:analysis-engine:zip"
 ["dashboard"]="com.escenic.plugins.dashboard:dashboard:zip"
 ["forum"]="com.escenic.plugins.forum:forum:zip"
-["geocode"]="com.escenic.plugins.geocode:geocode-dist:zip"
-["lucy"]="com.escenic.plugins.lucy:lucy-dist:zip"
-["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor-dist:zip"
-["newsroom"]="com.escenic.plugins.newsroom:newsroom-dist:zip"
+["geocode"]="com.escenic.plugins.geocode:geocode-dist:zip
+com.escenic.plugins.geocode:geocode:zip"
+["lucy"]="com.escenic.plugins.lucy:lucy-dist:zip
+com.escenic.plugins.lucy:lucy:zip"
+["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor-dist:zip
+com.escenic.plugins.menu-editor:menu-editor:zip"
+["newsroom"]="com.escenic.plugins.newsroom:newsroom-dist:zip
+com.escenic.plugins.newsroom:newsroom:zip"
 ["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
 ["poll"]="com.escenic.plugins.poll:poll:zip"
-["section-feed"]="com.escenic.plugins.section-feed:section-feed-dist:zip"
-["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense-dist:zip"
-["snapshot"]="com.escenic.plugins.snapshot:snapshot-dist:zip"
+["section-feed"]="com.escenic.plugins.section-feed:section-feed-dist:zip
+com.escenic.plugins.section-feed:section-feed:zip"
+["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense-dist:zip
+com.escenic.plugins.semantic:semantic-cxense:zip"
+["snapshot"]="com.escenic.plugins.snapshot:snapshot-dist:zip
+com.escenic.plugins.snapshot:snapshot:zip"
 ["community-engine"]="com.escenic.plugins.community:community-engine:zip"
 ["online-graphics"]="com.escenic.plugins.online-graphics:online-graphics:zip"
 ["video"]="com.escenic.plugins.video:video:zip"
@@ -530,6 +562,56 @@ function mvn_coordinate_to_url
 }
 
 ##
+function mvn_coordinate_to_rest_call
+{
+  # url to be returned
+  local url
+
+  # coordinate is e.g. com.escenic:engine-dist:zip:bin:trunk-SNAPSHOT
+  # or com.escenic.plugins.forum:forum:zip:trunk-SNAPSHOT
+  # groupid:artifactid:[packaging:[classifier:]]version
+  local coordinate=$1
+
+  # local variables parsed from coordinate
+  local groupid
+  local artifactid
+  local version
+  local packaging
+  local classifier
+
+  # chomp groupid: --> artifactid:[packaging:[classifier:]]version
+  groupid=${coordinate/:*}
+  coordinate=${coordinate#${groupid}:}
+
+  # chomp artifactid: --> [packaging:[classifier:]]version
+  artifactid=${coordinate/:*}
+  coordinate=${coordinate#${artifactid}:}
+
+  # chomp version --> [packaging[:classifier]]
+  version=${coordinate/*:}
+  coordinate=${coordinate%${version}}
+  coordinate=${coordinate%:}
+
+  classifier=
+  packaging=
+
+  if [ ! -z "$coordinate" ] ; then
+    # chomp packaging --> [classifier]
+    packaging=${coordinate/:*}
+    coordinate=${coordinate#${packaging}}
+    coordinate=${coordinate#:}
+  fi
+
+  if [ ! -z "$coordinate" ] ; then
+    # chomp classifier
+    classifier=$coordinate
+    coordinate=
+  fi
+
+  echo "&g=${groupid}&a=${artifactid}&v=$version&a=${artifactid}&e=${packaging}${classifier:+&c=${classifier}}"
+}
+
+##
 function set_java_home
 {
   project_java_version=`xml2 < $project_src_dir/pom.xml | grep '^/project/build/plugins/plugin/configuration/target=' | sed -n -e 's,.*project/build/plugins/plugin/configuration/target=,,p'`
@@ -563,16 +645,23 @@ function fetch_distributions
     run_wrapper mkdir -p $dists_root_dir
   fi
   
-  # iterate over all known distribution identifiers
+  # iterate over all distributions in the project
   for f in ${!project_distributions[@]};
   do
 
-    # try and fetch the version for the distribution from the pom.xml
+    # extract the version from the list of project distributions
     local dist_version=${project_distributions["$f"]}
     
-    # check if a version was returned from the pom.xml
+    # double check that the version isn't null
     if [[ ! $dist_version = "" ]]; then
-      
+
+      # remove old trunk-SNAPSHOT if present
+      if [[ $dist_version = "trunk-SNAPSHOT" ]]; then
+        if [ -d $dists_root_dir/$f-$dist_version ]; then
+          rm -rf $dists_root_dir/$f-$dist_version
+        fi
+      fi
+
       # check if the distribution is already present in the local dists directory
       if [ ! -d $dists_root_dir/$f-$dist_version ]; then
 
@@ -580,14 +669,20 @@ function fetch_distributions
         local artifact_pattern=$f
         local artifact_version=$dist_version
         local target_path=$dists_root_dir
-        
-        for h in ${maven_coordinates["$f"]};
-        do
-          local dist_path=`mvn_coordinate_to_url ${h}:$dist_version`
-
-          # try and add the distribution
-          request_distribution $dist_path
-        done
+       
+        if [[ $dist_version = "trunk-SNAPSHOT" ]]; then
+          for h in ${maven_snapshot_coordinates["$f"]};
+          do
+            local dist_path=`mvn_coordinate_to_rest_call ${h}:$dist_version`
+            request_snapshot $dist_path
+          done
+        else
+          for h in ${maven_coordinates["$f"]};
+          do
+            local dist_path=`mvn_coordinate_to_url ${h}:$dist_version`
+            request_distribution $dist_path
+          done
+        fi 
 
         if [ -e $dists_tmp_dir/distribution.zip ]; then
           run_wrapper cd $dists_tmp_dir
@@ -660,6 +755,19 @@ function request_distribution
 }
 
 ##
+function request_snapshot
+{
+  local dist_path=$1
+  if [ ! -z $dist_path ]; then
+    distribution_exists http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
+    local ret_val=$?
+    if [ $ret_val -eq 0 ]; then
+      download_distribution http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
+    fi
+  fi
+}
+
+##
 function distribution_exists
 {
   local url=$1
@@ -689,22 +797,34 @@ function download_distribution
 function print_unstable_distributions
 {
   for f in ${!project_distributions[@]}; do
-    for g in ${maven_coordinates["$f"]}
-    do
-      local dist_path=`mvn_coordinate_to_url ${g}:${project_distributions["$f"]}`
-      if [ ! -z $dist_path ]; then
-        distribution_exists http://maven.vizrt.com/$dist_path
-        if [ $? -ne 0 ]; then
-          distribution_exists http://maven.vizrt.com/unstable/$dist_path
-          if [ $? -eq 0 ]; then
-            print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
-            project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
-          fi
-        else
+    if [[ ${project_distributions["$f"]} = "trunk-SNAPSHOT" ]]; then
+      for g in ${maven_snapshot_coordinates["$f"]}
+      do
+        local dist_path=`mvn_coordinate_to_rest_call ${g}:${project_distributions["$f"]}`
+        distribution_exists http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
+        if [ $? -eq 0 ]; then
+          print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
           project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
         fi
-      fi
-    done
+      done
+    else
+      for g in ${maven_coordinates["$f"]}
+      do
+        local dist_path=`mvn_coordinate_to_url ${g}:${project_distributions["$f"]}`
+        if [ ! -z $dist_path ]; then
+          distribution_exists http://maven.vizrt.com/$dist_path
+          if [ $? -ne 0 ]; then
+            distribution_exists http://maven.vizrt.com/unstable/$dist_path
+            if [ $? -eq 0 ]; then
+              print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+              project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
+            fi
+          else
+            project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
+          fi
+        fi
+      done
+    fi
   done
 }
 
