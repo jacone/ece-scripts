@@ -214,6 +214,7 @@ technet_user=<user>
 technet_password=<password>
 fai_enabled=1
 fai_<profile>_install=1
+fai_server_java_version=1.7
 #+END_SRC
 
 If the configuration file does not contain these settings then
@@ -1030,6 +1031,10 @@ the *ece-install.conf*:
   the *ece-install* command downloads. If you wish to turn this
   feature off, set this to *0*.
 
+- *fai\_server\_java\_version* The java version to use. 
+  Only allowable values are 1.6 and 1.7.
+  The default is 1.6
+
 - *fai\_all\_conf\_archive* :: *conf.tar.gz* to use for Nursery & JAAS
      configuration. Default is "".
 
@@ -1038,6 +1043,9 @@ the *ece-install.conf*:
 
 - *fai\_all\_install* :: Install all components on your
      server.. Default is 0.
+
+- *fai\_all\_name* :: Instance name for the all install
+     server.. Default is engine1.
 
 - *fai\_all\_stop\_and\_clear* :: After installation, stop the
      instance and clear its work & log files.. Default is 0.

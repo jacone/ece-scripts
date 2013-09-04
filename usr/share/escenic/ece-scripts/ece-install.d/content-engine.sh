@@ -263,6 +263,18 @@ function set_up_engine_and_plugins() {
 
   for el in $technet_download_list $ear_download_list; do
     local file=$(basename $el)
+    if [[ "$file" == *-SNAPSHOT* ]] ; then
+      local el2
+      local elf=${file/-dist}
+      # Pick the first non-SNAPSHOT version.
+      for el2 in $(dirname $file)/${file/SNAPSHOT/*} $(dirname $file)/${elf/SNAPSHOT/*} ; do
+        if [ -r "$el2" ] ; then
+          file=$(basename $el2);
+          break;
+        fi
+      done
+    fi
+
     verify_that_archive_is_ok $download_dir/$file
 
     if [ $(echo $file | \
@@ -480,11 +492,11 @@ function set_up_basic_nursery_configuration() {
       run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/
     fi
 
-    run cp -r engine/siteconfig/config-skeleton/* $common_nursery_dir/
+    run cp -rn engine/siteconfig/config-skeleton/* $common_nursery_dir/
   elif [ -d $escenic_root_dir/engine/siteconfig/config-skeleton ] ; then
     print_and_log "I'm using Nursery & JAAS configuration (skeleton) " \
       "from $escenic_root_dir/engine"
-    run cp -r $escenic_root_dir/engine/siteconfig/config-skeleton/* \
+    run cp -rn $escenic_root_dir/engine/siteconfig/config-skeleton/* \
       $common_nursery_dir/
     run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/
   else
@@ -649,18 +661,8 @@ function install_ece_third_party_packages
       local version=$(lsb_release -s -r | sed "s#\.##g")
     fi
 
-    if [ $(has_sun_java_installed) -eq 0 ]; then
-      create_java_deb_packages_and_repo
-
-      # Here, we install sun-java6-jdk first so that ant doesn't pull
-      # down OpenJDK.
-      #
-      # This if guard is in palce to not attempt to install the
-      # package if Sun Java already is installed (typically, manually
-      # installed).
-      echo "sun-java6-jdk shared/accepted-sun-dlj-v1-1 boolean true" | \
-        debconf-set-selections
-      install_packages_if_missing sun-java6-jdk
+    if [ $(has_oracle_java_installed) -eq 0 ]; then
+      install_oracle_java
     fi
 
     local packages="

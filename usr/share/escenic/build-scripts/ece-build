@@ -64,6 +64,8 @@ snapshot
 
 declare -A project_distributions=()
 
+project_maven_coordinates=""
+
 declare -A maven_coordinates=(
 ["assemblytool"]="com.escenic.tools:assemblytool:jar"
 ["engine"]="com.escenic:engine-dist:zip:bin"
@@ -82,8 +84,10 @@ declare -A maven_coordinates=(
 ["community-engine"]="com.escenic.plugins.community:community-engine:zip"
 ["online-graphics"]="com.escenic.plugins.online-graphics:online-graphics:zip"
 ["video"]="com.escenic.plugins.video:video:zip"
-["xml-editor"]="com.escenic.plugins.xml-editor:xml-editor-dist:zip"
-["vcpeditor"]="com.escenic.plugins.vcpeditor:vcpeditor-dist:zip"
+["xml-editor"]="com.escenic.plugins.xml-editor:xml-editor-dist:zip
+com.escenic.plugins.xml-editor:xml-editor:zip"
+["vcpeditor"]="com.escenic.plugins.vcpeditor:vcpeditor-dist:zip
+com.escenic.plugins.vcpeditor:vcpeditor:zip"
 ["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
 ["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
 ["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
@@ -560,11 +564,11 @@ function fetch_distributions
   fi
   
   # iterate over all known distribution identifiers
-  for f in $escenic_identifiers
+  for f in ${!project_distributions[@]};
   do
 
     # try and fetch the version for the distribution from the pom.xml
-    local dist_version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $project_src_dir/pom.xml | tr -d $'\r' `
+    local dist_version=${project_distributions["$f"]}
     
     # check if a version was returned from the pom.xml
     if [[ ! $dist_version = "" ]]; then
@@ -573,13 +577,18 @@ function fetch_distributions
       if [ ! -d $dists_root_dir/$f-$dist_version ]; then
 
         # create a url from the maven coordinate of the distribution
-        local dist_path=`mvn_coordinate_to_url ${maven_coordinates["$f"]}:$dist_version`
         local artifact_pattern=$f
         local artifact_version=$dist_version
         local target_path=$dists_root_dir
         
-        # try and add the distribution
-        request_distribution $dist_path
+        for h in ${maven_coordinates["$f"]};
+        do
+          local dist_path=`mvn_coordinate_to_url ${h}:$dist_version`
+
+          # try and add the distribution
+          request_distribution $dist_path
+        done
+
         if [ -e $dists_tmp_dir/distribution.zip ]; then
           run_wrapper cd $dists_tmp_dir
           run_wrapper unzip -q $dists_tmp_dir/distribution.zip
@@ -680,16 +689,22 @@ function download_distribution
 function print_unstable_distributions
 {
   for f in ${!project_distributions[@]}; do
-    local dist_path=`mvn_coordinate_to_url ${maven_coordinates["$f"]}:${project_distributions["$f"]}`
-    if [ ! -z $dist_path ]; then
-      distribution_exists http://maven.vizrt.com/$dist_path
-      if [ $? -ne 0 ]; then
-        distribution_exists http://maven.vizrt.com/unstable/$dist_path
-        if [ $? -eq 0 ]; then
-          print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+    for g in ${maven_coordinates["$f"]}
+    do
+      local dist_path=`mvn_coordinate_to_url ${g}:${project_distributions["$f"]}`
+      if [ ! -z $dist_path ]; then
+        distribution_exists http://maven.vizrt.com/$dist_path
+        if [ $? -ne 0 ]; then
+          distribution_exists http://maven.vizrt.com/unstable/$dist_path
+          if [ $? -eq 0 ]; then
+            print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+            project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
+          fi
+        else
+          project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
         fi
       fi
-    fi
+    done
   done
 }
 
@@ -856,15 +871,9 @@ function add_distributions_to_ear
   if [ -e $assemblytool_root_dir/dist/engine.ear ]; then
     run_wrapper mkdir $assemblytool_root_dir/dist/META-INF
     # iterate over all known distribution identifiers
-    for f in $escenic_identifiers
+    for f in $project_maven_coordinates
     do
-      # try and fetch the version for the distribution from the pom.xml
-      local dist_version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $project_src_dir/pom.xml | tr -d $'\r' `
-
-      # check if a version was returned from the pom.xml
-      if [[ ! $dist_version = "" ]]; then
-        echo "${maven_coordinates["$f"]}:$dist_version" >> $assemblytool_root_dir/dist/META-INF/escenic-distributions.txt
-      fi
+      echo "$f" >> $assemblytool_root_dir/dist/META-INF/escenic-distributions.txt
     done
     run_wrapper cd $assemblytool_root_dir/dist
     run_wrapper zip -u $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt

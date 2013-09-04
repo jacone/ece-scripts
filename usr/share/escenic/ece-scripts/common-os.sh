@@ -42,10 +42,13 @@ function get_user_home_directory() {
   fi
 }
 
-### has_sun_java_installed
+### has_oracle_java_installed
 ## Will return 1 if the system has Sun/Oracle Java installed.
-function has_sun_java_installed() {
-  if [[ -x /usr/lib/jvm/java-6-sun/bin/java || \
+function has_oracle_java_installed() {
+  if [[ -x /usr/lib/jvm/java-6-oracle/bin/java || \
+    $(java -version 2>&1 > /dev/null | grep HotSpot | wc -l) -gt 0 ]]; then
+    echo 1
+  elif [[ -x /usr/lib/jvm/java-7-oracle/bin/java || \
     $(java -version 2>&1 > /dev/null | grep HotSpot | wc -l) -gt 0 ]]; then
     echo 1
   else

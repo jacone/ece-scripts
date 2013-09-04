@@ -45,11 +45,7 @@ appserver_parent_dir=/opt
 # country code for selecting the correct (APT) mirror.
 mirror_country_suffix=no
 
-# The script will install the sun-java6-jdk package on Debian based
-# systems and this is the path of the JAVA home with this package. If
-# you're using a different system or have other preferences, change
-# java_home.
-java_home=/usr/lib/jvm/java-6-sun
+java_package_name=""
 
 # This variable is updated by the package build scripts.
 ece_scripts_version="straight-from-github"
@@ -144,13 +140,13 @@ function init() {
     # load common librariees
     common_libraries="common-ece.sh common-bashing.sh common-io.sh common-os.sh"
     for el in $common_libraries; do
-      source $dir/${el}
+      source $dir/${el} || exit $?
     done
 
     # load ece-install modules
     for el in $dir/ece-install.d/*.sh; do
       log "Loading $(basename $0) module:" $(basename $el)
-      source $el
+      source $el || exit $?
     done
   else
     echo "I cannot find $(basename $0)'s dependencies, exiting :-("
@@ -190,10 +186,28 @@ function download_escenic_components()
       fi
       local repo
       for repo in $fai_maven_repositories; do
+        # Special handling for snapshots
+        if [[ "$el" == *-SNAPSHOT* ]] ; then
+          # If snapshot file is not available, try to see if there's a maven-metadata file
+          if ! curl -s -I $repo/$el | grep -q '^HTTP[^ ]* 200' ; then
+            if curl -s -I $repo/$(dirname $el)/maven-metadata.xml | grep -q '^HTTP[^ ]* 200' ; then
+              local metadata;
+              local name=$(basename $el)
+              metadata=$(curl -s $repo/$(dirname $el)/maven-metadata.xml)
+              local timestamp=$(xmlstarlet <<< "$metadata" sel -t -m /metadata/versioning/snapshot/timestamp -c 'text()')
+              local buildnumber=$(xmlstarlet <<< "$metadata"  sel -t -m /metadata/versioning/snapshot/buildNumber -c 'text()')
+              log "Found SNAPSHOT with $timestamp-$buildnumber in $el"
+              el=$(dirname $el)/${name/SNAPSHOT/$timestamp-$buildnumber}
+              log "Downloading $el from $repo".
+            fi
+          fi
+        fi
         if curl -s -I $repo/$el | grep -q '^HTTP[^ ]* 200' ; then
           log "Downloading $(basename $el) ..."
           run wget $wget_opts $repo/$el
           break
+        else
+          log "$(basename $el) not found"
         fi
       done
     done
@@ -292,7 +306,11 @@ dont_quote_conf_values=0
 # the value already is set, it will replace it with this one.
 function set_ece_instance_conf()
 {
-    instance_conf_file=$escenic_conf_dir/ece-$instance_name.conf
+    if [ -z "$instance_name" ]; then
+      instance_conf_file=$escenic_conf_dir/ece.conf
+    else
+      instance_conf_file=$escenic_conf_dir/ece-$instance_name.conf
+    fi
     set_conf_file_value $1 $2 $instance_conf_file
 }
 
@@ -682,6 +700,8 @@ function ask_for_instance_name()
             instance_name=${fai_presentation_name-$1}
         elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
             instance_name=${fai_search_name-$1}
+        elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+            instance_name=${fai_all_name-$1}
         elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
             instance_name=${fai_analysis_name-$1}
         fi
@@ -858,7 +878,7 @@ function un_install_everything() {
     percona-server-server
     percona-server-server-5.5
     varnish
-    sun-java6-jdk
+    ${java_package_name}
     mariadb-client
     mariadb-client-5.5
     mariadb-client-core-5.5
@@ -955,9 +975,29 @@ function read_user_input() {
   done
 }
 
+function get_java_package_name() {
+  # The script will install oracle java installer package on Debian based
+  # systems and this is the path of the JAVA home with this package. If
+  # you're using a different system or have other preferences, change
+  # java_home in your ece-install.conf
+  default_java_version=1.6
+  server_java_version=${fai_server_java_version-${default_java_version}}
+  if [ $server_java_version = "1.6" ]; then
+    java_package_name="oracle-java6-installer"
+  elif [ $server_java_version = "1.7" ]; then
+    java_package_name="oracle-java7-installer"
+  #elif [ $server_java_version = "1.8" ]; then
+  #  java_package_name="oracle-java8-installer"
+  else
+    # Setting it back to default
+    java_package_name=""
+  fi
+}
+
 read_user_input "$@"
 init
 assert_correct_runtime_environment
+get_java_package_name
 
 if [ ${fai_enabled-0} -eq 1 ]; then
     print_and_log "Full Automatic Install (FAI) enabled."
