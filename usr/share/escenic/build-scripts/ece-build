@@ -60,6 +60,7 @@ widget-framework-syndication
 mobile-expansion
 semantic-cxense
 snapshot
+changelog
 "
 
 declare -A project_distributions=()
