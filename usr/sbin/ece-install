@@ -185,6 +185,7 @@ function download_escenic_components()
         continue;
       fi
       local repo
+      local targetname=$(basename el)
       for repo in $fai_maven_repositories; do
         # Special handling for snapshots
         if [[ "$el" == *-SNAPSHOT* ]] ; then
@@ -204,7 +205,7 @@ function download_escenic_components()
         fi
         if curl -s -I $repo/$el | grep -q '^HTTP[^ ]* 200' ; then
           log "Downloading $(basename $el) ..."
-          run wget $wget_opts $repo/$el
+          run wget $wget_opts $repo/$el -O $targetname
           break
         else
           log "$(basename $el) not found"
