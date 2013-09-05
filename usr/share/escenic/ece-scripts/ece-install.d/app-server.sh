@@ -192,7 +192,11 @@ function set_up_app_server() {
 EOF
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER \
     -a $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
-    cat >> $tomcat_base/conf/server.xml <<EOF
+    # AFTER Content Engine 5.6, the Read and Update connectors are gone
+    # replaced with ReadConnector.  Configure it appropriately based
+    # on the presence of it in the common nursery dir.
+    if [ ! -r $common_nursery_dir/connector/DataConnector.properties ] ; then
+      cat >> $tomcat_base/conf/server.xml <<EOF
     <Resource
         name="jdbc/ECE_READ_DS"
         auth="Container"
@@ -216,11 +220,22 @@ EOF
         testWhileIdle="true"
         validationQuery="select now()"
     />
+EOF
+    fi
+    if [ -r $common_nursery_dir/connector/DataConnector.properties ] ; then
+      local ds=ECE_DS
+      local max=500
+    else
+      local ds=ECE_UPDATE_DS
+      local max=100
+    fi
+
+    cat >> $tomcat_base/conf/server.xml <<EOF
     <Resource
-        name="jdbc/ECE_UPDATE_DS"
+        name="jdbc/$ds"
         auth="Container"
         type="javax.sql.DataSource"
-        maxActive="100"
+        maxActive="$max"
         maxIdle="8"
         maxWait="2000"
         initialSize="20"
@@ -395,18 +410,23 @@ EOF
 
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
     $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
-    cat >> $tomcat_base/conf/context.xml <<EOF
-  <ResourceLink
-      global="jdbc/ECE_READ_DS"
-      name="jdbc/ECE_READ_DS"
-      type="javax.sql.DataSource"
-  />
-  <ResourceLink
-      global="jdbc/ECE_UPDATE_DS"
-      name="jdbc/ECE_UPDATE_DS"
-      type="javax.sql.DataSource"
-  />
-EOF
+
+    # Insert the ResourceLink element.
+    local el
+    if [ -r $common_nursery_dir/connector/DataConnector.properties ] ; then
+      local DSs="_"
+    else
+      local DSs="_READ_ _UPDATE_"
+    fi
+    for el in $DSs ; do
+      xmlstarlet ed -P -L \
+       -s /Context -t elem -n TMP -v '' \
+       -i //TMP -t attr -n global -v jdbc/ECE${el}DS \
+       -i //TMP -t attr -n name -v jdbc/ECE${el}DS \
+       -i //TMP -t attr -n type -v javax.sql.DataSource \
+       -r //TMP -v ResourceLink \
+       $tomcat_base/conf/context.xml
+    done
   fi
 
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then

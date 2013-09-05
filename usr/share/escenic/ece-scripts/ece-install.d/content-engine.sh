@@ -523,15 +523,28 @@ databaseProductName=MySQL
 filePublicationRoot=$escenic_data_dir/engine/
 webPublicationRoot=http://${public_host_name}/
 EOF
-  cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
+  # AFTER Content Engine 5.6, the Read and Update connectors are gone
+  # replaced with ReadConnector.  Configure it appropriately based
+  # on the presence of it in the common nursery dir.
+  if [ -r $common_nursery_dir/connector/DataConnector.properties ] ; then
+    cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
+dataConnector=/connector/DataConnector
+EOF
+  else
+    cat > $common_nursery_dir/neo/io/managers/ContentManager.properties <<EOF
 readConnector=/connector/ReadConnector
 updateConnector=/connector/UpdateConnector
 EOF
-
+  fi
   file=$common_nursery_dir/com/escenic/community/CommunityEngine.properties
   if [ -w ${file} ]; then
-    sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
-    exit_on_error "sed on $file"
+    if [ -r $common_nursery_dir/connector/DataConnector.properties ] ; then
+      sed -i 's/jdbc\/ecome/jdbc\/ECE_DS/g' $file
+      exit_on_error "sed on $file"
+    else
+      sed -i 's/jdbc\/ecome/jdbc\/ECE_UPDATE_DS/g' $file
+      exit_on_error "sed on $file"
+    fi
   elif [ ! -e ${file} ]; then
     print_and_log "I Could not find an ECOME configuration file," \
       "I assume you have not installed Community Engine."
