@@ -586,7 +586,7 @@ function check_software_credentials() {
   # if the WF credentials are set, we check to see if they're OK
   if [ -n "${wf_user}" -a -n "${wf_password}" ]; then
     print_and_log "Verifying that Widget Framework credentials are OK ..."
-    local url=http://repo.escenic.com
+    local url=http://maven.vizrt.com
     local notok=$(
       is_unauthorized_to_access_url \
         ${wf_user} \
