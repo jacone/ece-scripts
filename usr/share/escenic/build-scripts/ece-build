@@ -832,9 +832,9 @@ function print_unstable_distributions
 ##
 function symlink_ece_components
 {
-  for f in $escenic_identifiers
+  for f in ${!project_distributions[@]};
   do
-    version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $project_src_dir/pom.xml | tr -d $'\r' `
+    version=${project_distributions["$f"]}
     if [[ ! $version = "" ]]; then
       if [[ "$f" = "engine" ]]; then
         run_wrapper ln -s $dists_root_dir/$f-$version $engine_root_dir 
