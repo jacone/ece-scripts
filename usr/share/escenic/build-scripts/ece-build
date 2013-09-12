@@ -272,7 +272,7 @@ function verify_configuration {
     fi
     if [[ "$git_protocol" = "https" ]]; then
       enforce_variable git_password "Your $conf_file is missing the variable 'git_password', exiting!"
-    elif [[ "$git_protocol" = "svn" ]]; then
+    elif [[ "$git_protocol" = "ssh" ]]; then
       log "SSH protocol chosen for git, I will not use password based authentication!"
     else
       print_and_log "The chosen protocol $git_protocol for $src_control is NOT supported, exiting!"
