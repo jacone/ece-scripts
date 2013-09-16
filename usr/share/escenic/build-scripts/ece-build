@@ -328,6 +328,7 @@ function get_user_options
     case $opt in
       b)
         svn_path=branches/${OPTARG}
+        git_path="-b ${OPTARG}"
         release_label=branch-${OPTARG}
         ;;
       t)
@@ -491,13 +492,23 @@ function svn_fail_early
 function git_checkout
 {
   if [[ "$git_protocol" = "https" ]]; then
-    run_wrapper git clone https://$git_user:$git_password@$git_base $project_src_dir
+    local git_repo_uri="https://$git_user:$git_password@$git_base"
   elif [[ "$git_protocol" = "ssh" ]]; then
-    run_wrapper git clone ssh://$git_user@$git_base $project_src_dir
+    local git_repo_uri="ssh://$git_user@$git_base"
   else
     print_and_log "The chosen protocol $git_protocol for git is NOT supported, exiting!"
     exit 1
   fi
+  if [[ "$git_path" != "" ]]; then
+    local exists=$(git ls-remote --heads $git_repo_uri | grep abranch)
+    if [[ "${exists}" = "" ]]; then
+      print_and_log "The request branch $git_path does NOT exist, exiting!"
+      exit 1
+    fi
+  fi
+  
+  # git checkout
+  run_wrapper git clone $git_path $git_repo_uri $project_src_dir
 
   cd $project_src_dir
   revision=`git describe --always`
