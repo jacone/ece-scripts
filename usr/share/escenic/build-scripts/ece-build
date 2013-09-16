@@ -1169,7 +1169,7 @@ EOF
     run_wrapper mv $target_dir/*.{deb,rpm} $release_dir/
    
     # adding latest links for conf packages
-    run_wrapper ln -sf $release_dir/vosa-conf-${machine}-${package_version}.deb $release_dir/vosa-conf-${machine}-latest.deb
+    run_wrapper ln -sf $release_dir/vosa-conf-${machine}-${package_version}.deb $release_dir/vosa-conf-${machine}-1-${customer}-${release_label}-latest.deb
     run_wrapper ln -sf $release_dir/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm $release_dir/vosa-conf-${machine}-1_${customer}_${release_label}-latest.noarch.rpm
  
     # remove work directory
