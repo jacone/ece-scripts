@@ -1187,14 +1187,18 @@ EOF
     run_wrapper rm -rf $target_dir
   done
 
-  print_and_log "--- .deb configuration packages ---"  
-  for machine in $machine_list; do 
-    print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-${package_version}.deb"
-  done
-  print_and_log "--- .rpm configuration packages ---"
-  for machine in $machine_list; do
-    print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm"
-  done
+  if [ -z "$machine_list" ]; then 
+    print_and_log "Your project does not have any folders, except maybe common, under server-admin so no configuration packages will be generated."
+  else
+    print_and_log "--- .deb configuration packages ---"  
+    for machine in $machine_list; do 
+      print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-${package_version}.deb"
+    done
+    print_and_log "--- .rpm configuration packages ---"
+    for machine in $machine_list; do
+      print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm"
+    done
+  fi
 }
 
 ##
