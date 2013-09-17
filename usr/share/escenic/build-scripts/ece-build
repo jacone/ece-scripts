@@ -61,7 +61,7 @@ mobile-expansion
 semantic-cxense
 snapshot
 changelog
-"
+note"
 
 declare -A project_distributions=()
 
@@ -79,6 +79,7 @@ declare -A maven_snapshot_coordinates=(
 ["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor:zip"
 ["newsroom"]="com.escenic.plugins.newsroom:newsroom:zip"
 ["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
+["note"]="com.escenic.plugins.note:note:zip"
 ["poll"]="com.escenic.plugins.poll:poll:zip"
 ["section-feed"]="com.escenic.plugins.section-feed:section-feed:zip"
 ["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense:zip"
@@ -109,6 +110,7 @@ com.escenic.plugins.menu-editor:menu-editor:zip"
 ["newsroom"]="com.escenic.plugins.newsroom:newsroom-dist:zip
 com.escenic.plugins.newsroom:newsroom:zip"
 ["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
+["note"]="com.escenic.plugins.note:note:zip"
 ["poll"]="com.escenic.plugins.poll:poll:zip"
 ["section-feed"]="com.escenic.plugins.section-feed:section-feed-dist:zip
 com.escenic.plugins.section-feed:section-feed:zip"
