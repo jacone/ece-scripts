@@ -502,7 +502,7 @@ function git_checkout
     exit 1
   fi
   if [[ "$git_path" != "" ]]; then
-    local exists=$(git ls-remote --heads $git_repo_uri | grep abranch)
+    local exists=$(git ls-remote --heads $git_repo_uri | grep $git_path)
     if [[ "${exists}" = "" ]]; then
       print_and_log "The request branch $git_path does NOT exist, exiting!"
       exit 1
