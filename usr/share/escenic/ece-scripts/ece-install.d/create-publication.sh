@@ -7,16 +7,17 @@ function create_publication_prepare_war_file() {
     local the_tmp_dir=$(mktemp -d)
     (
       cd $the_tmp_dir
-      run jar xf $1
+      #run jar xf $1
 
       for el in $fai_publication_war_remove_file_list; do
         if [ -e $el ]; then
           print_and_log "Removing" $el "from" $(basename $1) "..."
-          run rm $el
+          #run rm $el
+          zip -d $1 $el
         fi
       done
 
-      run jar cf $1 .
+      #run jar cf $1 .
     )
   fi
 }
