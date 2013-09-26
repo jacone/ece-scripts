@@ -39,7 +39,7 @@ function get_header_from_jira() {
 }
 
 function get_to_revision() {
-  echo ${to-COMMITTED}
+  echo ${to-40acfc9}
 }
 
 function get_from_revision() {
