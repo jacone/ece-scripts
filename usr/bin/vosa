@@ -850,6 +850,7 @@ function do_create() {
       read_amazon_config $instance_dir/amazon.conf
       # TODO: sanitize "required" variables
       if $USE_AWS_CLI ; then
+        json="[{\"device_name\":\"/dev/sda1\", \"ebs\":{\"volume_size\":$amazon_config_initial_disk_size} } ]"
         opts=( "--image-id" ${amazon_config_image}
                "--min-count" "1"
                "--max-count" "1"
@@ -857,6 +858,7 @@ function do_create() {
         ${amazon_config_type/#/--instance-type }  \
         ${amazon_config_ssh_keypair/#/--key-name }  \
         ${amazon_config_group[@]/#/--security-groups } \
+         --block-device-mapping "${json}" \
         ${amazon_config_subnet/#/--subnet-id }
       )
       if [ ! -z ${amazon_config_user_data} ] ; then
