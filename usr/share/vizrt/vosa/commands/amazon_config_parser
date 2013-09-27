@@ -14,7 +14,7 @@ unset amazon_config_ssh_private_key
 unset amazon_config_image
 unset amazon_config_type
 unset amazon_config_subnet
-unset amazon_config_initial_disk_size
+amazon_config_initial_disk_size=8
 
 
 function amazon_config_key() {
