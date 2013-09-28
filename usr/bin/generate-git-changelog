@@ -38,10 +38,12 @@ function get_header_from_jira() {
   echo "$body" | grep '<title>' | sed -e 's/<title>//g' -e 's/<\/title>//g'
 }
 
+# --to revision number
 function get_to_revision() {
   echo ${to-COMMITTED}
 }
 
+# --from revision number
 function get_from_revision() {
   echo ${from-PREV}
 }
@@ -98,7 +100,7 @@ function should_regenerate() {
 function get_commit_information_from_vcs() {
   the_diff=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).diff
 
-  if [[ ! -e $the_diff || $(should_regenerate) -eq 1 ]]; then
+  if [[ ! -e $the_diff ]]; then
     git diff $(get_from_revision) $(get_to_revision) > $the_diff
     exit_on_error "git diff $(get_from_revision) $(get_to_revision)"
   fi
@@ -111,31 +113,32 @@ function get_commit_information_from_vcs() {
   fi
 }
 
-## $@ :: git revision number or tag name
-function get_date_from_svn_log() {
+## $@ :: git last revision date
+#Fri Sep 27 11:18:05 2013 +0600
+function get_date_from_git_log() {
   echo $(git log -1 --format="%cd")
 }
 
-
-function get_svn_location() {
-  git config --get remote.origin.url
+# e.g. ssh://git@git.vizrtsaas.com/ccipoc
+function get_git_location() {
+  echo $(git config --get remote.origin.url)
 }
 
 
 function get_info_from_jira() {
   the_report=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).report
   
-  if [[ ! -e $the_report || $(should_regenerate) -eq 1 ]]; then
-    echo "Changes in $(get_svn_location)" > $the_report  
+  if [[ ! -e $the_report ]]; then
+    echo "Changes in $(get_git_location)" > $the_report  
     echo "From: revision $(get_from_revision) @" \
-      $(get_date_from_svn_log $(get_from_revision)) >> $the_report
+      $(get_date_from_git_log $(get_from_revision)) >> $the_report
     echo "To  : revision $(get_to_revision) @" \
-      $(get_date_from_svn_log $(get_to_revision)) >> $the_report
+      $(get_date_from_git_log $(get_to_revision)) >> $the_report
 
     local commit_log=$(git log $(get_from_revision) $(get_to_revision))
     echo "$commit_log" | \
-      grep ${project_code}-[0-9]* | \
-      sed "s#.*\(${project_code}-[0-9]*\).*#\1#g" | \
+      grep $(get_project_name)-[0-9]* | \
+      sed "s#.*\($(get_project_name)-[0-9]*\).*#\1#g" | \
       sort | \
       uniq | while read f; do
       echo "   *" $(get_header_from_jira $f) | fmt >> $the_report
@@ -150,28 +153,22 @@ function get_info_from_jira() {
 }
 
 function sanity_check() {
-
   #if [ ! -e $(pwd)/.git ]; then
   #  print "This directory, $(pwd), " \
   #    "does not contain a working version control checkout."
-  #  exit 1
+    #exit 1
   #fi
 
   # defaulting to Atlassian on demand
   jira_base_url=${jira_base_url-https://vizrtcustomers.jira.com}
-  if [ -z "$git_base_url" ]; then
-    # bash default string substitution terminates with slashes, hence
-    # have to set this manually here.
-    git_base_url="ssh://git@git.vizrtsaas.com"
-  fi
 
   conf_file=$HOME/.$(basename $0).conf
   ensure_variable_is_set \
     project_code \
     user \
     password \
-    jira_base_url \
-    git_base_url
+    jira_base_url 
+
 
   if [[ "$(get_from_revision)" == "$(get_to_revision)" ]]; then
     print_and_log "From and to revision are the same," \
@@ -180,18 +177,19 @@ function sanity_check() {
   fi
 }
 
-function get_project() {
-  echo $(lowercase ${project_code})
+#e.g. ccipoc.git
+function get_project_name() {
+  echo ${project_code} | awk '{split($0,array,"/")} END{print array[1]}'
+}
+
+function get_project_branch() {
+  echo ${project_code} | awk '{split($0,array,"/")} END{print array[2]}'
 }
 
 function get_archive_dir() {
-  local project_context=$(lowercase $(get_svn_location | \
-    sed -e  "s#${git_base_url}/##g" -e 's#[ ]*##g')
-  )
-  
-  local dir=${archive_base_dir}/${project_context}
-  make_dir $dir
-  echo $dir
+  local directory=${archive_base_dir}/$(get_project_name)/$(get_project_branch)
+  make_dir $directory
+  echo $directory
 }
 
 function add_risk_assemsment_to_report() {
@@ -206,5 +204,3 @@ get_user_input "$@"
 sanity_check
 get_commit_information_from_vcs
 get_info_from_jira
-
-
