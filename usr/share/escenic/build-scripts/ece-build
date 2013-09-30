@@ -285,7 +285,7 @@ function verify_configuration {
     enforce_variable git_base "Your $conf_file is missing the variable 'git_base', exiting!"
     enforce_variable git_user "Your $conf_file is missing the variable 'git_user', exiting!"
     enforce_variable jira_user "Your $conf_file is missing the variable 'jira_user', exiting!"
-    enforce_variable jira_password "Your $conf_file is missing the variable 'jira_password', exiting!"
+    enforce_variable jira_password "Your $conf_file is missing the variable 'jira_password', exiting!"
   else
     print_and_log "The chosen source control system $src_control is NOT supported, exiting!"
     exit 1
@@ -1082,11 +1082,13 @@ function create_machine_conf_packages() {
     return
   fi
 
-  if [[ "$src_control" = svn ]]; then
-    generate_new_changelog
-  elif [[ "$src_control" = git ]]; then
-    generate_new_changelog
-  fi
+ # As both control run same function
+ #if [[ "$src_control" = svn ]]; then
+    #generate_new_changelog
+ #elif [[ "$src_control" = git ]]; then
+    #generate_new_changelog
+ #fi
+  generate_new_changelog
 
   local machine_list=$(
     find $conf_dir -maxdepth 1 -type d | \
