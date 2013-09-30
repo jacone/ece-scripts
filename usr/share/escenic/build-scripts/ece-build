@@ -284,7 +284,8 @@ function verify_configuration {
     fi    
     enforce_variable git_base "Your $conf_file is missing the variable 'git_base', exiting!"
     enforce_variable git_user "Your $conf_file is missing the variable 'git_user', exiting!"
-
+    enforce_variable jira_user "Your $conf_file is missing the variable 'jira_user', exiting!"
+    enforce_variable jira_password "Your $conf_file is missing the variable 'jira_password', exiting!"
   else
     print_and_log "The chosen source control system $src_control is NOT supported, exiting!"
     exit 1
@@ -1083,6 +1084,8 @@ function create_machine_conf_packages() {
 
   if [[ "$src_control" = svn ]]; then
     generate_new_changelog
+  elif [[ "$src_control" = git ]]; then
+    generate_new_changelog
   fi
 
   local machine_list=$(
@@ -1152,8 +1155,16 @@ EOF
     # changelogs
     local package_changelog_dir=${target_dir}/usr/share/doc/vizrt/$package_name
     make_dir $package_changelog_dir
-    local svn_base_dir=$(lowercase $(basename $svn_base))
-    local change_log_dir=$HOME/.generate-changelog/${svn_base_dir}/${svn_path}
+    if [[ "$src_control" = "svn" ]]; then 
+    	 local svn_base_dir=$(lowercase $(basename $svn_base))
+   	 local change_log_dir=$HOME/.generate-changelog/${svn_base_dir}/${svn_path}
+    elif [[ "$src_control" = "git" ]]; then
+         # get git repo's name
+   	 local git_base_dir=$(lowercase $(basename $git_base))
+	 # get git repo's branch name
+         local git_path_dir=$(echo $git_path | sed 's/-b //g')
+   	 local change_log_dir=$HOME/.generate-git-changelog/${git_base_dir}/${git_path_dir}
+    fi  
     
     if [ -d  $change_log_dir ]; then
       run_wrapper cp ${change_log_dir}/* $package_changelog_dir
@@ -1209,6 +1220,8 @@ function generate_new_changelog() {
   (
     cd ${project_src_dir}
     local previous_revision=PREV
+    
+    if [[ "$src_control" = "svn" ]]; then
     previous_revision=$(
       ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
         grep -v latest | \
@@ -1217,20 +1230,41 @@ function generate_new_changelog() {
         uniq | \
         tail -1
     )
+    elif [[ "$src_control" = "git" ]]; then
+    previous_revision=$(
+      ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
+        grep -v latest | \
+        sort | \
+        uniq | \
+        tail -1 | \
+        sed 's/.*r\([0-9a-z]*\).deb/\1/g'
+    )
+    fi
 
     # in case we don't have any previous builds, we don't pass
     # anything in the from parameters.
     local from_option=""
     if [ -n "${previous_revision}" ]; then
       from_option="--from $previous_revision"
-    fi
-    
-    run_wrapper generate-changelog \
-      --project $(basename $svn_base) \
-      --user $svn_user \
-      --password $svn_password \
-      ${from_option} \
-      --to $revision
+    fi  
+
+    if [[ "$src_control" = "svn" ]]; then 
+    	run_wrapper generate-changelog \
+    	  --project $(basename $svn_base) \
+    	  --user $svn_user \
+    	  --password $svn_password \
+    	  ${from_option} \
+    	  --to $revision
+    elif [[ "$src_control" = "git" ]]; then
+        # --project git repo name and branch 
+    	run_wrapper generate-git-changelog \
+    	  --project $(basename $git_base)/$(echo $git_path | sed 's/-b //g') \
+    	  --user $jira_user \
+          --password $jira_password \
+    	  ${from_option} \
+    	  --to $revision
+    fi    
+
   )
 }
 
