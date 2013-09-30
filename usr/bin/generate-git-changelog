@@ -54,7 +54,8 @@ function get_user_input() {
   local next_is_project=0
   local next_is_user=0
   local next_is_password=0
-  
+  local next_is_jirabaseurl=0
+
   for el in "$@"; do
     if [[ "$el" == "-s" || "$el" == "--from" ]]; then
       next_is_from=1
@@ -66,6 +67,8 @@ function get_user_input() {
       next_is_to=1
     elif [[ "$el" == "-p" || "$el" == "--project" ]]; then
       next_is_project=1
+    elif [[ "$el" == "-j" || "$el" == "--jirabaseurl" ]]; then
+      next_is_jirabaseurl=1
     elif [[ "$el" == "-f" || "$el" == "--full" ]]; then
       full_listing=1
     elif [ ${next_is_from-0} -eq 1 ]; then
@@ -83,6 +86,9 @@ function get_user_input() {
     elif [ ${next_is_project-0} -eq 1 ]; then
       project_code=$el
       next_is_project=0
+    elif [ ${next_is_jirabaseurl-0} -eq 1 ]; then
+      jirabaseurl=$el
+      next_is_jirabaseurl=0
     fi
   done
 }
@@ -111,6 +117,11 @@ function get_commit_information_from_vcs() {
     echo "Full diff of all" $(egrep '^(\+|\-)' $the_diff | wc -l) \
       "changes:" $the_diff | fmt
   fi
+ 
+  if [[ ! -z $jirabaseurl ]]; then
+    get_info_from_jira
+  fi
+
 }
 
 ## $@ :: git last revision date
@@ -160,14 +171,15 @@ function sanity_check() {
   #fi
 
   # defaulting to Atlassian on demand
-  jira_base_url=${jira_base_url-https://vizrtcustomers.jira.com}
+  jira_base_url=${jirabaseurl}
+  echo $jira_base_url
 
-  conf_file=$HOME/.$(basename $0).conf
-  ensure_variable_is_set \
-    project_code \
-    user \
-    password \
-    jira_base_url 
+  #conf_file=$HOME/.$(basename $0).conf
+  #ensure_variable_is_set \
+  #  project_code
+   # user \
+   # password \
+   # jira_base_url 
 
 
   if [[ "$(get_from_revision)" == "$(get_to_revision)" ]]; then
@@ -203,4 +215,4 @@ read_user_settings
 get_user_input "$@"
 sanity_check
 get_commit_information_from_vcs
-get_info_from_jira
+#get_info_from_jira

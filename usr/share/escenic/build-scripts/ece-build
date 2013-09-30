@@ -281,11 +281,14 @@ function verify_configuration {
     else
       print_and_log "The chosen protocol $git_protocol for $src_control is NOT supported, exiting!"
       exit 1
-    fi    
+    fi
+
     enforce_variable git_base "Your $conf_file is missing the variable 'git_base', exiting!"
     enforce_variable git_user "Your $conf_file is missing the variable 'git_user', exiting!"
-    enforce_variable jira_user "Your $conf_file is missing the variable 'jira_user', exiting!"
-    enforce_variable jira_password "Your $conf_file is missing the variable 'jira_password', exiting!"
+    if [[ ! -z $jira_base_url ]]; then
+      enforce_variable jira_user "Your $conf_file is missing the variable 'jira_user', exiting!"
+      enforce_variable jira_password "Your $conf_file is missing the variable 'jira_password', exiting!"
+    fi    
   else
     print_and_log "The chosen source control system $src_control is NOT supported, exiting!"
     exit 1
@@ -1258,13 +1261,21 @@ function generate_new_changelog() {
     	  ${from_option} \
     	  --to $revision
     elif [[ "$src_control" = "git" ]]; then
-        # --project git repo name and branch 
+        # --project git repo name and branch
+	if [[ ! -z $jira_base_url ]]; then 
     	run_wrapper generate-git-changelog \
     	  --project $(basename $git_base)/$(echo $git_path | sed 's/-b //g') \
     	  --user $jira_user \
           --password $jira_password \
     	  ${from_option} \
-    	  --to $revision
+    	  --to $revision \
+          --jirabaseurl $jira_base_url
+	else
+    	run_wrapper generate-git-changelog \
+    	  --project $(basename $git_base)/$(echo $git_path | sed 's/-b //g') \
+    	  ${from_option} \
+    	  --to $revision 
+	fi
     fi    
 
   )
