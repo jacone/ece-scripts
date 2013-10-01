@@ -505,6 +505,7 @@ function git_checkout
     print_and_log "The chosen protocol $git_protocol for git is NOT supported, exiting!"
     exit 1
   fi
+
   if [[ "$git_path" != "" ]]; then
     local exists=$(git ls-remote --heads $git_repo_uri | grep $git_path)
     if [[ "${exists}" = "" ]]; then
@@ -512,7 +513,6 @@ function git_checkout
       exit 1
     fi
   fi
-  
   # git checkout
   run_wrapper git clone $git_path $git_repo_uri $project_src_dir
 
@@ -522,6 +522,10 @@ function git_checkout
   if [[ $revision = "" ]]; then
     print_and_log "Failed to fetch current revision number, exiting!"
     exit 1
+  fi
+
+  if [[ "$git_path" == "" ]]; then
+    git_path="-b master"
   fi
 }
 

@@ -24,15 +24,6 @@ function bootstrap_thyself() {
   done
 }
 
-function read_user_settings() {
-  local file=$HOME/.$(basename $0).conf
-  if [ -r $file ]; then
-    run source $file
-  else
-    log $(blue INFO) $file "doesn't exist, will default to Atlassian on Demand"
-  fi
-}
-
 function get_header_from_jira() {
   local body=$(curl -u ${user}:${password} -s ${jira_base_url}/browse/${1})
   echo "$body" | grep '<title>' | sed -e 's/<title>//g' -e 's/<\/title>//g'
@@ -93,15 +84,6 @@ function get_user_input() {
   done
 }
 
-function should_regenerate() {
-  if [[ $(is_number $(get_from_revision)) -eq 1 && \
-    $(is_number $(get_to_revision)) ]]; then
-    echo 0
-    return
-  fi
-
-  echo 1
-}
 
 function get_commit_information_from_vcs() {
   the_diff=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).diff
@@ -140,16 +122,16 @@ function get_info_from_jira() {
   the_report=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).report
   
   if [[ ! -e $the_report ]]; then
-    echo "Changes in $(get_git_location)" > $the_report  
+    echo "Changes in branch:$(get_project_branch) and location:$(get_git_location) " > $the_report  
     echo "From: revision $(get_from_revision) @" \
       $(get_date_from_git_log $(get_from_revision)) >> $the_report
     echo "To  : revision $(get_to_revision) @" \
       $(get_date_from_git_log $(get_to_revision)) >> $the_report
 
-    local commit_log=$(git log $(get_from_revision) $(get_to_revision))
+    local commit_log=$(git log $(get_from_revision)..$(get_to_revision))
     echo "$commit_log" | \
-      grep $(get_project_name)-[0-9]* | \
-      sed "s#.*\($(get_project_name)-[0-9]*\).*#\1#g" | \
+      grep $(get_jira_project_name)-[0-9]* | \
+      sed "s#.*\($(get_jira_project_name)-[0-9]*\).*#\1#g" | \
       sort | \
       uniq | while read f; do
       echo "   *" $(get_header_from_jira $f) | fmt >> $the_report
@@ -164,23 +146,14 @@ function get_info_from_jira() {
 }
 
 function sanity_check() {
-  #if [ ! -e $(pwd)/.git ]; then
-  #  print "This directory, $(pwd), " \
-  #    "does not contain a working version control checkout."
+  #if [ ! -e $(pwd)/src/.git ]; then
+   # print "This directory, $(pwd), " \
+   #   "does not contain a working version control checkout."
     #exit 1
   #fi
 
   # defaulting to Atlassian on demand
   jira_base_url=${jirabaseurl}
-  echo $jira_base_url
-
-  #conf_file=$HOME/.$(basename $0).conf
-  #ensure_variable_is_set \
-  #  project_code
-   # user \
-   # password \
-   # jira_base_url 
-
 
   if [[ "$(get_from_revision)" == "$(get_to_revision)" ]]; then
     print_and_log "From and to revision are the same," \
@@ -192,6 +165,11 @@ function sanity_check() {
 #e.g. ccipoc.git
 function get_project_name() {
   echo ${project_code} | awk '{split($0,array,"/")} END{print array[1]}'
+}
+
+function get_jira_project_name() {
+  echo ${project_code} | awk '{split($0,array,"/")} END{print array[1]}' | sed 's/.git//g' | tr [a-z] [A-Z]
+
 }
 
 function get_project_branch() {
@@ -211,8 +189,6 @@ function add_risk_assemsment_to_report() {
 }
 
 bootstrap_thyself
-read_user_settings
 get_user_input "$@"
 sanity_check
 get_commit_information_from_vcs
-#get_info_from_jira
