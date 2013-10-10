@@ -338,7 +338,7 @@ function get_user_options
     case $opt in
       b)
         svn_path=branches/${OPTARG}
-        git_path="-b ${OPTARG}"
+        git_path="${OPTARG}"
         release_label=branch-${OPTARG}
         ;;
       t)
@@ -501,6 +501,7 @@ function svn_fail_early
 ##
 function git_checkout
 {
+  release_label=trunk
   if [[ "$git_protocol" = "https" ]]; then
     local git_repo_uri="https://$git_user:$git_password@$git_base"
   elif [[ "$git_protocol" = "ssh" ]]; then
@@ -516,13 +517,15 @@ function git_checkout
       print_and_log "The request branch $git_path does NOT exist, exiting!"
       exit 1
     fi
+    release_label=branch-$git_path
+    git_path="-b $git_path"
   fi
+
   # git checkout
   run_wrapper git clone $git_path $git_repo_uri $project_src_dir
 
   cd $project_src_dir
   revision=`git describe --always`
-  release_label=git
   if [[ $revision = "" ]]; then
     print_and_log "Failed to fetch current revision number, exiting!"
     exit 1
