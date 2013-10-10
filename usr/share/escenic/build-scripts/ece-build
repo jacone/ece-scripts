@@ -77,10 +77,12 @@ declare -A maven_snapshot_coordinates=(
 ["geocode"]="com.escenic.plugins.geocode:geocode:zip"
 ["lucy"]="com.escenic.plugins.lucy:lucy:zip"
 ["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor:zip"
+["mobile-expansion"]="com.escenic.plugins.mobile-expansion:mobile-expansion-dist:zip"
 ["newsroom"]="com.escenic.plugins.newsroom:newsroom:zip"
 ["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
 ["note"]="com.escenic.plugins.note:note:zip"
 ["poll"]="com.escenic.plugins.poll:poll:zip"
+["reporter"]="com.escenic.plugins.reporter:reporter:zip"
 ["section-feed"]="com.escenic.plugins.section-feed:section-feed:zip"
 ["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense:zip"
 ["snapshot"]="com.escenic.plugins.snapshot:snapshot:zip"
@@ -107,11 +109,13 @@ com.escenic.plugins.geocode:geocode:zip"
 com.escenic.plugins.lucy:lucy:zip"
 ["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor-dist:zip
 com.escenic.plugins.menu-editor:menu-editor:zip"
+["mobile-expansion"]="com.escenic.plugins.mobile-expansion:mobile-expansion-dist:zip"
 ["newsroom"]="com.escenic.plugins.newsroom:newsroom-dist:zip
 com.escenic.plugins.newsroom:newsroom:zip"
 ["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
 ["note"]="com.escenic.plugins.note:note:zip"
 ["poll"]="com.escenic.plugins.poll:poll:zip"
+["reporter"]="com.escenic.plugins.reporter:reporter:zip"
 ["section-feed"]="com.escenic.plugins.section-feed:section-feed-dist:zip
 com.escenic.plugins.section-feed:section-feed:zip"
 ["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense-dist:zip
@@ -856,7 +860,8 @@ function print_unstable_distributions
         distribution_exists http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
         if [ $? -eq 0 ]; then
           print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
-          project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
+        else
+          log "WARNING - $f version ${project_distributions["$f"]} is not available in the maven repository! This might cause unpredictable results in your server installations!"
         fi
       done
     else
@@ -869,14 +874,14 @@ function print_unstable_distributions
             distribution_exists http://maven.vizrt.com/unstable/$dist_path
             if [ $? -eq 0 ]; then
               print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
-              project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
+            else
+              log "WARNING - $f version ${project_distributions["$f"]} is not available in the maven repository! This might cause unpredictable results in your server installations!"
             fi
-          else
-            project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
           fi
         fi
       done
     fi
+    project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
   done
 }
 
