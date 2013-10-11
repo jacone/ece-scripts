@@ -856,6 +856,7 @@ function download_distribution
 function print_unstable_distributions
 {
   for f in ${!project_distributions[@]}; do
+    local coordinate=
     if [[ ${project_distributions["$f"]} = "trunk-SNAPSHOT" ]]; then
       for g in ${maven_snapshot_coordinates["$f"]}
       do
@@ -863,6 +864,7 @@ function print_unstable_distributions
         distribution_exists http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
         if [ $? -eq 0 ]; then
           print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+          local coordinate=$g
         else
           log "WARNING - $f version ${project_distributions["$f"]} is not available in the maven repository! This might cause unpredictable results in your server installations!"
         fi
@@ -877,14 +879,20 @@ function print_unstable_distributions
             distribution_exists http://maven.vizrt.com/unstable/$dist_path
             if [ $? -eq 0 ]; then
               print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+              local coordinate=$g
             else
               log "WARNING - $f version ${project_distributions["$f"]} is not available in the maven repository! This might cause unpredictable results in your server installations!"
             fi
+          else
+            local coordinate=$g
           fi
         fi
       done
     fi
-    project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
+    if [[ $coordinate = "" ]]; then
+      local coordinate=$g
+    fi
+    project_maven_coordinates+="${coordinate}:${project_distributions["$f"]}"$'\n'
   done
 }
 
