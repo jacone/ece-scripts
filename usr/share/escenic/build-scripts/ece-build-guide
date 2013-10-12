@@ -196,14 +196,15 @@ function checkout_standard_handbook
       run_wrapper cd $src_handbook_dir
       log "Getting latest from $src_handbook_repo"
       run_wrapper git pull --rebase
+      run_wrapper git checkout master
     else
       run_wrapper cd ${handbook_dir}
-      local sdp_exists=$(git ls-remote --heads $src_handbook_repo | grep sdp)
-      if [[ "${sdp_exists}" = "" ]]; then
-        print_and_log "The request branch sdp does NOT exist for the shared handbook, exiting!"
+      local vosahandbook_exists=$(git ls-remote --heads $src_handbook_repo | grep master)
+      if [[ "${vosahandbook_exists}" = "" ]]; then
+        print_and_log "The request branch master does NOT exist for the shared handbook, exiting!"
         exit 1
       fi
-      run_wrapper git clone -b sdp $src_handbook_repo $src_handbook_dir
+      run_wrapper git clone $src_handbook_repo $src_handbook_dir
     fi
   else
     print_and_log "The chosen source control system $src_control is NOT supported, exiting!"
