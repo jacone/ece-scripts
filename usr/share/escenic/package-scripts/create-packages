@@ -164,6 +164,10 @@ function set_up_escenic-content-engine-scripts() {
   run cp -r ../../../../etc/cron.daily/remove-old-escenic-log-files \
     $target_dir/etc/cron.daily/
 
+  # logrotate for tomcat catalina out
+  run cp -r ../../../../etc/logrotate.d/tomcat \
+    $target_dir/etc/logrotate.d/
+
   # hugin
   run cp -r ../../../../usr/share/hugin \
     $target_dir/usr/share/
