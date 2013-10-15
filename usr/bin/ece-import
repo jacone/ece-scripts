@@ -77,6 +77,8 @@ function get_user_input() {
   local next_is_password=0
   local next_is_uri=0
   local next_is_http_proxy=0
+  local next_is_regex_of_file=0
+  local next_is_write_url=0
 
   for el in $@; do
     if [[ "$el" == "-n" || "$el" == "--name" ]]; then
