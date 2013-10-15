@@ -48,8 +48,13 @@ function download_latest_files() {
 ##
 ## $@ :: list of URIs
 function download_files_if_desired() {
+
+  if [ -z $arg_write_url ] ; then
+    arg_write_url="$uri/\1"
+  fi
+  
   for the_file in $list_of_files; do
-    local url_to_download=$(url_to_download $the_file)
+    local url_to_download=$(url_to_download $the_file $arg_regex_of_file $arg_write_url)
     
     if [ $(is_already_downloaded $url_to_download) -eq 1 ]; then
       # not logging anything here as this will create log files in
@@ -86,16 +91,26 @@ function get_state_file() {
   echo $raw_state_base_dir/$publication_name/$job_name/download.state
 }
 
-
 function url_to_download() {
 
 local scanned_url=$url
 local filename=$1
 
-local sed_substitution=$(echo "$scanned_url/" | sed -e 's/[]\/()$*.^|[]/\\&/g')
-sed_substitution="$sed_substitution\1"
-local sed_regex="^\\(.*\\)\$"
-local url_to_print=$(echo "$filename" | sed -n "s/$sed_regex/$sed_substitution/p")
+local sed_regex_on_filename=$2
+if [ -z $2 ] ; then
+  sed_regex_on_filename="^(.*)$"
+fi
+
+local sed_write_url=$3
+if [ -z $3 ] ; then
+  sed_write_url="$scanned_url/\1"
+fi
+
+local esc_sed_write_url=$(echo $sed_write_url | sed -e 's/[/&]/\\&/g')
+#echo "esc_sed_write_url $esc_sed_write_url"
+local esc_sed_regex_on_filename=$(echo $sed_regex_on_filename | sed -e 's/[]\/()[]/\\&/g')
+#echo "esc_sed_regex_on_filename $esc_sed_regex_on_filename"
+local url_to_print=$(echo "$filename" | sed -n "s/$esc_sed_regex_on_filename/$esc_sed_write_url/p")
 echo "$url_to_print"
 
 }
