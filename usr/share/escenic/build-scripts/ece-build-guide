@@ -1,78 +1,250 @@
 #! /usr/bin/env bash
 
-source /usr/share/escenic/ece-scripts/common-bashing.sh || {
-    echo "Couldn't find common-bashing library"
+ece_scripts_home=/usr/share/escenic/ece-scripts
+log=~/ece-build-guide.log
+conf_file=~/.build/build.conf
+handbook_dir=~/handbook/
+handbook_target_dir=/var/www/$USER
+src_sdp_dir=${handbook_dir}sdp
+
+##
+function init
+{
+  init_failed=0
+  if [ ! -d $ece_scripts_home ]; then
+    init_failed=1
+    error_message="The directory for ece-scripts $ece_scripts_home does not exist, exiting!"
+  elif [ ! -e $ece_scripts_home/common-bashing.sh ]; then
+    init_failed=1
+    error_message="The script $ece_scripts_home/common-bashing.sh does not exist, exiting!"
+  elif [ ! -e $ece_scripts_home/common-io.sh ]; then
+    init_failed=1
+    error_message="The script $ece_scripts_home/common-io.sh does not exist, exiting!"
+  fi
+  if [ $init_failed -eq 0 ]; then
+    source $ece_scripts_home/common-bashing.sh
+    source $ece_scripts_home/common-io.sh
+  else
+    echo "$error_message"
     exit 1
+  fi
+
+  # set pid
+  pid_file=~/ece-build-guide.pid
+
+  if [ -e $pid_file ]; then
+    echo "Instance of $(basename $0) already running!"
+    exit 1
+  else
+    create_pid
+  fi
+
+  trap common_bashing_exit_hook_with_log_recap EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
 }
 
-log=$HOME/$(basename $0 .sh).log
-log "$USER is building his/her handbook @ $(date)"
+## To make your script call this whenever it does a controlled exit,
+## either by running through the script, call this hook.
+##
+## Put this line at the start of your script:
+##
+## trap common_bashing_exit_hooki_with_log_recap EXIT
+##
+## $@ :: signal
+function common_bashing_exit_hook_with_log_recap() {
+  local RETVAL=$?
+  if [ $RETVAL -ne 0 ]; then
+    print "BUILD FAILED/CANCELED"
+    print "### start tail review of $log ###"
+    tail -n 25 $log
+    print "### end of review ###"
+  fi
+  remove_pid
+  remove_lock
+  kill $$
+}
 
-source ~/.build/build.conf
+### run
+## Runs the passed command & arguments and log both standard error and
+## standard out. If the command exits cleanly, the calling code will
+## continue, however, if the command you passed to run failed, the run
+## wrapper will log the call stack and exit in error.
+##
+## $@ :: list of strings making up your command. Everything except
+##       pipes can be bassed
+function run_wrapper() {
+  if [ ! -e $log ]; then
+    touch $log || {
+      echo "Couldn't create $log"
+      exit 1
+    }
+  fi
 
-# TODO move to the builder itself once this matures, 2012-08-20
-handbook_dir=~/handbook/
-if [ -e $handbook_dir ]; then
-    echo building the guide
-else
-    echo building the guide from scratch
-    run mkdir $handbook_dir
-    echo '/usr/bin/ece-build-guide' > $handbook_dir/create-my-handbook.sh
-    chmod 777 $handbook_dir/create-my-handbook.sh
-fi
+  "${@}" 1>>$log 2>>$log
 
-handbook_target_dir=/var/www/$USER
-
-svn_sdp_repo=${svn_base}sdp
-svn_sdp_dir=${handbook_dir}sdp
-handbook_conf_file=$svn_sdp_dir/vosa-handbook/create-handbook.conf
-
-svn_handbook_repo=https://vizrtcustomers.jira.com/svn/VIZRTSAAS/trunk/doc
-svn_handbook_dir=${handbook_dir}VIZRTSAAS/doc
-
-
-# set up PROJECT doc scripts and standard content
-if [ -e $svn_sdp_dir ]; then
-    run cd $svn_sdp_dir
-    echo getting latest from $svn_sdp_repo
-    run svn update
-else
-    run cd ${handbook_dir}
-    echo svn checkout $svn_sdp_repo $svn_sdp_dir --username $svn_user
-    run svn checkout $svn_sdp_repo $svn_sdp_dir --username $svn_user
-fi
-
-
-# set up VIZRTSAAS doc scripts and standard content
-if [ -e $svn_handbook_dir ]; then
-    run cd $svn_handbook_dir
-    echo getting latest from $svn_handbook_repo
-    run svn update
-else
-    run cd ${handbook_dir}
-    echo svn checkout $svn_handbook_repo $svn_handbook_dir --username $svn_user
-    run svn checkout $svn_handbook_repo $svn_handbook_dir --username $svn_user
-fi
-
-
-
-# verify that the current project has its trails
-if [ ! -e $handbook_conf_file ]; then
-    echo $handbook_conf_file "doesn't exist :-("
+  local RETVAL=$?
+  if [ $RETVAL -ne 0 ]; then
+    print_and_log "The command <${@}> run as user $USER $(red FAILED)" \
+      "(the command exited with code ${code}), I'll exit now :-("
     exit 1
-fi
+  fi
+}
 
+##
+function fetch_configuration
+{
+  if [ -e $conf_file ]; then
+    source $conf_file
+  else
+    print_and_log "Your user is missing the $conf_file, exiting!"
+    exit 1
+  fi
+  if [ -z $src_control ]; then
+    print_and_log "No source control system chosen, I will assume that you are using subversion!"
+    src_control=svn
+  fi
+}
+
+##
+function setup_handbook_dir
+{
+  if [ -e $handbook_dir ]; then
+    log "Building the guide."
+  else
+    log "Building the guide from scratch."
+    run_wrapper mkdir $handbook_dir
+    echo '/usr/bin/ece-build-guide' > $handbook_dir/create-my-handbook.sh
+    run_wrapper chmod 777 $handbook_dir/create-my-handbook.sh
+  fi
+}
+
+##
+function verify_configuration
+{
+  if [[ "$src_control" = "svn" ]]; then
+    src_sdp_repo=${svn_base}sdp
+    src_handbook_repo=https://vizrtcustomers.jira.com/svn/VIZRTSAAS/trunk/doc
+    src_handbook_dir=${handbook_dir}VIZRTSAAS/doc
+  elif [[ "$src_control" = "git" ]]; then
+    src_handbook_repo=ssh://git@git.vizrtsaas.com/vizrtsaas.git
+    src_handbook_dir=${handbook_dir}VIZRTSAAS
+    if [ -z $git_protocol ]; then
+      log "No protocol chosen for git, I will assume that you are using https!"
+      git_protocol=https
+    fi
+    if [[ "$git_protocol" = "https" ]]; then
+      src_sdp_repo="https://$git_user:$git_password@$git_base"
+      enforce_variable git_password "Your $conf_file is missing the variable 'git_password', exiting!"
+    elif [[ "$git_protocol" = "ssh" ]]; then
+      src_sdp_repo="ssh://$git_user@$git_base"
+      log "SSH protocol chosen for git, I will not use password based authentication!"
+    else
+      print_and_log "The chosen protocol $git_protocol for $src_control is NOT supported, exiting!"
+      exit 1
+    fi
+  else
+    print_and_log "The chosen source control system $src_control is NOT supported, exiting!"
+    exit 1
+  fi
+  handbook_conf_file=$src_sdp_dir/vosa-handbook/create-handbook.conf
+}
+
+##
+function checkout_sdp
+{
+  if [[ "$src_control" = "svn" ]]; then
+    if [ -e $src_sdp_dir ]; then
+      run_wrapper cd $src_sdp_dir
+      log "Getting latest from $src_sdp_repo"
+      run_wrapper svn update
+    else
+      run_wrapper cd ${handbook_dir}
+      run_wrapper svn checkout $src_sdp_repo $src_sdp_dir --username $svn_user
+    fi  
+  elif [[ "$src_control" = "git" ]]; then
+    if [ -e $src_sdp_dir ]; then
+      run_wrapper cd $src_sdp_dir
+      log "Getting latest from $src_sdp_repo"
+      run_wrapper git pull --rebase
+    else
+      run_wrapper cd ${handbook_dir}
+      local sdp_exists=$(git ls-remote --heads $src_sdp_repo | grep sdp)
+      if [[ "${sdp_exists}" = "" ]]; then
+        print_and_log "The request branch sdp does NOT exist in the project, exiting!"
+      fi
+      run_wrapper git clone -b sdp $src_sdp_repo $src_sdp_dir
+    fi
+  else
+    print_and_log "The chosen source control system $src_control is NOT supported, exiting!"
+  fi
+}
+
+##
+function checkout_standard_handbook
+{
+  if [[ "$src_control" = "svn" ]]; then
+    if [ -e $src_handbook_dir ]; then
+      run_wrapper cd $src_handbook_dir
+      log "Getting latest from $src_handbook_repo"
+      run_wrapper svn update
+    else
+      run_wrapper cd ${handbook_dir}
+      run_wrapper svn checkout $src_handbook_repo $src_handbook_dir --username $svn_user
+    fi
+  elif [[ "$src_control" = "git" ]]; then
+    if [ -e $src_handbook_dir ]; then
+      run_wrapper cd $src_handbook_dir
+      log "Getting latest from $src_handbook_repo"
+      run_wrapper git pull --rebase
+      run_wrapper git checkout master
+    else
+      run_wrapper cd ${handbook_dir}
+      local vosahandbook_exists=$(git ls-remote --heads $src_handbook_repo | grep master)
+      if [[ "${vosahandbook_exists}" = "" ]]; then
+        print_and_log "The request branch master does NOT exist for the shared handbook, exiting!"
+        exit 1
+      fi
+      run_wrapper git clone $src_handbook_repo $src_handbook_dir
+    fi
+  else
+    print_and_log "The chosen source control system $src_control is NOT supported, exiting!"
+  fi
+}
+
+##
+function verify_handbook_conf
+{
+  # verify that the current project has its trails
+  if [ ! -e $handbook_conf_file ]; then
+    print_and_log "$handbook_conf_file does NOT exist, exiting!"
+    exit 1
+  fi
+}
+
+##
+function build_guide
+{
 (
-    run cd $svn_handbook_dir
-    run bash vosa-handbook/create-handbook.sh \
-	--conf-file $handbook_conf_file \
-	--doc-dir $svn_sdp_dir/vosa-handbook
-
-    find $handbook_target_dir -type d -name ".svn" | xargs rm -rf
-    run cp ~/tmp/create-handbook-$(date --iso)/vosa-handbook.html \
-	$handbook_target_dir/index.html 
-    run cp -r ~/tmp/create-handbook-$(date --iso)/graphics $handbook_target_dir/
-    run cp -r ~/tmp/create-handbook-$(date --iso)/customer $handbook_target_dir/
+  run_wrapper cd ${handbook_dir}VIZRTSAAS/doc
+  run_wrapper bash vosa-handbook/create-handbook.sh \
+      --conf-file $handbook_conf_file \
+      --doc-dir $src_sdp_dir/vosa-handbook
+  find $handbook_target_dir -type d -name ".svn" | xargs rm -rf
+  run_wrapper cp ~/tmp/create-handbook-$(date --iso)/vosa-handbook.html \
+      $handbook_target_dir/index.html 
+  run_wrapper cp -r ~/tmp/create-handbook-$(date --iso)/graphics $handbook_target_dir/
+  run_wrapper cp -r ~/tmp/create-handbook-$(date --iso)/customer $handbook_target_dir/
 )
+}
 
-log "$USER finished building his/her handbook @ $(date)"
+## ece-build execution
+init
+print_and_log "The user $USER is building the handbook @ $(date)"
+fetch_configuration
+setup_handbook_dir
+verify_configuration
+checkout_sdp
+checkout_standard_handbook
+verify_handbook_conf
+build_guide
+print_and_log "The user $USER finished building the handbook @ $(date)"

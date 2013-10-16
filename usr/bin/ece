@@ -332,6 +332,16 @@ function set_instance_settings() {
       ece_args=$ece_args" "$jvm_gc_settings
     fi
 
+    jvm_rolling_gc=${jvm_rolling_gc-1}
+    if [ "$jvm_rolling_gc" == 1 ]; then
+      gc_rolling_args="
+	-XX:+UseGCLogFileRotation
+	-XX:NumberOfGCLogFiles=${number_of_gc_log_files-5}
+	-XX:GCLogFileSize=${gc_log_file_size-5m}
+      "
+      ece_args=$ece_args" "$gc_rolling_args
+    fi
+
     if [ "$jvm_proxy_settings" ]; then
       ece_args=$ece_args" "$jvm_proxy_settings
     fi

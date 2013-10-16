@@ -60,27 +60,68 @@ widget-framework-syndication
 mobile-expansion
 semantic-cxense
 snapshot
-"
+changelog
+note"
 
 declare -A project_distributions=()
 
 project_maven_coordinates=""
 
+declare -A maven_snapshot_coordinates=(
+["assemblytool"]="com.escenic.tools:assemblytool:jar"
+["engine"]="com.escenic:engine-dist:zip:bin"
+["analysis-engine"]="com.escenic.plugins.analysis:analysis-engine:zip"
+["changelog"]="com.escenic.changelog:changelog:zip"
+["dashboard"]="com.escenic.plugins.dashboard:dashboard:zip"
+["forum"]="com.escenic.plugins.forum:forum:zip"
+["geocode"]="com.escenic.plugins.geocode:geocode:zip"
+["lucy"]="com.escenic.plugins.lucy:lucy:zip"
+["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor:zip"
+["mobile-expansion"]="com.escenic.plugins.mobile-expansion:mobile-expansion-dist:zip"
+["newsroom"]="com.escenic.plugins.newsroom:newsroom:zip"
+["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
+["note"]="com.escenic.plugins.note:note:zip"
+["poll"]="com.escenic.plugins.poll:poll:zip"
+["reporter"]="com.escenic.plugins.reporter:reporter:zip"
+["section-feed"]="com.escenic.plugins.section-feed:section-feed:zip"
+["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense:zip"
+["snapshot"]="com.escenic.plugins.snapshot:snapshot:zip"
+["community-engine"]="com.escenic.plugins.community:community-engine:zip"
+["online-graphics"]="com.escenic.plugins.online-graphics:online-graphics:zip"
+["video"]="com.escenic.plugins.video:video:zip"
+["xml-editor"]="com.escenic.plugins.xml-editor:xml-editor:zip"
+["vcpeditor"]="com.escenic.plugins.vcpeditor:vcpeditor:zip"
+["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
+["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
+["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
+)
+
 declare -A maven_coordinates=(
 ["assemblytool"]="com.escenic.tools:assemblytool:jar"
 ["engine"]="com.escenic:engine-dist:zip:bin"
 ["analysis-engine"]="com.escenic.plugins.analysis:analysis-engine:zip"
+["changelog"]="com.escenic.changelog:changelog:zip"
 ["dashboard"]="com.escenic.plugins.dashboard:dashboard:zip"
 ["forum"]="com.escenic.plugins.forum:forum:zip"
-["geocode"]="com.escenic.plugins.geocode:geocode-dist:zip"
-["lucy"]="com.escenic.plugins.lucy:lucy-dist:zip"
-["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor-dist:zip"
-["newsroom"]="com.escenic.plugins.newsroom:newsroom-dist:zip"
+["geocode"]="com.escenic.plugins.geocode:geocode-dist:zip
+com.escenic.plugins.geocode:geocode:zip"
+["lucy"]="com.escenic.plugins.lucy:lucy-dist:zip
+com.escenic.plugins.lucy:lucy:zip"
+["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor-dist:zip
+com.escenic.plugins.menu-editor:menu-editor:zip"
+["mobile-expansion"]="com.escenic.plugins.mobile-expansion:mobile-expansion-dist:zip"
+["newsroom"]="com.escenic.plugins.newsroom:newsroom-dist:zip
+com.escenic.plugins.newsroom:newsroom:zip"
 ["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
+["note"]="com.escenic.plugins.note:note:zip"
 ["poll"]="com.escenic.plugins.poll:poll:zip"
-["section-feed"]="com.escenic.plugins.section-feed:section-feed-dist:zip"
-["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense-dist:zip"
-["snapshot"]="com.escenic.plugins.snapshot:snapshot-dist:zip"
+["reporter"]="com.escenic.plugins.reporter:reporter:zip"
+["section-feed"]="com.escenic.plugins.section-feed:section-feed-dist:zip
+com.escenic.plugins.section-feed:section-feed:zip"
+["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense-dist:zip
+com.escenic.plugins.semantic:semantic-cxense:zip"
+["snapshot"]="com.escenic.plugins.snapshot:snapshot-dist:zip
+com.escenic.plugins.snapshot:snapshot:zip"
 ["community-engine"]="com.escenic.plugins.community:community-engine:zip"
 ["online-graphics"]="com.escenic.plugins.online-graphics:online-graphics:zip"
 ["video"]="com.escenic.plugins.video:video:zip"
@@ -216,21 +257,45 @@ function fetch_configuration
 function verify_configuration {
   enforce_variable customer "Your $conf_file is missing the variable 'customer', exiting!"
   if [ -z $src_control ]; then
-    log "No source control system chosen, I will assume that you are using subversion."
+
+    log "No source control system chosen, I will assume that you are using subversion!"
     src_control=svn
-    
+
+  fi
+  if [[ "$src_control" = "svn" ]]; then 
+
     enforce_variable svn_base "Your $conf_file is missing the variable 'svn_base', exiting!"
-    enforce_variable svn_user "Your $conf_file is missing the variable 'svn_base', exiting!"
+    enforce_variable svn_user "Your $conf_file is missing the variable 'svn_user', exiting!"
+    
     enforce_variable svn_password "Your $conf_file is missing the variable 'svn_password', exiting!"
     
     # append a / to svn_base if not present
     [[ $svn_base != */ ]] && svn_base="$svn_base"/
+
   elif [[ "$src_control" = "git" ]]; then
+    
+    if [ -z $git_protocol ]; then
+      log "No protocol chosen for git, I will assume that you are using https!"
+      git_protocol=https
+    fi
+    if [[ "$git_protocol" = "https" ]]; then
+      enforce_variable git_password "Your $conf_file is missing the variable 'git_password', exiting!"
+    elif [[ "$git_protocol" = "ssh" ]]; then
+      log "SSH protocol chosen for git, I will not use password based authentication!"
+    else
+      print_and_log "The chosen protocol $git_protocol for $src_control is NOT supported, exiting!"
+      exit 1
+    fi
+
     enforce_variable git_base "Your $conf_file is missing the variable 'git_base', exiting!"
-    enforce_variable git_user "Your $conf_file is missing the variable 'git_base', exiting!"
-    enforce_variable git_password "Your $conf_file is missing the variable 'git_password', exiting!"  
+    enforce_variable git_user "Your $conf_file is missing the variable 'git_user', exiting!"
+    if [[ ! -z $jira_base_url ]]; then
+      enforce_variable jira_user "Your $conf_file is missing the variable 'jira_user', exiting!"
+      enforce_variable jira_password "Your $conf_file is missing the variable 'jira_password', exiting!"
+    fi    
   else
     print_and_log "The chosen source control system $src_control is NOT supported, exiting!"
+    exit 1
   fi
 }
 
@@ -273,6 +338,7 @@ function get_user_options
     case $opt in
       b)
         svn_path=branches/${OPTARG}
+        git_path="${OPTARG}"
         release_label=branch-${OPTARG}
         ;;
       t)
@@ -435,13 +501,38 @@ function svn_fail_early
 ##
 function git_checkout
 {
-  run_wrapper git clone https://$git_user:$git_password@$git_base $project_src_dir
+  release_label=trunk
+  if [[ "$git_protocol" = "https" ]]; then
+    local git_repo_uri="https://$git_user:$git_password@$git_base"
+  elif [[ "$git_protocol" = "ssh" ]]; then
+    local git_repo_uri="ssh://$git_user@$git_base"
+  else
+    print_and_log "The chosen protocol $git_protocol for git is NOT supported, exiting!"
+    exit 1
+  fi
+
+  if [[ "$git_path" != "" ]]; then
+    local exists=$(git ls-remote --heads $git_repo_uri | grep $git_path)
+    if [[ "${exists}" = "" ]]; then
+      print_and_log "The request branch $git_path does NOT exist, exiting!"
+      exit 1
+    fi
+    release_label=branch-$git_path
+    git_path="-b $git_path"
+  fi
+
+  # git checkout
+  run_wrapper git clone $git_path $git_repo_uri $project_src_dir
+
   cd $project_src_dir
   revision=`git describe --always`
-  release_label=git
   if [[ $revision = "" ]]; then
     print_and_log "Failed to fetch current revision number, exiting!"
     exit 1
+  fi
+
+  if [[ "$git_path" == "" ]]; then
+    git_path="-b master"
   fi
 }
 
@@ -530,6 +621,56 @@ function mvn_coordinate_to_url
 }
 
 ##
+function mvn_coordinate_to_rest_call
+{
+  # url to be returned
+  local url
+
+  # coordinate is e.g. com.escenic:engine-dist:zip:bin:trunk-SNAPSHOT
+  # or com.escenic.plugins.forum:forum:zip:trunk-SNAPSHOT
+  # groupid:artifactid:[packaging:[classifier:]]version
+  local coordinate=$1
+
+  # local variables parsed from coordinate
+  local groupid
+  local artifactid
+  local version
+  local packaging
+  local classifier
+
+  # chomp groupid: --> artifactid:[packaging:[classifier:]]version
+  groupid=${coordinate/:*}
+  coordinate=${coordinate#${groupid}:}
+
+  # chomp artifactid: --> [packaging:[classifier:]]version
+  artifactid=${coordinate/:*}
+  coordinate=${coordinate#${artifactid}:}
+
+  # chomp version --> [packaging[:classifier]]
+  version=${coordinate/*:}
+  coordinate=${coordinate%${version}}
+  coordinate=${coordinate%:}
+
+  classifier=
+  packaging=
+
+  if [ ! -z "$coordinate" ] ; then
+    # chomp packaging --> [classifier]
+    packaging=${coordinate/:*}
+    coordinate=${coordinate#${packaging}}
+    coordinate=${coordinate#:}
+  fi
+
+  if [ ! -z "$coordinate" ] ; then
+    # chomp classifier
+    classifier=$coordinate
+    coordinate=
+  fi
+
+  echo "&g=${groupid}&a=${artifactid}&v=$version&a=${artifactid}&e=${packaging}${classifier:+&c=${classifier}}"
+}
+
+##
 function set_java_home
 {
   project_java_version=`xml2 < $project_src_dir/pom.xml | grep '^/project/build/plugins/plugin/configuration/target=' | sed -n -e 's,.*project/build/plugins/plugin/configuration/target=,,p'`
@@ -563,16 +704,23 @@ function fetch_distributions
     run_wrapper mkdir -p $dists_root_dir
   fi
   
-  # iterate over all known distribution identifiers
+  # iterate over all distributions in the project
   for f in ${!project_distributions[@]};
   do
 
-    # try and fetch the version for the distribution from the pom.xml
+    # extract the version from the list of project distributions
     local dist_version=${project_distributions["$f"]}
     
-    # check if a version was returned from the pom.xml
+    # double check that the version isn't null
     if [[ ! $dist_version = "" ]]; then
-      
+
+      # remove old trunk-SNAPSHOT if present
+      if [[ $dist_version = "trunk-SNAPSHOT" ]]; then
+        if [ -d $dists_root_dir/$f-$dist_version ]; then
+          rm -rf $dists_root_dir/$f-$dist_version
+        fi
+      fi
+
       # check if the distribution is already present in the local dists directory
       if [ ! -d $dists_root_dir/$f-$dist_version ]; then
 
@@ -580,14 +728,20 @@ function fetch_distributions
         local artifact_pattern=$f
         local artifact_version=$dist_version
         local target_path=$dists_root_dir
-        
-        for h in ${maven_coordinates["$f"]};
-        do
-          local dist_path=`mvn_coordinate_to_url ${h}:$dist_version`
-
-          # try and add the distribution
-          request_distribution $dist_path
-        done
+       
+        if [[ $dist_version = "trunk-SNAPSHOT" ]]; then
+          for h in ${maven_snapshot_coordinates["$f"]};
+          do
+            local dist_path=`mvn_coordinate_to_rest_call ${h}:$dist_version`
+            request_snapshot $dist_path
+          done
+        else
+          for h in ${maven_coordinates["$f"]};
+          do
+            local dist_path=`mvn_coordinate_to_url ${h}:$dist_version`
+            request_distribution $dist_path
+          done
+        fi 
 
         if [ -e $dists_tmp_dir/distribution.zip ]; then
           run_wrapper cd $dists_tmp_dir
@@ -660,6 +814,19 @@ function request_distribution
 }
 
 ##
+function request_snapshot
+{
+  local dist_path=$1
+  if [ ! -z $dist_path ]; then
+    distribution_exists http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
+    local ret_val=$?
+    if [ $ret_val -eq 0 ]; then
+      download_distribution http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
+    fi
+  fi
+}
+
+##
 function distribution_exists
 {
   local url=$1
@@ -689,31 +856,52 @@ function download_distribution
 function print_unstable_distributions
 {
   for f in ${!project_distributions[@]}; do
-    for g in ${maven_coordinates["$f"]}
-    do
-      local dist_path=`mvn_coordinate_to_url ${g}:${project_distributions["$f"]}`
-      if [ ! -z $dist_path ]; then
-        distribution_exists http://maven.vizrt.com/$dist_path
-        if [ $? -ne 0 ]; then
-          distribution_exists http://maven.vizrt.com/unstable/$dist_path
-          if [ $? -eq 0 ]; then
-            print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
-            project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
-          fi
+    local coordinate=
+    if [[ ${project_distributions["$f"]} = "trunk-SNAPSHOT" ]]; then
+      for g in ${maven_snapshot_coordinates["$f"]}
+      do
+        local dist_path=`mvn_coordinate_to_rest_call ${g}:${project_distributions["$f"]}`
+        distribution_exists http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
+        if [ $? -eq 0 ]; then
+          print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+          local coordinate=$g
         else
-          project_maven_coordinates+="${g}:${project_distributions["$f"]}"$'\n'
+          log "WARNING - $f version ${project_distributions["$f"]} is not available in the maven repository! This might cause unpredictable results in your server installations!"
         fi
-      fi
-    done
+      done
+    else
+      for g in ${maven_coordinates["$f"]}
+      do
+        local dist_path=`mvn_coordinate_to_url ${g}:${project_distributions["$f"]}`
+        if [ ! -z $dist_path ]; then
+          distribution_exists http://maven.vizrt.com/$dist_path
+          if [ $? -ne 0 ]; then
+            distribution_exists http://maven.vizrt.com/unstable/$dist_path
+            if [ $? -eq 0 ]; then
+              print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+              local coordinate=$g
+            else
+              log "WARNING - $f version ${project_distributions["$f"]} is not available in the maven repository! This might cause unpredictable results in your server installations!"
+            fi
+          else
+            local coordinate=$g
+          fi
+        fi
+      done
+    fi
+    if [[ $coordinate = "" ]]; then
+      local coordinate=$g
+    fi
+    project_maven_coordinates+="${coordinate}:${project_distributions["$f"]}"$'\n'
   done
 }
 
 ##
 function symlink_ece_components
 {
-  for f in $escenic_identifiers
+  for f in ${!project_distributions[@]};
   do
-    version=`sed "/<escenic.$f.version>/!d;s/ *<\/\?escenic.$f.version> *//g" $project_src_dir/pom.xml | tr -d $'\r' `
+    version=${project_distributions["$f"]}
     if [[ ! $version = "" ]]; then
       if [[ "$f" = "engine" ]]; then
         run_wrapper ln -s $dists_root_dir/$f-$version $engine_root_dir 
@@ -896,7 +1084,7 @@ function publish_ear
     fi
     
     # add new latest.ear link
-    run_wrapper ln -fs $release_dir/$resulting_ear $release_dir/latest.ear
+    run_wrapper ln -fs $release_dir/$resulting_ear $release_dir/$customer-$release_label-latest.ear
   else
     print_and_log "I'm done, but the .ear is still missing, exiting!"
     exit 1
@@ -917,9 +1105,13 @@ function create_machine_conf_packages() {
     return
   fi
 
-  if [[ "$src_control" = svn ]]; then
-    generate_new_changelog
-  fi
+ # As both control run same function
+ #if [[ "$src_control" = svn ]]; then
+    #generate_new_changelog
+ #elif [[ "$src_control" = git ]]; then
+    #generate_new_changelog
+ #fi
+  generate_new_changelog
 
   local machine_list=$(
     find $conf_dir -maxdepth 1 -type d | \
@@ -988,8 +1180,16 @@ EOF
     # changelogs
     local package_changelog_dir=${target_dir}/usr/share/doc/vizrt/$package_name
     make_dir $package_changelog_dir
-    local svn_base_dir=$(lowercase $(basename $svn_base))
-    local change_log_dir=$HOME/.generate-changelog/${svn_base_dir}/${svn_path}
+    if [[ "$src_control" = "svn" ]]; then 
+    	 local svn_base_dir=$(lowercase $(basename $svn_base))
+   	 local change_log_dir=$HOME/.generate-changelog/${svn_base_dir}/${svn_path}
+    elif [[ "$src_control" = "git" ]]; then
+         # get git repo's name
+   	 local git_base_dir=$(lowercase $(basename $git_base))
+	 # get git repo's branch name
+         local git_path_dir=$(echo $git_path | sed 's/-b //g')
+   	 local change_log_dir=$HOME/.generate-git-changelog/${git_base_dir}/${git_path_dir}
+    fi  
     
     if [ -d  $change_log_dir ]; then
       run_wrapper cp ${change_log_dir}/* $package_changelog_dir
@@ -1018,21 +1218,25 @@ EOF
     run_wrapper mv $target_dir/*.{deb,rpm} $release_dir/
    
     # adding latest links for conf packages
-    run_wrapper ln -sf $release_dir/${package_name}-${package_version}.deb $release_dir/${package_name}-latest.deb
-    run_wrapper ln -sf $release_dir/${package_name}-${package_version}.rpm $release_dir/${package_name}-latest.rpm
+    run_wrapper ln -sf $release_dir/vosa-conf-${machine}-${package_version}.deb $release_dir/vosa-conf-${machine}-1-${customer}-${release_label}-latest.deb
+    run_wrapper ln -sf $release_dir/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm $release_dir/vosa-conf-${machine}-1_${customer}_${release_label}-latest.noarch.rpm
  
     # remove work directory
     run_wrapper rm -rf $target_dir
   done
 
-  print_and_log "--- .deb configuration packages ---"  
-  for machine in $machine_list; do 
-    print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-${package_version}.deb"
-  done
-  print_and_log "--- .rpm configuration packages ---"
-  for machine in $machine_list; do
-    print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm"
-  done
+  if [ -z "$machine_list" ]; then 
+    print_and_log "Your project does not have any folders, except maybe common, under server-admin so no configuration packages will be generated."
+  else
+    print_and_log "--- .deb configuration packages ---"  
+    for machine in $machine_list; do 
+      print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-${package_version}.deb"
+    done
+    print_and_log "--- .rpm configuration packages ---"
+    for machine in $machine_list; do
+      print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm"
+    done
+  fi
 }
 
 ##
@@ -1041,6 +1245,8 @@ function generate_new_changelog() {
   (
     cd ${project_src_dir}
     local previous_revision=PREV
+    
+    if [[ "$src_control" = "svn" ]]; then
     previous_revision=$(
       ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
         grep -v latest | \
@@ -1049,20 +1255,49 @@ function generate_new_changelog() {
         uniq | \
         tail -1
     )
+    elif [[ "$src_control" = "git" ]]; then
+    previous_revision=$(
+      ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
+        grep -v latest | \
+        sort | \
+        uniq | \
+        tail -1 | \
+        sed 's/.*r\([0-9a-z]*\).deb/\1/g'
+    )
+    fi
 
     # in case we don't have any previous builds, we don't pass
     # anything in the from parameters.
     local from_option=""
     if [ -n "${previous_revision}" ]; then
       from_option="--from $previous_revision"
-    fi
-    
-    run_wrapper generate-changelog \
-      --project $(basename $svn_base) \
-      --user $svn_user \
-      --password $svn_password \
-      ${from_option} \
-      --to $revision
+    fi  
+
+    if [[ "$src_control" = "svn" ]]; then 
+    	run_wrapper generate-changelog \
+    	  --project $(basename $svn_base) \
+    	  --user $svn_user \
+    	  --password $svn_password \
+    	  ${from_option} \
+    	  --to $revision
+    elif [[ "$src_control" = "git" ]]; then
+        # --project git repo name and branch
+	if [[ ! -z $jira_base_url ]]; then 
+    	run_wrapper generate-git-changelog \
+    	  --project $(basename $git_base)/$(echo $git_path | sed 's/-b //g') \
+    	  --user $jira_user \
+          --password $jira_password \
+    	  ${from_option} \
+    	  --to $revision \
+          --jirabaseurl $jira_base_url
+	else
+    	run_wrapper generate-git-changelog \
+    	  --project $(basename $git_base)/$(echo $git_path | sed 's/-b //g') \
+    	  ${from_option} \
+    	  --to $revision 
+	fi
+    fi    
+
   )
 }
 

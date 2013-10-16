@@ -57,6 +57,8 @@ raw_state_base_dir=/var/lib/escenic/raw
 raw_transformation_base_dir=/var/cache/escenic/import
 raw_transformed_base_dir=/var/backups/escenic/import
 transformers_base_dir=/usr/share/escenic/import
+arg_regex_of_file="^(.*)$"
+arg_write_url=""
 
 # available commands/operations for ece-import
 COMMAND_IMPORT=1
@@ -75,6 +77,8 @@ function get_user_input() {
   local next_is_password=0
   local next_is_uri=0
   local next_is_http_proxy=0
+  local next_is_regex_of_file=0
+  local next_is_write_url=0
 
   for el in $@; do
     if [[ "$el" == "-n" || "$el" == "--name" ]]; then
@@ -95,6 +99,10 @@ function get_user_input() {
       next_is_password=1
     elif [[ "$el" == "--uri" ]]; then
       next_is_uri=1
+    elif [[ "$el" == "--regex-of-file" ]]; then
+      next_is_regex=1
+    elif [[ "$el" == "--write_url" ]]; then
+      next_is_write_url=1
     elif [[ "$el" == "--directories-only" ]]; then
       directories_only=1
     elif [[ "$el" == "--http-proxy" ]]; then
@@ -129,6 +137,12 @@ function get_user_input() {
     elif [ $next_is_uri -eq 1 ]; then
       uri=$el
       next_is_uri=0
+    elif [ $next_is_regex_of_file -eq 1 ]; then
+      arg_regex_of_file=$el
+      next_is_regex_of_file=0
+    elif [ $next_is_write_url -eq 1 ]; then
+      arg_write_url=$el
+      next_is_write_url=0
     elif [ $next_is_http_proxy -eq 1 ]; then
       the_http_proxy="$el"
       next_is_http_proxy=0

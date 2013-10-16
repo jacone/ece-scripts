@@ -112,27 +112,41 @@ function make_ln() {
 ##      https://file. If $1 is a local file reference, it's used as it
 ##      is.
 ## $2 :: the target dir
+## $3 :: the target filename. If left empty, the bassename of $1 is used
 function download_uri_target_to_dir() {
   local uri=$1
   local target_dir=$2
+  local target_file=$3
   make_dir $target_dir
 
   if [[ $uri == "http://"* || $uri == "https://"* ]]; then
+
+    if [ -z $target_file ] ; then
+      target_file=$(basename $uri)
+    fi
+    
     log "Downloading" $uri "to" $target_dir "..."
     run cd $target_dir
     run wget \
       $wget_opts \
       $wget_auth \
       --server-response \
-      --output-document $(basename $uri) \
+      --output-document "$target_file" \
       $uri
-  elif [[ $uri == "file://"* ]]; then
-      # length of file:// is 7
-    local file=${file:7}
-    run cp $file $target_dir
   else
-    local file=$uri
-    run cp $file $target_dir
+    
+    local file=$uri    
+    if [[ $uri == "file://"* ]] ; then
+      # length of file:// is 7
+      file=${file:7}
+    fi
+
+    if [ -z $target_file ] ; then
+      run cp $file $target_dir
+    else
+      run cp $file $target_dir/$target_file
+    fi
+
   fi
 }
 

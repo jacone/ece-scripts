@@ -1,0 +1,194 @@
+#! /usr/bin/env bash
+
+log=$HOME/.$(basename $0).log
+archive_base_dir=$HOME/.$(basename $0)
+
+function bootstrap_thyself() {
+  # first, try to be nice, then check the standard location
+  local dir=$(dirname $0)/../share/escenic/ece-scripts
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
+
+  local common_libraries="
+    common-bashing.sh
+    common-io.sh
+  "
+
+  for el in $common_libraries; do
+    source $dir/$el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+}
+
+function get_header_from_jira() {
+  local body=$(curl -u ${user}:${password} -s ${jira_base_url}/browse/${1})
+  echo "$body" | grep '<title>' | sed -e 's/<title>//g' -e 's/<\/title>//g'
+}
+
+# --to revision number
+function get_to_revision() {
+  echo ${to-COMMITTED}
+}
+
+# --from revision number
+function get_from_revision() {
+  echo ${from-PREV}
+}
+
+function get_user_input() {
+  local next_is_from=0
+  local next_is_to=0
+  local next_is_project=0
+  local next_is_user=0
+  local next_is_password=0
+  local next_is_jirabaseurl=0
+
+  for el in "$@"; do
+    if [[ "$el" == "-s" || "$el" == "--from" ]]; then
+      next_is_from=1
+    elif [[ "$el" == "-u" || "$el" == "--user" ]]; then
+      next_is_user=1
+    elif [[ "$el" == "-p" || "$el" == "--password" ]]; then
+      next_is_password=1
+    elif [[ "$el" == "-t" || "$el" == "--to" ]]; then
+      next_is_to=1
+    elif [[ "$el" == "-p" || "$el" == "--project" ]]; then
+      next_is_project=1
+    elif [[ "$el" == "-j" || "$el" == "--jirabaseurl" ]]; then
+      next_is_jirabaseurl=1
+    elif [[ "$el" == "-f" || "$el" == "--full" ]]; then
+      full_listing=1
+    elif [ ${next_is_from-0} -eq 1 ]; then
+      from=$el
+      next_is_from=0
+    elif [ ${next_is_user-0} -eq 1 ]; then
+      user=$el
+      next_is_user=0
+    elif [ ${next_is_password-0} -eq 1 ]; then
+      password=$el
+      next_is_password=0
+    elif [ ${next_is_to-0} -eq 1 ]; then
+      to=$el
+      next_is_to=0
+    elif [ ${next_is_project-0} -eq 1 ]; then
+      project_code=$el
+      next_is_project=0
+    elif [ ${next_is_jirabaseurl-0} -eq 1 ]; then
+      jirabaseurl=$el
+      next_is_jirabaseurl=0
+    fi
+  done
+}
+
+
+function get_commit_information_from_vcs() {
+  the_diff=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).diff
+
+  if [[ ! -e $the_diff ]]; then
+    git diff $(get_from_revision) $(get_to_revision) > $the_diff
+    exit_on_error "git diff $(get_from_revision) $(get_to_revision)"
+  fi
+
+  if [ ${full_listing-0} -eq 1 ]; then
+    cat $the_diff
+  else
+    echo "Full diff of all" $(egrep '^(\+|\-)' $the_diff | wc -l) \
+      "changes:" $the_diff | fmt
+  fi
+ 
+  if [[ ! -z $jirabaseurl ]]; then
+    get_info_from_jira
+  fi
+
+}
+
+## $@ :: git last revision date
+#Fri Sep 27 11:18:05 2013 +0600
+function get_date_from_git_log() {
+  echo $(git log -1 --format="%cd")
+}
+
+# e.g. ssh://git@git.vizrtsaas.com/ccipoc
+function get_git_location() {
+  echo $(git config --get remote.origin.url)
+}
+
+
+function get_info_from_jira() {
+  the_report=$(get_archive_dir)/from-$(get_from_revision)-to-$(get_to_revision).report
+  
+  if [[ ! -e $the_report ]]; then
+    echo "Changes in branch:$(get_project_branch) and location:$(get_git_location) " > $the_report  
+    echo "From: revision $(get_from_revision) @" \
+      $(get_date_from_git_log $(get_from_revision)) >> $the_report
+    echo "To  : revision $(get_to_revision) @" \
+      $(get_date_from_git_log $(get_to_revision)) >> $the_report
+
+    local commit_log=$(git log $(get_from_revision)..$(get_to_revision))
+    echo "$commit_log" | \
+      grep $(get_jira_project_name)-[0-9]* | \
+      sed "s#.*\($(get_jira_project_name)-[0-9]*\).*#\1#g" | \
+      sort | \
+      uniq | while read f; do
+      echo "   *" $(get_header_from_jira $f) | fmt >> $the_report
+      echo "   URL: ${jira_base_url}/browse/$(basename $f)" >> $the_report
+      echo "" >> $the_report
+    done
+
+    add_risk_assemsment_to_report
+  fi
+
+  echo "Report:" $the_report
+}
+
+function sanity_check() {
+  #if [ ! -e $(pwd)/src/.git ]; then
+   # print "This directory, $(pwd), " \
+   #   "does not contain a working version control checkout."
+    #exit 1
+  #fi
+
+  # defaulting to Atlassian on demand
+  jira_base_url=${jirabaseurl}
+
+  if [[ "$(get_from_revision)" == "$(get_to_revision)" ]]; then
+    print_and_log "From and to revision are the same," \
+      "will no create any change log"
+    exit 0
+  fi
+}
+
+#e.g. ccipoc.git
+function get_project_name() {
+  echo ${project_code} | awk '{split($0,array,"/")} END{print array[1]}'
+}
+
+function get_jira_project_name() {
+  echo ${project_code} | awk '{split($0,array,"/")} END{print array[1]}' | sed 's/.git//g' | tr [a-z] [A-Z]
+
+}
+
+function get_project_branch() {
+  echo ${project_code} | awk '{split($0,array,"/")} END{print array[2]}'
+}
+
+function get_archive_dir() {
+  local directory=${archive_base_dir}/$(get_project_name)/$(get_project_branch)
+  make_dir $directory
+  echo $directory
+}
+
+function add_risk_assemsment_to_report() {
+  echo "Risk assessment score: " \
+    $(wc -l $the_diff 2>/dev/null | cut -d' ' -f1) \
+    >> $the_report
+}
+
+bootstrap_thyself
+get_user_input "$@"
+sanity_check
+get_commit_information_from_vcs
