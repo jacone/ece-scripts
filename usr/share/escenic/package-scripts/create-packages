@@ -165,8 +165,8 @@ function set_up_escenic-content-engine-scripts() {
     $target_dir/etc/cron.daily/
 
   # logrotate for tomcat catalina out
-  run cp -r ../../../../etc/logrotate.d/tomcat \
-    $target_dir/etc/logrotate.d/
+  run cp -r ../../../../etc/logrotate.d \
+    $target_dir/etc/
 
   # hugin
   run cp -r ../../../../usr/share/hugin \
