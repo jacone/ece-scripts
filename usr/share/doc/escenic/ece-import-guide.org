@@ -394,7 +394,7 @@ done
 * TROUBLESHOOTING
 
 To trigger a (re)import of an already imported file,
-- edit the /var/lib/escenic/raw/<pub>/<job>/download.state file as the escenic user
+- edit the /var/lib/escenic/raw/<pub>/<job>/download.state file as the escenic user and remove the respective filenames 
 or 
 - use sed '/pattern to match/d' sed /var/lib/escenic/raw/<pub>/<job>/download.state > /var/lib/escenic/raw/<pub>/<job>/download.newstate
 - verify that /var/lib/escenic/raw/<pub>/<job>/download.newstate is good
