@@ -786,7 +786,8 @@ function do_destroy() {
       echo "$instance_name is not enabled"
       exit 1
     fi
-    read_amazon_config $instance_dir/amazon.conf
+
+    [ -r "instance_dir/amazon.conf" ] && read_amazon_config $instance_dir/amazon.conf
     local status=( $(really_do_status $instance_dir) )
     if [ "${status[3]}" == "alive" -o "${status[3]}" == "running" ] ; then
       echo "$instance_name is alive. You might want to stop instances before destroying them."
