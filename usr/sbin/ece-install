@@ -204,7 +204,7 @@ function download_escenic_components()
           fi
         fi
         if curl -s -I $repo/$el | grep -q '^HTTP[^ ]* 200' ; then
-          log "Downloading $(basename $el) ..."
+          log "Downloading $(basename $el) from $repo/$el ..."
           run wget $wget_opts $repo/$el -O $targetname
           break
         else
