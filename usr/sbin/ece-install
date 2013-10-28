@@ -208,7 +208,7 @@ function download_escenic_components()
           run wget $wget_opts $repo/$el -O $targetname
           break
         else
-          log "$(basename $el) not found"
+          log "$(basename $el) not found using $repo/$el"
         fi
       done
     done
