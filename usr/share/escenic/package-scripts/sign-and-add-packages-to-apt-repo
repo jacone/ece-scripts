@@ -25,7 +25,7 @@ function get_package_name() {
 for el in $dir/*.deb; do
   echo "Signing and adding $(basename $el) to the APT repository ... "
   dpkg-sig --sign builder -k $gpg_key $el
-  reprepro -Vb $apt_repo_dir remove $suite $(get_package_name $el)
+  # reprepro -Vb $apt_repo_dir remove $suite $(get_package_name $el)
 
   if [[ $(basename $(dirname $el)) == "non-free" ]]; then
       component=non-free

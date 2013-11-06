@@ -196,6 +196,10 @@ sub vcl_recv {
   /* This is the default backend */
   set req.backend = webdirector;
 
+  if (req.url == "/.well-known/backend-health.txt") {
+    error 200 "OK";
+  }
+
 EOF
 
   if [ -n "${fai_analysis_host}" ]; then

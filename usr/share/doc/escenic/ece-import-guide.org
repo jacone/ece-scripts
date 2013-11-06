@@ -391,6 +391,17 @@ done
      holding all the URLs (HTTP or FTP) that *ece-import* has
      downloaded before.
 
+* TROUBLESHOOTING
+
+To trigger a (re)import of an already imported file,
+- edit the /var/lib/escenic/raw/<pub>/<job>/download.state file as the escenic user and remove the respective filenames 
+or 
+- use sed '/pattern to match/d' sed /var/lib/escenic/raw/<pub>/<job>/download.state > /var/lib/escenic/raw/<pub>/<job>/download.newstate
+- verify that /var/lib/escenic/raw/<pub>/<job>/download.newstate is good
+- mv /var/lib/escenic/raw/<pub>/<job>/download.newstate /var/lib/escenic/raw/<pub>/<job>/download.state
+
+then wait a while for the import to happen again. or trigger it with the ece-import command.
+
 * COPYRIGHT
 Copyright 2012-2013 Vizrt
 
