@@ -11,13 +11,6 @@ SDP_BOOTSTRAPPER=
 
 # if SDP_BOOTSTRAPPER is set to anything, it is assumed to be the URL
 # from which to download a source tar.gz file.
-
-# "old style" sdp.conf parameters (going away in the autom 2013)
-#  ROLE        corresponds to sdp-bootstrap-instance --role
-#  PROFILE     corresponds to sdp-bootstrap-instance --profile
-#  NAME        corresponds to sdp-bootstrap-instance --name
-
-# "new style" being introduced later summer 2013
 #  ENVIRONMENT corresponds to sdp-bootstrap-instance --environment
 #  CLUSTER     corresponds to sdp-bootstrap-instance --cluster
 #  MACHINE     corresponds to sdp-bootstrap-instance --machine
@@ -171,12 +164,7 @@ fi
 $guest sdp-bootstrap-instance \
      --state activation \
      --sdp-file /etc/sdp.xml \
-     ${ROLE+--role $ROLE} \
-     ${REALM+--realm $REALM} \
-     ${PROFILE+--profile $PROFILE} \
-     ${NAME+--name $NAME} \
-     --run-module baseline \
-     --run-module restore-backup \
-     --run-module "backup-set-escenic-database" \
-     --run-module "backup-set-escenic-multimedia" \
+     ${ENVIRONMENT+--environment $ENVIRONMENT} \
+     ${CLUSTER+--cluster $CLUSTER} \
+     ${MACHINE+--machine $MACHINE} \
      --verbose
