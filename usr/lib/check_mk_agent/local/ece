@@ -35,6 +35,18 @@ function determine_health() {
       continue;
     fi
 
+    nr_open_files=$(ls /proc/$pid/fd | wc -l)
+    limit_open_files=$(cat /proc/$pid/limits | awk '/^Max open files  /{print $4}')
+    if [ $nr_open_files -le 2456 ]; then
+      echo "0 ${basename}_filehandles - OK ${basename} is using $nr_open_files of $limit_open_files file handles"
+    else
+        if [ $nr_open_files -le 3456 ]; then
+          echo "1 ${basename}_filehandles - ${basename} is using $nr_open_files of $limit_open_files file handles (warning at 50%)"
+        else
+          echo "2 ${basename}_filehandles - ${basename} is using $nr_open_files of $limit_open_files file handles (critical 75%)"
+        fi
+    fi
+
     echo "0 ${basename}_up - OK process $pid"
 
   done
