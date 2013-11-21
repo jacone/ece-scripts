@@ -836,7 +836,7 @@ function add_ece_init_to_runlevels() {
 
   if [ $on_debian_or_derivative -eq 1 ]; then
     print_and_log "Adding the ece init.d script to the default run levels ..."
-    run update-rc.d ece defaults
+    run update-rc.d ece defaults 35
   elif [ $on_redhat_or_derivative -eq 1 ]; then
     run chkconfig --level 35 ece on
   else
