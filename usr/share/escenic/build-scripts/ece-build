@@ -14,7 +14,7 @@ log=~/ece-build.log
 # build related variables
 build_date=`date +%F_%H%M`
 maven_build_offline=0
-maven_opts="clean install"
+maven_opts="-U clean install"
 skip_ear=0
 project_pom_versions=""
 
@@ -153,6 +153,7 @@ assemblytool_lib_dir=$assemblytool_root_dir/lib
 conf_file=~/.build/build.conf
 maven_conf_file=~/.m2/settings.xml
 project_src_dir=~/src
+project_src_master_dir=~/src_master
 project_assembly_dir=$project_src_dir/project-assembly
 project_assembly_target_dir=$project_assembly_dir/target
 release_dir=~/releases
@@ -518,11 +519,39 @@ function git_checkout
       exit 1
     fi
     release_label=branch-$git_path
+    branch_name=$git_path
     git_path="-b $git_path"
   fi
 
+  
+  if [ -d $project_src_master_dir ]; then
+    cd $project_src_master_dir
+    git show-ref --quiet --verify "refs/heads/master"
+    if [ ! $? = 0 ]; then
+      run_wrapper rm -rf $project_src_master_dir
+    fi
+  fi
+  if [ ! -d $project_src_master_dir ]; then
+    make_dir $project_src_master_dir
+    run_wrapper git clone $git_repo_uri $project_src_master_dir
+  fi
+    
+  cd $project_src_master_dir
+  run_wrapper git checkout master
+  run_wrapper git clean -d -x -f
+  if [[ "$git_path" != "" ]]; then
+    git show-ref --quiet --verify "refs/heads/$branch_name"
+    if [ $? = 0 ]; then
+      run_wrapper git checkout $branch_name
+    else
+      run_wrapper git checkout -b $branch_name origin/$branch_name  
+    fi
+  fi
+  run_wrapper git pull --rebase
+  run_wrapper git clean -d -x -f
+  
   # git checkout
-  run_wrapper git clone $git_path $git_repo_uri $project_src_dir
+  run_wrapper git clone $git_path $project_src_master_dir $project_src_dir
 
   cd $project_src_dir
   revision=`git describe --always`
@@ -1041,8 +1070,13 @@ context-root: /dashboard" > $assemblytool_pub_dir/dashboard.properties
   fi
   if [ -d $plugin_dir/newsgate ]; then
     log "Adding an assembly descriptor for Newsgate Webservice ..."
-    echo "source-war: ../../plugins/newsgate/webapps/newsgate-webservice.war
+    if [ -e $plugin_dir/newsgate/webapps/newsgate-webservice.war ]; then
+      echo "source-war: ../../plugins/newsgate/webapps/newsgate-webservice.war
 context-root: /newsgate-webservice" > $assemblytool_pub_dir/newsgate-webservice.properties
+    else
+      echo "source-war: ../../plugins/newsgate/wars/newsgate-webservice.war
+context-root: /newsgate-webservice" > $assemblytool_pub_dir/newsgate-webservice.properties
+    fi
   fi
 }
 
