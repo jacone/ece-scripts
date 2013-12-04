@@ -539,6 +539,8 @@ function git_checkout
   cd $project_src_master_dir
   run_wrapper git checkout master
   run_wrapper git clean -d -x -f
+  run_wrapper git remote update
+  run_wrapper git fetch
   if [[ "$git_path" != "" ]]; then
     git show-ref --quiet --verify "refs/heads/$branch_name"
     if [ $? = 0 ]; then
