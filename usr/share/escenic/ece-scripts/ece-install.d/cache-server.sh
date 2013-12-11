@@ -467,7 +467,8 @@ function create_varnish_conf_compression() {
   local file=${varnish_conf_dir}/compression.vcl
   cat > $file <<EOF
 sub vcl_fetch {
-  if (beresp.http.content-type ~ "^text/") {
+  if (beresp.http.content-type ~ "^text/" || 
+      beresp.http.content-type == "application/javascript") {
     set beresp.do_gzip = true;
   }
 }
@@ -534,14 +535,14 @@ sub vcl_fetch {
 
   /* Remove cookies from these resource types and cache them for a
    * long time */
-  if (req.url ~ "\.(png|gif|jpg|css|js)$" ||
+  if (req.url ~ "\.(png|gif|jpg|css|js)$" || beresp.http.content-type ~ "^image/" ||
       req.url == "/favicon.ico" && beresp.status == 200) {
     set beresp.ttl = 5h;
   }
 }
 
 sub vcl_deliver {
-  if (req.url ~ "\.(png|gif|jpg)$" && resp.status == 200) {
+  if (resp.http.content-type ~ "^image/" && resp.status == 200) {
     set resp.http.Cache-Control = "public, max-age=3600";
   }
   else if ((req.url ~ "\.(css|js)$" || req.url == "/favicon.ico") &&
