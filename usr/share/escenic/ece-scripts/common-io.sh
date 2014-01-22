@@ -133,6 +133,16 @@ function download_uri_target_to_dir() {
       --server-response \
       --output-document "$target_file" \
       $uri
+  elif [[ $uri == "s3://"* ]]; then
+
+    if [ -z $target_file ] ; then
+      target_file=$(basename $uri)
+    fi
+
+    log "Downloading" $uri "to" $target_dir "..."
+    run cd $target_dir
+    run s3cmd get $uri $target_file
+
   else
     
     local file=$uri    
