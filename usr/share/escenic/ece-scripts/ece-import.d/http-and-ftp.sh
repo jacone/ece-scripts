@@ -27,18 +27,22 @@ function download_latest_files() {
 
   # long sed from
   # http://stackoverflow.com/questions/1881237/easiest-way-to-extract-the-urls-from-an-html-page-using-sed-or-awk-only
-  local list_of_files=$(
-    wget $user_and_password \
-      --quiet \
-      --output-document \
-      - $uri | \
-      sed -e 's/<a /\n<a /g' | \
-      grep ^'<a href' | \
-      sed -e 's/<a .*href=['"'"'"]//' \
-      -e 's/["'"'"'].*$//' \
-      -e '/^$/ d' | \
-      egrep -i '.(xml|jpg|jpeg|gif|pdf)$'
-  )
+  if [[ $uri == "s3://"* ]]; then
+    local list_of_files=$(s3cmd ls $uri | awk '{print $4}'| egrep -i '.(xml|jpg|jpeg|gif|pdf)$')
+  else
+    local list_of_files=$(
+      wget $user_and_password \
+        --quiet \
+        --output-document \
+        - $uri | \
+        sed -e 's/<a /\n<a /g' | \
+        grep ^'<a href' | \
+        sed -e 's/<a .*href=['"'"'"]//' \
+        -e 's/["'"'"'].*$//' \
+        -e '/^$/ d' | \
+        egrep -i '.(xml|jpg|jpeg|gif|pdf)$'
+    )
+  fi
 
   download_files_if_desired $list_of_files
 }
@@ -54,7 +58,12 @@ function download_files_if_desired() {
   fi
   
   for the_file in $list_of_files; do
-    local url_to_download=$(url_to_download $the_file $arg_regex_of_file $arg_write_url)
+
+    if [[ $the_file == "s3://"* ]]; then
+       local url_to_download=$the_file
+    else
+       local url_to_download=$(url_to_download $the_file $arg_regex_of_file $arg_write_url)
+    fi
     
     if [ $(is_already_downloaded $url_to_download) -eq 1 ]; then
       # not logging anything here as this will create log files in
