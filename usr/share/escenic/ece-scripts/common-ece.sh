@@ -85,6 +85,7 @@ webapps_in_standard_webapps_list="
   video-webservice
   video-webservice-extensions
   poll-ws
+  note-webservice
 "
 
 ### is_webapp_a_publication
