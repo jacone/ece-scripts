@@ -140,9 +140,12 @@ function set_up_app_server() {
 
   tomcat_home=${appserver_parent_dir}/tomcat
   tomcat_base=${appserver_parent_dir}/tomcat-${instance_name}
-  make_dir $tomcat_base
 
-  run cp -r ${appserver_parent_dir}/${tomcat_dir}/conf $tomcat_base
+  if [ ! -d $tomcat_base ] ; then
+    make_dir $tomcat_base
+    run cp -r ${appserver_parent_dir}/${tomcat_dir}/conf $tomcat_base
+  fi
+
   for el in bin escenic/lib lib work logs temp webapps; do
     make_dir $tomcat_base/$el
   done
@@ -314,7 +317,7 @@ EOF
                protocol="HTTP/1.1"
                connectionTimeout="20000"
                URIEncoding="UTF-8"
-               compression="on"
+               compression="off"
                redirectPort="${redirect_port}"
     />
     <Connector port="${redirect_port}"
@@ -330,6 +333,7 @@ EOF
              suffix=".log"
              pattern="common"/>
       <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+             digest="md5"
              resourceName="UserDatabase"/>
       <Host name="localhost"
             appBase="webapps"
@@ -402,11 +406,16 @@ EOF
 </Server>
 EOF
 
-  cat > $tomcat_base/conf/context.xml <<EOF
+  if [ ! -e $tomcat_base/conf/context.xml ] ; then
+    cat > $tomcat_base/conf/context.xml <<EOF
 <?xml version='1.0' encoding='utf-8'?>
-<Context>
-  <WatchedResource>WEB-INF/web.xml</WatchedResource>
+<Context/>
 EOF
+
+  xmlstarlet ed -P -L \
+     -s /Context -t elem -n WatchedResource -v WEB-INF/web.xml \
+     $tomcat_base/conf/context.xml
+  fi
 
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
     $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
@@ -430,63 +439,61 @@ EOF
   fi
 
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
-    cat >> $tomcat_base/conf/context.xml <<EOF
-  <Environment
-      name="escenic/solr-base-uri"
-      value="http://${search_host}:${search_port}/solr/"
-      type="java.lang.String"
-      override="false"
-  />
-EOF
+    xmlstarlet ed -P -L \
+       -s /Context -t elem -n TMP -v '' \
+       -i //TMP -t attr -n name -v escenic/solr-base-uri \
+       -i //TMP -t attr -n value -v http://${search_host}:${search_port}/solr/ \
+       -i //TMP -t attr -n type -v java.lang.String \
+       -i //TMP -t attr -n override -v false \
+       -r //TMP -v Environment \
+       $tomcat_base/conf/context.xml
+
   fi
 
   if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
     $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
-    cat >> $tomcat_base/conf/context.xml <<EOF
-  <Environment
-      name="escenic/indexer-webservice"
-      value="${indexer_ws_uri}"
-      type="java.lang.String"
-      override="false"
-  />
-  <Environment
-      name="escenic/index-update-uri"
-      value="http://${search_host}:${search_port}/solr/update/"
-      type="java.lang.String"
-      override="false"
-  />
-  <Environment
-      name="escenic/head-tail-storage-file"
-      value="$escenic_data_dir/engine/head-tail.index"
-      type="java.lang.String"
-      override="false"
-  />
-  <Environment
-      name="escenic/failing-documents-storage-file"
-      value="$escenic_data_dir/engine/failures.index"
-      type="java.lang.String"
-      override="false"
-  />
-</Context>
-EOF
+
+    xmlstarlet ed -P -L \
+       -s /Context -t elem -n TMP -v '' \
+       -i /Context/TMP -t attr -n name -v escenic/indexer-webservice \
+       -i /Context/TMP -t attr -n value -v ""${indexer_ws_uri} \
+       -i /Context/TMP -t attr -n type -v java.lang.String \
+       -i /Context/TMP -t attr -n override -v false \
+       -r //TMP -v Environment \
+       -s /Context -t elem -n TMP -v '' \
+       -i /Context/TMP -t attr -n name -v escenic/index-update-uri \
+       -i /Context/TMP -t attr -n value -v http://${search_host}:${search_port}/solr/update/ \
+       -i /Context/TMP -t attr -n type -v java.lang.String \
+       -i /Context/TMP -t attr -n override -v false \
+       -r //TMP -v Environment \
+       -s /Context -t elem -n TMP -v '' \
+       -i /Context/TMP -t attr -n name -v escenic/head-tail-storage-file \
+       -i /Context/TMP -t attr -n value -v $escenic_data_dir/engine/head-tail.index \
+       -i /Context/TMP -t attr -n type -v java.lang.String \
+       -i /Context/TMP -t attr -n override -v false \
+       -r //TMP -v Environment \
+       -s /Context -t elem -n TMP -v '' \
+       -i /Context/TMP -t attr -n name -v escenic/failing-documents-storage-file \
+       -i /Context/TMP -t attr -n value -v $escenic_data_dir/engine/failures.index \
+       -i /Context/TMP -t attr -n type -v java.lang.String \
+       -i /Context/TMP -t attr -n override -v false \
+       -r //TMP -v Environment \
+       $tomcat_base/conf/context.xml
+
+
   elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
-    cat >> $tomcat_base/conf/context.xml <<EOF
-  <ResourceLink
-      global="jdbc/eae-logger/logger"
-      name="jdbc/eae-logger/logger"
-      type="javax.sql.DataSource"
-  />
-  <ResourceLink
-      global="jdbc/eae-qs/qs"
-      name="jdbc/eae-qs/qs"
-      type="javax.sql.DataSource"
-  />
-</Context>
-EOF
-  else
-    cat >> $tomcat_base/conf/context.xml <<EOF
-</Context>
-EOF
+    xmlstarlet ed -P -L \
+       -s /Context -t elem -n TMP -v '' \
+       -i /Context/TMP -t attr -n global -v jdbc/eae-logger/logger \
+       -i /Context/TMP -t attr -n name -v jdbc/eae-logger/logger \
+       -i /Context/TMP -t attr -n type -v javax.sql.DataSource \
+       -r //TMP -v ResourceLink \
+       -s /Context -t elem -n TMP -v '' \
+       -i /Context/TMP -t attr -n global -v jdbc/eae-qs/qs \
+       -i /Context/TMP -t attr -n name -v jdbc/eae-qs/qs \
+       -i /Context/TMP -t attr -n type -v javax.sql.DataSource \
+       -r //TMP -v ResourceLink \
+       $tomcat_base/conf/context.xml
   fi
 
   set_up_logging
