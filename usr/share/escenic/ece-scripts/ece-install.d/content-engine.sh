@@ -391,8 +391,7 @@ EOF
   find ../../ -maxdepth 1 -type d | \
     grep -v assemblytool | \
     while read directory; do
-    if [ $directory = "../../" -o \
-      $(echo $directory | grep widget-framework | wc -l) -gt 0 ]; then
+    if [ $directory = "../../" ]; then
       continue
     fi
 
