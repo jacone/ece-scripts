@@ -100,12 +100,12 @@ function install_ece_instance() {
       $ece_instance_conf_archive
   fi
 
-  set_up_app_server
-
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
     set_up_basic_nursery_configuration
     set_up_instance_specific_nursery_configuration
   fi
+
+  set_up_app_server
 
   # We set a WAR white list for all profiles except all in one
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
