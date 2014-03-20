@@ -846,6 +846,9 @@ function do_create() {
       echo "$instance_name is not enabled, enable it on this host first"
       exit 1
     fi
+    if [ ! -d "$(dirname $0)/../../var/lib/vizrt/vosa/images" ] ; then
+      mkdir -p "$(dirname $0)/../../var/lib/vizrt/vosa/images"
+    fi
     if [ $aws -eq 1 ] ; then
       mkdir "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" || exit 2
       read_amazon_config $instance_dir/amazon.conf
