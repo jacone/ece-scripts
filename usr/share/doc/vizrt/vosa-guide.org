@@ -240,13 +240,19 @@ completely dark, and so shouldn't happen whenever any virtual
 machines are running.
 
 #+BEGIN_SRC sh
+br=br0
 for i in $(seq 1 10) ; do
   tap=$(tunctl -b)
-  touch /var/run/vizrt/vosa/$tap.availablenetwork
-  brctl addif br0 $tap
+  echo $br > /var/run/vizrt/vosa/$tap.availablenetwork
+  brctl addif $br $tap
   ifconfig $tap up 0.0.0.0
 done
 #+END_SRC
+
+If your machine has multiple network interfaces, talking with different
+physical networks, you need to make several bridges, and create tap
+devices for each bridge, indicating which bridge the tap interface is
+bound to.  The above script uses the *br0* bridge.
 
 *tunctl* creates the tap interface, and we create a file with the name
 of the created tap interface in a directory.  This little snippet
