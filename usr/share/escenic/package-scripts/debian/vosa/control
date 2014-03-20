@@ -1,7 +1,7 @@
 Package: vosa
 Version: VERSION
 Depends: gawk
-Suggests: ec2-api-tools
+Suggests: ec2-api-tools, genisoimage
 Section: base
 Priority: optional
 Architecture: all
