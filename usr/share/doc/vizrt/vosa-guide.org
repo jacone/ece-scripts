@@ -240,6 +240,7 @@ completely dark, and so shouldn't happen whenever any virtual
 machines are running.
 
 #+BEGIN_SRC sh
+mkdir -p /var/run/vizrt/vosa
 br=br0
 for i in $(seq 1 10) ; do
   tap=$(tunctl -b)
@@ -253,6 +254,9 @@ If your machine has multiple network interfaces, talking with different
 physical networks, you need to make several bridges, and create tap
 devices for each bridge, indicating which bridge the tap interface is
 bound to.  The above script uses the *br0* bridge.
+
+This needs to happen every time you boot, so the script above should be
+copied to e.g. /etc/rc.local or some other system wide boot location.
 
 *tunctl* creates the tap interface, and we create a file with the name
 of the created tap interface in a directory.  This little snippet
