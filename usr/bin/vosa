@@ -370,9 +370,6 @@ EOF
   if [ ! -r /etc/vizrt/vosa/overlay/common/etc/resolv.conf ] ; then
     ln -s /etc/resolv.conf /etc/vizrt/vosa/overlay/common/etc/resolv.conf || exit 2
   fi
-  if [ ! -r /etc/vizrt/vosa/overlay/common/etc/hosts ] ; then
-    ln -s /etc/resolv.conf /etc/vizrt/vosa/overlay/common/etc/hosts || exit 2
-  fi
   if [ ! -r /etc/vizrt/vosa/global-ssh-keys ] ; then
     touch /etc/vizrt/vosa/global-ssh-keys || exit 2
   fi
