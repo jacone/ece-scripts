@@ -562,11 +562,6 @@ EOF
   file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
   
   cat >> $file <<EOF
-# We set this to get around a missing feature in Varnish, see:
-# https://www.varnish-cache.org/trac/wiki/Future_Feature#Chunkedencodingclientrequests
-# For Escenic-ites, see: VF-3480
-property.com.escenic.client.chunked=false
-
 # This font have been tested and works with (at least): English,
 # Norwegian & Tamil. The font comes with (at least) MS Office and OS X
 # 10.5 and up.
@@ -575,6 +570,9 @@ property.com.escenic.studio.font.linux=Arial Unicode MS
 property.com.escenic.studio.font.windows7=Arial Unicode MS
 property.com.escenic.studio.font.windowsxp=Arial Unicode MS
 property.com.escenic.studio.font.windowsvista=Arial Unicode MS
+
+# We want to speed up downloading studio
+property.jnlp.packEnabled=true
 EOF
 
   set_up_publication_nursery_conf
