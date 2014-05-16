@@ -4,7 +4,7 @@ function get_deploy_white_list() {
 
   local deploy_white_list=""
   local presentation_deploy_white_list="escenic-admin $(get_publication_short_name_list)"
-  local editor_deploy_white_list="escenic-admin escenic studio indexer-webservice webservice webservice-extensions"
+  local editor_deploy_white_list="escenic-admin escenic studio indexer-webservice webservice webservice-extensions preview-editor-ws"
   local search_deploy_white_list="solr indexer-webapp"
 
   # user's deploy white list, if present, takes precedence.
