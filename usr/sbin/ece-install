@@ -189,16 +189,19 @@ function download_escenic_components()
       for repo in $fai_maven_repositories; do
         # Special handling for snapshots
           # It will try to get the maven-metadata file. If the file exist it will create the proper el and download it later. VOSA-108
-            if curl -s -I $repo/$(dirname $el)/maven-metadata.xml | grep -q '^HTTP[^ ]* 200' ; then
-              local metadata;
-              local name=$(basename $el)
-              metadata=$(curl -s $repo/$(dirname $el)/maven-metadata.xml)
-              local timestamp=$(xmlstarlet <<< "$metadata" sel -t -m /metadata/versioning/snapshot/timestamp -c 'text()')
-              local buildnumber=$(xmlstarlet <<< "$metadata"  sel -t -m /metadata/versioning/snapshot/buildNumber -c 'text()')
-              log "Found SNAPSHOT with $timestamp-$buildnumber in $el"
-              el=$(dirname $el)/${name/SNAPSHOT/$timestamp-$buildnumber}
-              log "Downloading $el from $repo".
-            fi
+        if curl -s -I $repo/$(dirname $el)/maven-metadata.xml | grep -q '^HTTP[^ ]* 200' ; then
+          local metadata;
+          local name=$(basename $el)
+          metadata=$(curl -s $repo/$(dirname $el)/maven-metadata.xml)
+          local timestamp=$(xmlstarlet <<< "$metadata" sel -t -m /metadata/versioning/snapshot/timestamp -c 'text()')
+          local buildnumber=$(xmlstarlet <<< "$metadata"  sel -t -m /metadata/versioning/snapshot/buildNumber -c 'text()')
+          #Now Check the the timestamp and buildnumber is not empty. If not then create the dist name with timestamp and buildnumber. 
+          if [[ -n $timestamp ||  -n $buildnumber ]]; then
+          log "Found SNAPSHOT with $timestamp-$buildnumber in $el"
+          el=$(dirname $el)/${name/SNAPSHOT/$timestamp-$buildnumber}
+          fi
+          log "Downloading $el from $repo".
+        fi
         if curl -s -I $repo/$el | grep -q '^HTTP[^ ]* 200' ; then
           log "Downloading $(basename $el) from $repo/$el ..."
           run wget $wget_opts $repo/$el -O $targetname
