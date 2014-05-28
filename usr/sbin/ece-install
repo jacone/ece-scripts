@@ -188,9 +188,7 @@ function download_escenic_components()
       local targetname=$(basename $el)
       for repo in $fai_maven_repositories; do
         # Special handling for snapshots
-        if [[ "$el" == *-SNAPSHOT* ]] ; then
-          # If snapshot file is not available, try to see if there's a maven-metadata file
-          if ! curl -s -I $repo/$el | grep -q '^HTTP[^ ]* 200' ; then
+          # It will try to get the maven-metadata file. If the file exist it will create the proper el and download it later. VOSA-108
             if curl -s -I $repo/$(dirname $el)/maven-metadata.xml | grep -q '^HTTP[^ ]* 200' ; then
               local metadata;
               local name=$(basename $el)
@@ -201,8 +199,6 @@ function download_escenic_components()
               el=$(dirname $el)/${name/SNAPSHOT/$timestamp-$buildnumber}
               log "Downloading $el from $repo".
             fi
-          fi
-        fi
         if curl -s -I $repo/$el | grep -q '^HTTP[^ ]* 200' ; then
           log "Downloading $(basename $el) from $repo/$el ..."
           run wget $wget_opts $repo/$el -O $targetname
