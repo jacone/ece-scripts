@@ -196,7 +196,7 @@ function download_escenic_components()
           local timestamp=$(xmlstarlet <<< "$metadata" sel -t -m /metadata/versioning/snapshot/timestamp -c 'text()')
           local buildnumber=$(xmlstarlet <<< "$metadata"  sel -t -m /metadata/versioning/snapshot/buildNumber -c 'text()')
           #Now Check the the timestamp and buildnumber is not empty. If not then create the dist name with timestamp and buildnumber. 
-          if [[ -n $timestamp ||  -n $buildnumber ]]; then
+          if [[ -z $timestamp && -z $buildnumber ]]; then
           log "Found SNAPSHOT with $timestamp-$buildnumber in $el"
           el=$(dirname $el)/${name/SNAPSHOT/$timestamp-$buildnumber}
           fi

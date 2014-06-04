@@ -156,7 +156,7 @@ function create_varnish_conf_backends() {
     cat >> $file <<EOF
 backend ${appserver_id}${i} {
   .host = "$appserver_host";
-  .port = "$appserver_port";
+  .port = "$default_app_server_presentation_port";
 }
 
 EOF
