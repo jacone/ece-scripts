@@ -344,6 +344,29 @@ EOF
       </Host>
     </Engine>
   </Service>
+    <Service name="Catalina">
+    <Connector port="${default_app_server_publication_port}"
+               protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               URIEncoding="UTF-8"
+               compression="off"
+               redirectPort="${redirect_port}"
+               />
+    <Connector port="${redirect_port}"
+               protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               URIEncoding="UTF-8"
+               proxyPort="443"
+               scheme="https"/>
+    <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
+      <Valve className="org.apache.catalina.valves.AccessLogValve"
+             prefix="access."
+             suffix=".log"
+             pattern="common"
+             />
+      <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
+             digest="md5"
+             resourceName="UserDatabase"/>
 EOF
   if [[ ($install_profile_number == $PROFILE_EDITORIAL_SERVER || \
     $install_profile_number == $PROFILE_PRESENTATION_SERVER || \
@@ -378,29 +401,6 @@ EOF
       # publication the WARs belong to, we must use a scheme were it's
       # the WAR file name which determines the webapp context.
       cat >> $file <<EOF
-  <Service name="Catalina">
-    <Connector port="${default_app_server_presentation_port}"
-               protocol="HTTP/1.1"
-               connectionTimeout="20000"
-               URIEncoding="UTF-8"
-               compression="off"
-               redirectPort="${redirect_port}"
-    />
-    <Connector port="${redirect_port}"
-               protocol="HTTP/1.1"
-               connectionTimeout="20000"
-               URIEncoding="UTF-8"
-               proxyPort="443"
-               scheme="https"
-    />
-    <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
-      <Valve className="org.apache.catalina.valves.AccessLogValve"
-             prefix="access."
-             suffix=".log"
-             pattern="common"/>
-      <Realm className="org.apache.catalina.realm.UserDatabaseRealm"
-             digest="md5"
-             resourceName="UserDatabase"/>
       <Host
         name="${domain}"
         appBase="$(get_app_base $publication_war)"
