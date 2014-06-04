@@ -342,17 +342,23 @@ EOF
             xmlValidation="false"
             xmlNamespaceAware="false">
       </Host>
-    </Engine>
+EOF
+  if [[ ($install_profile_number == $PROFILE_EDITORIAL_SERVER || \
+    $install_profile_number == $PROFILE_PRESENTATION_SERVER || \
+    $install_profile_number == $PROFILE_ALL_IN_ONE) && \
+    -n "$fai_publication_domain_mapping_list" ]]; then
+    cat >> $tomcat_base/conf/server.xml <<EOF
+        </Engine>
   </Service>
-    <Service name="Catalina">
+  <Service name="Catalina">
     <Connector port="${default_app_server_publication_port}"
                protocol="HTTP/1.1"
                connectionTimeout="20000"
                URIEncoding="UTF-8"
                compression="off"
-               redirectPort="${redirect_port}"
+               redirectPort="${default_app_server_publication_redirect}"
                />
-    <Connector port="${redirect_port}"
+    <Connector port="${default_app_server_publication_redirect}"
                protocol="HTTP/1.1"
                connectionTimeout="20000"
                URIEncoding="UTF-8"
@@ -368,11 +374,6 @@ EOF
              digest="md5"
              resourceName="UserDatabase"/>
 EOF
-  if [[ ($install_profile_number == $PROFILE_EDITORIAL_SERVER || \
-    $install_profile_number == $PROFILE_PRESENTATION_SERVER || \
-    $install_profile_number == $PROFILE_ALL_IN_ONE) && \
-    -n "$fai_publication_domain_mapping_list" ]]; then
-
     for el in ${fai_publication_domain_mapping_list}; do
       local old_ifs=$IFS
       # the entries in the fai_publication_domain_mapping_list are on

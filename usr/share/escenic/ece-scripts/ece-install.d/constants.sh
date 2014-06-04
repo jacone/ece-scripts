@@ -31,6 +31,7 @@ default_db_schema=ece5db
 # app server constants
 default_app_server_port=8080
 default_app_server_publication_port=8040
+default_app_server_publication_redirect=8444
 default_app_server_shutdown=8005
 default_app_server_redirect=8443
 default_app_server_heap_size=2048
