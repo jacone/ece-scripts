@@ -356,14 +356,7 @@ EOF
                connectionTimeout="20000"
                URIEncoding="UTF-8"
                compression="off"
-               redirectPort="${default_app_server_publication_redirect}"
                />
-    <Connector port="${default_app_server_publication_redirect}"
-               protocol="HTTP/1.1"
-               connectionTimeout="20000"
-               URIEncoding="UTF-8"
-               proxyPort="443"
-               scheme="https"/>
     <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
       <Valve className="org.apache.catalina.valves.AccessLogValve"
              prefix="access."
