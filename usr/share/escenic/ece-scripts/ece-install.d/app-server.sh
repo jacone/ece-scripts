@@ -356,6 +356,7 @@ EOF
                connectionTimeout="20000"
                URIEncoding="UTF-8"
                compression="off"
+               redirectPort="${redirect_port}"
                />
     <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
       <Valve className="org.apache.catalina.valves.AccessLogValve"
