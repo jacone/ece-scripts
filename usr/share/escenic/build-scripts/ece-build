@@ -61,7 +61,10 @@ mobile-expansion
 semantic-cxense
 snapshot
 changelog
-note"
+note
+seo
+mobile-studio
+preview-editor"
 
 declare -A project_distributions=()
 
@@ -94,6 +97,9 @@ declare -A maven_snapshot_coordinates=(
 ["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
 ["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
 ["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
+["seo"]="com.escenic.plugins.seo:seo:zip"
+["mobile-studio"]="com.escenic.plugins.mobile-studio:mobile-studio:zip"
+["preview-editor"]="com.escenic.plugins.preview-editor:preview-editor:zip"
 )
 
 declare -A maven_coordinates=(
@@ -133,6 +139,9 @@ com.escenic.plugins.vcpeditor:vcpeditor:zip"
 ["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
 ["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
 ["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
+["seo"]="com.escenic.plugins.seo:seo:zip"
+["mobile-studio"]="com.escenic.plugins.mobile-studio:mobile-studio:zip"
+["preview-editor"]="com.escenic.plugins.preview-editor:preview-editor:zip"
 )
 
 # root folders for engine and plugin distributions
