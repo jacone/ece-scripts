@@ -14,7 +14,7 @@ function install_memory_cache()
   assert_commands_available memcached
 
   print_and_log "Downloading the memcached java library ..."
-  download_uri_target_to_dir $memcached_java_lib_url $download_dir
+  curl_download_uri_target_to_dir $memcached_java_lib_url $download_dir
 
   make_dir ${escenic_root_dir}/assemblytool/lib
   run cp $(basename $memcached_java_lib_url) ${escenic_root_dir}/assemblytool/lib

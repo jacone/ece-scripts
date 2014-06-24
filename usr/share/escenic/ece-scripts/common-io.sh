@@ -160,6 +160,34 @@ function download_uri_target_to_dir() {
   fi
 }
 
+### curl_download_uri_target_to_dir
+## Returns the local, downloaded file with absolute path.
+##
+## $1 :: http://server/file or
+##       https://file. The $1 should only be a http/https url
+## $2 :: the target dir
+## $3 :: the target filename. If left empty, the bassename of $1 is used
+function curl_download_uri_target_to_dir() {
+  local uri=$1
+  local target_dir=$2
+  local target_file=$3
+  make_dir $target_dir
+
+  if [[ $uri == "http://"* || $uri == "https://"* ]]; then
+
+    if [ -z $target_file ] ; then
+      target_file=$(basename $uri)
+    fi
+    
+    log "Downloading" $uri "to" $target_dir "..."
+    run cd $target_dir
+    run curl \
+      -L \
+      --o "$target_file" \
+      $uri
+  fi
+}
+
 ### verify_that_archive_is_ok
 ## Will verify that the archive passed to the function is ok. If it's
 ## not, the function will terminate the calling script, exiting in
