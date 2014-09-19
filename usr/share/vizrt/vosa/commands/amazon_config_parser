@@ -14,6 +14,7 @@ unset amazon_config_ssh_private_key
 unset amazon_config_image
 unset amazon_config_type
 unset amazon_config_subnet
+unset amazon_config_group
 amazon_config_initial_disk_size=8
 
 
@@ -77,17 +78,15 @@ function amazon_config_initial_disk_size() {
   amazon_config_initial_disk_size=$1
 }
 
+function amazon_config_group() {
+  amazon_config_group+="$1 "
+}
+
 # Handle arrays
 
-declare -a amazon_config_group
 declare -a amazon_config_postinstall
 
 function amazon_config_postinstall() {
   amazon_config_postinstall=( "${amazon_config_postinstall[@]}" "$1" )
 }
-
-function amazon_config_group() {
-  amazon_config_group=( "${amazon_config_group[@]}" "$1" )
-}
-
 

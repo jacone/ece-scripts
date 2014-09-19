@@ -858,7 +858,7 @@ function do_create() {
         ${amazon_config_availability_zone/#/--placement availability_zone=}  \
         ${amazon_config_type/#/--instance-type }  \
         ${amazon_config_ssh_keypair/#/--key-name }  \
-        ${amazon_config_group[@]/#/--security-groups } \
+        ${amazon_config_group/#/--security-groups } \
          --block-device-mapping "${json}" \
         ${amazon_config_subnet/#/--subnet-id }
       )
@@ -874,7 +874,7 @@ function do_create() {
         ${amazon_config_availability_zone/#/--availability-zone }  \
         ${amazon_config_type/#/--instance-type }  \
         ${amazon_config_ssh_keypair/#/--key }  \
-        ${amazon_config_group[@]/#/--group } \
+        ${amazon_config_group/#/--group } \
         ${amazon_config_user_data/#/--user-data-file } \
         ${amazon_config_subnet/#/--subnet }
         )
