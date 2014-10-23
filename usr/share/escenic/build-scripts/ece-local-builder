@@ -1,0 +1,461 @@
+#! /usr/bin/env bash
+################################################################################
+#
+# Script for managing "the builder"
+#
+################################################################################
+
+# Common variables
+ece_scripts_version=1.0-2014-06-24-lean-974
+ece_scripts_home=/usr/share/escenic/ece-scripts
+log=/var/log/ece-project-builder.log
+
+# script dependencies
+dependencies="tar
+ant
+sed
+unzip
+wget"
+
+# available commands
+add_customer=0
+add_artifact=0
+add_artifact_list=0
+given_maven_username=0
+given_maven_password=0
+given_git_url=0
+given_skip_user_creation=0
+# Add artifact variables
+list_path=
+artifact_path=
+
+# Add user variables
+builder_system_user=
+customer_name=
+user_maven_username=
+user_maven_password="CHANGE_ME"
+git_url=
+
+# Initialize builder variables
+root_dir=/etc/escenic/builder
+download_dir=$root_dir/.downloads
+builder_engine_dir=$root_dir/engine
+builder_plugins_dir=$root_dir/plugins
+skel_dir=$root_dir/.skel
+subversion_dir=$skel_dir/.subversion
+assemblytool_home=$skel_dir/assemblytool
+m2_home=$skel_dir/.m2
+
+##
+function verify_root_privilege
+{
+  if [ "$(id -u)" != "0" ]; then
+    echo "This script must be run as root!"
+    exit 1
+  fi
+}
+
+function verify_builder_conf
+{
+  if [ ! -e $provided_conf_file ]; then
+    print_and_log "The provided configuration file does not exist, exiting!" >&2
+    remove_pid_and_exit_in_error
+  else
+    provided_conf_file=$(readlink -f $provided_conf_file)
+    run source $provided_conf_file
+  fi
+  enforce_variable customer_name "Your builder configuration file is missing the variable customer_name, exiting!"
+  enforce_variable technet_user "Your builder configuration file is missing the variable technet_user, exiting!"
+  enforce_variable technet_user "Your builder configuration file is missing the variable technet_user, exiting!"
+  enforce_variable technet_user "Your builder configuration file is missing the variable technet_password, exiting!"
+  enforce_variable maven_vizrt_user "Your builder configuration file is missing the variable maven_vizrt_user, exiting!"
+  enforce_variable maven_vizrt_password "Your builder configuration file is missing the variable maven_vizrt_password, exiting!"
+  wget --http-user $technet_user --http-password $technet_password http://technet.escenic.com/ -qO /dev/null
+  if [ $? -ne 0 ]; then
+    print_and_log "Your user can't reach http://technet.escenic.com/, exiting!"
+    remove_pid_and_exit_in_error
+  fi
+  wget --http-user $maven_vizrt_user --http-password $maven_vizrt_password http://maven.vizrt.com/ -qO /dev/null
+  if [ $? -ne 0 ]; then
+    print_and_log "Your user can't reach http://maven.vizrt.com/, exiting!"
+    remove_pid_and_exit_in_error
+  fi
+}
+
+##
+function verify_scripts
+{
+  init_failed=0
+  if [ ! -d $ece_scripts_home ]; then
+    init_failed=1
+    error_message="The directory for ece-scripts $ece_scripts_home does not exist, exiting!"
+  elif [ ! -e $ece_scripts_home/common-bashing.sh ]; then
+    init_failed=1
+    error_message="The script $ece_scripts_home/common-bashing.sh does not exist, exiting!"
+  elif [ ! -e $ece_scripts_home/common-io.sh ]; then
+    init_failed=1
+    error_message="The script $ece_scripts_home/common-io.sh does not exist, exiting!"
+  fi
+  if [ $init_failed -eq 0 ]; then
+    source $ece_scripts_home/common-bashing.sh
+    source $ece_scripts_home/common-io.sh
+  else
+    echo "$error_message"
+    exit 1
+  fi
+
+  # set pid
+  if [ -e $pid_file ]; then
+    echo "Instance of $(basename $0) already running!"
+    exit 1
+  else
+    create_pid
+  fi
+
+  # shutdown hooks
+  trap common_bashing_exit_hook EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
+}
+
+##
+function enforce_variable
+{
+  if [ ! -n "$(eval echo $`echo $1`)" ]; then
+    print_and_log "$2"
+    remove_pid_and_exit_in_error
+  fi
+}
+
+##
+function verify_command {
+  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; remove_pid_and_exit_in_error; }
+}
+
+##
+function verify_dependencies
+{
+  for f in $dependencies
+  do
+    verify_command $f
+  done
+}
+
+function usages(){
+  echo "Usage: ece-project-builder -c <customer-builder-configuration>(require) -s skip system user creation (optional)"
+}
+
+##
+function get_user_options
+{
+  while getopts ":i:c:b:u:p:g:Vs" opt; do
+    case $opt in
+      c)
+        print_and_log "Customer builder configuration is given in ${OPTARG} ..."
+        provided_conf_file=${OPTARG}
+        add_customer=1
+        ;;
+      s)
+        print_and_log "Skip ${OPTARG} user creation ..."
+        given_skip_user_creation=1
+        ;;
+      V)
+        echo "Version:" $ece_scripts_version
+        exit 0
+        ;;
+      \?)
+        print_and_log "Invalid option: -$OPTARG" >&2
+        usages
+        remove_pid_and_exit_in_error
+        ;;
+      :)
+        print_and_log "Option -$OPTARG requires an argument." >&2
+        usages
+        remove_pid_and_exit_in_error
+        ;;
+    esac
+  done
+}
+
+##
+function execute
+{
+    if [ $add_customer -eq 1 ]; then
+      if [ ! -d $root_dir ]; then
+         init
+      else
+        print_and_log "Builder configurations are already generated! So, Going to create the customer  builder ..."
+     fi
+       ensure_no_user_conflict
+       add_customer
+    else
+      print_and_log "No valid action chosen, exiting!" >&2
+      remove_pid_and_exit_in_error
+    fi
+}
+
+
+##
+
+##
+function init
+{
+  # create skel dir for user creation
+  if [ ! -d "$skel_dir" ]; then
+    mkdir -p  $skel_dir
+  fi
+
+  # setup assemblytool skel
+  if [ ! -d "$assemblytool_home" ]; then
+    mkdir $assemblytool_home
+    run wget --http-user=$technet_user --http-password=$technet_password http://technet.escenic.com/downloads/assemblytool-2.0.2.zip -O $assemblytool_home/assemblytool.zip
+    run cd $assemblytool_home
+    run unzip assemblytool.zip
+    run rm -f assemblytool.zip
+    run ant -q initialize
+    echo "engine.root = ../engine/
+plugins = ../plugins" >> $assemblytool_home/assemble.properties
+  fi
+
+  # setup maven settings.xml skel
+  if [ ! -d "$m2_home" ]; then
+    mkdir $m2_home
+    cat>> $m2_home/settings.xml <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/settings/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                              http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+<servers>
+    <server>
+      <id>vizrt-repo</id>
+      <username>edemo-dev</username>
+      <password>strange-preference</password>
+    </server>
+    <server>
+      <id>vizrt-unstable</id>
+      <username>edemo-dev</username>
+      <password>strange-preference</password>
+    </server>
+  </servers>
+  <profiles>
+    <profile>
+      <id>escenic-profile</id>
+      <repositories>
+        <repository>
+          <id>vizrt-repo</id>
+          <name>Vizrt Maven Repository</name>
+          <url>http://maven.vizrt.com</url>
+          <layout>default</layout>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>vizrt-repo</id>
+          <name>Vizrt Maven Repository</name>
+          <url>http://maven.vizrt.com</url>
+          <layout>default</layout>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+    <profile>
+      <id>unstable</id>
+      <repositories>
+        <repository>
+          <id>vizrt-unstable</id>
+          <name>Vizrt Maven Repository</name>
+          <url>http://maven.vizrt.com/unstable</url>
+          <layout>default</layout>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>vizrt-unstable</id>
+          <name>Vizrt Maven Repository</name>
+          <url>http://maven.vizrt.com/unstable</url>
+          <layout>default</layout>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+    <profile>
+      <id>unstable</id>
+      <repositories>
+        <repository>
+          <id>vizrt-unstable</id>
+          <name>Vizrt Maven Repository</name>
+          <url>http://maven.vizrt.com/unstable</url>
+          <layout>default</layout>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>vizrt-unstable</id>
+          <name>Vizrt Maven Repository</name>
+          <url>http://maven.vizrt.com/unstable</url>
+          <layout>default</layout>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>escenic-profile</activeProfile>
+    <activeProfile>unstable</activeProfile>
+    <activeProfile>builder</activeProfile>
+  </activeProfiles>
+</settings>
+EOF
+  fi
+
+  # setup subversion config skel
+  if [ ! -d "$subversion_dir" ]; then
+    run mkdir $subversion_dir
+    echo "[groups]
+
+[global]
+# Password / passphrase caching parameters:
+store-passwords = yes
+store-plaintext-passwords = yes" > $subversion_dir/servers
+  fi
+
+  # setup .vim.rc skel 
+  if [ ! -e "$skel_dir/.vimrc" ]; then
+    echo "set background=dark
+syntax on
+set nocompatible
+set backspace=2" > $skel_dir/.vimrc
+  fi
+}
+
+##
+function verify_builder_exist 
+{
+  if [ ! -d $root_dir ]; then
+    print_and_log "Builder has not been initialized, please run this script with the -i flag and provide a valid config file!"
+    remove_pid_and_exit_in_error
+  fi
+}
+
+##
+function verify_user_options() {
+  if [ $add_customer -eq 1 ]; then
+      if [ -z $builder_system_user ]; then
+         builder_system_user=$customer_name
+      fi
+  else 
+      print_and_log "Don't you want to create customer builder. Missing some required options ..."
+      usages
+      remove_pid_and_exit_in_error
+  fi
+}
+
+##
+function ensure_no_user_conflict
+{
+  if [ $given_skip_user_creation -eq 1 ]; then
+    if [  -z "$(getent passwd $builder_system_user)" ]; then
+      print_and_log "User $builder_system_user does not exist but you want to skip user creation!!!! Are you gone nuts ...."
+      remove_pid_and_exit_in_error
+    fi
+    if [ ! -d /home/$builder_system_user ]; then
+     print_and_log "User $builder_system_user does not exist, but has a home folder!"
+     remove_pid_and_exit_in_error
+   fi
+     print_and_log "I will skipping builder system user creation ..."
+  else 
+
+    if [ ! -z "$(getent passwd $builder_system_user)" ]; then
+      print_and_log "User $builder_system_user already exist!"
+      remove_pid_and_exit_in_error
+    fi
+    if [ -d /home/$builder_system_user ]; then
+     print_and_log "User $builder_system_user does not exist, but has a home folder!"
+     remove_pid_and_exit_in_error
+   fi
+   if [ -d /var/www/$customer_name ]; then
+     print_and_log "Project $customer_name does not exist, but has a web root under /var/www/$customer_name"
+     remove_pid_and_exit_in_error
+   fi
+fi
+}
+
+
+##
+function add_customer
+{
+
+# Check if user want's to skip user creation
+  if [ $given_skip_user_creation -eq 1 ];then
+       print_and_log " Skipping builder system user $builder_system_user creation ..."
+  else
+     run useradd -m -s /bin/bash $builder_system_user
+  fi
+  git_protocol=`echo $git_url | cut -d':' -f1`
+  git_user=`echo $git_url | awk -F"//" '{print $2;}' | cut -d'@' -f1`
+  git_base=`echo $git_url | cut -d'@' -f2`
+  make_dir /home/$builder_system_user/.build
+  echo "customer=$customer_name
+src_control=git
+git_user=$git_user
+git_protocol=$git_protocol
+git_base=$git_base" > /home/$builder_system_user/.build/build.conf
+  run chown $builder_system_user:$builder_system_user /home/$builder_system_user/.build/build.conf
+  run rsync -av $skel_dir/ /home/$builder_system_user
+  run sed -i "s/maven.username/$user_maven_username/" /home/$builder_system_user/.m2/settings.xml
+  run sed -i "s/maven.password/$user_maven_password/" /home/$builder_system_user/.m2/settings.xml
+  run chown -R $builder_system_user:$builder_system_user /home/$builder_system_user
+  if [ ! -d /var/www/$customer_name ]; then
+    make_dir /var/www/$customer_name
+    run chown www-data:www-data /var/www/$customer_name  
+  else
+    print_and_log "Failed to add web root /var/www/$customer_name"
+    remove_pid_and_exit_in_error
+  fi
+  if [ ! -h /var/www/$builder_system_user/releases ]; then
+    run ln -s /home/$builder_system_user/releases /var/www/$customer_name/releases
+  else
+    print_and_log "Failed to add symlink for /var/www/$customer_name/releases"
+    remove_pid_and_exit_in_error
+  fi
+}
+
+
+##
+function common_post_build {
+  run rm $pid_file
+}
+
+##
+function phase_startup {
+  verify_root_privilege
+  verify_scripts
+  verify_dependencies
+}
+
+function pre_setup_verify {
+  verify_builder_conf
+  verify_user_options
+}
+
+##
+function phase_execute
+{
+  execute
+}
+
+##
+function phase_shutdown
+{
+  common_post_build
+}
+
+#####################################################
+# Run commands
+#####################################################
+phase_startup
+get_user_options $@
+pre_setup_verify
+print_and_log "Starting process @ $(date)"
+print_and_log "Additional output can be found in $log"
+phase_execute
+print_and_log "SUCCESS! @ $(date)"
+phase_shutdown
