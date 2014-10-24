@@ -7,7 +7,7 @@
 ################################################################################
 
 # common variables
-ece_scripts_version="straight-from-github"
+ece_scripts_version=1.0-2014-06-24-lean-974
 ece_scripts_home=/usr/share/escenic/ece-scripts
 log=~/ece-build.log
 
@@ -19,10 +19,8 @@ skip_ear=0
 project_pom_versions=""
 
 # standard java locations
-#TODO:take java home location dynamically
 java_6_sun=/usr/lib/jvm/java-6-sun
-java_7_oracle=/usr/lib/jvm/java-7-oracle
-java_8_oracle=/usr/lib/jvm/java-8-oracle
+java_7_oracle=/usr/lib/jvm/jdk-8-oracle-x64
 
 # ece-build platform dependencies
 dependencies="tar
@@ -63,10 +61,7 @@ mobile-expansion
 semantic-cxense
 snapshot
 changelog
-note
-seo
-mobile-studio
-preview-editor"
+note"
 
 declare -A project_distributions=()
 
@@ -99,9 +94,6 @@ declare -A maven_snapshot_coordinates=(
 ["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
 ["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
 ["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
-["seo"]="com.escenic.plugins.seo:seo:zip"
-["mobile-studio"]="com.escenic.plugins.mobile-studio:mobile-studio:zip"
-["preview-editor"]="com.escenic.plugins.preview-editor:preview-editor:zip"
 )
 
 declare -A maven_coordinates=(
@@ -141,9 +133,6 @@ com.escenic.plugins.vcpeditor:vcpeditor:zip"
 ["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
 ["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
 ["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
-["seo"]="com.escenic.plugins.seo:seo:zip"
-["mobile-studio"]="com.escenic.plugins.mobile-studio:mobile-studio:zip"
-["preview-editor"]="com.escenic.plugins.preview-editor:preview-editor:zip"
 )
 
 # root folders for engine and plugin distributions
@@ -491,12 +480,30 @@ function clean_customer_home
 ##
 function add_global_libs
 {
+local project_engine_version
+local engine_minor_version
+local engine_major_version
+local engine_version
+  for f in $project_pom_versions; do
+    if [[ $f == engine=* ]]; then
+      local project_engine_version=`echo $f | sed 's/=/-/g'`
+      print_and_log " project engine verion $project_engine_version"
+      break
+    fi
+  done
+ engine_major_version=`echo $project_engine_version | cut -d'-' -f2 | cut -d'.' -f1`
+ engine_minor_version=`echo $project_engine_version | cut -d'-' -f2 | cut -d'.' -f2`
+ engine_version=$engine_major_version$engine_minor_version
+ if [ ! $engine_version -ge 57 ] ; then
   if [ -e $builder_root_dir/lib/java_memcached-release_2.0.1.jar ]; then
     run_wrapper ln -s $builder_root_dir/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
   else
     print_and_log "The global library $builder_root_dir/lib/java_memcached-release_2.0.1.jar is missing, exiting!"
     exit 1
   fi
+ else
+  print_and_log "Skip java_memcache jar cause it is distributed with $project_engine_version"
+ fi
 }
 
 
@@ -732,13 +739,6 @@ function set_java_home
       export JAVA_HOME=$java_7_oracle
     else
       print_and_log "The expected home directory, $java_7_oracle, for you requested java version does not exist on the platform and needs to be added, exiting!"
-      exit 1
-    fi
-  elif [[ $project_java_version == "1.8" ]]; then
-    if [ -d $java_8_oracle ]; then
-      export JAVA_HOME=$java_8_oracle
-    else
-      print_and_log "The expected home directory, $java_8_oracle, for you requested java version does not exist on the platform and needs to be added, exiting!"
       exit 1
     fi
   else
