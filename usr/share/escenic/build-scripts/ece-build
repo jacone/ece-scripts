@@ -22,7 +22,7 @@ project_pom_versions=""
 #TODO:take java home location dynamically
 java_6_sun=/usr/lib/jvm/java-6-sun
 java_7_oracle=/usr/lib/jvm/java-7-oracle
-java_8_oracle=/usr/lib/jvm/java-8-oracle
+java_8_oracle=/usr/lib/jvm/jdk-8-oracle-x64
 
 # ece-build platform dependencies
 dependencies="tar
@@ -491,14 +491,31 @@ function clean_customer_home
 ##
 function add_global_libs
 {
+local project_engine_version
+local engine_minor_version
+local engine_major_version
+local engine_version
+  for f in $project_pom_versions; do
+    if [[ $f == engine=* ]]; then
+      local project_engine_version=`echo $f | sed 's/=/-/g'`
+      print_and_log " project engine verion $project_engine_version"
+      break
+    fi
+  done
+ engine_major_version=`echo $project_engine_version | cut -d'-' -f2 | cut -d'.' -f1`
+ engine_minor_version=`echo $project_engine_version | cut -d'-' -f2 | cut -d'.' -f2`
+ engine_version=$engine_major_version$engine_minor_version
+ if [ ! $engine_version -ge 57 ] ; then
   if [ -e $builder_root_dir/lib/java_memcached-release_2.0.1.jar ]; then
     run_wrapper ln -s $builder_root_dir/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
   else
     print_and_log "The global library $builder_root_dir/lib/java_memcached-release_2.0.1.jar is missing, exiting!"
     exit 1
   fi
+ else
+  print_and_log "Skip java_memcache jar cause it is distributed with $project_engine_version"
+ fi
 }
-
 
 ##
 function svn_fail_early
