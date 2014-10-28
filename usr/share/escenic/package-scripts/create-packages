@@ -119,6 +119,7 @@ function set_up_escenic-build-scripts() {
   make_dir $target_dir/usr/bin
   run cp ../build-scripts/ece-build $target_dir/usr/bin/ece-build
   run cp ../build-scripts/ece-builder $target_dir/usr/bin/ece-builder
+  run cp ../build-scripts/ece-local-builder $target_dir/usr/bin/ece-local-builder
   run cp ../build-scripts/ece-build-guide $target_dir/usr/bin/ece-build-guide
 }
 
