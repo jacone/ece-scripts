@@ -1328,6 +1328,10 @@ the *ece-install.conf*:
 
 - *fai\_wf\_install* :: Install Widget Framework profile. Default is 0.
 
+- *fallback\_tomcat\_url* :: Override url used to download Tomcat. As old
+    releases are removed from Tomcat download mirrors this can be used to
+    point to the updated versions. Use the link for the .tar.gz file.
+
 As you've probably already found out, *0* means "false" and *1* means "true".
 
 ** Example Configurations
