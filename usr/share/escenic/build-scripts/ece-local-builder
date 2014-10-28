@@ -19,22 +19,18 @@ wget"
 
 # available commands
 add_customer=0
-add_artifact=0
-add_artifact_list=0
-given_maven_username=0
-given_maven_password=0
-given_git_url=0
 given_skip_user_creation=0
-# Add artifact variables
-list_path=
-artifact_path=
+given_all_system_users=0
 
 # Add user variables
 builder_system_user=
 customer_name=
+technet_user=
+technet_password=
 user_maven_username=
 user_maven_password="CHANGE_ME"
 git_url=
+assemblytool_url=
 
 # Initialize builder variables
 root_dir=/etc/escenic/builder
@@ -43,7 +39,6 @@ builder_engine_dir=$root_dir/engine
 builder_plugins_dir=$root_dir/plugins
 skel_dir=$root_dir/.skel
 subversion_dir=$skel_dir/.subversion
-assemblytool_home=$skel_dir/assemblytool
 m2_home=$skel_dir/.m2
 
 ##
@@ -70,6 +65,7 @@ function verify_builder_conf
   enforce_variable technet_user "Your builder configuration file is missing the variable technet_password, exiting!"
   enforce_variable maven_vizrt_user "Your builder configuration file is missing the variable maven_vizrt_user, exiting!"
   enforce_variable maven_vizrt_password "Your builder configuration file is missing the variable maven_vizrt_password, exiting!"
+  enforce_variable assemblytool_url "Your builder configuration file is missing the variable assemblytool_url, exiting!"
   wget --http-user $technet_user --http-password $technet_password http://technet.escenic.com/ -qO /dev/null
   if [ $? -ne 0 ]; then
     print_and_log "Your user can't reach http://technet.escenic.com/, exiting!"
@@ -147,7 +143,7 @@ function usages(){
 ##
 function get_user_options
 {
-  while getopts ":i:c:b:u:p:g:Vs" opt; do
+  while getopts ":i:c:b:u:p:g:Vsa" opt; do
     case $opt in
       c)
         print_and_log "Customer builder configuration is given in ${OPTARG} ..."
@@ -157,6 +153,10 @@ function get_user_options
       s)
         print_and_log "Skip ${OPTARG} user creation ..."
         given_skip_user_creation=1
+        ;;
+      a)
+        print_and_log "Adding builder to all system users ..."
+        given_all_system_users=1
         ;;
       V)
         echo "Version:" $ece_scripts_version
@@ -179,14 +179,24 @@ function get_user_options
 ##
 function execute
 {
+local users
     if [ $add_customer -eq 1 ]; then
       if [ ! -d $root_dir ]; then
          init
       else
         print_and_log "Builder configurations are already generated! So, Going to create the customer  builder ..."
-     fi
-       ensure_no_user_conflict
-       add_customer
+      fi
+      if [ $given_all_system_users -eq 1 ]; then
+        users=`ls -1 /home`
+        for user in $users
+          do
+            ensure_no_user_conflict $user $customer_name
+            add_customer $user $customer_name
+          done
+      else
+       ensure_no_user_conflict $builder_system_user $customer_name
+       add_customer $builder_system_user $customer_name
+      fi
     else
       print_and_log "No valid action chosen, exiting!" >&2
       remove_pid_and_exit_in_error
@@ -199,33 +209,232 @@ function execute
 ##
 function init
 {
+ local assemblytool_dir
+ local assemblytool_home
   # create skel dir for user creation
   if [ ! -d "$skel_dir" ]; then
     mkdir -p  $skel_dir
   fi
 
   # setup assemblytool skel
+  assemblytool_dir=`echo $assemblytool_url | rev | cut -d'/' -f1 | cut -d'.' -f2- | rev`
+  assemblytool_home=$skel_dir/$assemblytool_dir
   if [ ! -d "$assemblytool_home" ]; then
     mkdir $assemblytool_home
-    run wget --http-user=$technet_user --http-password=$technet_password http://technet.escenic.com/downloads/assemblytool-2.0.2.zip -O $assemblytool_home/assemblytool.zip
+    
+    run wget --http-user=$technet_user --http-password=$technet_password $assemblytool_url -O $assemblytool_home/assemblytool.zip
     run cd $assemblytool_home
     run unzip assemblytool.zip
     run rm -f assemblytool.zip
     run ant -q initialize
     echo "engine.root = ../engine/
 plugins = ../plugins" >> $assemblytool_home/assemble.properties
+    if [ ! -d $assemblytool_home/conf ]; then
+       make_dir $assemblytool_home/conf/layers
+    fi
+    echo "######################################################
+# Site Wide Nursery configuration file.
+########################################################
+# The purpose of this file is to set up the nursery,
+# and all of the other configuration layers that are
+# to be used by this configuration.
+#
+# This Nursery component will bootstrap the Nursery.
+#
+# Therefore, it is vital that all files needed to
+# configure the nursery are available in _this_
+# configuration layer.
+#
+# Only after loading the Nursery component, will the
+# other configuration layers be visible to any other
+# Nursery component.
+# 
+# After bootstrapping itself, it will  turn bootstrap
+# the rest of Escenic.
+#
+# It is possible to do System property substitution
+# in all configuration layers, even this configuration
+# layer:
+#   someProperty=\${some.system.property}
+# will expand to the value of the system property
+# called \"some.system.property\".
+#
+# Note: There is only one nursery per Java process.
+########################################################
+
+\$class=neo.nursery.Bootstrapper
+
+########################################################
+# CONFIGURATION LAYERS
+########################################################
+# Each referenced component must have its own
+# properties file; they _must_ reside in this
+# configuration layer.
+#
+# Content Engine ships with three default layers
+# layer.01 = /layers/default/Layer
+# layer.02 = /layers/addon/Layer
+# layer.03 = /layers/common/Layer
+########################################################
+
+
+# ECE :: default layer
+layer.01 = /layers/default/Layer
+
+# ECE :: plugins layer
+layer.02 = /layers/addon/Layer
+
+# VOSA :: common VOSA/SaaS layer
+layer.03 = /layers/vosa/Layer
+
+# Customer :: common layer
+layer.04 = /layers/common/Layer
+
+# Customer :: family/group layer (e.g. presentation, editorial)
+layer.05 = /layers/family/Layer
+
+# Customer :: environment layer (e.g. testing, staging, production)
+layer.06 = /layers/environment/Layer
+
+# Customer :: host specific layer
+layer.07 = /layers/host/Layer
+
+# Customer :: instance specific layer
+layer.08 = /layers/instance/Layer
+
+# Customer :: \"escenic.server\" specific layer
+layer.09 = /layers/server/Layer" > $assemblytool_home/conf/Nursery.properties
+
+   #Update default layer configurations
+   if [ ! -d  $assemblytool_home/conf/layers/default ]; then
+        make_dir $assemblytool_home/conf/layers/default
+        echo "# The Escenic default configuration is read from the classpath with a prefix of com/escenic/configuration/default
+\$class=neo.nursery.ResourceDepot
+prefix=com/escenic/configuration/default" > $assemblytool_home/conf/layers/default/Files.properties
+
+       echo "# This configuration layer consists of properties files
+\$class=neo.nursery.PropertyFileConfigurator
+depot=./Files" > $assemblytool_home/conf/layers/default/Layer.properties
+  else
+       print_and_log "Default layer already exists no need to create again"
+  fi
+  #Update family layer configurations
+    if [ ! -d  $assemblytool_home/conf/layers/family ]; then
+        make_dir $assemblytool_home/conf/layers/family
+        echo "# The family configuration is read from the file system hierarchy standard for configuration
+\$class=neo.nursery.FileSystemDepot
+
+# The files are loaded from a subdirectory of /etc/escenic/engine/host
+#   either from the system property \"com.escenic.config.engine.family\"
+#   or the family name \"default\" if that system property is null
+fileSystemRoot = /etc/escenic/engine/family/\${com.escenic.config.engine.family \"default\"}" > $assemblytool_home/conf/layers/family/Files.properties
+     
+  echo "# This configuration layer consists of properties files
+\$class=neo.nursery.PropertyFileConfigurator
+depot=./Files" > $assemblytool_home/conf/layers/family/Layer.properties  
+    else
+       print_and_log "Default layer already exists no need to create again"
+    fi
+   #Update addon layer configurations
+    if [ ! -d  $assemblytool_home/conf/layers/addon ]; then
+        make_dir $assemblytool_home/conf/layers/addon
+        echo "# The addon configuration is read from the classpath with no prefix
+\$class=neo.nursery.ResourceDepot" > $assemblytool_home/conf/layers/addon/Files.properties
+
+      echo "# This configuration layer consists of properties files
+\$class=neo.nursery.PropertyFileConfigurator
+depot=./Files" > $assemblytool_home/conf/layers/addon/Layer.properties 
+    else
+       print_and_log "Addon layer already exists no need to create again"
+    fi
+   #Update common layer configurations
+    if [ ! -d  $assemblytool_home/conf/layers/common ]; then
+        make_dir $assemblytool_home/conf/layers/common
+        echo "# The common configuration is read from the file system hierarchy standard location for configuration files
+\$class=neo.nursery.FileSystemDepot
+fileSystemRoot = /etc/escenic/engine/common/" > $assemblytool_home/conf/layers/common/Files.properties
+
+       echo "# This configuration layer consists of properties files
+\$class=neo.nursery.PropertyFileConfigurator
+depot=./Files" > $assemblytool_home/conf/layers/common/Layer.properties
+    else
+       print_and_log "Common layer already exists no need to create again"
+    fi
+   #Update host layer configurations
+    if [ ! -d  $assemblytool_home/conf/layers/host ]; then
+        make_dir $assemblytool_home/conf/layers/host
+        echo "# The host configuration is read from the file system hierarchy standard for configuration
+\$class=neo.nursery.FileSystemDepot
+
+# The files are loaded from a subdirectory of /etc/escenic/engine/host
+#   * the system property \"hostname\" if specified
+#   * the environment variable \"HOSTNAME\" or \"COMPUTERNAME\"
+#   otherwise the default value of \"localhost\"
+fileSystemRoot = /etc/escenic/engine/host/\${hostname env:HOSTNAME env:COMPUTERNAME \"localhost\"}/" >  $assemblytool_home/conf/layers/host/Files.properties
+       echo "# This configuration layer consists of properties files
+\$class=neo.nursery.PropertyFileConfigurator
+depot=./Files" > $assemblytool_home/conf/layers/host/Layer.properties
+    else
+       print_and_log "Host layer already exists no need to create again"
+    fi
+   #Update environment layer configuration
+     if [ ! -d $assemblytool_home/conf/layers/environment ]; then
+          make_dir  $assemblytool_home/conf/layers/environment
+          echo "\$class=neo.nursery.FileSystemDepot
+fileSystemRoot = /etc/escenic/engine/environment/\${com.escenic.environment \"unknown\"}/" > $assemblytool_home/conf/layers/environment/Files.properties
+          echo "# This configuration layer consists of properties files
+\$class=neo.nursery.PropertyFileConfigurator
+depot=./Files" > $assemblytool_home/conf/layers/environment/Layer.properties
+     else
+          print_and_log "Envirnoment layer already exists no need to create again"
+     fi
+   #Update instance layer configuration
+    if [ ! -d  $assemblytool_home/conf/layers/instance ]; then
+         make_dir  $assemblytool_home/conf/layers/instance
+         echo "\$class=neo.nursery.FileSystemDepot
+fileSystemRoot = /etc/escenic/engine/instance/\${com.escenic.instance \"default\"}" > $assemblytool_home/conf/layers/instance/Files.properties
+        echo "# This configuration layer consists of properties files
+\$class=neo.nursery.PropertyFileConfigurator
+depot=./Files" > $assemblytool_home/conf/layers/instance/Layer.properties
+   else
+         print_and_log "Instance layer already exists no need to create again"
+   fi
+  #Update server layer configuration
+    if [ ! -d  $assemblytool_home/conf/layers/server ]; then
+         make_dir  $assemblytool_home/conf/layers/server
+         echo "# The host configuration is read from the file system hierarchy standard for configuration
+\$class=neo.nursery.FileSystemDepot
+
+# The files are loaded from a subdirectory of /etc/escenic/engine/host-instance
+#   named after the hostname and instance name it's running as.
+fileSystemRoot = /etc/escenic/engine/server/\${escenic.server \"default\"}/" > $assemblytool_home/conf/layers/server/Files.properties
+        echo "# This configuration layer consists of properties files
+\$class=neo.nursery.PropertyFileConfigurator
+depot=./Files" > $assemblytool_home/conf/layers/server/Layer.properties
+   else
+       print_and_log "Server layer already exists no need to create again"
+   fi
+  #Update vosa layer configuration
+   if [ ! -d   $assemblytool_home/conf/layers/vosa ]; then
+       mkdir  $assemblytool_home/conf/layers/vosa
+       echo "\$class=neo.nursery.FileSystemDepot
+fileSystemRoot = /etc/escenic/engine/vosa/" > $assemblytool_home/conf/layers/vosa/Files.properties
+       echo "# This configuration layer consists of properties files
+\$class=neo.nursery.PropertyFileConfigurator
+depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
+   else
+       print_and_log "Vosa layer already exists no need to create again"
+   fi
   fi
 
   # setup maven settings.xml skel
   if [ ! -d "$m2_home" ]; then
     mkdir $m2_home
-    cat>> $m2_home/settings.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns="http://maven.apache.org/settings/1.0.0"
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
-                              http://maven.apache.org/xsd/settings-1.0.0.xsd">
-
+    echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<settings xmlns=\"http://maven.apache.org/settings/1.0.0\"
+          xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+          xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0
+                              http://maven.apache.org/xsd/settings-1.0.0.xsd\">
 <servers>
     <server>
       <id>vizrt-repo</id>
@@ -277,33 +486,13 @@ plugins = ../plugins" >> $assemblytool_home/assemble.properties
         </pluginRepository>
       </pluginRepositories>
     </profile>
-    <profile>
-      <id>unstable</id>
-      <repositories>
-        <repository>
-          <id>vizrt-unstable</id>
-          <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com/unstable</url>
-          <layout>default</layout>
-        </repository>
-      </repositories>
-      <pluginRepositories>
-        <pluginRepository>
-          <id>vizrt-unstable</id>
-          <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com/unstable</url>
-          <layout>default</layout>
-        </pluginRepository>
-      </pluginRepositories>
-    </profile>
   </profiles>
   <activeProfiles>
     <activeProfile>escenic-profile</activeProfile>
     <activeProfile>unstable</activeProfile>
     <activeProfile>builder</activeProfile>
   </activeProfiles>
-</settings>
-EOF
+</settings>" > $m2_home/settings.xml
   fi
 
   # setup subversion config skel
@@ -352,27 +541,27 @@ function verify_user_options() {
 function ensure_no_user_conflict
 {
   if [ $given_skip_user_creation -eq 1 ]; then
-    if [  -z "$(getent passwd $builder_system_user)" ]; then
-      print_and_log "User $builder_system_user does not exist but you want to skip user creation!!!! Are you gone nuts ...."
+    if [  -z "$(getent passwd $1)" ]; then
+      print_and_log "User $1 does not exist but you want to skip user creation!!!! Are you gone nuts ...."
       remove_pid_and_exit_in_error
     fi
-    if [ ! -d /home/$builder_system_user ]; then
-     print_and_log "User $builder_system_user does not exist, but has a home folder!"
+    if [ ! -d /home/$1 ]; then
+     print_and_log "User $1 does not exist, but has a home folder!"
      remove_pid_and_exit_in_error
    fi
      print_and_log "I will skipping builder system user creation ..."
   else 
 
-    if [ ! -z "$(getent passwd $builder_system_user)" ]; then
-      print_and_log "User $builder_system_user already exist!"
+    if [ ! -z "$(getent passwd $1)" ]; then
+      print_and_log "User $1 already exist!"
       remove_pid_and_exit_in_error
     fi
-    if [ -d /home/$builder_system_user ]; then
-     print_and_log "User $builder_system_user does not exist, but has a home folder!"
+    if [ -d /home/$1 ]; then
+     print_and_log "User $1 does not exist, but has a home folder!"
      remove_pid_and_exit_in_error
    fi
-   if [ -d /var/www/$customer_name ]; then
-     print_and_log "Project $customer_name does not exist, but has a web root under /var/www/$customer_name"
+   if [ -d /var/www/$2 ]; then
+     print_and_log "Project $2 does not exist, but has a web root under /var/www/$2"
      remove_pid_and_exit_in_error
    fi
 fi
@@ -385,37 +574,48 @@ function add_customer
 
 # Check if user want's to skip user creation
   if [ $given_skip_user_creation -eq 1 ];then
-       print_and_log " Skipping builder system user $builder_system_user creation ..."
+       print_and_log " Skipping builder system user $1 creation ..."
   else
-     run useradd -m -s /bin/bash $builder_system_user
+     run useradd -m -s /bin/bash $1
   fi
   git_protocol=`echo $git_url | cut -d':' -f1`
   git_user=`echo $git_url | awk -F"//" '{print $2;}' | cut -d'@' -f1`
   git_base=`echo $git_url | cut -d'@' -f2`
-  make_dir /home/$builder_system_user/.build
-  echo "customer=$customer_name
+  make_dir /home/$1/.build
+  echo "customer=$2
 src_control=git
 git_user=$git_user
 git_protocol=$git_protocol
-git_base=$git_base" > /home/$builder_system_user/.build/build.conf
-  run chown $builder_system_user:$builder_system_user /home/$builder_system_user/.build/build.conf
-  run rsync -av $skel_dir/ /home/$builder_system_user
-  run sed -i "s/maven.username/$user_maven_username/" /home/$builder_system_user/.m2/settings.xml
-  run sed -i "s/maven.password/$user_maven_password/" /home/$builder_system_user/.m2/settings.xml
-  run chown -R $builder_system_user:$builder_system_user /home/$builder_system_user
-  if [ ! -d /var/www/$customer_name ]; then
-    make_dir /var/www/$customer_name
-    run chown www-data:www-data /var/www/$customer_name  
+git_base=$git_base" > /home/$1/.build/build.conf
+  run chown $1:$1 /home/$1/.build/build.conf
+  run rsync -av $skel_dir/ /home/$1
+  run sed -i "s/maven.username/$user_maven_username/" /home/$1/.m2/settings.xml
+  run sed -i "s/maven.password/$user_maven_password/" /home/$1/.m2/settings.xml
+  run chown -R $1:$1 /home/$1
+  if [ ! -d /var/www/$1 ]; then
+    make_dir /var/www/$1
+    run chown www-data:www-data /var/www/$1
   else
-    print_and_log "Failed to add web root /var/www/$customer_name"
+    print_and_log "Failed to add web root /var/www/$1"
+  fi
+  if [ ! -h /var/www/$1/releases ]; then
+    run ln -s /home/$1/releases /var/www/$1/releases
+  else
+    print_and_log "Failed to add symlink for /var/www/$1/releases"
     remove_pid_and_exit_in_error
   fi
-  if [ ! -h /var/www/$builder_system_user/releases ]; then
-    run ln -s /home/$builder_system_user/releases /var/www/$customer_name/releases
-  else
-    print_and_log "Failed to add symlink for /var/www/$customer_name/releases"
-    remove_pid_and_exit_in_error
-  fi
+  setup_nginx $1
+}
+
+function setup_nginx
+{
+  if [ ! -e /etc/nginx/default-site/$1.conf ]; then
+    echo "location /$1/ {
+        alias /var/www/$1/releases/;
+        expires modified +310s;
+}" > /etc/nginx/default-site/$1.conf
+  fi 
+
 }
 
 
