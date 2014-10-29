@@ -17,7 +17,7 @@ maven_build_offline=0
 maven_opts="-U clean install"
 skip_ear=0
 project_pom_versions=""
-
+ear_base_url=http://builder.vizrtsaas.com
 # standard java locations
 #TODO:take java home location dynamically
 java_6_sun=/usr/lib/jvm/java-6-sun
@@ -1302,11 +1302,11 @@ EOF
   else
     print_and_log "--- .deb configuration packages ---"  
     for machine in $machine_list; do 
-      print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-${package_version}.deb"
+      print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-${package_version}.deb"
     done
     print_and_log "--- .rpm configuration packages ---"
     for machine in $machine_list; do
-      print_and_log "http://builder.vizrtsaas.com/$customer/releases/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm"
+      print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm"
     done
   fi
 }
@@ -1429,7 +1429,7 @@ function print_result
   if [ $skip_ear -eq 1 ]; then
     print_and_log "Only configuration packages has been created in this release!"
   else
-    print_and_log "You'll find the release here: http://builder.vizrtsaas.com/$customer/releases/$resulting_ear"
+    print_and_log "You'll find the release here: $ear_base_url/$customer/releases/$resulting_ear"
   fi
 }
 
