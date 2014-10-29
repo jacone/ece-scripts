@@ -586,7 +586,8 @@ function add_customer
 src_control=git
 git_user=$git_user
 git_protocol=$git_protocol
-git_base=$git_base" > /home/$1/.build/build.conf
+git_base=$git_base
+ear_base_url=$ear_base_url/$1" > /home/$1/.build/build.conf
   run chown $1:$1 /home/$1/.build/build.conf
   run rsync -av $skel_dir/ /home/$1
   run sed -i "s/maven.username/$user_maven_username/" /home/$1/.m2/settings.xml
@@ -604,13 +605,13 @@ git_base=$git_base" > /home/$1/.build/build.conf
     print_and_log "Failed to add symlink for /var/www/$1/releases"
     remove_pid_and_exit_in_error
   fi
-  setup_nginx $1
+  setup_nginx $1 $2
 }
 
 function setup_nginx
 {
   if [ ! -e /etc/nginx/default-site/$1.conf ]; then
-    echo "location /$1/ {
+    echo "location /$1/$2/releases/ {
         alias /var/www/$1/releases/;
         expires modified +310s;
 }" > /etc/nginx/default-site/$1.conf
