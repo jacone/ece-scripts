@@ -7,7 +7,7 @@
 ################################################################################
 
 # common variables
-ece_scripts_version="straight-from-github"
+ece_scripts_version=1.0-2014-10-29-lean-1072
 ece_scripts_home=/usr/share/escenic/ece-scripts
 log=~/ece-build.log
 
@@ -16,8 +16,12 @@ build_date=`date +%F_%H%M`
 maven_build_offline=0
 maven_opts="-U clean install"
 skip_ear=0
+clean_repo=0
+update_repo=0
 project_pom_versions=""
 ear_base_url=http://builder.vizrtsaas.com
+#Mode to use keep git local changes
+local_mode=false
 # standard java locations
 #TODO:take java home location dynamically
 java_6_sun=/usr/lib/jvm/java-6-sun
@@ -347,7 +351,7 @@ function verify_java
 ##
 function get_user_options
 {
-  while getopts ":b:t:osV" opt; do
+  while getopts ":b:t:oscuV" opt; do
     case $opt in
       b)
         svn_path=branches/${OPTARG}
@@ -363,9 +367,13 @@ function get_user_options
         maven_opts="-o $maven_opts"
         print_and_log "Maven offline mode in effect!"
         ;;
-      s)
-        skip_ear=1
-        print_and_log "Skip .ear mode in effect!"
+      c)
+        clean_repo=1
+        print_and_log "Git repository clean up mode in effect!"
+        ;;
+      u)
+        update_repo=1
+        print_and_log "Git repository update  mode in effect!"
         ;;
       V)
         echo "Version:" $ece_scripts_version
@@ -483,8 +491,6 @@ function clean_customer_home
   # drop and recreate project src directory if it exists
   if [ -d "$project_src_dir" ]; then
     run_wrapper rm -rf $project_src_dir
-  else
-    make_dir $project_src_dir
   fi
 }
 
@@ -564,26 +570,28 @@ function git_checkout
     make_dir $project_src_master_dir
     run_wrapper git clone $git_repo_uri $project_src_master_dir
   fi
-    
   cd $project_src_master_dir
+  if [ $local_mode == false ]; then
+  clean_up
   run_wrapper git checkout master
-  run_wrapper git clean -d -x -f
   run_wrapper git remote update
-  run_wrapper git fetch
-  if [[ "$git_path" != "" ]]; then
-    git show-ref --quiet --verify "refs/heads/$branch_name"
-    if [ $? = 0 ]; then
-      run_wrapper git checkout $branch_name
-    else
-      run_wrapper git checkout -b $branch_name origin/$branch_name  
-    fi
-  fi
-  run_wrapper git pull --rebase
-  run_wrapper git clean -d -x -f
-  
+  udpate_repository
+  clean_up
   # git checkout
   run_wrapper git clone $git_path $project_src_master_dir $project_src_dir
-
+  else
+    print_and_log "Switching to local mode. You can use -u to update and -c to clean your local git repo"
+    if [ $clean_repo -eq 1 ]; then
+      clean_up
+    fi
+    if [ $update_repo -eq 1 ]; then
+      if [[ "$git_path" == "" ]]; then
+        run_wrapper git checkout master
+      fi
+      udpate_repository
+    fi 
+    run_wrapper cp -rf $project_src_master_dir $project_src_dir
+ fi
   cd $project_src_dir
   revision=`git describe --always`
   if [[ $revision = "" ]]; then
@@ -594,6 +602,28 @@ function git_checkout
   if [[ "$git_path" == "" ]]; then
     git_path="-b master"
   fi
+}
+## Git update repository 
+function udpate_repository
+{
+  run_wrapper git fetch
+  if [[ "$git_path" != "" ]]; then
+    git show-ref --quiet --verify "refs/heads/$branch_name"
+    if [ $? = 0 ]; then
+      run_wrapper git checkout $branch_name
+    else
+      run_wrapper git checkout -b $branch_name origin/$branch_name
+    fi
+  fi
+  run_wrapper git pull
+}
+
+
+## Git local repository clean up
+function clean_up
+{
+  run_wrapper git clean -d -x -f
+  run_wrapper git checkout * 
 }
 
 ##

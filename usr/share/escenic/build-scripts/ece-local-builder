@@ -587,7 +587,8 @@ src_control=git
 git_user=$git_user
 git_protocol=$git_protocol
 git_base=$git_base
-ear_base_url=$ear_base_url/$1" > /home/$1/.build/build.conf
+ear_base_url=$ear_base_url/$1
+local_mode=true" > /home/$1/.build/build.conf
   run chown $1:$1 /home/$1/.build/build.conf
   run rsync -av $skel_dir/ /home/$1
   run sed -i "s/maven.username/$user_maven_username/" /home/$1/.m2/settings.xml
