@@ -7,7 +7,7 @@
 ################################################################################
 
 # common variables
-ece_scripts_version=1.0-2014-10-29-lean-1072
+ece_scripts_version=1.0-2014-10-30-lean-1074
 ece_scripts_home=/usr/share/escenic/ece-scripts
 log=~/ece-build.log
 
@@ -584,10 +584,12 @@ function git_checkout
     if [ $clean_repo -eq 1 ]; then
       clean_up
     fi
+    if [[ "$git_path" == "" ]]; then
+        branch_name=master
+        git_path="-b master"
+    fi
+    checkout_repo
     if [ $update_repo -eq 1 ]; then
-      if [[ "$git_path" == "" ]]; then
-        run_wrapper git checkout master
-      fi
       udpate_repository
     fi 
     run_wrapper cp -rf $project_src_master_dir $project_src_dir
@@ -607,6 +609,12 @@ function git_checkout
 function udpate_repository
 {
   run_wrapper git fetch
+  checkout_repo
+  run_wrapper git pull
+}
+
+function checkout_repo
+{
   if [[ "$git_path" != "" ]]; then
     git show-ref --quiet --verify "refs/heads/$branch_name"
     if [ $? = 0 ]; then
@@ -615,7 +623,6 @@ function udpate_repository
       run_wrapper git checkout -b $branch_name origin/$branch_name
     fi
   fi
-  run_wrapper git pull
 }
 
 
