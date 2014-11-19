@@ -462,44 +462,57 @@ EOF
     xmlstarlet ed -P -L \
        -s /Context -t elem -n TMP -v '' \
        -i //TMP -t attr -n name -v escenic/solr-base-uri \
-       -i //TMP -t attr -n value -v http://${search_host}:${search_port}/solr/ \
+       -i //TMP -t attr -n value -v http://${search_host}:${search_port}/solr/collection1 \
        -i //TMP -t attr -n type -v java.lang.String \
        -i //TMP -t attr -n override -v false \
        -r //TMP -v Environment \
        $tomcat_base/conf/context.xml
-
   fi
 
   if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
-    $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+       $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
 
-    xmlstarlet ed -P -L \
+     xmlstarlet ed -P -L \
        -s /Context -t elem -n TMP -v '' \
        -i /Context/TMP -t attr -n name -v escenic/indexer-webservice \
        -i /Context/TMP -t attr -n value -v ""${indexer_ws_uri} \
        -i /Context/TMP -t attr -n type -v java.lang.String \
-       -i /Context/TMP -t attr -n override -v false \
+       -i /Context/TMP -t attr -n override -v true \
        -r //TMP -v Environment \
        -s /Context -t elem -n TMP -v '' \
        -i /Context/TMP -t attr -n name -v escenic/index-update-uri \
-       -i /Context/TMP -t attr -n value -v http://${search_host}:${search_port}/solr/update/ \
+       -i /Context/TMP -t attr -n value -v http://${search_host}:${search_port}/solr/collection1/update/ \
        -i /Context/TMP -t attr -n type -v java.lang.String \
-       -i /Context/TMP -t attr -n override -v false \
+       -i /Context/TMP -t attr -n override -v true \
        -r //TMP -v Environment \
        -s /Context -t elem -n TMP -v '' \
        -i /Context/TMP -t attr -n name -v escenic/head-tail-storage-file \
        -i /Context/TMP -t attr -n value -v $escenic_data_dir/engine/head-tail.index \
        -i /Context/TMP -t attr -n type -v java.lang.String \
-       -i /Context/TMP -t attr -n override -v false \
+       -i /Context/TMP -t attr -n override -v true \
        -r //TMP -v Environment \
        -s /Context -t elem -n TMP -v '' \
        -i /Context/TMP -t attr -n name -v escenic/failing-documents-storage-file \
        -i /Context/TMP -t attr -n value -v $escenic_data_dir/engine/failures.index \
        -i /Context/TMP -t attr -n type -v java.lang.String \
-       -i /Context/TMP -t attr -n override -v false \
+       -i /Context/TMP -t attr -n override -v true \
        -r //TMP -v Environment \
        $tomcat_base/conf/context.xml
+   print_and_log "Finished adding solr configuration for search"
+   print_and_log "Started adding context configuration for indexer-webapp-presentation"
+ 
+     mkdir -p $tomcat_base/conf/Catalina/localhost/
 
+     cat >> $tomcat_base/conf/Catalina/localhost/indexer-webapp-presentation.xml <<EOF
+    <Context docBase="$\\{catalina.base}/webapps/indexer-webapp">
+      <Environment name="escenic/solr-base-uri" value="http://${search_host}:${search_port}/solr/presentation/" type="java.lang.String" override="true"/>
+      <Environment name="escenic/indexer-webservice" value="${indexer_ws_uri}" type="java.lang.String" override="true"/>
+      <Environment name="escenic/index-update-uri" value="http://${search_host}:${search_port}/solr/presentation/update/" type="java.lang.String" override="true"/>
+      <Environment name="escenic/head-tail-storage-file" value=" $escenic_data_dir/engine/head-tail-presentation.index" type="java.lang.String" override="true"/>
+      <Environment name="escenic/failing-documents-storage-file" value=" $escenic_data_dir/engine/failures-presentation.index" type="java.lang.String" override="true"/>
+   </Context>
+EOF
+   print_and_log "Finished adding context for indexer-webapp-presentation"
 
   elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
     xmlstarlet ed -P -L \
