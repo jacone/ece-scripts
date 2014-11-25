@@ -172,10 +172,13 @@ function deploy() {
           add_memcached_support $tomcat_base/$app_base/$name
         fi
       done
-      print_and_log "Found instance type : $type"
       if [ $type == "search" ]; then
-        print_and_log "Type search coping indexer-webapp to indexer-webapp-presenation "
-	run cp -r $tomcat_base/webapps/indexer-webapp $tomcat_base/webapps/indexer-webapp-presentation
+         if [[ -L $tomcat_base/$app_base/indexer-webapp-presentation && -d $tomcat_base/$app_base/indexer-webapp-presentation ]]; then
+            print_and_log "Found $tomcat_base/$app_base/indexer-webapp-presentation so deleting it"
+            rm -rf $tomcat_base/$app_base/indexer-webapp-presentation
+         fi
+        run cd $tomcat_base/$app_base/
+        run ln -s indexer-webapp $tomcat_base/$app_base/indexer-webapp-presentation
       fi
       ;;
     
