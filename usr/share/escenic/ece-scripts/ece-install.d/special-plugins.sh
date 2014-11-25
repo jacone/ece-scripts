@@ -15,6 +15,13 @@ function configure_seo(){
    fi
 }
 
+function configure_mobile_studio(){
+  print_and_log "Configuring mobile-studio ..."
+  if [ -d $tomcat_base/webapps/engine-webservice ]; then
+     cd $tomcat_base/webapps/
+     ln -s webservice $tomcat_base/webapps/mobile-webservice
+  fi
+}
 
 function configure_special_plugins(){
   print_and_log "Checking for special plugins ..."
@@ -24,6 +31,9 @@ function configure_special_plugins(){
   
      if [[ "$ear_download_list" =~ "seo-" ]]; then
         configure_seo
+     fi
+     if [[ "$ear_download_list" =~ "mobile-studio-" ]]; then
+        configure_mobile_studio
      fi
   fi
 }
