@@ -17,7 +17,7 @@ function configure_seo(){
 
 function configure_mobile_studio(){
   print_and_log "Configuring mobile-studio ..."
-  if [ -d $tomcat_base/webapps/engine-webservice ]; then
+  if [ -d $tomcat_base/webapps/webservice ]; then
      cd $tomcat_base/webapps/
      ln -s webservice $tomcat_base/webapps/mobile-webservice
   fi
@@ -27,8 +27,6 @@ function configure_special_plugins(){
   print_and_log "Checking for special plugins ..."
   if [[ $type == "engine" && -e $escenic_conf_dir/ece-$instance_name.conf ]]; then
      source $escenic_conf_dir/ece-$instance_name.conf
-     print_and_log "Found tomcat base : $tomcat_base"
-  
      if [[ "$ear_download_list" =~ "seo-" ]]; then
         configure_seo
      fi
