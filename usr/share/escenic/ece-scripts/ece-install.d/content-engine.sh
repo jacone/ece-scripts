@@ -128,6 +128,7 @@ function install_ece_instance() {
     set_up_content_engine_cron_jobs
     install_memory_cache
     assemble_deploy_and_restart_type
+    configure_special_plugins
   fi
 
   update_type_instances_to_start_up
