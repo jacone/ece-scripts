@@ -6,8 +6,8 @@ function configure_seo(){
     print_and_log "Configuring seo plugin ..."
     xmlstarlet ed -P -L \
        -s /Context -t elem -n TMP -v '' \
-       -i //TMP -t attr -n name -v escenic/solr-base-uri \
-       -i //TMP -t attr -n value -v http://${search_host}:${search_port}/solr/collection1 \
+       -i //TMP -t attr -n name -v escenic/presentation-solr-base-uri \
+       -i //TMP -t attr -n value -v http://${search_host}:${search_port}/solr/presentation \
        -i //TMP -t attr -n type -v java.lang.String \
        -i //TMP -t attr -n override -v false \
        -r //TMP -v Environment \
