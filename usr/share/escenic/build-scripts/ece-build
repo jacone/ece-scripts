@@ -7,7 +7,7 @@
 ################################################################################
 
 # common variables
-ece_scripts_version=1.0-2014-10-29-lean-1072
+ece_scripts_version="straight-from-github"
 ece_scripts_home=/usr/share/escenic/ece-scripts
 log=~/ece-build.log
 
