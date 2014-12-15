@@ -14,9 +14,9 @@ mariadb_ubuntu_gpg_key=CBCB082A1BB943DB
 function get_ubuntu_supported_list() {
   local url=$1
   curl -s $url | \
-      grep "DIR" | \
-      sed -e 's#.*href=\"\(.*\)\">.*</a>.*#\1#' -e 's#/##g' | \
-      grep -v apt
+      html2 | \
+      sed -n '/\/a\/@href=[A-Za-z0-9]*\/$/s/.*=//p' | \
+      sed -n '/\/$/s/\/$//p'
 }
 
 function get_percona_supported_list() {
