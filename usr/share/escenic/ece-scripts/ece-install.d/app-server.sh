@@ -100,7 +100,23 @@ function set_up_app_server() {
     indexer_ws_uri=http://${HOSTNAME}:${appserver_port}/indexer-webservice/index/
   fi
 
-  leave_trail "trail_indexer_ws_uri=${indexer_ws_uri}"
+  if [ $fai_enabled -eq 0 ]; then
+    print "Really sorry to bug you again with a similar question:"
+    print "What's the URI to the indexer-webservice for presentation search? (this is typically"
+    print "something like http://editor1/indexer-webservice/presentation-index/)"
+    echo -n "Your choice [http://${HOSTNAME}:${default_app_server_port}/indexer-webservice/presentation-index/]> "
+    read user_presentation_indexer_ws_uri
+  else
+    user_presentation_indexer_ws_uri=${fai_presentation_search_indexer_ws_uri}
+  fi
+
+  if [ -n "$user_presentation_indexer_ws_uri" ]; then
+    presentation_indexer_ws_uri=$user_presentation_indexer_ws_uri
+  else
+    presentation_indexer_ws_uri=http://${HOSTNAME}:${appserver_port}/indexer-webservice/presentation-index/
+  fi
+
+  leave_trail "trail_presentation_indexer_ws_uri=${presentation_indexer_ws_uri}"
 
   if [ $fai_enabled -eq 0 ]; then
     print "Last question, I promise!: Where does the search instance run?"
@@ -506,10 +522,10 @@ EOF
      cat >> $tomcat_base/conf/Catalina/localhost/indexer-webapp-presentation.xml <<EOF
     <Context docBase="$\\{catalina.base}/webapps/indexer-webapp">
       <Environment name="escenic/solr-base-uri" value="http://${search_host}:${search_port}/solr/presentation/" type="java.lang.String" override="true"/>
-      <Environment name="escenic/indexer-webservice" value="${indexer_ws_uri}" type="java.lang.String" override="true"/>
+      <Environment name="escenic/indexer-webservice" value="${presentation_indexer_ws_uri}" type="java.lang.String" override="true"/>
       <Environment name="escenic/index-update-uri" value="http://${search_host}:${search_port}/solr/presentation/update/" type="java.lang.String" override="true"/>
-      <Environment name="escenic/head-tail-storage-file" value=" $escenic_data_dir/engine/head-tail-presentation.index" type="java.lang.String" override="true"/>
-      <Environment name="escenic/failing-documents-storage-file" value=" $escenic_data_dir/engine/failures-presentation.index" type="java.lang.String" override="true"/>
+      <Environment name="escenic/head-tail-storage-file" value="$escenic_data_dir/engine/head-tail-presentation.index" type="java.lang.String" override="true"/>
+      <Environment name="escenic/failing-documents-storage-file" value="$escenic_data_dir/engine/failures-presentation.index" type="java.lang.String" override="true"/>
    </Context>
 EOF
    print_and_log "Finished adding context for indexer-webapp-presentation"
