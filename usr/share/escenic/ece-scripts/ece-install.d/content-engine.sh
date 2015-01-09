@@ -42,7 +42,7 @@ function get_publication_short_name_list() {
   elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
     deploy_white_list=${fai_all_deploy_white_list}
   fi
-
+	
   if [[ -z "$deploy_white_list" && \
     -n "${fai_publication_domain_mapping_list}" ]]; then
     for el in $fai_publication_domain_mapping_list; do
@@ -70,6 +70,50 @@ function get_publication_short_name_list() {
   done
 
   echo ${short_name_list}
+}
+
+function deploy_conf_package() {
+  if [ -z $fai_conf_url ]; then
+     return;
+  fi
+  local conf_file_url=$fai_conf_url
+
+  if [ ! -d $escenic_cache_dir ] ; then
+    mkdir -p $escenic_cache_dir
+  fi 
+
+  print_and_log "Downloading and installing $conf_file_url ..."
+
+  if [[ -n "${fai_conf_builder_http_user}" && \
+      -n "${fai_conf_builder_http_password}" ]]; then
+      local wget_auth="
+          --http-user $fai_conf_builder_http_user
+          --http-password $fai_conf_builder_http_password
+        "
+  fi
+
+  local conf_file=$escenic_cache_dir/$(basename $conf_file_url)
+
+  if [ -s $conf_file ] ; then
+    print_and_log "Using previously downloaded EAR file $conf_file"
+  else
+    print_and_log "Downloading $conf_file_url to $conf_file"
+    run wget $wget_auth $wget_opts $conf_file_url \
+      -O $conf_file
+  fi
+
+  if [ ! -s $conf_file ] ; then
+    rm $conf_file
+    print_and_log "Unable to download EAR file $conf_file_url," \
+      "aborting."
+    remove_pid_and_exit_in_error
+  fi
+
+  print_and_log "Installing $(basename $conf_file_url) ..."
+  local dpkg_opts=" --force-overwrite  --force-confold "
+  dpkg \
+    $dpkg_opts \
+    --install $conf_file
 }
 
 ## $1=<default instance name>
@@ -104,7 +148,7 @@ function install_ece_instance() {
     set_up_basic_nursery_configuration
     set_up_instance_specific_nursery_configuration
   fi
-
+  deploy_conf_package
   set_up_app_server
 
   # We set a WAR white list for all profiles except all in one
