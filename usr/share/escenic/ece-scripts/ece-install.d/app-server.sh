@@ -150,7 +150,7 @@ function set_up_app_server() {
   run tar xzf $download_dir/${tomcat_dir}.tar.gz
 
   if [ -e tomcat ]; then
-    run rm tomcat
+    run rm -r tomcat
   fi
   run ln --symbolic --force ${tomcat_dir} tomcat
 
