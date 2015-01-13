@@ -82,8 +82,6 @@ function deploy_conf_package() {
     mkdir -p $escenic_cache_dir
   fi 
 
-  print_and_log "Downloading and installing $conf_file_url ..."
-
   if [[ -n "${fai_conf_builder_http_user}" && \
       -n "${fai_conf_builder_http_password}" ]]; then
       local wget_auth="
@@ -95,7 +93,7 @@ function deploy_conf_package() {
   local conf_file=$escenic_cache_dir/$(basename $conf_file_url)
 
   if [ -s $conf_file ] ; then
-    print_and_log "Using previously downloaded EAR file $conf_file"
+    print_and_log "Using previously downloaded conf file $conf_file"
   else
     print_and_log "Downloading $conf_file_url to $conf_file"
     run wget $wget_auth $wget_opts $conf_file_url \
@@ -104,14 +102,14 @@ function deploy_conf_package() {
 
   if [ ! -s $conf_file ] ; then
     rm $conf_file
-    print_and_log "Unable to download EAR file $conf_file_url," \
+    print_and_log "Unable to download conf file $conf_file_url," \
       "aborting."
     remove_pid_and_exit_in_error
   fi
 
   print_and_log "Installing $(basename $conf_file_url) ..."
-  local dpkg_opts=" --force-overwrite  --force-confold "
-  dpkg \
+  local dpkg_opts=" --force-overwrite --force-confnew "
+  run dpkg \
     $dpkg_opts \
     --install $conf_file
 }
