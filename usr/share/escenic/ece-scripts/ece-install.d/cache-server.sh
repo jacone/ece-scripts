@@ -167,6 +167,7 @@ EOF
 backend analysis {
   .host = "${fai_analysis_host}";
   .port = "${fai_analysis_port-${default_app_server_port}}";
+  .max_connections = 50;
 }
 
 EOF
@@ -206,6 +207,7 @@ EOF
     cat >> $file <<EOF
   if (req.url ~ "^/analysis-logger/") {
     set req.backend = analysis;
+    return(pass);
   }
 EOF
   fi
