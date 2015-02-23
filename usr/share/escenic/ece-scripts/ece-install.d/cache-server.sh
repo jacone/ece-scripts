@@ -161,7 +161,7 @@ backend ${appserver_id}${i} {
 
 EOF
   done
-
+print_and_log "Found anaysis engine host : $fai_analysis_host"
   if [ -n "${fai_analysis_host}" ]; then
     cat >> $file <<EOF
 backend analysis {
