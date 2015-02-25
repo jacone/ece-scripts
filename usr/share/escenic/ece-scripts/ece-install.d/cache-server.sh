@@ -205,7 +205,7 @@ EOF
 
   if [ -n "${fai_analysis_host}" ]; then
     cat >> $file <<EOF
-  if (req.url ~ "^/analysis-logger/") {
+  if (req.url ~ "^/analysis-logger/Logger/" || req.url == "/analysis-logger/") {
     set req.backend = analysis;
     return(pass);
   }
