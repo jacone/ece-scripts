@@ -11,6 +11,7 @@
 ece_deploy_data_dir=/var/lib/escenic/$(basename $0)
 ece_deploy_download_dir=/var/cache/escenic
 log=/var/log/escenic/$(basename $0).log
+proxy_settings=""
 
 function ece_deploy_cancel_hook() {
   local the_dir=$ece_deploy_data_dir/$deployment_id
@@ -70,33 +71,51 @@ function bootstrap_thyself() {
 
 bootstrap_thyself
 
-function deploy_ear() {
-  local proxy_setings=""
-  if [ -n "$http_proxy" ]; then
-    proxy_settings="http_proxy=$http_proxy"
-  fi
-
+function deploy_engine() {
   for el in $engine_instance_list; do
-    su - $ece_unix_user -c \
-      "${proxy_settings} ece -i $el stop deploy clean start --uri $ear_uri"
+    if [ "$USER" != "$ece_unix_user" ]; then
+        su - $ece_unix_user -c \
+        "${proxy_settings} ece -i $el stop deploy clean start --uri $ear_uri"
+    else
+        ${proxy_settings} ece -i $el stop deploy clean start --uri $ear_uri
+    fi
     if [ ${PIPESTATUS[@]} -gt 0 ]; then
       exit 1
     fi
   done
-  
+}
+
+function deploy_search() {
   for el in $search_instance_list; do
-    su - $ece_unix_user -c \
-      "${proxy_settings} ece -i $el -t search stop deploy clean start --uri $ear_uri"
+     if [ "$USER" != "$ece_unix_user" ]; then
+        su - $ece_unix_user -c \
+        "${proxy_settings} ece -i $el -t search stop deploy clean start --uri $ear_uri"
+     else
+        ${proxy_settings} ece -i $el -t search stop deploy clean start --uri $ear_uri
+     fi
     exit_on_error "Running ece deploy as $ece_unix_user"
   done
 }
 
+function deploy_ear() {
+  if [ -n "$http_proxy" ]; then
+    proxy_settings="http_proxy=$http_proxy"
+    print_and_log "HTTP proxy found setting proxy settings to $proxy_settings"
+  fi
+  deploy_engine
+  deploy_search
+}
+
 function start_all_content_engine_instances() {
   for el in $engine_instance_list; do
-    su - $ece_unix_user -c \
+    if [ "$USER" != "$ece_unix_user" ]; then
+      su - $ece_unix_user -c \
       "${proxy_settings} ece -i $el restart"
+    else
+      ${proxy_settings} ece -i $el restart
+    fi
   done
-}  
+}
 
 function set_builder_user_and_password() {
   run source /etc/escenic/ece.conf
