@@ -1574,4 +1574,5 @@ phase_verify_user
 phase_clean_up
 phase_verify_project
 phase_release
+phase_deploy
 phase_shutdown
