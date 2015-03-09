@@ -170,7 +170,7 @@ function deploy_conf() {
       $dpkg_opts
   fi
 
-  dpkg \
+  sudo dpkg \
     $dpkg_opts \
     --install $ece_deploy_download_dir/$(basename $conf_package_uri)
 }
