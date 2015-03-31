@@ -147,7 +147,6 @@ function install_ece_instance() {
     set_up_instance_specific_nursery_configuration
   fi
   set_up_app_server
-  deploy_conf_package
 
   # We set a WAR white list for all profiles except all in one
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
@@ -171,6 +170,7 @@ function install_ece_instance() {
     install_memory_cache
     assemble_deploy_and_restart_type
     configure_special_plugins
+    deploy_conf_package
   fi
 
   update_type_instances_to_start_up
