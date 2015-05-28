@@ -256,12 +256,12 @@ function set_up_escenic-munin-plugins() {
 
   local dir=$(mktemp -d)
   (
+    run cp -r ../../munin/plugins/* $target_dir/usr/share/munin/plugins
     run download_uri_target_to_dir \
       https://github.com/mogsie/escenic-munin/tarball/master \
       $dir
     cd $dir
     tar xzf master
-    run cp -r ../../munin/plugins/* $target_dir/usr/share/munin/plugins
     run cp $dir/mogsie-escenic-munin*/*_ $target_dir/usr/share/munin/plugins
     run cp $dir/mogsie-escenic-munin*/README.md $doc_dir
     run cp $dir/mogsie-escenic-munin*/site/* $doc_dir
