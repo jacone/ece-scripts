@@ -1,0 +1,52 @@
+#!/bin/bash
+#
+
+#. $MUNIN_LIBDIR/plugins/plugin.sh
+info_file="/var/cache/periodic-check/site_length"
+sites=($(cat $info_file | cut -f 2 -d ' '))
+lengths=($(cat $info_file | cut -f 3 -d ' '))
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/stat ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 0
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+
+	echo 'graph_title sites length'
+	echo "graph_order " ${sites[@]//./_}
+	echo "graph_args --base 1000 -r --lower-limit 0 "
+	echo 'graph_vlabel Bytes'
+#	echo 'graph_scale no'
+	echo 'graph_info This graph shows length of different pages.'
+	echo 'graph_category system'
+	echo 'graph_period second'
+        for site in "${sites[@]}"; do
+    	  echo "${site//./_}.label $site"
+	  echo "${site//./_}.draw LINE2"
+	  echo "${site//./_}.min 0"
+	  echo "${site//./_}.type GAUGE"
+	  echo "${site//./_}.info length/size of $site in Bytes" 
+        done
+        exit 0
+fi
+
+# Note: Counters/derive need to report integer values.  Also we need
+# to avoid 10e+09 and the like %.0f should do this.
+
+cur_epoch=$(date +%s)
+sample_epoch=$(cat "$info_file" | head -n 1| cut -f 1 -d ' ')
+#add 90 seconds to compensate freshness.
+sample_epoch=$(echo "$sample_epoch + 90"| bc)
+
+if [ "$sample_epoch" -gt "$cur_epoch" ]; then
+  for i in $(seq 1 ${#sites[@]}); do
+    printf "%s.value %.0f\n" ${sites[$i-1]//./_} ${lengths[$i-1]}
+  done
+fi
+

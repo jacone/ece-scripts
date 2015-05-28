@@ -261,6 +261,7 @@ function set_up_escenic-munin-plugins() {
       $dir
     cd $dir
     tar xzf master
+    run cp ../../munin/plugins/* $target_dir/usr/share/munin/plugins
     run cp $dir/mogsie-escenic-munin*/*_ $target_dir/usr/share/munin/plugins
     run cp $dir/mogsie-escenic-munin*/README.md $doc_dir
     run cp $dir/mogsie-escenic-munin*/site/* $doc_dir
