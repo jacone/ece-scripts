@@ -195,7 +195,7 @@ function download_escenic_components()
           metadata=$(curl -s $repo/$(dirname $el)/maven-metadata.xml)
           local timestamp=$(xmlstarlet <<< "$metadata" sel -t -m /metadata/versioning/snapshot/timestamp -c 'text()')
           local buildnumber=$(xmlstarlet <<< "$metadata"  sel -t -m /metadata/versioning/snapshot/buildNumber -c 'text()')
-          #Now Check the the timestamp and buildnumber is not empty. If not then create the dist name with timestamp and buildnumber. 
+          #Now Check the the timestamp and buildnumber is not empty. If not then create the dist name with timestamp and buildnumber.
           if [[ -n $timestamp && -n $buildnumber ]]; then
           log "Found SNAPSHOT with $timestamp-$buildnumber in $el"
           el=$(dirname $el)/${name/SNAPSHOT/$timestamp-$buildnumber}
@@ -261,7 +261,7 @@ function install_packages_if_missing() {
 function install_common_os_packages()
 {
   print_and_log "Installing common OS packages ..."
-  local packages="curl wget unzip bc ca-certificates"
+  local packages="curl wget unzip bc ca-certificates xml2"
   local git_package=git
 
   if [ $on_debian_or_derivative -eq 1 ]; then
@@ -275,7 +275,7 @@ function install_common_os_packages()
   fi
 
   install_packages_if_missing $packages $git_package
-  assert_commands_available lsb_release curl host wget git unzip
+  assert_commands_available lsb_release curl host wget git unzip html2
 
   # all hosts need the system-info package, hence we'll install the
   # escenic-content-engine package here if on a Debian based
