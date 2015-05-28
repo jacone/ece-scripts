@@ -256,7 +256,7 @@ function set_up_escenic-munin-plugins() {
 
   local dir=$(mktemp -d)
   (
-    run cp -r ../../munin/plugins/* $target_dir/usr/share/munin/plugins
+    run cp -r ../../../../etc/munin/plugins/* $target_dir/etc/munin/plugins
     run download_uri_target_to_dir \
       https://github.com/mogsie/escenic-munin/tarball/master \
       $dir
