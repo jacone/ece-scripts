@@ -36,7 +36,6 @@ if [ "$filehead" == "$dbhead" ]; then
 else
   diff=$(($curr_epoch - $file_epoch))
   diff_min=$(($diff / 60))
-  echo "$diff $max_critical_diff"
   if [ "$diff" -ge "$max_critical_diff" ]; then
     indexer_running=-2
   elif [ "$diff" -ge "$max_warning_diff" ]; then
