@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# assumptions: indexer is running if head-tail file has max(documentID) or head-tail file is modified in 5 minutes.
+# if indexer is running, script will check the time difference between the last modification time of the head-tail file and 
+# last modification date mentioned in SearchIndex table for the documentID mentioned as a head in head-tail file
+
+#output
+#<time-stamp-epoch> <indexer_running> <yes/no/NO> <indexing time/age of head-tail file> <head from file> <head from DB> <comment>
+#
+
+head_tail_file="/var/lib/escenic/engine/head-tail.index"
+max_warning_diff=180 #3 minutes
+max_critical_diff=300 #5 minutes
+
+filehead=$(cat $head_tail_file | grep "head="| sed 's/.*head=after\/\([0-9][0-9]*\).*/\1/')
+file_epoch=$(stat --format "%Y" "$head_tail_file")
+
+dbhead=$(curl -isX PUT "http://uat.bjorgu.cust.vizrtsaas.com:8080/escenic-admin/pages/database/query.jsp?query=select%20max(documentID)%20from%20SearchIndex" | grep -A 2 ">max(documentID)"| tail -n 1 | sed 's/.*>\([0-9][-0-9]*\).*/\1/')
+curr_epoch=$(date +%s)
+
+function invalid_diff {
+  #valid difference must be more than 0 
+  re="^[-0-9]+$"
+  if [[ "$1" =~ $re ]] && [[ "$1" -ge 0 ]]; then
+    echo "0"
+    return 0
+  else
+    echo "1"
+    return 1
+  fi
+}
+
+indexer_running=0
+if [ "$filehead" == "$dbhead" ]; then 
+  indexer_running=1
+else
+  diff=$(($curr_epoch - $file_epoch))
+  diff_min=$(($diff / 60))
+  echo "$diff $max_critical_diff"
+  if [ "$diff" -ge "$max_critical_diff" ]; then
+    indexer_running=-2
+  elif [ "$diff" -ge "$max_warning_diff" ]; then
+    indexer_critical=-1
+  else
+    indexer_running=1
+  fi
+fi
+
+if [ "$indexer_running" == 1 ]; then
+
+  #dbdate=$(echo "select entryUpdated from SearchIndex si where documentID=(select max(documentID) from SearchIndex);"| sudo mysql ece5db | tail -n 2| tail -n 1)
+
+  dbdate=$(curl -isX PUT "http://uat.bjorgu.cust.vizrtsaas.com:8080/escenic-admin/pages/database/query.jsp?query=select%20entryUpdated%20from%20SearchIndex%20si%20where%20documentID%3D$filehead" | grep -A 2 ">entryUpdated"| tail -n 1 | sed 's/.*>\([0-9][-0-9 :-]*\).*/\1/')
+
+  db_epoch=$(date --date "$dbdate" +"%s")
+  diff=$(($file_epoch - $db_epoch))
+  diff_min=$(($diff / 60))
+
+  a=$(invalid_diff $diff)
+
+  if [ "$a" == 1 ]; then
+    echo "$curr_epoch indexer_running yes -1 $filehead $dbhead"
+  else
+    echo "$curr_epoch indexer_running yes $diff_min $filehead $dbhead"
+  fi
+elif [ "$indexer_running" == -1 ]; then
+  echo "$curr_epoch indexer_running no $diff_min $filehead $dbhead"
+elif [ "$indexer_running" == -2 ]; then
+  echo "$curr_epoch indexer_running NO $diff_min $filehead $dbhead"
+else
+  echo "indexer_running NO -1 $filehead $dbhead UNKNOWN"
+fi 
+
+

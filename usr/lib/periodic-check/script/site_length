@@ -32,4 +32,4 @@ for line in $sites; do
   fi
 done
 
-echo "$all_lines" > "$nagios_data_file"
+echo "$all_lines"

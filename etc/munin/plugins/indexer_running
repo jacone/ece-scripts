@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+
+#. $MUNIN_LIBDIR/plugins/plugin.sh
+info_file="/var/cache/periodic-check/indexer_running"
+state=$(cat $info_file | cut -f 3 -d ' ')
+age=$(cat $info_file | cut -f 4 -d ' ')
+
+if [ "$1" = "autoconf" ]; then
+	if [ -r /proc/stat ]; then
+		echo yes
+		exit 0
+	else
+		echo no
+		exit 0
+	fi
+fi
+
+if [ "$1" = "config" ]; then
+	echo 'graph_title indexing delay'
+	echo "graph_args --base 1000 -r --lower-limit 0 "
+	echo 'graph_vlabel Minutes'
+#	echo 'graph_scale no'
+	echo 'graph_info Shows the time to get a document indexed by Escenic search. This is basically time difference between update time of head-tail file and entryUpdated field in SearchIndex table.'
+	echo 'graph_category system'
+	echo 'graph_period second'
+	echo "indexing_delay.label time to index current document"
+	echo "indexing_delay.draw LINE2"
+	echo "indexing_delay.min 0"
+	echo "indexing_delay.type GAUGE"
+	echo "indexing_delay.info time in $site in Bytes" 
+fi
+
+# Note: Counters/derive need to report integer values.  Also we need
+# to avoid 10e+09 and the like %.0f should do this.
+
+cur_epoch=$(date +%s)
+sample_epoch=$(cat "$info_file" | head -n 1| cut -f 1 -d ' ')
+#add 90 seconds to compensate freshness.
+sample_epoch=$(echo "$sample_epoch + 90"| bc)
+
+if [ "$sample_epoch" -gt "$cur_epoch" ] && [ "$state" == "yes" ] && [ "$age" -ge 0 ]; then
+  printf "indexing_delay.value $age\n" 
+fi
+
