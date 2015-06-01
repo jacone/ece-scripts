@@ -18,7 +18,7 @@ init
 for line in $sites; do
   epoch=$(date +"%s")
   before=$(date +"%s.%N")
-  size=$(curl --connection-timeout $connection_timeout --max-time $max_time -s http://localhost:$tomcat_port -H "Host:$line"| wc -c)
+  size=$(curl --connect-timeout $connect_timeout --max-time $max_time -s http://localhost:$tomcat_port -H "Host:$line"| wc -c)
   after=$(date +"%s.%N")
   if [ "$size" == "" ]; then 
     size="0"

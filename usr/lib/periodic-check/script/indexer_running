@@ -15,7 +15,7 @@ max_critical_diff=300 #5 minutes
 filehead=$(cat $head_tail_file | grep "head="| sed 's/.*head=after\/\([0-9][0-9]*\).*/\1/')
 file_epoch=$(stat --format "%Y" "$head_tail_file")
 
-dbhead=$(curl -isX PUT "http://localhost:8080/escenic-admin/pages/database/query.jsp?query=select%20max(documentID)%20from%20SearchIndex" | grep -A 2 ">max(documentID)"| tail -n 1 | sed 's/.*>\([0-9][-0-9]*\).*/\1/')
+dbhead=$(curl --connect-timeout $connect_timeout --max-time $max_time -isX PUT "http://localhost:8080/escenic-admin/pages/database/query.jsp?query=select%20max(documentID)%20from%20SearchIndex" | grep -A 2 ">max(documentID)"| tail -n 1 | sed 's/.*>\([0-9][-0-9]*\).*/\1/')
 curr_epoch=$(date +%s)
 
 function invalid_diff {
@@ -49,7 +49,7 @@ if [ "$indexer_running" == 1 ]; then
 
   #dbdate=$(echo "select entryUpdated from SearchIndex si where documentID=(select max(documentID) from SearchIndex);"| sudo mysql ece5db | tail -n 2| tail -n 1)
 
-  dbdate=$(curl -isX PUT "http://localhost:8080/escenic-admin/pages/database/query.jsp?query=select%20entryUpdated%20from%20SearchIndex%20si%20where%20documentID%3D$filehead" | grep -A 2 ">entryUpdated"| tail -n 1 | sed 's/.*>\([0-9][-0-9 :-]*\).*/\1/')
+  dbdate=$(curl --connect-timeout $connect_timeout --max-time $max_time -isX PUT "http://localhost:8080/escenic-admin/pages/database/query.jsp?query=select%20entryUpdated%20from%20SearchIndex%20si%20where%20documentID%3D$filehead" | grep -A 2 ">entryUpdated"| tail -n 1 | sed 's/.*>\([0-9][-0-9 :-]*\).*/\1/')
 
   db_epoch=$(date --date "$dbdate" +"%s")
   diff=$(($file_epoch - $db_epoch))
