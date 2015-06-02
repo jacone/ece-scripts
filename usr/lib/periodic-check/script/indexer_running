@@ -8,9 +8,21 @@
 #<time-stamp-epoch> <indexer_running> <yes/no/NO> <indexing time/age of head-tail file> <head from file> <head from DB> <comment>
 #
 
+this_script=$(basename $0)
+
+function init {
+  . "$(dirname $0)/../main.conf"
+  if [ -f "$(dirname $0)/../conf/$this_script.conf" ]; then
+    . "$(dirname $0)/../conf/$this_script.conf"
+  fi
+}
+
+
 head_tail_file="/var/lib/escenic/engine/head-tail.index"
 max_warning_diff=180 #3 minutes
 max_critical_diff=300 #5 minutes
+
+init
 
 filehead=$(cat $head_tail_file | grep "head="| sed 's/.*head=after\/\([0-9][0-9]*\).*/\1/')
 file_epoch=$(stat --format "%Y" "$head_tail_file")
