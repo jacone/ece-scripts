@@ -20,6 +20,7 @@ if [ "$1" = "config" ]; then
 	echo 'graph_title indexing delay'
 	echo "graph_args --base 1000 -r --lower-limit 0 "
 	echo 'graph_vlabel Minutes'
+        echo 'graph_order indexing_delay'
 #	echo 'graph_scale no'
 	echo 'graph_info Shows the time to get a document indexed by Escenic search. This is basically time difference between update time of head-tail file and entryUpdated field in SearchIndex table.'
 	echo 'graph_category system'
@@ -29,6 +30,7 @@ if [ "$1" = "config" ]; then
 	echo "indexing_delay.min 0"
 	echo "indexing_delay.type GAUGE"
 	echo "indexing_delay.info time in $site in Bytes" 
+        exit 0;
 fi
 
 # Note: Counters/derive need to report integer values.  Also we need
