@@ -16,13 +16,22 @@ function init {
   fi
 }
 
+head_56pattern=".*head=[0-9-][0-9]*.*"
+head_57pattern=".*head=after/[0-9-]*.*"
 head_tail_file="/var/lib/escenic/engine/head-tail.index"
 max_warning_diff=180 #3 minutes
 max_critical_diff=300 #5 minutes
 
 init
 
-filehead=$(cat $head_tail_file | grep "head="| sed 's/.*head=after\/\([0-9][0-9]*\).*/\1/')
+filehead=$(cat $head_tail_file | grep "head=")
+if [[ $filehead =~ $head_56pattern ]]; then
+  echo "hello"
+  filehead=$(cat $head_tail_file | grep "head="| sed 's/.*head=\([0-9][0-9]*\).*/\1/')
+elif [[ $filehead =~ $head_57pattern ]]; then
+  filehead=$(cat $head_tail_file | grep "head="| sed 's/.*head=after\/\([0-9][0-9]*\).*/\1/')
+fi
+
 file_epoch=$(stat --format "%Y" "$head_tail_file")
 
 dbhead=$(curl --connect-timeout $connect_timeout --max-time $max_time -isX PUT "http://localhost:8080/escenic-admin/pages/database/query.jsp?query=select%20max(documentID)%20from%20SearchIndex" | grep -A 2 ">max(documentID)"| tail -n 1 | sed 's/.*>\([0-9][-0-9]*\).*/\1/')
