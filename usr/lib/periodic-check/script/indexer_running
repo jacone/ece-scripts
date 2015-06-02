@@ -9,14 +9,12 @@
 #
 
 this_script=$(basename $0)
-
 function init {
   . "$(dirname $0)/../main.conf"
   if [ -f "$(dirname $0)/../conf/$this_script.conf" ]; then
     . "$(dirname $0)/../conf/$this_script.conf"
   fi
 }
-
 
 head_tail_file="/var/lib/escenic/engine/head-tail.index"
 max_warning_diff=180 #3 minutes
