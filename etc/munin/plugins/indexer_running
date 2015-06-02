@@ -6,16 +6,6 @@ info_file="/var/cache/periodic-check/indexer_running"
 state=$(cat $info_file | cut -f 3 -d ' ')
 age=$(cat $info_file | cut -f 4 -d ' ')
 
-if [ "$1" = "autoconf" ]; then
-	if [ -r /proc/stat ]; then
-		echo yes
-		exit 0
-	else
-		echo no
-		exit 0
-	fi
-fi
-
 if [ "$1" = "config" ]; then
 	echo 'graph_title indexing delay'
 	echo "graph_args --base 1000 -r --lower-limit 0 "
