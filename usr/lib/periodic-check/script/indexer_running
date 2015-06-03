@@ -9,28 +9,29 @@
 #
 
 this_script=$(basename $0)
+
 function init {
   . "$(dirname $0)/../main.conf"
   if [ -f "$(dirname $0)/../conf/$this_script.conf" ]; then
     . "$(dirname $0)/../conf/$this_script.conf"
   fi
 }
-
 head_56pattern=".*head=[0-9-][0-9]*.*"
 head_57pattern=".*head=after/[0-9-]*.*"
 head_tail_file="/var/lib/escenic/engine/head-tail.index"
 max_warning_diff=180 #3 minutes
 max_critical_diff=300 #5 minutes
-
 init
+
+#filehead=$(cat $head_tail_file | grep "head="| sed 's/.*head=after\/\([0-9][0-9]*\).*/\1/')
 
 filehead=$(cat $head_tail_file | grep "head=")
 if [[ $filehead =~ $head_56pattern ]]; then
-  echo "hello"
   filehead=$(cat $head_tail_file | grep "head="| sed 's/.*head=\([0-9][0-9]*\).*/\1/')
 elif [[ $filehead =~ $head_57pattern ]]; then
   filehead=$(cat $head_tail_file | grep "head="| sed 's/.*head=after\/\([0-9][0-9]*\).*/\1/')
 fi
+
 
 file_epoch=$(stat --format "%Y" "$head_tail_file")
 
@@ -39,8 +40,8 @@ curr_epoch=$(date +%s)
 
 function invalid_diff {
   #valid difference must be more than 0 
-  re="^[-0-9]+$"
-  if [[ "$1" =~ $re ]] && [[ "$1" -ge 0 ]]; then
+  re="^[-0-9][0-9]*$"
+  if [[ $1 =~ $re ]] && [[ "$1" -ge 0 ]] && [[ $1 -le 10 ]]; then
     echo "0"
     return 0
   else
@@ -69,7 +70,6 @@ if [ "$indexer_running" == 1 ]; then
   #dbdate=$(echo "select entryUpdated from SearchIndex si where documentID=(select max(documentID) from SearchIndex);"| sudo mysql ece5db | tail -n 2| tail -n 1)
 
   dbdate=$(curl --connect-timeout $connect_timeout --max-time $max_time -isX PUT "http://localhost:8080/escenic-admin/pages/database/query.jsp?query=select%20entryUpdated%20from%20SearchIndex%20si%20where%20documentID%3D$filehead" | grep -A 2 ">entryUpdated"| tail -n 1 | sed 's/.*>\([0-9][-0-9 :-]*\).*/\1/')
-
   db_epoch=$(date --date "$dbdate" +"%s")
   diff=$(($file_epoch - $db_epoch))
   diff_min=$(($diff / 60))
@@ -88,5 +88,4 @@ elif [ "$indexer_running" == -2 ]; then
 else
   echo "indexer_running NO -1 $filehead $dbhead UNKNOWN"
 fi 
-
 
