@@ -1,6 +1,6 @@
 
 #+TITLE: Escenic Installer User Guide
-#+AUTHOR: Vizrt Online / The SaaS Team
+#+AUTHOR: Escenic / The SaaS Team
 #+OPTIONS: H:6 num:5 toc:2
 
 * NAME
@@ -1031,7 +1031,7 @@ the *ece-install.conf*:
   the *ece-install* command downloads. If you wish to turn this
   feature off, set this to *0*.
 
-- *fai\_server\_java\_version* The java version to use. 
+- *fai\_server\_java\_version* The java version to use.
   Only allowable values are 1.6 and 1.7.
   The default is 1.6
 

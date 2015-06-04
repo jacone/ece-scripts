@@ -424,7 +424,7 @@ function print_status_and_next_steps()
     print_next_step_list
 
     print $'\n'"Enjoy your time with Escenic Content Engine!"$'\n'
-    print "-$(red Vizrt) Online"
+    print "-$(red Escenic)"
 }
 
 function check_for_required_downloads()
