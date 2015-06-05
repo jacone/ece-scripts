@@ -863,7 +863,9 @@ function common_post_install() {
     fi
   fi
 
-  install_system_info
+  if [ ${fai_system_info_skip-0} -eq 1 ]; then
+      install_system_info
+  fi
   set_correct_permissions
 
   print_status_and_next_steps
