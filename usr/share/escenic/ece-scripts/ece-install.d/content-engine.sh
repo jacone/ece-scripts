@@ -216,7 +216,7 @@ function create_ear_download_list() {
     # or com.escenic.plugins.forum:forum:zip:3.2.1.132293
     # groupid:artifactid:[packaging:[classifier:]]version
 
-    # chomp groupid: --> artifactid:[packaging:[classifier:]]version 
+    # chomp groupid: --> artifactid:[packaging:[classifier:]]version
     groupid=${coordinate/:*}
     coordinate=${coordinate#${groupid}:}
 
@@ -303,6 +303,10 @@ function set_up_engine_and_plugins() {
     # FIXME el will never be engine-* because it's the technet download list.  Should
     # this be [[ "$file" == ....
     if [[ "$el" == engine-* ]]; then
+      continue
+    fi
+    # We handle AT explicitly in set_up_assembly_tool
+    if [[ ${file} == assemblytool* ]]; then
       continue
     fi
     run unzip -q -u -o $download_dir/$file
@@ -560,7 +564,7 @@ EOF
   fi
 
   file=$common_nursery_dir/com/escenic/webstart/StudioConfig.properties
-  
+
   cat >> $file <<EOF
 # This font have been tested and works with (at least): English,
 # Norwegian & Tamil. The font comes with (at least) MS Office and OS X
