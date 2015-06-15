@@ -1,23 +1,15 @@
 # ece-install module for installing the memory cache
 
-memcached_java_lib_url=https://github.com/downloads/gwhalin/Memcached-Java-Client/java_memcached-release_2.5.3.jar
-
 function install_memory_cache()
 {
   print "Installing a distributed memory cache on $HOSTNAME ..."
-  
+
   install_packages_if_missing "memcached"
   if [ $on_redhat_or_derivative -eq 1 ]; then
     run /etc/init.d/memcached restart
   fi
   
   assert_commands_available memcached
-
-  print_and_log "Downloading the memcached java library ..."
-  curl_download_uri_target_to_dir $memcached_java_lib_url $download_dir
-
-  make_dir ${escenic_root_dir}/assemblytool/lib
-  run cp $(basename $memcached_java_lib_url) ${escenic_root_dir}/assemblytool/lib
   memcached_set_up_common_nursery
 
   # ece deploy will set up the necessary in-publication Nursery
