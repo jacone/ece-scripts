@@ -15,7 +15,7 @@
 #################################################################
 # Usage:
 # * copy this script to /etc/init.d/ece
-# 
+#
 # * copy its configuration file to /etc/default/ece (or
 # * /etc/conf.d/ece on Gentoo based disitributions)
 #
@@ -77,10 +77,13 @@ function ensure_dirs_are_ok()
         if [ ! -d $el ]; then
             mkdir -p $el
         fi
-        
-        chown --changes $ece_unix_user:$ece_unix_group $el
-    done
 
+        if [[ ${el} == "/var/cache"* || ${el} == "/var/lib"* ]]; then
+            chown --changes $ece_unix_user:$ece_unix_group $el
+        else
+            chown --recursive --changes $ece_unix_user:$ece_unix_group $el
+        fi
+    done
 }
 
 function ensure_ece_script_is_ok()
@@ -92,7 +95,7 @@ function ensure_ece_script_is_ok()
         echo "$ece_script needs to be executable (do: chmod +x $ece_script)"
         exit 1
     fi
-    
+
 }
 
 function execute_command()
@@ -100,11 +103,11 @@ function execute_command()
     if [ $enable_rmi_hub -eq 1 ]; then
         su - $ece_unix_user -c "$ece_script -t rmi-hub $1"
     fi
-    
+
     for el in $engine_instance_list; do
         su - $ece_unix_user -c "$ece_script -t engine -i $el $1"
     done
-    
+
     for el in $search_instance_list; do
         su - $ece_unix_user -c "$ece_script -t search -i $el $1"
     done
