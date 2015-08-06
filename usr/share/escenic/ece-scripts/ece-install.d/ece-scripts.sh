@@ -12,7 +12,7 @@ function install_ece_scripts_with_git() {
   else
     run git clone $ece_scripts_git_source
   fi
-  
+
   run cp -r ece-scripts/usr/* /usr/
   run cp -r ece-scripts/etc/bash_completion.d/ece /etc/bash_completion.d/
   run cp -r ece-scripts/etc/init.d/* /etc/init.d/
@@ -25,7 +25,7 @@ function install_ece_scripts_with_git() {
     fi
     run cp $el /etc/default/
   done
-  
+
   for el in ece-scripts/etc/escenic/*; do
     local file=/etc/escenic/$(basename $el)
     if [ -e $file ]; then
@@ -73,7 +73,7 @@ function set_up_ece_scripts()
   set_conf_file_value heap_dump_dir ${escenic_crash_dir} ${file}
   set_conf_file_value java_home ${java_home} ${file}
   set_conf_file_value log_dir ${escenic_log_dir} ${file}
-  set_conf_file_value pid_dir ${escenic_run_dir} ${file}
+  set_conf_file_value run_dir ${escenic_run_dir} ${file}
   set_conf_file_value rmi_hub_conf ${escenic_conf_dir}/rmi-hub ${file}
   set_conf_file_value solr_home ${escenic_data_dir}/solr ${file}
   set_conf_file_value ece_security_configuration_dir \
