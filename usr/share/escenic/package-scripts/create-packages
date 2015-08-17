@@ -119,7 +119,6 @@ function set_up_escenic-build-scripts() {
   make_dir $target_dir/usr/bin
   run cp ../build-scripts/ece-build $target_dir/usr/bin/ece-build
   run cp ../build-scripts/ece-builder $target_dir/usr/bin/ece-builder
-  run cp ../build-scripts/ece-local-builder $target_dir/usr/bin/ece-local-builder
   run cp ../build-scripts/ece-build-guide $target_dir/usr/bin/ece-build-guide
 }
 
@@ -234,22 +233,31 @@ function set_up_escenic-check-mk-server-plugins() {
 
 function set_up_escenic-check-mk-plugins() {
   make_dir $target_dir/usr/lib/check_mk_agent/local
+  make_dir $target_dir/usr/lib/check_mk_agent/plugins
   make_dir $target_dir/etc/cron.d $target_dir/usr/lib/periodic-check $target_dir/var/cache/periodic-check
+#  chown nagios:nagios "$target_dir/var/cache/periodic-check"
+#  chown nagios:nagios "$target_dir/usr/lib/periodic-check"
+  run cp -r ../../../lib/check_mk_agent/plugins/* \
+    $target_dir/usr/lib/check_mk_agent/plugins/
   run cp -r ../../../lib/check_mk_agent/local/* \
     $target_dir/usr/lib/check_mk_agent/local/
   run cp -r ../../../lib/periodic-check/* \
     $target_dir/usr/lib/periodic-check/
   run cp  ../../../../etc/cron.d/periodic-check \
     $target_dir/etc/cron.d/periodic-check
+  run cp  ../../../../var/cache/periodic-check/* \
+    $target_dir/var/cache/periodic-check/
 }
 
 function set_up_escenic-munin-plugins() {
   make_dir $target_dir/usr/share/munin/plugins
+  make_dir $target_dir/etc/munin/plugins
   local doc_dir=$target_dir/usr/share/doc/escenic/escenic-munin-plugin
   make_dir $doc_dir
 
   local dir=$(mktemp -d)
   (
+    run cp -r ../../../../etc/munin/plugins/* $target_dir/etc/munin/plugins
     run download_uri_target_to_dir \
       https://github.com/mogsie/escenic-munin/tarball/master \
       $dir

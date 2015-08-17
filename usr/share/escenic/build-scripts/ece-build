@@ -574,7 +574,6 @@ function git_checkout
   if [ $local_mode == false ]; then
   clean_up
   run_wrapper git checkout master
-  run_wrapper git remote update
   udpate_repository
   clean_up
   # git checkout
@@ -584,12 +583,14 @@ function git_checkout
     if [ $clean_repo -eq 1 ]; then
       clean_up
     fi
+    if [[ "$git_path" == "" ]]; then
+        branch_name=master
+        git_path="-b master"
+    fi
     if [ $update_repo -eq 1 ]; then
-      if [[ "$git_path" == "" ]]; then
-        run_wrapper git checkout master
-      fi
       udpate_repository
-    fi 
+    fi
+    checkout_repo 
     run_wrapper cp -rf $project_src_master_dir $project_src_dir
  fi
   cd $project_src_dir
@@ -606,7 +607,14 @@ function git_checkout
 ## Git update repository 
 function udpate_repository
 {
+  run_wrapper git remote update
   run_wrapper git fetch
+  checkout_repo
+  run_wrapper git pull
+}
+
+function checkout_repo
+{
   if [[ "$git_path" != "" ]]; then
     git show-ref --quiet --verify "refs/heads/$branch_name"
     if [ $? = 0 ]; then
@@ -615,7 +623,6 @@ function udpate_repository
       run_wrapper git checkout -b $branch_name origin/$branch_name
     fi
   fi
-  run_wrapper git pull
 }
 
 

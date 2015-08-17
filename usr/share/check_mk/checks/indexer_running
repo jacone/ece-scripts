@@ -25,59 +25,52 @@
 # Boston, MA 02110-1301 USA.
 
 # expected line is
-# <epoch> <site> <site-size in bytes> <time in seconds>
+#<time-stamp-epoch> indexer_running <yes/no/NO> <indexing time/age of head-tail file> <head from file> <head from DB> <comment>
 # 
 
 import time
 
-def inventory_site_length(info):
+def inventory_indexer_running(info):
     items = []
     for line in info:
-        item = "site length of "+line[1]
+        item = line[1]
         items.append((item, None))
     return items
 
 
-def check_site_length(item, params, info):
+def check_indexer_running(item, params, info):
     for line in info:
         state=3
-        site="at"
-        size=0.0
-        load_time=0.0
-        msg="No data or site_length check is not working properly." + line[1]
+        msg="No data for " + line[1]
         result=state, msg
-        if ("site length of " + line[1]) == item:
-#            try:
+        if line[1] == item:
             sample_epoch=int(line[0])
-#            except ValueError:              
-#                return state, "Data format is not correct. Expected <epoch> <site> <size> <loading time>"
+            running=line[2]
+            age=line[3]
+            filehead=line[4]
+            dbhead=line[5]
+#            comment=line[6:]
             curr_epoch=int(time.time())
             if (sample_epoch + 90) < curr_epoch:
-                size=0
-                load_time=0
                 state=2             
                 msg="Data is not updated."
                 result=state, msg
                 return result
-            size=float(line[2])/1024
-            load_time=float(line[3])
-            str_size="{:.2f}".format(size)
-            str_time="{:.2f}".format(load_time)
             #msg=" ".join(str(w) for w in line[2:])
-            if size <= 0:
+            if running == "NO":
                 state=2
-                msg="CRITICAL. Webpage is not available from tomcat." 
-            elif size < 50:
-                state=2
-                msg="CRITICAL. Webpage is smaller than 50 KB from tomcat port."
+                msg="CRITICAL. Stopped for "+ age +" min. Head in file:"+ filehead +" and DB:" + dbhead  
+            elif running == "no":
+                state=1
+                msg="WARNING. Stopped for "+ age +" min. Head in file:"+ filehead +" and DB:" + dbhead
             else:
                 state=0
-                msg="OK. "+ str_size +" KB in "+ str_time+" sec."
+                msg="OK. Last index took "+ age +" min. Head in file:"+ filehead +" and DB:" + dbhead
             result=state, msg
             return result
 
-check_info['site_length'] = (
-        check_site_length,
+check_info['indexer_running'] = (
+        check_indexer_running,
         "%s",
         1,
-        inventory_site_length)
+        inventory_indexer_running)

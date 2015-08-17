@@ -21,7 +21,7 @@ function check_trail() {
     source $el
     for var in $vars ; do
       if [[ $var =~ ^.*_port$ ]] ; then
-        name=${var#trail_}
+        local name=${var#trail_}
         name=${name%_port}
         check_port_listening $name ${!var}
         check_port_status $name ${!var}
@@ -32,9 +32,9 @@ function check_trail() {
 }
 
 function check_port_listening() { # foo 4040
-  name=$1
-  port=$2
-  listening=$(sudo -n lsof -s TCP:LISTEN -i 4:$port -n | tail -n +2 | wc -l)
+  local name=$1
+  local port=$2
+  local listening=$(sudo -n lsof -s TCP:LISTEN -i 4:$port -i 6:$port -n | tail -n +2 | wc -l)
   if [ $listening -eq 0 ] ; then
     echo "2 port_${name}_${port}_listen - CRITICAL: not listening on $name port $port"
     return;
@@ -44,9 +44,9 @@ function check_port_listening() { # foo 4040
 }
 
 function check_port_status() { # foo 4040
-  name=$1
-  port=$2
-  established=$(sudo -n lsof -s TCP:ESTABLISHED -i 4:$port -n | tail -n +2 | wc -l)
+  local name=$1
+  local port=$2
+  local established=$(sudo -n lsof -s TCP:ESTABLISHED -i 4:$port -i 6:$port -n | tail -n +2 | wc -l)
   if [ $established -gt $critical ] ; then
     echo "2 port_${name}_${port}_established - CRITICAL: $established established connections to on $name port $port"
     return;

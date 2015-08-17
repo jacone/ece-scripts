@@ -207,7 +207,7 @@ function download_escenic_components()
           run wget $wget_opts $repo/$el -O $targetname
           break
         else
-          log "$(basename $el) not found"
+          log "$(basename $el) not found using $repo/$el"
         fi
       done
     done
@@ -505,8 +505,6 @@ function read_user_input()
 "$PROFILE_RMI_HUB - RMI hub"
 "$PROFILE_SEARCH_SERVER - Search server (Solr + indexer-webapp)"
 "$PROFILE_WIDGET_FRAMEWORK - Install Widget Framework."
-"$PROFILE_MONITORING_SERVER - A monitoring server (web server +"\
-" Munin gatherer)"
 "$PROFILE_RESTORE_FROM_BACKUP - Restore from backup"\
 " (DB, data files, binaries, conf & publications)"
     )
@@ -587,7 +585,7 @@ function check_software_credentials() {
   # if the WF credentials are set, we check to see if they're OK
   if [ -n "${wf_user}" -a -n "${wf_password}" ]; then
     print_and_log "Verifying that Widget Framework credentials are OK ..."
-    local url=http://repo.escenic.com
+    local url=http://maven.vizrt.com
     local notok=$(
       is_unauthorized_to_access_url \
         ${wf_user} \
@@ -849,19 +847,6 @@ function add_ece_init_to_runlevels() {
 function common_post_install() {
   add_ece_init_to_runlevels
 
-  if [ $install_profile_number -ne $PROFILE_WIDGET_FRAMEWORK -a \
-    $install_profile_number -ne $PROFILE_CREATE_PUBLICATION -a \
-    $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP ]; then
-
-    if [[ "${fai_monitoring_node_munin_skip}" != "1" ]]; then
-      install_munin_node
-    fi
-
-    if [[ $install_profile_number != $PROFILE_MONITORING_SERVER &&
-          "${fai_monitoring_node_nagios_skip}" != "1" ]]; then
-      install_nagios_node
-    fi
-  fi
 
   if [ ${fai_system_info_skip-0} -eq 1 ]; then
       install_system_info
@@ -1078,19 +1063,12 @@ if [ ${fai_enabled-0} -eq 1 ]; then
     if [ ${fai_cache_install-0} -eq 1 ]; then
         install_profile_number=$PROFILE_CACHE_SERVER
         install_cache_server
-        install_web_server 0
         no_fai_profile=0
     fi
 
     if [ ${fai_publication_create-0} -eq 1 ]; then
         install_profile_number=$PROFILE_CREATE_PUBLICATION
         create_publication
-        no_fai_profile=0
-    fi
-
-    if [ ${fai_monitoring_install-0} -eq 1 ]; then
-        install_profile_number=$PROFILE_MONITORING_SERVER
-        install_monitoring_server
         no_fai_profile=0
     fi
 
@@ -1145,13 +1123,6 @@ if [ ${fai_enabled-0} -eq 1 ]; then
       no_fai_profile=0
     fi
 
-    if [ ${fai_monitoring_node_install-0} -eq 1 ]; then
-      install_profile_number=$PROFILE_MONITORING_NODE
-      # no need to call anything specific here as all the work is done
-      # in the common_post_install function.
-      no_fai_profile=0
-    fi
-
     if [ $no_fai_profile -eq 1 ]; then
         print_and_log "No install profile selected, be sure to have one of the "
         print_and_log "fai_<profile>_install=1 in your $conf_file"
@@ -1169,7 +1140,6 @@ else
             ;;
         $PROFILE_CACHE_SERVER)
             install_cache_server
-            install_web_server 0
             ;;
         $PROFILE_DB_SERVER)
             install_database_server
@@ -1191,10 +1161,6 @@ else
             ;;
         $PROFILE_CREATE_PUBLICATION)
             create_publication
-            ;;
-        $PROFILE_MONITORING_SERVER)
-            install_munin_gatherer
-            install_web_server 1
             ;;
         $PROFILE_RESTORE_FROM_BACKUP)
             restore_from_backup

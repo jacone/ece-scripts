@@ -148,7 +148,6 @@ function set_up_repository_if_possible() {
     fi
 
     if is_supported $code_name; then
-      print_and_log "Setting Up the $db_vendor Repository ..."
       add_gpg_key
 
       if [ $db_vendor = "mariadb" ]; then
@@ -164,7 +163,10 @@ function set_up_repository_if_possible() {
         leave_trail "trail_db_vendor=percona"
       fi
       pin
-      run apt-get update
+      if ! apt-cache > /dev/null show $mysql_server_packages; then
+        print_and_log "Setting Up the $db_vendor Repository ..."
+        run apt-get update
+      fi
     else
       print_and_log "The $db_vendor APT repsository doesn't have packages" \
         "for your Debian (or derivative) version with code" \
@@ -629,7 +631,7 @@ function create_ecedb() {
   run_db_scripts $ece_home/database/$db_product
   
   # ... then, find the plugins and run their SQL scripts
-  for archive in $technet_download_list; do
+  for archive in $technet_download_list $ear_download_list; do
     # don't re-run the engine scripts
     if [[ $(basename ${archive}) == engine* ]]; then
       continue
@@ -641,7 +643,7 @@ function create_ecedb() {
         head -2 | \
         awk '{print $2}' | \
         tail -1 | \
-        cut -d'/' -f1      
+        cut -d'/' -f1
     )
 
     # should always be one
