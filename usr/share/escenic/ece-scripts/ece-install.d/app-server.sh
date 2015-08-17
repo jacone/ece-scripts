@@ -100,7 +100,23 @@ function set_up_app_server() {
     indexer_ws_uri=http://${HOSTNAME}:${appserver_port}/indexer-webservice/index/
   fi
 
-  leave_trail "trail_indexer_ws_uri=${indexer_ws_uri}"
+  if [ $fai_enabled -eq 0 ]; then
+    print "Really sorry to bug you again with a similar question:"
+    print "What's the URI to the indexer-webservice for presentation search? (this is typically"
+    print "something like http://editor1/indexer-webservice/presentation-index/)"
+    echo -n "Your choice [http://${HOSTNAME}:${default_app_server_port}/indexer-webservice/presentation-index/]> "
+    read user_presentation_indexer_ws_uri
+  else
+    user_presentation_indexer_ws_uri=${fai_presentation_search_indexer_ws_uri}
+  fi
+
+  if [ -n "$user_presentation_indexer_ws_uri" ]; then
+    presentation_indexer_ws_uri=$user_presentation_indexer_ws_uri
+  else
+    presentation_indexer_ws_uri=http://${HOSTNAME}:${appserver_port}/indexer-webservice/presentation-index/
+  fi
+
+  leave_trail "trail_presentation_indexer_ws_uri=${presentation_indexer_ws_uri}"
 
   if [ $fai_enabled -eq 0 ]; then
     print "Last question, I promise!: Where does the search instance run?"
@@ -134,7 +150,7 @@ function set_up_app_server() {
   run tar xzf $download_dir/${tomcat_dir}.tar.gz
 
   if [ -e tomcat ]; then
-    run rm tomcat
+    run rm -r tomcat
   fi
   run ln --symbolic --force ${tomcat_dir} tomcat
 
@@ -144,6 +160,8 @@ function set_up_app_server() {
   if [ ! -d $tomcat_base ] ; then
     make_dir $tomcat_base
     run cp -r ${appserver_parent_dir}/${tomcat_dir}/conf $tomcat_base
+  elif [ -d $tomcat_base/conf ]; then 
+    run cp -nr ${appserver_parent_dir}/${tomcat_dir}/conf/* $tomcat_base/conf/
   fi
 
   for el in bin escenic/lib lib work logs temp webapps; do
@@ -462,44 +480,57 @@ EOF
     xmlstarlet ed -P -L \
        -s /Context -t elem -n TMP -v '' \
        -i //TMP -t attr -n name -v escenic/solr-base-uri \
-       -i //TMP -t attr -n value -v http://${search_host}:${search_port}/solr/ \
+       -i //TMP -t attr -n value -v http://${search_host}:${search_port}/solr/collection1 \
        -i //TMP -t attr -n type -v java.lang.String \
        -i //TMP -t attr -n override -v false \
        -r //TMP -v Environment \
        $tomcat_base/conf/context.xml
-
   fi
 
   if [ $install_profile_number -eq $PROFILE_SEARCH_SERVER -o \
-    $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+       $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
 
-    xmlstarlet ed -P -L \
+     xmlstarlet ed -P -L \
        -s /Context -t elem -n TMP -v '' \
        -i /Context/TMP -t attr -n name -v escenic/indexer-webservice \
        -i /Context/TMP -t attr -n value -v ""${indexer_ws_uri} \
        -i /Context/TMP -t attr -n type -v java.lang.String \
-       -i /Context/TMP -t attr -n override -v false \
+       -i /Context/TMP -t attr -n override -v true \
        -r //TMP -v Environment \
        -s /Context -t elem -n TMP -v '' \
        -i /Context/TMP -t attr -n name -v escenic/index-update-uri \
-       -i /Context/TMP -t attr -n value -v http://${search_host}:${search_port}/solr/update/ \
+       -i /Context/TMP -t attr -n value -v http://${search_host}:${search_port}/solr/collection1/update/ \
        -i /Context/TMP -t attr -n type -v java.lang.String \
-       -i /Context/TMP -t attr -n override -v false \
+       -i /Context/TMP -t attr -n override -v true \
        -r //TMP -v Environment \
        -s /Context -t elem -n TMP -v '' \
        -i /Context/TMP -t attr -n name -v escenic/head-tail-storage-file \
        -i /Context/TMP -t attr -n value -v $escenic_data_dir/engine/head-tail.index \
        -i /Context/TMP -t attr -n type -v java.lang.String \
-       -i /Context/TMP -t attr -n override -v false \
+       -i /Context/TMP -t attr -n override -v true \
        -r //TMP -v Environment \
        -s /Context -t elem -n TMP -v '' \
        -i /Context/TMP -t attr -n name -v escenic/failing-documents-storage-file \
        -i /Context/TMP -t attr -n value -v $escenic_data_dir/engine/failures.index \
        -i /Context/TMP -t attr -n type -v java.lang.String \
-       -i /Context/TMP -t attr -n override -v false \
+       -i /Context/TMP -t attr -n override -v true \
        -r //TMP -v Environment \
        $tomcat_base/conf/context.xml
+   print_and_log "Finished adding solr configuration for search"
+   print_and_log "Started adding context configuration for indexer-webapp-presentation"
+ 
+     mkdir -p $tomcat_base/conf/Catalina/localhost/
 
+     cat >> $tomcat_base/conf/Catalina/localhost/indexer-webapp-presentation.xml <<EOF
+    <Context docBase="$\\{catalina.base}/webapps/indexer-webapp">
+      <Environment name="escenic/solr-base-uri" value="http://${search_host}:${search_port}/solr/presentation/" type="java.lang.String" override="true"/>
+      <Environment name="escenic/indexer-webservice" value="${presentation_indexer_ws_uri}" type="java.lang.String" override="true"/>
+      <Environment name="escenic/index-update-uri" value="http://${search_host}:${search_port}/solr/presentation/update/" type="java.lang.String" override="true"/>
+      <Environment name="escenic/head-tail-storage-file" value="$escenic_data_dir/engine/head-tail-presentation.index" type="java.lang.String" override="true"/>
+      <Environment name="escenic/failing-documents-storage-file" value="$escenic_data_dir/engine/failures-presentation.index" type="java.lang.String" override="true"/>
+   </Context>
+EOF
+   print_and_log "Finished adding context for indexer-webapp-presentation"
 
   elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
     xmlstarlet ed -P -L \

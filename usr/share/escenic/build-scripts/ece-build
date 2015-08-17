@@ -22,6 +22,9 @@ project_pom_versions=""
 ear_base_url=http://builder.vizrtsaas.com
 #Mode to use keep git local changes
 local_mode=false
+auto_deploy=false
+deploy_ear=false
+deploy_conf=""
 # standard java locations
 #TODO:take java home location dynamically
 java_6_sun=/usr/lib/jvm/java-6-sun
@@ -1539,6 +1542,24 @@ function phase_release
   create_machine_conf_packages
   print_result
 }
+## Used to deploy ear and conf packages after built
+function automatic_deploy(){
+  if [ $deploy_ear == true ]; then
+    ece-deploy --ear $ear_base_url/$customer/releases/$resulting_ear
+  fi
+
+  if [ "$deploy_conf" == "deb" ]; then
+    ece-deploy --conf $ear_base_url/$customer/releases/vosa-conf-${machine}-1-${customer}-${release_label}-latest.deb
+  fi
+
+  if [ "$deploy_conf" == "rpm" ]; then
+    ece-deploy --conf $ear_base_url/$customer/releases/vosa-conf-${machine}-1_${customer}_${release_label}-latest.noarch.rpm
+  fi
+}
+
+function phase_deploy() {
+  automatic_deploy
+}
 
 ##
 function phase_shutdown
@@ -1553,4 +1574,5 @@ phase_verify_user
 phase_clean_up
 phase_verify_project
 phase_release
+phase_deploy
 phase_shutdown

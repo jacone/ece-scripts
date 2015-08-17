@@ -815,7 +815,7 @@ function install_all_in_one_environment()
     install_ece_instance $default_ece_intance_name 0
     install_cache_server
     install_web_server 2
-    set_up_solr
+    multicore_solr_setup
 
     install_widget_framework
     create_publication

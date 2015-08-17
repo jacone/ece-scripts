@@ -611,7 +611,7 @@ function really_do_status () {
         if [ $done -eq 0 ] ; then
           # Parse the statefile and find its instance ID
           if [ -r $bootstatefile ] ; then
-            aws_instance=$(awk < "$bootstatefile" -F '\t' '/^INSTANCE/ { print $2 }')
+            aws_instance=$(awk < "$bootstatefile" -F '\t' '/^INSTANCE/ { print $8 }')
           fi
           if [ -z $aws_instance ] && [ -r $bootstatefile ] ; then
             aws_instance=$(cut < "$bootstatefile" -f 6 | grep 'i-')
@@ -851,10 +851,9 @@ function do_create() {
       read_amazon_config $instance_dir/amazon.conf
       # TODO: sanitize "required" variables
       if $USE_AWS_CLI ; then
-        json="[{\"device_name\":\"/dev/sda1\", \"ebs\":{\"volume_size\":$amazon_config_initial_disk_size} } ]"
+	json="[{\"DeviceName\":\"/dev/sda1\", \"Ebs\":{\"VolumeSize\":$amazon_config_initial_disk_size} } ]"
         opts=( "--image-id" ${amazon_config_image}
-               "--min-count" "1"
-               "--max-count" "1"
+               "count" "1:1"
         ${amazon_config_availability_zone/#/--placement availability_zone=}  \
         ${amazon_config_type/#/--instance-type }  \
         ${amazon_config_ssh_keypair/#/--key-name }  \
