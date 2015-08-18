@@ -25,6 +25,7 @@ local_mode=false
 auto_deploy=false
 deploy_ear=false
 deploy_conf=""
+package_for_machine="all"
 # standard java locations
 #TODO:take java home location dynamically
 java_6_sun=/usr/lib/jvm/java-6-sun
@@ -354,7 +355,7 @@ function verify_java
 ##
 function get_user_options
 {
-  while getopts ":b:t:oscuV" opt; do
+  while getopts ":b:t:m:oscuV" opt; do
     case $opt in
       b)
         svn_path=branches/${OPTARG}
@@ -364,6 +365,9 @@ function get_user_options
       t)
         svn_path=tags/${OPTARG}
         release_label=tag-${OPTARG}
+        ;;
+      m)
+        package_for_machine=${OPTARG}
         ;;
       o)
         maven_build_offline=1
@@ -514,7 +518,7 @@ local engine_version
  engine_major_version=`echo $project_engine_version | cut -d'-' -f2 | cut -d'.' -f1`
  engine_minor_version=`echo $project_engine_version | cut -d'-' -f2 | cut -d'.' -f2`
  engine_version=$engine_major_version$engine_minor_version
- if [ ! $engine_version -ge 57 ] ; then
+ if [[  "$engine_version" -lt "57" ]] ; then
   if [ -e $builder_root_dir/lib/java_memcached-release_2.0.1.jar ]; then
     run_wrapper ln -s $builder_root_dir/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
   else
@@ -1203,37 +1207,15 @@ function publish_ear
   fi
 }
 
-## creates DEB and RPM packages with the server configuration for all
-## of the machines available in <project>/server-admin/<machine
-## instance>
+## Creates deb and rpm package for machines specified in 
+## <project>/server-admin directory.
 ##
-## Common files are taken from <project>/server-admin/common.
-##
-## If <project>/server-admin doesn't exist, the method simply returns.
-function create_machine_conf_packages() {
-  local conf_dir=$project_src_dir/server-admin
-  
-  if [ ! -d $conf_dir ]; then
-    return
-  fi
-
- # As both control run same function
- #if [[ "$src_control" = svn ]]; then
-    #generate_new_changelog
- #elif [[ "$src_control" = git ]]; then
-    #generate_new_changelog
- #fi
-  generate_new_changelog
-
-  local machine_list=$(
-    find $conf_dir -maxdepth 1 -type d | \
-      egrep -v "common|.svn" | \
-      sed -e "s#$conf_dir##g" -e "s#^/##g" | \
-      sort | \
-      grep [a-z]
-  )
-
-  for machine in $machine_list; do
+## This function takes two parameters. It can be called like below
+## make_conf_package <machine> <project_configuration_directory>
+##  
+function make_conf_package() {
+   local machine=$1
+   local conf_dir=$2
     # work dir
     local target_dir=$(mktemp -d)
 
@@ -1262,7 +1244,7 @@ function create_machine_conf_packages() {
       run_wrapper mkdir -p $dir
       run_wrapper cp $file $dir/truth.conf
     fi
-    
+
     # mark all files as conf files
     local conffiles_file=$target_dir/DEBIAN/conffiles
     run_wrapper mkdir -p $(dirname $conffiles_file)
@@ -1271,7 +1253,7 @@ function create_machine_conf_packages() {
       egrep -v DEBIAN | \
       sed "s#$target_dir##" \
       > $conffiles_file
-    
+
     # debian control file
     local control_file=$target_dir/DEBIAN/control
     local package_name=vosa-conf-${machine}
@@ -1292,17 +1274,17 @@ EOF
     # changelogs
     local package_changelog_dir=${target_dir}/usr/share/doc/vizrt/$package_name
     make_dir $package_changelog_dir
-    if [[ "$src_control" = "svn" ]]; then 
-    	 local svn_base_dir=$(lowercase $(basename $svn_base))
-   	 local change_log_dir=$HOME/.generate-changelog/${svn_base_dir}/${svn_path}
+    if [[ "$src_control" = "svn" ]]; then
+         local svn_base_dir=$(lowercase $(basename $svn_base))
+         local change_log_dir=$HOME/.generate-changelog/${svn_base_dir}/${svn_path}
     elif [[ "$src_control" = "git" ]]; then
          # get git repo's name
-   	 local git_base_dir=$(lowercase $(basename $git_base))
-	 # get git repo's branch name
+         local git_base_dir=$(lowercase $(basename $git_base))
+         # get git repo's branch name
          local git_path_dir=$(echo $git_path | sed 's/-b //g')
-   	 local change_log_dir=$HOME/.generate-git-changelog/${git_base_dir}/${git_path_dir}
-    fi  
-    
+         local change_log_dir=$HOME/.generate-git-changelog/${git_base_dir}/${git_path_dir}
+    fi
+
     if [ -d  $change_log_dir ]; then
       run_wrapper cp ${change_log_dir}/* $package_changelog_dir
     fi
@@ -1312,10 +1294,10 @@ EOF
       print_and_log "You must have dpkg-deb installed to create packages :-("
       return
     fi
-    
+
     run_wrapper dpkg-deb --build $target_dir
     mv ${target_dir}.deb $target_dir/${package_name}-${package_version}.deb
-    
+
     if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
       (
         run_wrapper cd $target_dir
@@ -1328,26 +1310,82 @@ EOF
 
     # move the machine's DEB and RPM packges to the release directory
     run_wrapper mv $target_dir/*.{deb,rpm} $release_dir/
-   
+    local release_version=${package_name}-${package_version}
     # adding latest links for conf packages
-    run_wrapper ln -sf $release_dir/vosa-conf-${machine}-${package_version}.deb $release_dir/vosa-conf-${machine}-1-${customer}-${release_label}-latest.deb
-    run_wrapper ln -sf $release_dir/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm $release_dir/vosa-conf-${machine}-1_${customer}_${release_label}-latest.noarch.rpm
- 
+    run_wrapper ln -sf $release_dir/$release_version.deb $release_dir/vosa-conf-${machine}-1-${customer}-${release_label}-latest.deb
+    run_wrapper ln -sf $release_dir/$release_version.noarch.rpm $release_dir/vosa-conf-${machine}-1-${customer}-${release_label}-latest.noarch.rpm
+
     # remove work directory
     run_wrapper rm -rf $target_dir
-  done
+    
+    #Let´s print the package links 
+}
+## This function prints the debian package links for the given machine
+## Call print_deb_package_link <machine>
+function print_deb_package_link() {
+  local machine=$1
+  print_and_log "--- .deb configuration package for $machine machine  ---"
+  print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-1-${customer}-${release_label}-r${revision}.deb"
+}
+## This function prints the rpm package links for the given machine
+## Call print_rpm_package_link <machine>
+function print_rpm_package_link() {
+  local machine=$1
+  print_and_log "--- .rpm configuration package for $machine machine  ---"
+  print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-1-${customer}-${release_label}-r${revision}.noarch.rpm"
+}
 
-  if [ -z "$machine_list" ]; then 
+## creates DEB and RPM packages with the server configuration for all
+## of the machines available in <project>/server-admin/<machine
+## instance>
+##
+## Common files are taken from <project>/server-admin/common.
+##
+## If <project>/server-admin doesn't exist, the method simply returns.
+function create_machine_conf_packages() {
+  local conf_dir=$project_src_dir/server-admin
+  
+  if [ ! -d $conf_dir ]; then
+    return
+  fi
+  
+ # As both control run same function
+ #if [[ "$src_control" = svn ]]; then
+    #generate_new_changelog
+ #elif [[ "$src_control" = git ]]; then
+    #generate_new_changelog
+ #fi
+  generate_new_changelog
+
+  local machine_list=$(
+    find $conf_dir -maxdepth 1 -type d | \
+      egrep -v "common|.svn" | \
+      sed -e "s#$conf_dir##g" -e "s#^/##g" | \
+      sort | \
+      grep [a-z]
+  )
+  if [ -z "$machine_list" ]; then
     print_and_log "Your project does not have any folders, except maybe common, under server-admin so no configuration packages will be generated."
-  else
-    print_and_log "--- .deb configuration packages ---"  
-    for machine in $machine_list; do 
-      print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-${package_version}.deb"
+    return
+  fi
+  if [ -z "$package_for_machine" ] || [ "$package_for_machine" == "all" ]; then
+    print_and_log "The configuration package_for_machine is Empty or set to all!"
+    print_and_log "I will build configuration packages for all the machines."
+   for machine in $machine_list; do
+      #create the package for machine
+      make_conf_package $machine $conf_dir
+      #first print the deb package link for machine
+      print_deb_package_link $machine
+      #second print the rpm package link for the machine
+      print_rpm_package_link $machine
     done
-    print_and_log "--- .rpm configuration packages ---"
-    for machine in $machine_list; do
-      print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-1_${customer}_${release_label}-r${revision}.noarch.rpm"
-    done
+  elif [[ "$machine_list" =~ "$package_for_machine" ]];then
+    make_conf_package $package_for_machine $conf_dir
+    print_deb_package_link $package_for_machine
+    print_rpm_package_link $package_for_machine
+  else 
+    print_and_log "We have not found any conf directory for the desired machine `$package_for_machine` under $conf_dir ! Please check the machine name is correct"
+    print_and_log "I will not generate any configuration packages then! Please set the package_for_machine correclty!"
   fi
 }
 
