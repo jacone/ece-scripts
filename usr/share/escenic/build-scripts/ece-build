@@ -1589,11 +1589,11 @@ function automatic_deploy(){
   fi
 
   if [ "$deploy_conf" == "deb" ]; then
-    ece-deploy --conf $ear_base_url/$customer/releases/vosa-conf-${machine}-1-${customer}-${release_label}-latest.deb
+    ece-deploy --conf $ear_base_url/$customer/releases/vosa-conf-${package_for_machine}-1-${customer}-${release_label}-latest.deb
   fi
 
   if [ "$deploy_conf" == "rpm" ]; then
-    ece-deploy --conf $ear_base_url/$customer/releases/vosa-conf-${machine}-1_${customer}_${release_label}-latest.noarch.rpm
+    ece-deploy --conf $ear_base_url/$customer/releases/vosa-conf-${package_for_machine}-1_${customer}_${release_label}-latest.noarch.rpm
   fi
 }
 
