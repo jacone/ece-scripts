@@ -589,6 +589,7 @@ git_protocol=$git_protocol
 git_base=$git_base
 ear_base_url=$ear_base_url/$1
 local_mode=true
+package_for_machine=$package_for_machine
 auto_deploy=true
 deploy_ear=true
 deploy_conf=deb" > /home/$1/.build/build.conf
