@@ -26,6 +26,7 @@ auto_deploy=false
 deploy_ear=false
 deploy_conf=""
 package_for_machine="all"
+generate_changelog=0
 # standard java locations
 #TODO:take java home location dynamically
 java_6_sun=/usr/lib/jvm/java-6-sun
@@ -1355,8 +1356,9 @@ function create_machine_conf_packages() {
  #elif [[ "$src_control" = git ]]; then
     #generate_new_changelog
  #fi
-  generate_new_changelog
-
+ if [ $generate_changelog -eq 1 ]; then
+    generate_new_changelog
+ fi
   local machine_list=$(
     find $conf_dir -maxdepth 1 -type d | \
       egrep -v "common|.svn" | \
