@@ -176,6 +176,7 @@ function run() {
     }
   fi
 
+  debug "${FUNCNAME}()" → "$@"
   "${@}" 1>>$log 2>>$log
   exit_on_error $@
 }
