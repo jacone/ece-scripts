@@ -554,10 +554,10 @@ function git_checkout
     print_and_log "The chosen protocol $git_protocol for git is NOT supported, exiting!"
     exit 1
   fi
-
-  if [[ "$git_path" != "" ]]; then
+  # Check the remote branch exists for not
+  if [ -n "$git_path" ]; then
     local exists=$(git ls-remote --heads $git_repo_uri | grep $git_path)
-    if [[ "${exists}" = "" ]]; then
+    if [ -z "$exists" ]; then
       print_and_log "The request branch $git_path does NOT exist, exiting!"
       exit 1
     fi
@@ -591,7 +591,7 @@ function git_checkout
     if [ $clean_repo -eq 1 ]; then
       clean_up
     fi
-    if [[ "$git_path" == "" ]]; then
+    if [ -z "$git_path" ]; then
         branch_name=master
         git_path="-b master"
     fi
@@ -600,7 +600,7 @@ function git_checkout
     fi
     checkout_repo 
     run_wrapper cp -rf $project_src_master_dir $project_src_dir
- fi
+  fi
   cd $project_src_dir
   revision=`git describe --always`
   if [[ $revision = "" ]]; then
@@ -608,7 +608,7 @@ function git_checkout
     exit 1
   fi
 
-  if [[ "$git_path" == "" ]]; then
+  if [ -z "$git_path" ]; then
     git_path="-b master"
   fi
 }
@@ -1314,7 +1314,8 @@ EOF
     local release_version=${package_name}-${package_version}
     # adding latest links for conf packages
     run_wrapper ln -sf $release_dir/$release_version.deb $release_dir/vosa-conf-${machine}-1-${customer}-${release_label}-latest.deb
-    run_wrapper ln -sf $release_dir/$release_version.noarch.rpm $release_dir/vosa-conf-${machine}-1-${customer}-${release_label}-latest.noarch.rpm
+    run_wrapper ln -sf $release_dir/vosa-conf-${machine}-1_$(echo $customer | sed -e "s/-/\_/g")_$(echo $release_label | sed -e "s/-/\_/g")-r${revision}.noarch.rpm \
+                       $release_dir/vosa-conf-${machine}-1_$(echo $customer | sed -e "s/-/\_/g")_$(echo $release_label | sed -e "s/-/\_/g")-latest.noarch.rpm
 
     # remove work directory
     run_wrapper rm -rf $target_dir
@@ -1333,7 +1334,7 @@ function print_deb_package_link() {
 function print_rpm_package_link() {
   local machine=$1
   print_and_log "--- .rpm configuration package for $machine machine  ---"
-  print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-1-${customer}-${release_label}-r${revision}.noarch.rpm"
+  print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-1_$(echo $customer | sed -e "s/-/\_/g")_$(echo $release_label | sed -e "s/-/\_/g")-r${revision}.noarch.rpm"
 }
 
 ## creates DEB and RPM packages with the server configuration for all
