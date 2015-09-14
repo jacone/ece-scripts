@@ -554,10 +554,10 @@ function git_checkout
     print_and_log "The chosen protocol $git_protocol for git is NOT supported, exiting!"
     exit 1
   fi
-
-  if [[ "$git_path" != "" ]]; then
+  # Check the remote branch exists for not
+  if [ -n "$git_path" ]; then
     local exists=$(git ls-remote --heads $git_repo_uri | grep $git_path)
-    if [[ "${exists}" = "" ]]; then
+    if [ -z "$exists" ]; then
       print_and_log "The request branch $git_path does NOT exist, exiting!"
       exit 1
     fi
@@ -591,7 +591,7 @@ function git_checkout
     if [ $clean_repo -eq 1 ]; then
       clean_up
     fi
-    if [[ "$git_path" == "" ]]; then
+    if [ -z "$git_path" ]; then
         branch_name=master
         git_path="-b master"
     fi
@@ -600,7 +600,7 @@ function git_checkout
     fi
     checkout_repo 
     run_wrapper cp -rf $project_src_master_dir $project_src_dir
- fi
+  fi
   cd $project_src_dir
   revision=`git describe --always`
   if [[ $revision = "" ]]; then
@@ -608,7 +608,7 @@ function git_checkout
     exit 1
   fi
 
-  if [[ "$git_path" == "" ]]; then
+  if [ -z "$git_path" ]; then
     git_path="-b master"
   fi
 }
