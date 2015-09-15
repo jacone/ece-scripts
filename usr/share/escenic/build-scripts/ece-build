@@ -75,7 +75,8 @@ changelog
 note
 seo
 mobile-studio
-preview-editor"
+preview-editor
+live-center"
 
 declare -A project_distributions=()
 
@@ -111,6 +112,7 @@ declare -A maven_snapshot_coordinates=(
 ["seo"]="com.escenic.plugins.seo:seo:zip"
 ["mobile-studio"]="com.escenic.plugins.mobile-studio:mobile-studio:zip"
 ["preview-editor"]="com.escenic.plugins.preview-editor:preview-editor:zip"
+["live-center"]="com.escenic.plugins.live-center:live-center:zip"
 )
 
 declare -A maven_coordinates=(
@@ -153,6 +155,7 @@ com.escenic.plugins.vcpeditor:vcpeditor:zip"
 ["seo"]="com.escenic.plugins.seo:seo:zip"
 ["mobile-studio"]="com.escenic.plugins.mobile-studio:mobile-studio:zip"
 ["preview-editor"]="com.escenic.plugins.preview-editor:preview-editor:zip"
+["live-center"]="com.escenic.plugins.live-center:live-center:zip"
 )
 
 # root folders for engine and plugin distributions
@@ -497,7 +500,8 @@ function clean_customer_home
   fi
 
   # drop and recreate project src directory if it exists
-  if [ -d "$project_src_dir" ]; then
+  if [ -d $project_src_dir  ] && [ $clean_repo -eq 1 ]; then
+    print_and_log "You asked for cleaning the $project_src_dir to be removed"
     run_wrapper rm -rf $project_src_dir
   fi
 }
