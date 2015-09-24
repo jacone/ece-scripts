@@ -71,6 +71,7 @@ function get_instance_type() {
 
 webapps_in_standard_webapps_list="
   dashboard
+  ece-extension
   escenic
   escenic-admin
   indexer-webapp
