@@ -82,7 +82,7 @@ function multicore_solr_setup(){
   if [ $editorial_search_instance -eq 1 ]; then
     run sed -i "s#<maxTime>[0-9]*</maxTime>#<maxTime>5000</maxTime>#g" $file
   else
-    run sed -i "s#<maxTime>[0-9]*</maxTime>#<maxTime>60000</maxTime>#g" $file
+    run sed -i "s#<maxTime>[0-9]*</maxTime>#<maxTime>3000</maxTime>#g" $file
   fi
 
   run_hook set_up_solr.postinst
@@ -144,7 +144,7 @@ function set_up_solr() {
   if [ $editorial_search_instance -eq 1 ]; then
     run sed -i "s#<maxTime>[0-9]*</maxTime>#<maxTime>5000</maxTime>#g" $file
   else
-    run sed -i "s#<maxTime>[0-9]*</maxTime>#<maxTime>60000</maxTime>#g" $file
+    run sed -i "s#<maxTime>[0-9]*</maxTime>#<maxTime>3000</maxTime>#g" $file
   fi
 
   run_hook set_up_solr.postinst
