@@ -603,7 +603,6 @@ function git_checkout
       udpate_repository
     fi
     checkout_repo 
-    run_wrapper cp -rf $project_src_master_dir $project_src_dir
   fi
   cd $project_src_dir
   revision=`git describe --always`
@@ -1590,7 +1589,7 @@ function phase_release
 ## Used to deploy ear and conf packages after built
 function automatic_deploy(){
   if [ $deploy_ear == true ]; then
-    ece-deploy --ear $ear_base_url/$customer/releases/$resulting_ear
+    ece-deploy --ear ~/releases/$resulting_ear
   fi
 
   if [ "$deploy_conf" == "deb" ]; then
