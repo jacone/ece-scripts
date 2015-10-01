@@ -27,6 +27,9 @@ deploy_ear=false
 deploy_conf=""
 package_for_machine="all"
 generate_changelog=0
+do_force=0
+deploy_resources=0
+
 # standard java locations
 #TODO:take java home location dynamically
 java_6_sun=/usr/lib/jvm/java-6-sun
@@ -359,7 +362,7 @@ function verify_java
 ##
 function get_user_options
 {
-  while getopts ":b:t:m:oscuV" opt; do
+  while getopts ":b:t:m:osrfcuV" opt; do
     case $opt in
       b)
         svn_path=branches/${OPTARG}
@@ -385,6 +388,14 @@ function get_user_options
       u)
         update_repo=1
         print_and_log "Git repository update  mode in effect!"
+        ;;
+      f)
+        do_force=1
+        print_and_log "Will use force to deploy configuration package for local deployment as requested"
+        ;;
+      r)
+        deploy_resources=1
+        print_and_log "Will update pulbication resources as requested"
         ;;
       V)
         echo "Version:" $ece_scripts_version
@@ -1588,16 +1599,24 @@ function phase_release
 }
 ## Used to deploy ear and conf packages after built
 function automatic_deploy(){
+local ear_deploy_opts="--ear"
+local conf_deploy_opts="--conf"
+  if [ $do_force -eq 1 ]; then
+     ear_deploy_opts="--force $conf_deploy_opts"
+  fi
+  if [ $deploy_resources -eq 1 ]; then
+     ear_deploy_opts="--update-publication-resources $ear_deploy_opts"
+  fi
   if [ $deploy_ear == true ]; then
-    ece-deploy --ear ~/releases/$resulting_ear
+    ece-deploy $ear_deploy_opts ~/releases/$resulting_ear
   fi
 
   if [ "$deploy_conf" == "deb" ]; then
-    ece-deploy --conf ~/releases/vosa-conf-${package_for_machine}-1-${customer}-${release_label}-latest.deb
+    ece-deploy $conf_deploy_opts ~/releases/vosa-conf-${package_for_machine}-1-${customer}-${release_label}-latest.deb
   fi
 
   if [ "$deploy_conf" == "rpm" ]; then
-    ece-deploy --conf ~/releases/vosa-conf-${package_for_machine}-1_${customer}_${release_label}-latest.noarch.rpm
+    ece-deploy $conf_deploy_opts ~/releases/vosa-conf-${package_for_machine}-1_${customer}_${release_label}-latest.noarch.rpm
   fi
 }
 
