@@ -6,7 +6,7 @@
 ################################################################################
 
 # Common variables
-ece_scripts_version=1.0-2014-06-24-lean-974
+ece_scripts_version="straight-from-github"
 ece_scripts_home=/usr/share/escenic/ece-scripts
 log=/var/log/ece-project-builder.log
 
@@ -27,8 +27,8 @@ builder_system_user=
 customer_name=
 technet_user=
 technet_password=
-user_maven_username=
-user_maven_password="CHANGE_ME"
+maven_user="maven.user"
+maven_password="maven.password"
 git_url=
 assemblytool_url=
 
@@ -40,6 +40,15 @@ builder_plugins_dir=$root_dir/plugins
 skel_dir=$root_dir/.skel
 subversion_dir=$skel_dir/.subversion
 m2_home=$skel_dir/.m2
+
+#local builder related properties
+local_mode=true
+package_for_machine=dev
+auto_deploy=true
+deploy_ear=true
+deploy_conf=deb
+do_force=0
+update_resources=0
 
 ##
 function verify_root_privilege
@@ -63,17 +72,18 @@ function verify_builder_conf
   enforce_variable technet_user "Your builder configuration file is missing the variable technet_user, exiting!"
   enforce_variable technet_user "Your builder configuration file is missing the variable technet_user, exiting!"
   enforce_variable technet_user "Your builder configuration file is missing the variable technet_password, exiting!"
-  enforce_variable maven_vizrt_user "Your builder configuration file is missing the variable maven_vizrt_user, exiting!"
-  enforce_variable maven_vizrt_password "Your builder configuration file is missing the variable maven_vizrt_password, exiting!"
+  enforce_variable maven_user "Your builder configuration file is missing the variable maven_user, exiting!"
+  enforce_variable maven_password "Your builder configuration file is missing the variable maven_password, exiting!"
   enforce_variable assemblytool_url "Your builder configuration file is missing the variable assemblytool_url, exiting!"
+
   wget --http-user $technet_user --http-password $technet_password http://technet.escenic.com/ -qO /dev/null
   if [ $? -ne 0 ]; then
     print_and_log "Your user can't reach http://technet.escenic.com/, exiting!"
     remove_pid_and_exit_in_error
   fi
-  wget --http-user $maven_vizrt_user --http-password $maven_vizrt_password http://maven.vizrt.com/ -qO /dev/null
+  wget --http-user $maven_user --http-password $maven_password http://maven.escenic.com/ -qO /dev/null
   if [ $? -ne 0 ]; then
-    print_and_log "Your user can't reach http://maven.vizrt.com/, exiting!"
+    print_and_log "Your user can't reach http://maven.escenic.com/, exiting!"
     remove_pid_and_exit_in_error
   fi
 }
@@ -116,7 +126,7 @@ function verify_scripts
 ##
 function enforce_variable
 {
-  if [ ! -n "$(eval echo $`echo $1`)" ]; then
+  if [ -z "$(eval echo $`echo $1`)" ]; then
     print_and_log "$2"
     remove_pid_and_exit_in_error
   fi
@@ -438,13 +448,13 @@ depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
 <servers>
     <server>
       <id>vizrt-repo</id>
-      <username>edemo-dev</username>
-      <password>strange-preference</password>
+      <username>$maven_user</username>
+      <password>$maven_password</password>
     </server>
     <server>
       <id>vizrt-unstable</id>
-      <username>edemo-dev</username>
-      <password>strange-preference</password>
+      <username>$maven_user</username>
+      <password>$maven_password</password>
     </server>
   </servers>
   <profiles>
@@ -454,7 +464,7 @@ depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
         <repository>
           <id>vizrt-repo</id>
           <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com</url>
+          <url>http://maven.escenic.com</url>
           <layout>default</layout>
         </repository>
       </repositories>
@@ -462,7 +472,7 @@ depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
         <pluginRepository>
           <id>vizrt-repo</id>
           <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com</url>
+          <url>http://maven.escenic.com</url>
           <layout>default</layout>
         </pluginRepository>
       </pluginRepositories>
@@ -473,7 +483,7 @@ depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
         <repository>
           <id>vizrt-unstable</id>
           <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com/unstable</url>
+          <url>http://maven.escenic.com/unstable</url>
           <layout>default</layout>
         </repository>
       </repositories>
@@ -481,7 +491,7 @@ depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
         <pluginRepository>
           <id>vizrt-unstable</id>
           <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com/unstable</url>
+          <url>http://maven.escenic.com/unstable</url>
           <layout>default</layout>
         </pluginRepository>
       </pluginRepositories>
@@ -588,15 +598,15 @@ git_user=$git_user
 git_protocol=$git_protocol
 git_base=$git_base
 ear_base_url=$ear_base_url/$1
-local_mode=true
+local_mode=$local_mode
 package_for_machine=$package_for_machine
-auto_deploy=true
-deploy_ear=true
-deploy_conf=deb" > /home/$1/.build/build.conf
+auto_deploy=$auto_deploy
+deploy_ear=$deploy_ear
+deploy_conf=$deploy_conf
+update_resources=$update_resources
+do_force=$do_force" > /home/$1/.build/build.conf
   run chown $1:$1 /home/$1/.build/build.conf
   run rsync -av $skel_dir/ /home/$1
-  run sed -i "s/maven.username/$user_maven_username/" /home/$1/.m2/settings.xml
-  run sed -i "s/maven.password/$user_maven_password/" /home/$1/.m2/settings.xml
   run chown -R $1:$1 /home/$1
   if [ ! -d /var/www/$1 ]; then
     make_dir /var/www/$1
