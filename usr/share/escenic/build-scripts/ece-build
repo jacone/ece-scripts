@@ -613,7 +613,10 @@ function git_checkout
     if [ $update_repo -eq 1 ]; then
       udpate_repository
     fi
-    checkout_repo 
+    if [ ! -d $project_src_dir ]; then
+       run_wrapper git clone $git_path $project_src_master_dir $project_src_dir
+    fi
+    checkout_repo
   fi
   cd $project_src_dir
   revision=`git describe --always`
@@ -1602,7 +1605,7 @@ function automatic_deploy(){
 local ear_deploy_opts="--ear"
 local conf_deploy_opts="--conf"
   if [ $do_force -eq 1 ]; then
-     ear_deploy_opts="--force $conf_deploy_opts"
+     conf_deploy_opts="--force $conf_deploy_opts"
   fi
   if [ $deploy_resources -eq 1 ]; then
      ear_deploy_opts="--update-publication-resources $ear_deploy_opts"
