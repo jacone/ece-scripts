@@ -198,9 +198,9 @@ function verify_builder_conf
     print_and_log "Your user can't reach http://technet.escenic.com/, exiting!"
     remove_pid_and_exit_in_error
   fi
-  wget --http-user $maven_vizrt_user --http-password $maven_vizrt_password http://maven.vizrt.com/ -qO /dev/null
+  wget --http-user $maven_vizrt_user --http-password $maven_vizrt_password http://maven.escenic.com/ -qO /dev/null
   if [ $? -ne 0 ]; then
-    print_and_log "Your user can't reach http://maven.vizrt.com/, exiting!"
+    print_and_log "Your user can't reach http://maven.escenic.com/, exiting!"
     remove_pid_and_exit_in_error
   fi
   enforce_variable escenic_plugin_indentifiers "You need to configure a list of supported plugins in you builder configuration file using the variable escenic_plugin_indentifiers, exiting!"
@@ -258,14 +258,18 @@ plugins = ../plugins" >> $assemblytool_home/assemble.properties
           xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
           xsi:schemaLocation=\"http://maven.apache.org/SETTINGS/1.0.0
                               http://maven.apache.org/xsd/settings-1.0.0.xsd\">
-  <servers>
+<servers>
     <server>
       <id>vizrt-repo</id>
-      <username>maven.username</username>
+      <username>maven.user</username>
+      <password>maven.password</password>
+    </server>
+    <server>
+      <id>vizrt-unstable</id>
+      <username>maven.user</username>
       <password>maven.password</password>
     </server>
   </servers>
-
   <profiles>
     <profile>
       <id>escenic-profile</id>
@@ -273,15 +277,42 @@ plugins = ../plugins" >> $assemblytool_home/assemble.properties
         <repository>
           <id>vizrt-repo</id>
           <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com</url>
+          <url>http://maven.escenic.com</url>
           <layout>default</layout>
         </repository>
       </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>vizrt-repo</id>
+          <name>Vizrt Maven Repository</name>
+          <url>http://maven.escenic.com</url>
+          <layout>default</layout>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+    <profile>
+      <id>unstable</id>
+      <repositories>
+        <repository>
+          <id>vizrt-unstable</id>
+          <name>Vizrt Maven Repository</name>
+          <url>http://maven.escenic.com/unstable</url>
+          <layout>default</layout>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>vizrt-unstable</id>
+          <name>Vizrt Maven Repository</name>
+          <url>http://maven.escenic.com/unstable</url>
+          <layout>default</layout>
+        </pluginRepository>
+      </pluginRepositories>
     </profile>
   </profiles>
-
   <activeProfiles>
     <activeProfile>escenic-profile</activeProfile>
+    <activeProfile>unstable</activeProfile>
     <activeProfile>builder</activeProfile>
   </activeProfiles>
 </settings>" > $m2_home/settings.xml
@@ -502,7 +533,7 @@ function process_artifact
   fi
 
   # fetch and unpack resource
-  if [[ "${artifact_path}" == *maven.vizrt.com* ]]; then
+  if [[ "${artifact_path}" == *maven.vizrt.com* ]] || [[ "$artifact_path" =~ "maven.escenic.com" ]] ; then
     local http_user=$maven_vizrt_user
     local http_password=$maven_vizrt_password
   elif [[ "${artifact_path}" == *technet* ]]; then
