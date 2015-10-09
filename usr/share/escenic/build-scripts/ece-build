@@ -366,7 +366,7 @@ function get_user_options
     case $opt in
       b)
         svn_path=branches/${OPTARG}
-        git_path="${OPTARG}"
+        branch_name="${OPTARG}"
         release_label=branch-${OPTARG}
         ;;
       t)
@@ -511,8 +511,8 @@ function clean_customer_home
   fi
 
   # drop and recreate project src directory if it exists
-  if [ -d $project_src_dir  ] && [ $clean_repo -eq 1 ]; then
-    print_and_log "You asked for cleaning the $project_src_dir to be removed"
+  if [ -d $project_src_dir  ] && ([ $clean_repo -eq 1 ] || [ $local_mode == false ]); then
+    print_and_log "Cleaning up project source directroy $project_src_dir"
     run_wrapper rm -rf $project_src_dir
   fi
 }
@@ -570,15 +570,14 @@ function git_checkout
     exit 1
   fi
   # Check the remote branch exists for not
-  if [ -n "$git_path" ]; then
-    local exists=$(git ls-remote --heads $git_repo_uri | grep $git_path)
+  if [ -n "$branch_name" ]; then
+    local exists=$(git ls-remote --heads $git_repo_uri | grep $branch_name)
     if [ -z "$exists" ]; then
-      print_and_log "The request branch $git_path does NOT exist, exiting!"
+      print_and_log "The request branch $branch_name does NOT exist, exiting!"
       exit 1
     fi
-    release_label=branch-$git_path
-    branch_name=$git_path
-    git_path="-b $git_path"
+    release_label=branch-$branch_name
+    git_path="-b $branch_name"
   fi
 
   
@@ -597,7 +596,7 @@ function git_checkout
   if [ $local_mode == false ]; then
   clean_up
   run_wrapper git checkout master
-  udpate_repository
+  update_repository
   clean_up
   # git checkout
   run_wrapper git clone $git_path $project_src_master_dir $project_src_dir
@@ -606,31 +605,31 @@ function git_checkout
     if [ $clean_repo -eq 1 ]; then
       clean_up
     fi
-    if [ -z "$git_path" ]; then
+    if [ -z "$branch_name" ]; then
         branch_name=master
-        git_path="-b master"
+        git_path="-b $branch_name"
     fi
     if [ $update_repo -eq 1 ]; then
-      udpate_repository
+      update_repository
     fi
     if [ ! -d $project_src_dir ]; then
        run_wrapper git clone $git_path $project_src_master_dir $project_src_dir
     fi
-    checkout_repo
+    cd $project_src_dir
+    update_repository
   fi
-  cd $project_src_dir
   revision=`git describe --always`
   if [[ $revision = "" ]]; then
     print_and_log "Failed to fetch current revision number, exiting!"
     exit 1
   fi
 
-  if [ -z "$git_path" ]; then
-    git_path="-b master"
+  if [ -z "$branch_name" ]; then
+    git_path="-b $branch_name"
   fi
 }
 ## Git update repository 
-function udpate_repository
+function update_repository
 {
   run_wrapper git remote update
   run_wrapper git fetch
@@ -640,9 +639,10 @@ function udpate_repository
 
 function checkout_repo
 {
-  if [[ "$git_path" != "" ]]; then
+  if [ -n  "$branch_name" ]; then
     git show-ref --quiet --verify "refs/heads/$branch_name"
     if [ $? = 0 ]; then
+    print_and_log "Checkout src directory to $branch_name"
       run_wrapper git checkout $branch_name
     else
       run_wrapper git checkout -b $branch_name origin/$branch_name
@@ -1299,7 +1299,7 @@ EOF
          # get git repo's name
          local git_base_dir=$(lowercase $(basename $git_base))
          # get git repo's branch name
-         local git_path_dir=$(echo $git_path | sed 's/-b //g')
+         local git_path_dir=$branch_name
          local change_log_dir=$HOME/.generate-git-changelog/${git_base_dir}/${git_path_dir}
     fi
 
@@ -1454,7 +1454,7 @@ function generate_new_changelog() {
         # --project git repo name and branch
 	if [[ ! -z $jira_base_url ]]; then 
     	run_wrapper generate-git-changelog \
-    	  --project $(basename $git_base)/$(echo $git_path | sed 's/-b //g') \
+    	  --project $(basename $git_base)/$branch_name \
     	  --user $jira_user \
           --password $jira_password \
     	  ${from_option} \
@@ -1462,7 +1462,7 @@ function generate_new_changelog() {
           --jirabaseurl $jira_base_url
 	else
     	run_wrapper generate-git-changelog \
-    	  --project $(basename $git_base)/$(echo $git_path | sed 's/-b //g') \
+    	  --project $(basename $git_base)/$branch_name \
     	  ${from_option} \
     	  --to $revision 
 	fi
