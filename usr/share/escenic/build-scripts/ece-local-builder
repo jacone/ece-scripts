@@ -202,11 +202,15 @@ local users
           do
             ensure_no_user_conflict $user $customer_name
             add_customer $user $customer_name
+            setup_nginx $user $customer_name
           done
       else
        ensure_no_user_conflict $builder_system_user $customer_name
        add_customer $builder_system_user $customer_name
+       setup_nginx $builder_system_user $customer_name
       fi
+      setup_maven
+      authorize_users
     else
       print_and_log "No valid action chosen, exiting!" >&2
       remove_pid_and_exit_in_error
@@ -620,8 +624,6 @@ do_force=$do_force" > /home/$1/.build/build.conf
     print_and_log "Failed to add symlink for /var/www/$1/releases"
     remove_pid_and_exit_in_error
   fi
-  setup_nginx $1 $2
-  setup_maven
 }
 
 function setup_nginx
@@ -634,6 +636,15 @@ function setup_nginx
   fi
 }
 
+function disable_host_key_checking
+{
+local git_host=$(echo "$git_base" | cut -d '/' -f1)
+tee > /home/escenic/.ssh/config << EOF
+Host $git_host
+    StrictHostKeyChecking no
+EOF
+}
+
 function setup_maven
 {
 local temdir=/tmp
@@ -642,10 +653,28 @@ unzip /tmp/$(basename $maven_download_url) -d /usr/local/maven
 tee /etc/profile.d/envmaven.sh << EOF
 M2_HOME=/usr/local/maven/$(echo "$(basename $maven_download_url)" | cut -d'-' -f1-3)
 M2=\$M2_HOME/bin
-PATH=\$M2:\$PATH
+PATH=\$M2:\$PATH:/usr/sbin/bin:/usr/local/sbin:/usr/sbin
 EOF
 chmod a+x /etc/profile.d/envmaven.sh
 rm /tmp/$(basename $maven_download_url)
+}
+
+function authorize_users
+{
+local home_dir=/home
+users=`ls -1 $home_dir`
+  if [ ! -d $home_dir/$builder_system_user/.ssh ];then
+     mkdir -m 700 $home_dir/$builder_system_user/.ssh
+  fi
+   for user in $users
+      do
+        if [ -e $home_dir/$user/.ssh/authorized_keys ]; then
+        cat $home_dir/$user/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/keys
+        fi
+   done
+   cat /root/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/keys
+   mv $home_dir/$builder_system_user/.ssh/keys $home_dir/$builder_system_user/.ssh/authorized_keys
+   chown -R $builder_system_user:$builder_system_user $home_dir/$builder_system_user/.ssh
 }
 
 ##
