@@ -211,6 +211,7 @@ local users
       fi
       setup_maven
       authorize_users
+      disable_host_key_checking
     else
       print_and_log "No valid action chosen, exiting!" >&2
       remove_pid_and_exit_in_error
