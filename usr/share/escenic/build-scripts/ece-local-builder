@@ -637,12 +637,12 @@ function setup_nginx
 function setup_maven
 {
 local temdir=/tmp
-wget --quite $maven_download_url -O /tmp/$(basename $maven_download_url)
+wget --quiet $maven_download_url -O /tmp/$(basename $maven_download_url)
 unzip /tmp/$(basename $maven_download_url) -d /usr/local/maven
 tee /etc/profile.d/envmaven.sh << EOF
 M2_HOME=/usr/local/maven/$(echo "$(basename $maven_download_url)" | cut -d'-' -f1-3)
-M2=$M2_HOME/bin
-PATH=$M2:$PATH
+M2=\$M2_HOME/bin
+PATH=\$M2:\$PATH
 EOF
 chmod a+x /etc/profile.d/envmaven.sh
 rm /tmp/$(basename $maven_download_url)
