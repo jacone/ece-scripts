@@ -70,11 +70,11 @@ function verify_builder_conf
   fi
   enforce_variable customer_name "Your builder configuration file is missing the variable customer_name, exiting!"
   enforce_variable technet_user "Your builder configuration file is missing the variable technet_user, exiting!"
-  enforce_variable technet_user "Your builder configuration file is missing the variable technet_user, exiting!"
-  enforce_variable technet_user "Your builder configuration file is missing the variable technet_password, exiting!"
+  enforce_variable technet_password "Your builder configuration file is missing the variable technet_password, exiting!"
   enforce_variable maven_user "Your builder configuration file is missing the variable maven_user, exiting!"
   enforce_variable maven_password "Your builder configuration file is missing the variable maven_password, exiting!"
   enforce_variable assemblytool_url "Your builder configuration file is missing the variable assemblytool_url, exiting!"
+  enforce_variable maven_url "Your builder configuration is missing the variable maven_url, exiting"
 
   wget --http-user $technet_user --http-password $technet_password http://technet.escenic.com/ -qO /dev/null
   if [ $? -ne 0 ]; then
@@ -621,6 +621,7 @@ do_force=$do_force" > /home/$1/.build/build.conf
     remove_pid_and_exit_in_error
   fi
   setup_nginx $1 $2
+  setup_maven
 }
 
 function setup_nginx
@@ -630,10 +631,22 @@ function setup_nginx
         alias /var/www/$1/releases/;
         expires modified +310s;
 }" > /etc/nginx/default-site/$1.conf
-  fi 
-
+  fi
 }
 
+function setup_maven
+{
+local temdir=/tmp
+wget --quite $maven_url -O /tmp/$(basename $maven_url)
+unzip /tmp/$(basename $maven_url) -d /usr/local/maven
+tee /etc/profile.d/envmaven.sh << EOF
+M2_HOME=/usr/local/maven/$(echo "$(basename $maven_url)" | cut -d'-' -f1-3)
+M2=$M2_HOME/bin
+PATH=$M2:$PATH
+EOF
+chmod a+x /etc/profile.d/envmaven.sh
+rm /tmp/$(basename $maven_url)
+}
 
 ##
 function common_post_build {
