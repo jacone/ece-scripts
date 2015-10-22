@@ -263,7 +263,7 @@ EOF
     <feature type="escenic-publication" revision="1" id="nightly">
         <param name="name">demopub</param>
         <param name="webapp">demopub</param>
-        <param name="primary-host">demopub.${domain}</param>
+        <param name="primary-host">demopub.\${domain}</param>
     </feature>
 
     <module type="unix-user" revision="1" id="root-user">
@@ -303,9 +303,9 @@ EOF
     </module>
 
     <module type="branding" revision="1">
-        <param name="name">${name}</param>
-        <param name="timezone">${timezone}</param>
-        <param name="realm">${realm}</param>
+        <param name="name">\${name}</param>
+        <param name="timezone">\${timezone}</param>
+        <param name="realm">\${realm}</param>
     </module>
 
     <feature type="escenic-mysql" revision="1" id="escenic-db"/>
