@@ -692,11 +692,11 @@ users=`ls -1 $home_dir`
           continue
         fi
         if [ -e $home_dir/$user/.ssh/authorized_keys ]; then
-         run  cat $home_dir/$user/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/authorized_keys
+         cat $home_dir/$user/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/authorized_keys
         fi
    done
 #special handling for the root user authorized keys
-  run  cat /root/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/authorized_keys
+  cat /root/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/authorized_keys
   run chown -R $builder_system_user:$builder_system_user $home_dir/$builder_system_user/.ssh/
 }
 
