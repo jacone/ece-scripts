@@ -239,6 +239,148 @@ processor_affinity 0,1,2,3
 vnc_port none
 EOF
   fi
+    if [ ! -r /etc/vizrt/vosa/skeleton-kvm/sdp.xml ] ; then
+    cat > /etc/vizrt/vosa/skeleton-kvm/sdp.xml <<EOF
+<?xml version="1.0"?>
+<sdp xmlns="http://www.vizrt.com/types/service-design-package">
+    <global-variables>
+        <!-- Fill in all the following parameters -->
+        <param name="name">NAME</param>
+        <param name="timezone">TIMEZONE</param>
+        <param name="location">LOCATION</param>
+        <param name="shortname">SHORTNAME</param>
+        <param name="realm">REALM</param>
+        <param name="domain">DOMAIN</param>
+    </global-variables>
+
+    <feature type="authentication" revision="1" id="technet-login">
+        <param name="url">http://technet.escenic.com/</param>
+        <!-- Enter your Technet username and password -->
+        <param name="userid">USERNAME</param>
+        <param name="password">PASSWORD</param>
+    </feature>
+
+    <feature type="escenic-publication" revision="1" id="nightly">
+        <param name="name">demopub</param>
+        <param name="webapp">demopub</param>
+        <param name="primary-host">demopub.${domain}</param>
+    </feature>
+
+    <module type="unix-user" revision="1" id="root-user">
+        <param name="username">root</param>
+        <!-- Choose and enter a root password -->
+        <param name="password" scopes="platform">PASSWORD</param>
+    </module>
+
+    <module type="unix-user" revision="1" id="escenic-user">
+        <param name="username">escenic</param>
+        <param name="group" scopes="platform">adm</param>
+        <!-- Choose and enter a password for the escenic user -->
+        <param name="password" scopes="platform">PASSWORD</param>
+    </module>
+
+    <module type="security-policy" revision="1"/>
+
+    <module type="ubuntu-mirror" revision="1">
+        <param name="url">http://no.archive.ubuntu.com/ubuntu/</param>
+    </module>
+
+    <module type="additional-packages" revision="1" id="jdk8">
+        <param name="deb-package">unixodbc</param>
+        <param name="deb-package">defoma</param>
+        <param name="deb-package">java-common</param>
+        <param name="deb-package">xsltproc</param>
+        <param name="deb-package-list">http://secrets.vizrtsaas.com/static/packages/java/8/server.urilist</param>
+        <!-- Enter the Escenic Debian repository passphrase -->
+        <param name="passphrase">PASSPHRASE</param>
+    </module>
+
+    <module type="additional-packages" revision="1" id="python">
+        <param name="deb-package">python-dev</param>
+        <param name="deb-package">libxml2-dev</param>
+        <param name="deb-package">libxslt1-dev</param>
+        <param name="pip-package">lxml</param>
+    </module>
+
+    <module type="branding" revision="1">
+        <param name="name">${name}</param>
+        <param name="timezone">${timezone}</param>
+        <param name="realm">${realm}</param>
+    </module>
+
+    <feature type="escenic-mysql" revision="1" id="escenic-db"/>
+
+    <feature type="escenic-ear" revision="1">
+        <!-- Replace with a correct download URL (see Escenic Cloud Installation Guide) -->
+        <param name="url">http://BUILDER-IP:PORT/escenic/CUSTOMER/releases/CUSTOMER-trunk-latest.ear</param>
+    </feature>
+
+    <feature type="escenic-conf" revision="1">
+        <!-- Replace with a correct download URL (see Escenic Cloud Installation Guide) -->
+        <param name="url">
+            http://BUILDER-IP:PORT/escenic/CUSTOMER/releases/vosa-conf-CUSTOMER-1-CUSTOMER-trunk-latest.deb
+        </param>
+    </feature>
+
+    <feature type="maven-repository" revision="1">
+        <param name="url">http://maven.escenic.com</param>
+        <!-- Enter your Escenic Maven repo username and password -->
+        <param name="userid">MAVEN-USER</param>
+        <param name="password">MAVEN-PASSWORD</param>
+    </feature>
+
+    <feature type="maven-repository" revision="1">
+        <param name="url">http://repo.dev.escenic.com/content/groups/trunk</param>
+    </feature>
+
+    <feature type="maven-repository" revision="1">
+        <param name="url">http://maven.escenic.com/unstable</param>
+        <!-- Enter your Escenic Maven repo username and password -->
+        <param name="userid">MAVEN-USER</param>
+        <param name="password">MAVEN-PASSWORD</param>
+    </feature>
+
+    <module type="escenic-database" revision="1">
+        <use-feature refid="escenic-db"/>
+        <use-feature type="escenic-ear"/>
+        <use-feature type="maven-repository"/>
+    </module>
+
+    <module type="ece-install" revision="4">
+        <use-feature refid="escenic-db"/>
+        <use-feature type="escenic-ear"/>
+        <use-feature type="escenic-conf"/>
+        <use-feature type="maven-repository"/>
+        <param name="tomcat-base-uri" override="tomcat-base-uri">
+            http://ftp.heanet.ie/mirrors/www.apache.org/dist/tomcat/tomcat-7/
+        </param>
+    </module>
+
+    <feature-group name="everything">
+        <ref-feature refid="technet-login"/>
+        <ref-feature refid="escenic-db"/>
+        <ref-feature refid="nightly"/>
+    </feature-group>
+
+    <!-- Enter environment/cluster/machine names and ids (see Escenic Cloud Installation Guide) -->
+    <environment name="ENVIRONMENT-NAME" id="ENVIRONMENT-ID">
+        <cluster name="CLUSTER-NAME">
+            <machine name="MACHINE-NAME">
+                <ref-feature-group name="everything"/>
+                <ref-module refid="root-user"/>
+                <ref-module refid="escenic-user"/>
+                <ref-module type="ece-install"/>
+                <ref-module type="escenic-database"/>
+                <ref-module type="security-policy"/>
+                <ref-module refid="jdk8"/>
+                <ref-module refid="python"/>
+                <ref-module type="branding"/>
+            </machine>
+        </cluster>
+    </environment>
+</sdp>
+EOF
+  fi
   # TODO:
   # Include common configuration items.
   #include /etc/vizrt/vosa/common.conf
