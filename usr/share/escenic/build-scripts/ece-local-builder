@@ -21,6 +21,7 @@ wget"
 add_customer=0
 given_skip_user_creation=0
 given_all_system_users=0
+first_build=0
 
 # Add user variables
 builder_system_user=
@@ -75,6 +76,7 @@ function verify_builder_conf
   enforce_variable maven_password "Your builder configuration file is missing the variable maven_password, exiting!"
   enforce_variable assemblytool_url "Your builder configuration file is missing the variable assemblytool_url, exiting!"
   enforce_variable maven_download_url "Your builder configuration is missing the variable maven_download_url, exiting"
+  enforce_variable branch_name "Your builder configuration is missing the variable branch_name, exiting"
 
   wget --http-user $technet_user --http-password $technet_password http://technet.escenic.com/ -qO /dev/null
   if [ $? -ne 0 ]; then
@@ -168,6 +170,10 @@ function get_user_options
         print_and_log "Adding builder to all system users ..."
         given_all_system_users=1
         ;;
+      b)
+        print_and_log "I will run ece-build for the first time after builder setup is finised."
+        first_build=1
+        ;;
       V)
         echo "Version:" $ece_scripts_version
         exit 0
@@ -212,6 +218,9 @@ local users
       setup_maven
       authorize_users
       disable_host_key_checking
+      if [ $first_build -eq 1 ]; then
+        run_ece_build
+      fi
     else
       print_and_log "No valid action chosen, exiting!" >&2
       remove_pid_and_exit_in_error
@@ -609,7 +618,8 @@ auto_deploy=$auto_deploy
 deploy_ear=$deploy_ear
 deploy_conf=$deploy_conf
 update_resources=$update_resources
-do_force=$do_force" > /home/$1/.build/build.conf
+do_force=$do_force
+branch_name=$branch_name" > /home/$1/.build/build.conf
   run chown $1:$1 /home/$1/.build/build.conf
   run rsync -av $skel_dir/ /home/$1
   run chown -R $1:$1 /home/$1
@@ -649,15 +659,22 @@ EOF
 function setup_maven
 {
 local temdir=/tmp
-wget --quiet $maven_download_url -O /tmp/$(basename $maven_download_url)
-unzip /tmp/$(basename $maven_download_url) -d /usr/local/maven
+run wget --quiet $maven_download_url -O /tmp/$(basename $maven_download_url)
+run unzip /tmp/$(basename $maven_download_url) -d /usr/local/maven
 tee /etc/profile.d/envmaven.sh << EOF
 M2_HOME=/usr/local/maven/$(echo "$(basename $maven_download_url)" | cut -d'-' -f1-3)
 M2=\$M2_HOME/bin
 PATH=\$M2:\$PATH:/usr/sbin/bin:/usr/local/sbin:/usr/sbin
 EOF
-chmod a+x /etc/profile.d/envmaven.sh
-rm /tmp/$(basename $maven_download_url)
+run chmod a+x /etc/profile.d/envmaven.sh
+run rm /tmp/$(basename $maven_download_url)
+}
+
+function run_ece_build
+{
+run su - $builder_system_user
+run ece-build
+
 }
 
 function authorize_users
@@ -665,17 +682,17 @@ function authorize_users
 local home_dir=/home
 users=`ls -1 $home_dir`
   if [ ! -d $home_dir/$builder_system_user/.ssh ];then
-     mkdir -m 700 $home_dir/$builder_system_user/.ssh
+    run mkdir -m 700 $home_dir/$builder_system_user/.ssh
   fi
    for user in $users
       do
         if [ -e $home_dir/$user/.ssh/authorized_keys ]; then
-        cat $home_dir/$user/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/keys
+        run cat $home_dir/$user/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/keys
         fi
    done
-   cat /root/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/keys
-   mv $home_dir/$builder_system_user/.ssh/keys $home_dir/$builder_system_user/.ssh/authorized_keys
-   chown -R $builder_system_user:$builder_system_user $home_dir/$builder_system_user/.ssh
+  run cat /root/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/keys
+  run  mv $home_dir/$builder_system_user/.ssh/keys $home_dir/$builder_system_user/.ssh/authorized_keys
+  run chown -R $builder_system_user:$builder_system_user $home_dir/$builder_system_user/.ssh
 }
 
 ##
