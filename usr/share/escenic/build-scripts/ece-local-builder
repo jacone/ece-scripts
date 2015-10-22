@@ -155,7 +155,7 @@ function usages(){
 ##
 function get_user_options
 {
-  while getopts ":i:c:b:u:p:g:Vsab" opt; do
+  while getopts ":i:c:u:p:g:Vsab" opt; do
     case $opt in
       c)
         print_and_log "Customer builder configuration is given in ${OPTARG} ..."
