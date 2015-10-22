@@ -654,6 +654,7 @@ tee > /home/escenic/.ssh/config << EOF
 Host $git_host
     StrictHostKeyChecking no
 EOF
+chown $builder_system_user:$builder_system_user /home/escenic/.ssh/config
 }
 
 function setup_maven
@@ -672,9 +673,7 @@ run rm /tmp/$(basename $maven_download_url)
 
 function run_ece_build
 {
-run su - $builder_system_user
-run ece-build
-
+run su - $builder_system_user -c 'ece-build'
 }
 
 function authorize_users
@@ -684,15 +683,21 @@ users=`ls -1 $home_dir`
   if [ ! -d $home_dir/$builder_system_user/.ssh ];then
     run mkdir -m 700 $home_dir/$builder_system_user/.ssh
   fi
+  if [ ! -e $home_dir/$builder_system_user/.ssh/authorized_keys ]; then
+    run touch $home_dir/$builder_system_user/.ssh/authorized_keys
+  fi
    for user in $users
       do
+        if [ "$user" == "$builder_system_user" ]; then
+          continue
+        fi
         if [ -e $home_dir/$user/.ssh/authorized_keys ]; then
-        run cat $home_dir/$user/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/keys
+         run  cat $home_dir/$user/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/authorized_keys
         fi
    done
-  run cat /root/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/keys
-  run  mv $home_dir/$builder_system_user/.ssh/keys $home_dir/$builder_system_user/.ssh/authorized_keys
-  run chown -R $builder_system_user:$builder_system_user $home_dir/$builder_system_user/.ssh
+#special handling for the root user authorized keys
+  run  cat /root/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/authorized_keys
+  run chown -R $builder_system_user:$builder_system_user $home_dir/$builder_system_user/.ssh/
 }
 
 ##
