@@ -1624,7 +1624,9 @@ local conf_deploy_opts="--conf"
 }
 
 function phase_deploy() {
-  automatic_deploy
+  if [ $auto_deploy == true ]; then
+    automatic_deploy
+  fi
 }
 
 ##
