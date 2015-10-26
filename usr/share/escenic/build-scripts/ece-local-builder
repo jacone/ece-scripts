@@ -22,6 +22,7 @@ add_customer=0
 given_skip_user_creation=0
 given_all_system_users=0
 first_build=0
+do_initialize=0
 
 # Add user variables
 builder_system_user=
@@ -155,6 +156,12 @@ function usages(){
 ##
 function get_user_options
 {
+  for el in "$1"; do
+    if [ "$el" == "initialize" ]; then
+       do_initialize=1
+       print_and_log "Initializing builder configuration ..."
+    fi
+  done
   while getopts ":i:c:u:p:g:Vsab" opt; do
     case $opt in
       c)
@@ -195,6 +202,10 @@ function get_user_options
 ##
 function execute
 {
+  if [ $do_initialize -eq 1 ]; then
+     initialize
+     return
+  else
 local users
     if [ $add_customer -eq 1 ]; then
       if [ ! -d $root_dir ]; then
@@ -217,7 +228,7 @@ local users
       fi
       setup_maven
       authorize_users
-      disable_host_key_checking
+      disable_host_key_checking $builder_system_user
       if [ $first_build -eq 1 ]; then
         run_ece_build
       fi
@@ -225,10 +236,34 @@ local users
       print_and_log "No valid action chosen, exiting!" >&2
       remove_pid_and_exit_in_error
     fi
+  fi
 }
 
 
-##
+function initialize
+{
+local configuration_dir=/etc/escenic
+if [ ! -d $configuration_dir ]; then
+  run mkdir $configuration_dir
+fi
+#Adding builder.conf file
+local builder_file=/etc/escenic/builder.conf
+tee > $builder_file << EOF
+customer_name=mycloud
+technet_user=technet-username
+technet_password=technet-password
+maven_user=maven-username
+maven_password=maven-password
+git_url=ssh://git@git-ip-address/mycloud.git
+assemblytool_url=http://technet.escenic.com/downloads/release/57/assemblytool-2.0.7.zip
+local_mode=false
+auto_deploy=false
+ear_base_url=http://builder-ip-address
+package_for_machine=all
+branch_name=master
+maven_download_url=http://www.eu.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.zip
+EOF
+}
 
 ##
 function init
@@ -611,7 +646,7 @@ src_control=git
 git_user=$git_user
 git_protocol=$git_protocol
 git_base=$git_base
-ear_base_url=$ear_base_url/$1
+ear_base_url=$ear_base_url
 local_mode=$local_mode
 package_for_machine=$package_for_machine
 auto_deploy=$auto_deploy
@@ -657,21 +692,22 @@ EOF
   fi
 
   if [ ! -e /etc/nginx/default-site/$1.conf ]; then
-    echo "location /$1/$2/releases/ {
+    echo "location /$2/releases/ {
         alias /var/www/$1/releases/;
         expires modified +310s;
 }" > /etc/nginx/default-site/$1.conf
   fi
+  service nginx restart
 }
 
 function disable_host_key_checking
 {
 local git_host=$(echo "$git_base" | cut -d '/' -f1)
-tee > /home/escenic/.ssh/config << EOF
+tee > /home/$1/.ssh/config << EOF
 Host $git_host
     StrictHostKeyChecking no
 EOF
-chown $builder_system_user:$builder_system_user /home/escenic/.ssh/config
+chown $builder_system_user:$builder_system_user /home/$1/.ssh/config
 }
 
 function setup_maven
@@ -730,8 +766,10 @@ function phase_startup {
 }
 
 function pre_setup_verify {
+if [ $do_initialize -ne 1 ]; then
   verify_builder_conf
   verify_user_options
+fi
 }
 
 ##
