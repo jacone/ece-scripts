@@ -639,6 +639,23 @@ branch_name=$branch_name" > /home/$1/.build/build.conf
 
 function setup_nginx
 {
+  local exists=$(dpkg -l | grep nginx)
+  if [ -z "$exists" ]; then
+     run apt-get -y install nginx
+  fi
+  if [ ! -d /etc/nginx/default-site ]; then
+    #We are trying to install in a fresh vm with out sdp.xml
+    run mkdir /etc/nginx/default-site
+    run rm /etc/nginx/sites-available/default
+    tee > /etc/nginx/sites-available/default << EOF
+server {
+  listen 81 default;
+  include /etc/nginx/default-site/*.conf;
+}
+
+EOF
+  fi
+
   if [ ! -e /etc/nginx/default-site/$1.conf ]; then
     echo "location /$1/$2/releases/ {
         alias /var/www/$1/releases/;
