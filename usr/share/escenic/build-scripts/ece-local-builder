@@ -249,7 +249,7 @@ fi
 #Adding builder.conf file
 local builder_file=/etc/escenic/builder.conf
 tee > $builder_file << EOF
-customer_name=mycloud
+customer_name=customer-name
 technet_user=technet-username
 technet_password=technet-password
 maven_user=maven-username
