@@ -315,13 +315,14 @@ EOF
         <param name="url">http://BUILDER-IP:PORT/escenic/CUSTOMER/releases/CUSTOMER-branch-master-latest.ear</param>
     </feature>
 
-    <feature type="escenic-conf" revision="1">
+<!-- This feature is to deploy nursery configuration changes, in the Escenic installation. -->
+<!-- <feature type="escenic-conf" revision="1">
         <!-- Replace with a correct download URL (see Escenic Cloud Installation Guide) -->
         <param name="url">
             http://BUILDER-IP:PORT/escenic/CUSTOMER/releases/vosa-conf-CUSTOMER-1-CUSTOMER-branch-master-latest.deb
         </param>
     </feature>
-
+-->
     <feature type="maven-repository" revision="1">
         <param name="url">http://maven.escenic.com</param>
         <!-- Enter your Escenic Maven repo username and password -->
@@ -349,7 +350,8 @@ EOF
     <module type="ece-install" revision="4">
         <use-feature refid="escenic-db"/>
         <use-feature type="escenic-ear"/>
-        <use-feature type="escenic-conf"/>
+        <!-- Enable escenic-conf feature
+        <!--<use-feature type="escenic-conf"/>-->
         <use-feature type="maven-repository"/>
         <param name="tomcat-base-uri" override="tomcat-base-uri">
             http://ftp.heanet.ie/mirrors/www.apache.org/dist/tomcat/tomcat-7/
