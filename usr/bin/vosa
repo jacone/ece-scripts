@@ -312,13 +312,13 @@ EOF
 
     <feature type="escenic-ear" revision="1">
         <!-- Replace with a correct download URL (see Escenic Cloud Installation Guide) -->
-        <param name="url">http://BUILDER-IP:PORT/escenic/CUSTOMER/releases/CUSTOMER-trunk-latest.ear</param>
+        <param name="url">http://BUILDER-IP:PORT/escenic/CUSTOMER/releases/CUSTOMER-branch-master-latest.ear</param>
     </feature>
 
     <feature type="escenic-conf" revision="1">
         <!-- Replace with a correct download URL (see Escenic Cloud Installation Guide) -->
         <param name="url">
-            http://BUILDER-IP:PORT/escenic/CUSTOMER/releases/vosa-conf-CUSTOMER-1-CUSTOMER-trunk-latest.deb
+            http://BUILDER-IP:PORT/escenic/CUSTOMER/releases/vosa-conf-CUSTOMER-1-CUSTOMER-branch-master-latest.deb
         </param>
     </feature>
 
