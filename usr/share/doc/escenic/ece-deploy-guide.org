@@ -1,5 +1,5 @@
 #+TITLE: ece-deploy
-#+AUTHOR: Vizrt Online / The SaaS Team
+#+AUTHOR: Escenic Cloud Team
 #+MAN_CLASS_OPTIONS: section-id:8
 #+OPTIONS: H:6 num:5 toc:2
 
@@ -168,10 +168,10 @@ servers is present in /etc/escenic/ece.conf and
 
 
 * COPYRIGHT
-Copyright 2011-2013 Vizrt
+Copyright 2011-2015 Escenic
 
 Licensed under the Apache License, Version 2.0, see
-https://github.com/vizrt/ece-scripts/COPYING for further details.
+https://github.com/escenic/ece-scripts/COPYING for further details.
 
 * AUTHOR
 Torstein Krause Johansen
