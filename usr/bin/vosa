@@ -1261,10 +1261,37 @@ function shutdown() {
   fi
 }
 
+#Makes vmdk image from the virtual machine disk image.
+function do_make() {
+  if [[ $aws -eq 1 ]]; then
+    echo "The make commad is only for kvm use. Exiting ...."
+    exit 1
+  else
+    make_kvm "${@}"
+  fi
+}
+
+function make_kvm() {
+  ${commands}/make-dev-image.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" "$instance_name"|| exit $?
+}
 
 function unknown-argument() {
   echo "Unknown argument $@"
   usage=1
+}
+
+#Creates ova file from vmdk image.
+function do_ova() {
+  if [[ $aws -eq 1 ]]; then
+    echo "The ova command is only for kvm use. Exiting ... "
+    exit 1
+  else
+    ova_for_kvm "${@}"
+  fi
+}
+
+function ova_for_kvm() {
+${commands}/make-ova.sh "$instance_dir" "$(dirname $0)/../../var/lib/vizrt/vosa/images/$instance_name" "$instance_name"|| exit $?
 }
 
 LASTOPTIND=0
