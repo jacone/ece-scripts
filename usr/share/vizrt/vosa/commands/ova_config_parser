@@ -1,0 +1,44 @@
+# bash functions common to the vosa commands
+# specifically functions to aid parsing ova.conf files
+
+ova_config_output_directory=
+ova_config_passphrase=
+ova_config_top_user=
+ova_config_vm_memory=
+ova_config_vm_ubuntu_pass=
+ova_config_vendor=
+ova_config_vendorurl=
+ova_config_eula=
+
+function ova_config_output_directory() {
+  ova_config_output_directory=$1
+}
+
+function ova_config_passphrase() {
+  ova_config_passphrase=$1
+}
+
+function ova_config_top_user() {
+  ova_config_top_user=$1
+}
+
+function ova_config_vm_memory() {
+  ova_config_vm_memory=$1
+}
+
+function ova_config_vm_ubuntu_pass() {
+ ova_config_vm_ubuntu_pass=$1
+}
+
+function ova_config_vendor() {
+  ova_config_vendor=$1
+}
+
+function ova_config_vendorurl() {
+  ova_config_vendorurl=$1
+}
+
+function ova_config_eula() {
+  ova_config_eula=$1
+}
+
