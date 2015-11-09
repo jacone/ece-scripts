@@ -139,12 +139,13 @@ rm -rf /tmp/${instance}
 #Creates encrypted ova file.
 function make_encrypted_image() {
 mkdir -p ${vboxmanage_output_dir}/$instance/
+#This time we will move both vmdk and ova image to target directory
 mv ${vboxmanage_output_dir}/$instance.* ${vboxmanage_output_dir}/$instance/
-for a in ova vmdk ; do
-  rm -f ${vboxmanage_output_dir}/$instance/$instance.$a.gpg
-  gpg --no-use-agent --batch --symmetric --passphrase "${ova_config_passphrase}"  ${vboxmanage_output_dir}/$instance/$instance.$a
-  chmod +r ${vboxmanage_output_dir}/$instance/$instance.$a ${vboxmanage_output_dir}/$instance/$instance.$a.gpg
-done
+rm -f ${vboxmanage_output_dir}/$instance/$instance.ova.gpg
+if [ -n "${ova_config_passphrase}" ]; then
+  gpg --no-use-agent --batch --symmetric --passphrase "${ova_config_passphrase}"  ${vboxmanage_output_dir}/$instance/$instance.ova
+  chmod +r ${vboxmanage_output_dir}/$instance/$instance.ova ${vboxmanage_output_dir}/$instance/$instance.ova.gpg
+fi
 }
 
 #Execution sequence

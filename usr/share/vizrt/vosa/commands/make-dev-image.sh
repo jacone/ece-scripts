@@ -178,6 +178,16 @@ echo "You can start and create ova file in a single command : vosa -i ${instance
 fi
 }
 
+function make_encrypted_image() {
+mkdir -p ${vboxmanage_output_dir}/$instance/
+cp  ${vboxmanage_output_dir}/$instance.* ${vboxmanage_output_dir}/$instance/
+rm -f ${vboxmanage_output_dir}/$instance/$instance.vmdk.gpg
+if [ -n "${ova_config_passphrase}"  ]; then
+  gpg --no-use-agent --batch --symmetric --passphrase "${ova_config_passphrase}"  ${vboxmanage_output_dir}/$instance/$instance.vmdk
+  chmod +r ${vboxmanage_output_dir}/$instance/$instance.vmdk ${vboxmanage_output_dir}/$instance/$instance.vmdk.gpg
+fi
+}
+
 #Run sequence of this script.
 check_dependencies
 check_status_of_machine
@@ -186,3 +196,4 @@ shutdown_guest_machine
 make_changes_to_disk
 install_extlinux
 make_vmdk_from_image
+make_encrypted_image
