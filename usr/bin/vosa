@@ -1261,7 +1261,7 @@ function shutdown() {
   fi
 }
 
-#Makes vmdk image from the virtual machine disk image.
+## Makes vmdk image from the virtual machine disk image.
 function do_make() {
   if [[ $aws -eq 1 ]]; then
     echo "The make commad is only for kvm use. Exiting ...."
@@ -1280,7 +1280,7 @@ function unknown-argument() {
   usage=1
 }
 
-#Creates ova file from vmdk image.
+## Creates ova file from vmdk image.
 function do_ova() {
   if [[ $aws -eq 1 ]]; then
     echo "The ova command is only for kvm use. Exiting ... "
