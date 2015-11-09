@@ -12,7 +12,6 @@ image=$2
 instance=$3
 
 #Reads the ova.conf file and parse it get user defined values.
-function read_dev_image_configuration() {
 if [ ! -e ${config}/ova.conf ]; then
   print_and_log "There is no ${config}/ova.conf file. Exiting ...!"
   exit 2
@@ -21,9 +20,8 @@ source $(dirname $0)/functions
 source $(dirname $0)/ova_config_parser
 parse_config_file $config/ova.conf ova_config_
 fi
-}
 
-vboxmanage_output_dir=${ova_output_directory}
+vboxmanage_output_dir=${ova_config_output_directory}
 
 function run_on_dev_host() {
 local command=$1
@@ -129,7 +127,7 @@ extlinux --install ${image}/small/extlinux/
 (
 cat <<EOF
 DEFAULT /vmlinuz
-APPEND root=/dev/sda noapic init=/usr/lib/cloud-init/uncloud-init ubuntu-pass=${ova_config_ubuntu_pass} ds=nocloud consoleblank=0
+APPEND root=/dev/sda noapic init=/usr/lib/cloud-init/uncloud-init ubuntu-pass=${ova_config_vm_ubuntu_pass} ds=nocloud consoleblank=0
 EOF
 ) |
 tee ${image}/small/extlinux/extlinux.conf
@@ -183,7 +181,6 @@ fi
 #Run sequence of this script.
 check_dependencies
 check_status_of_machine
-read_dev_image_configuration
 clean_up_image
 shutdown_guest_machine
 make_changes_to_disk

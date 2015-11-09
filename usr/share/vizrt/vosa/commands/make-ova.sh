@@ -11,7 +11,7 @@ image=$2
 instance=$3
 
 #Reads the configuration file and parses user defined data.
-function read_dev_image_configuration() {
+
 if [ ! -e ${config}/ova.conf ]; then
   print_and_log "There is no ${config}/ova.conf file. Exiting ...!"
   exit 2
@@ -20,9 +20,8 @@ source $(dirname $0)/functions
 source $(dirname $0)/ova_config_parser
 parse_config_file $config/ova.conf ova_config_
 fi
-}
 
-vboxmanage_output_dir=${ova_output_directory}
+vboxmanage_output_dir=${ova_config_output_directory}
 
 #Creates ova file from previously generated vmdk file by vosa -i {instance} make command.
 function make_ova_file() {
@@ -148,6 +147,6 @@ for a in ova vmdk ; do
 done
 }
 
-read_dev_image_configuration
+#Execution sequence
 make_ova_file
 make_encrypted_image
