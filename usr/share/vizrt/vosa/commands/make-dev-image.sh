@@ -151,22 +151,16 @@ cat ${image}/small.img | pv $pv_options | vboxmanage convertfromraw stdin $vboxm
 
 #checks dependencies of this script.
 function check_dependencies() {
-   if ! which vboxmanage > /dev/null ; then
-   echo "Please install vboxmange package first by apt-get install virtualbox. Exiting ..."
-   exit 2
-   fi
-   if ! which pv > /dev/null ; then
-   echo "Please install pv package first by apt-get install pv. Exiting ..."
-   exit 2
-   fi
-   if ! which zerofree > /dev/null ; then
-   echo "Please install zerofree package first by apt-get install zerofree. Exiting ..."
-   exit 2
-   fi
-   if ! which extlinux > /dev/null ; then
-   echo "Please install extlinux package first by apt-get install extlinux. Exiting ..."
-   exit 2
-   fi
+local missing=
+for d in vboxmanage pv zerofree extlinux; do
+  if ! which $d > /dev/null ; then
+    missing="$d $missing"
+  fi
+done
+if [ -n "$missing" ] ; then
+  echo "Required packages '${missing}' missing. Please install it by apt-get install ${missing}. Exiting ..."
+  exit 2
+fi
 }
 
 function check_status_of_machine() {
