@@ -343,19 +343,10 @@ To make a VMDK image we have to run
 vosa -i my-first-vm make
 #+END_SRC
 
-To make a ova file from the VMDK image
-#+BEGIN_SRC sh
-vosa -i my-first-vm ova
-#+END_SRC
-
 We can create a VMDK and ova file with a single command like
 #+BEGIN_SRC sh
 vosa -i my-first-vm make ova
 #+END_SRC
-
-
-
-
 
 * Puppet Master
 
