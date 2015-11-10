@@ -13,7 +13,7 @@ instance=$3
 #Reads the configuration file and parses user defined data.
 
 if [ ! -e ${config}/ova.conf ]; then
-  print_and_log "There is no ${config}/ova.conf file. Exiting ...!"
+  echo "There is no ${config}/ova.conf file. Exiting ...!"
   exit 2
 else
 source $(dirname $0)/functions
