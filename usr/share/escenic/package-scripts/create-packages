@@ -125,6 +125,8 @@ function set_up_escenic-build-scripts() {
   run cp ../build-scripts/ece-build-guide $target_dir/usr/bin/ece-build-guide
 
   run cp -r ../../doc/escenic/ece-build-guide.org $doc_dir
+  run cp -r ../../doc/escenic/ece-builder-guide.org $doc_dir
+  run cp -r ../../doc/escenic/ece-local-builder-guide.org $doc_dir
 }
 
 function set_up_escenic-content-engine-scripts() {
