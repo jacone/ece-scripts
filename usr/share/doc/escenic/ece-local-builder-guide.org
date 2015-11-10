@@ -13,13 +13,14 @@ setting up local builder with in a Escenic Installation. This command requires a
 file to setup the builder.
 
 ** -c builder-conf-file
-Creates a builder under
+Setup builder under customer_name user provided in the builder.conf file .
+The user creation can be skipped using -s option.
 
 ** -a
 Add builder under all the existing user.
 
 ** -s
-Skip creation of the builder_system_user
+Skip creation of the user.
 
 ** -b
 Executes a ece-build operation on given branch in builder.conf file
@@ -53,39 +54,39 @@ branch_name=master
 maven_download_url=http://www.eu.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.zip
 #+END_SRC
 
-Here are description about the properties in builder.conf file
+The properties of builder.conf file are described here
 * customer_name
 The name of the customer
-*technet_user
+* technet_user
 Username for escenic technet to download the distribution
-*technet_password
+* technet_password
 Password for the technet user
 *maven_user
 Username for Escenic maven repository
-*maven_password
+* maven_password
 Password for Escenic maven repository
-*git_url
+* git_url
 Customer git project url
-*assemblytool_url
+* assemblytool_url
 Download url for Escenic Assembly Tool
-*local_mode
+* local_mode
 Sets the builder in local mode if value is set to true. Defaule is false
-*auto_deploy
+* auto_deploy
 Sets the builder to automatic deploy of the created ear and configuration package if set to true.
 Default value is false
-*ear_base_url
+* ear_base_url
 The base url for the ear and configuration packages to be exposed to external systems.
-*package_for_machine
+* package_for_machine
 Machine name, for which the configuration will be created and deployed if auto_deploy is set to ture.
-*branch_name
+* branch_name
 Customer git project branch name from where the build will be made
-*maven_download_url
+* maven_download_url
 Maven download url. Default value is set to
 http://www.eu.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.zip
 
 Now after preparing the configuration file with valid values for the properties. We can run the following commands
 
-*Examples
+* Examples
 * To setup a builder under the customer_name user
 #+BEGIN_SRC sh
 $ ece-local-builder -c /etc/escenic/builder.conf
