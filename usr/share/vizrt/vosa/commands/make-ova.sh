@@ -117,7 +117,7 @@ vboxmanage export ${instance} --output ${vboxmanage_output_dir}/${instance}-tmp.
                             --product "Escenic ${instance} Development Image" \
                             --vendor "${ova_config_vendor}" \
                             --vendorurl "${ova_config_vendorurl}" \
-                            --eula "${ova_config_eula}"
+                            --eula "${ova_config_agreement}"
 #Make a vagrant "box" too
 rm -f ${vboxmanage_output_dir}/${instance}-box.ova
 vboxmanage export ${instance} --output ${vboxmanage_output_dir}/${instance}-box.ova \

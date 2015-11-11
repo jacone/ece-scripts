@@ -8,7 +8,7 @@ ova_config_vm_memory=
 ova_config_vm_ubuntu_pass=
 ova_config_vendor=
 ova_config_vendorurl=
-ova_config_eula=
+ova_config_agreement=
 
 function ova_config_output_directory() {
   ova_config_output_directory=$1
@@ -31,14 +31,14 @@ function ova_config_vm_ubuntu_pass() {
 }
 
 function ova_config_vendor() {
-  ova_config_vendor=$1
+  ova_config_vendor=${@}
 }
 
 function ova_config_vendorurl() {
   ova_config_vendorurl=$1
 }
 
-function ova_config_eula() {
-  ova_config_eula=$1
+function ova_config_agreement() {
+  ova_config_agreement=${@}
 }
 
