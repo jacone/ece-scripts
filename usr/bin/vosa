@@ -260,6 +260,7 @@ output_directory /var/www/html/dev
 top_user top
 
 ## The memory of the development image.
+## The value should not be less then 1028 and a valid positive integer.
 vm_memory 2048
 
 ## The password for the ubuntu user in the development image.
@@ -275,19 +276,19 @@ vm_memory 2048
 
 ## Maximum heap size for engine1 tomcat
 ## Default is 512
-#ova_config_engine_max_heap 512
+#engine_max_heap 512
 
 ## Minimum heap size for engine1 tomcat
 ## Default is 256
-#ova_config_engine_min_heap 256
+#engine_min_heap 256
 
 ## Maximum heap size for search1 tomcat
 ## Default is 256
-#ova_config_search_max_heap 256
+#search_max_heap 256
 
 ## Minimum heap size for search1 tomcat
 ## Default value is 128
-#ova_config_search_min_heap 128
+#search_min_heap 128
 
 ## Vendor name
 #vendor Escenic A/S
