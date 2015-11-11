@@ -6,9 +6,12 @@ ova_config_passphrase=
 ova_config_top_user=
 ova_config_vm_memory=
 ova_config_vm_ubuntu_pass=
-ova_config_vendor=
-ova_config_vendorurl=
-ova_config_agreement=
+ova_config_vendor="Escenic A/S"
+ova_config_vendorurl="http://www.escenic.com/"
+ova_config_agreement="You solemnly swear that you have a license agreement with Escenic, or that you are an Escenic Employee."
+ova_config_ostype=Ubuntu_64
+ova_config_cpus=2
+
 
 function ova_config_output_directory() {
   ova_config_output_directory=$1
@@ -42,3 +45,10 @@ function ova_config_agreement() {
   ova_config_agreement=${@}
 }
 
+function ova_config_ostype() {
+  ova_config_ostype=$1
+}
+
+function ova_config_cpus() {
+  ova_config_cpus=$1
+}

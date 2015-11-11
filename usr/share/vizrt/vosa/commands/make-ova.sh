@@ -30,10 +30,11 @@ if [ ! -e "${vboxmanage_output_dir}/${instance}.vmdk" ] ; then
   echo "You should first make an vmdk file by running > vosa -i ${instance} make"
   exit 2
 fi
+
 #for this will only work with virtualbox version 4. Cause --synthcpu off option is removed from version 5.
 options=$(cat <<EOF | grep ^[^#]
 --name ${instance}
---ostype Ubuntu_64
+--ostype ${ova_config_ostype}
 --memory ${ova_config_vm_memory}
 # --pagefusion on|off
 # --vram <vramsize in MB>
@@ -54,7 +55,7 @@ options=$(cat <<EOF | grep ^[^#]
 #--cpuidremove <leaf>
 #--cpuidremoveall
 #--hardwareuuid <uuid>
---cpus 2
+--cpus ${ova_config_cpus}
 #--cpuhotplug on|off
 #--plugcpu <id>
 #--unplugcpu <id>
