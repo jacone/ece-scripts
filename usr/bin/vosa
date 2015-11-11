@@ -260,6 +260,15 @@ EOF
         <param name="password">PASSWORD</param>
     </feature>
 
+    <!-- Uncomment following feature to install a Development Builder -->
+    <!--
+    <feature type="authentication" revision="1" id="technet-login">
+        <param name="url">http://technet.escenic.com/</param>
+        <param name="userid">TECHNET-USERNAME</param>
+        <param name="password">TECHNET-PASSWORD</param>
+    </feature>
+    -->
+
     <feature type="escenic-publication" revision="1" id="nightly">
         <param name="name">demopub</param>
         <param name="webapp">demopub</param>
@@ -302,6 +311,34 @@ EOF
         <param name="pip-package">lxml</param>
     </module>
 
+    <!-- Uncomment following module to install a Development Builder -->
+    <!--
+    <module type="additional-packages" revision="1" id="builder-pack">
+      <param name="deb-package">escenic-build-scripts</param>
+      <param name="deb-package">subversion</param>
+      <param name="deb-package">zip</param>
+      <param name="deb-package">alien</param>
+      <param name="deb-package">fakeroot</param>
+    </module>
+    -->
+
+    <!-- Uncomment following module to install a Development Builder -->
+    <!--
+    <module type="escenic-builder" revision="1">
+      <use-feature refid="escenic-repo"/>
+      <use-feature refid="technet-login"/>
+      <param name="customer">CUSTOMER-NAME</param>
+      <param name="builder-user">escenic</param>
+      <param name="git-url">ssh://GIT-IP-ADDRESS/mycloud.git</param>
+      <param name="assemblytool-url">http://technet.escenic.com/downloads/release/57/assemblytool-2.0.7.zip</param>
+      <param name="ear-base-url">http://LOCAL-IP-ADDRESS:81</param>
+      <param name="machine">MACHINE-NAME</param>
+      <param name="branch">BRANCH-NAME</param>
+      <param name="maven-url">http://www.us.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.zip</param>
+      <param name="private-key" src="/etc/escenic/private-key"/>
+    </module>
+    -->
+
     <module type="branding" revision="1">
         <param name="name">\${name}</param>
         <param name="timezone">\${timezone}</param>
@@ -315,7 +352,7 @@ EOF
         <param name="url">http://BUILDER-IP:PORT/escenic/CUSTOMER/releases/CUSTOMER-branch-master-latest.ear</param>
     </feature>
 
-<!-- This feature is to deploy nursery configuration changes, in the Escenic installation. -->
+<!-- This feature is to deploy nursery configuration changes,in the Escenic installation. -->
 <!-- <feature type="escenic-conf" revision="1">
         <!-- Replace with a correct download URL (see Escenic Cloud Installation Guide) -->
         <param name="url">
@@ -323,15 +360,11 @@ EOF
         </param>
     </feature>
 -->
-    <feature type="maven-repository" revision="1">
+    <feature type="maven-repository" revision="1" id="escenic-repo">
         <param name="url">http://maven.escenic.com</param>
         <!-- Enter your Escenic Maven repo username and password -->
         <param name="userid">MAVEN-USER</param>
         <param name="password">MAVEN-PASSWORD</param>
-    </feature>
-
-    <feature type="maven-repository" revision="1">
-        <param name="url">http://repo.dev.escenic.com/content/groups/trunk</param>
     </feature>
 
     <feature type="maven-repository" revision="1">
@@ -377,6 +410,11 @@ EOF
                 <ref-module refid="jdk8"/>
                 <ref-module refid="python"/>
                 <ref-module type="branding"/>
+
+                <!-- Uncomment following lines to install a Development Builder -->
+                <!--
+                <ref-module refid="builder-pack"/>
+                <ref-module type="escenic-builder"/>
             </machine>
         </cluster>
     </environment>
