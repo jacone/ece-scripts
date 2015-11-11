@@ -82,12 +82,10 @@ sed -i '/^iface eth0/ s/static/dhcp/p; /^iface eth0/,/^[a-z]/d' /etc/network/int
 # Resize heaps. 128/256 and 256/512.
 sed -i s/min_heap_size=.*// /etc/escenic/ece-*.conf
 sed -i s/max_heap_size=.*// /etc/escenic/ece-*.conf
-echo min_heap_size=256m | tee -a > /dev/null /etc/escenic/ece-engine1.conf
-echo max_heap_size=512m | tee -a > /dev/null /etc/escenic/ece-engine1.conf
-echo min_heap_size=128m | tee -a > /dev/null /etc/escenic/ece-search1.conf
-echo max_heap_size=256m | tee -a > /dev/null /etc/escenic/ece-search1.conf
-echo min_heap_size=128m | tee -a > /dev/null /etc/escenic/ece-analysis1.conf
-echo max_heap_size=256m | tee -a > /dev/null /etc/escenic/ece-analysis1.conf
+echo min_heap_size=${ova_config_engine_min_heap}m | tee -a > /dev/null /etc/escenic/ece-engine1.conf
+echo max_heap_size=${ova_config_engine_max_heap}m | tee -a > /dev/null /etc/escenic/ece-engine1.conf
+echo min_heap_size=${ova_config_search_min_heap}m | tee -a > /dev/null /etc/escenic/ece-search1.conf
+echo max_heap_size=${ova_config_search_max_heap}m | tee -a > /dev/null /etc/escenic/ece-search1.conf
 
 # remove superflous jvm configuration, to make sure the instances can boot.
 echo jvm_gc_settings= | tee -a > /dev/null /etc/escenic/ece-engine1.conf

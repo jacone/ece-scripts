@@ -11,6 +11,10 @@ ova_config_vendorurl="http://www.escenic.com/"
 ova_config_agreement="You solemnly swear that you have a license agreement with Escenic, or that you are an Escenic Employee."
 ova_config_ostype=Ubuntu_64
 ova_config_cpus=2
+ova_config_engine_max_heap=512
+ova_config_engine_min_heap=256
+ova_config_search_max_heap=256
+ova_config_search_min_heap=128
 
 
 function ova_config_output_directory() {
@@ -51,4 +55,20 @@ function ova_config_ostype() {
 
 function ova_config_cpus() {
   ova_config_cpus=$1
+}
+
+function ova_config_engine_max_heap() {
+  ova_config_engine_max_heap=$1
+}
+
+function ova_config_engine_min_heap() {
+  ova_config_engine_min_heap=$1
+}
+
+function ova_config_search_max_heap() {
+  ova_config_search_max_heap=$1
+}
+
+function ova_config_search_min_heap() {
+  ova_config_search_min_heap=$1
 }
