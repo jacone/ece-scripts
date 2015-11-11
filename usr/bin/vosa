@@ -239,6 +239,66 @@ processor_affinity 0,1,2,3
 vnc_port none
 EOF
   fi
+
+  if [ ! -r /etc/vizrt/vosa/skeleton-kvm/ova.conf ] ; then
+    cat > /etc/vizrt/vosa/skeleton-kvm/ova.conf <<EOF
+## This is a sample configuration file needed to create a development
+## image of VMDK or OVA format. The properties looks like below
+
+################################################################
+
+## The is the output directory where the VMDK or the OVA file will be
+## generated in a directory created with the instance name.
+output_directory /var/www/html/dev
+
+## Passphrase to create an enrypted VMDK or OVA file. The encrypted file
+## have an extension vmdk.gpg or ova.gpg. Anyone with the passphrase can
+## decrypt the file and use it.
+#passphrase
+
+## A user to use the top command in the development image
+top_user top
+
+## The memory of the development image.
+vm_memory 2048
+
+## The password for the ubuntu user in the development image.
+#vm_ubuntu_pass
+
+## Operating system type to be used.
+## Default value is Ubuntu_64
+#ostype Ubuntu_64
+
+## Number of cpus to be used by the virtual machine
+## Default value is 2
+#cpus 2
+
+## Maximum heap size for engine1 tomcat
+## Default is 512
+#ova_config_engine_max_heap 512
+
+## Minimum heap size for engine1 tomcat
+## Default is 256
+#ova_config_engine_min_heap 256
+
+## Maximum heap size for search1 tomcat
+## Default is 256
+#ova_config_search_max_heap 256
+
+## Minimum heap size for search1 tomcat
+## Default value is 128
+#ova_config_search_min_heap 128
+
+## Vendor name
+#vendor Escenic A/S
+
+## Vendor url for the the vm
+#vendorurl http://www.escenic.com/
+
+## the agreement messasge shown while importing the ova file.
+#agreement You solemnly swear that you have a license agreement with Escenic, or that you are an Escenic Employee.
+EOF
+  fi
     if [ ! -r /etc/vizrt/vosa/skeleton-kvm/sdp.xml ] ; then
     cat > /etc/vizrt/vosa/skeleton-kvm/sdp.xml <<EOF
 <?xml version="1.0"?>
