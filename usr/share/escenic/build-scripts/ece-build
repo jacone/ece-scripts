@@ -1331,8 +1331,8 @@ EOF
     local release_version=${package_name}-${package_version}
     # adding latest links for conf packages
     run_wrapper ln -sf $release_dir/$release_version.deb $release_dir/vosa-conf-${machine}-1-${customer}-${release_label}-latest.deb
-    run_wrapper ln -sf $release_dir/vosa-conf-${machine}-1_$(echo $customer | sed -e "s/-/\_/g")_$(echo $release_label | sed -e "s/-/\_/g")-r${revision}.noarch.rpm \
-                       $release_dir/vosa-conf-${machine}-1_$(echo $customer | sed -e "s/-/\_/g")_$(echo $release_label | sed -e "s/-/\_/g")-latest.noarch.rpm
+    run_wrapper ln -sf $release_dir/vosa-conf-${machine}-1_${customer//-/_}_${release_label//-/_}-r${revision}.noarch.rpm \
+                       $release_dir/vosa-conf-${machine}-1_${customer//-/_}_${release_label//-/_}-latest.noarch.rpm
 
     # remove work directory
     run_wrapper rm -rf $target_dir
@@ -1351,7 +1351,7 @@ function print_deb_package_link() {
 function print_rpm_package_link() {
   local machine=$1
   print_and_log "--- .rpm configuration package for $machine machine  ---"
-  print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-1_$(echo $customer | sed -e "s/-/\_/g")_$(echo $release_label | sed -e "s/-/\_/g")-r${revision}.noarch.rpm"
+  print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-1_${customer//-/_}_${release_label//-/_}-r${revision}.noarch.rpm"
 }
 
 ## creates DEB and RPM packages with the server configuration for all
