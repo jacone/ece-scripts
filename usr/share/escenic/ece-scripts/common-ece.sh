@@ -89,6 +89,9 @@ webapps_in_standard_webapps_list="
   note-webservice
   preview-editor-ws
   mobile-studio
+  live-center-editorial
+  live-center
+  live-center-presentation-webservice
 "
 
 ### is_webapp_a_publication

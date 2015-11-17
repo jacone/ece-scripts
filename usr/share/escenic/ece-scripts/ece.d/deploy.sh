@@ -64,13 +64,19 @@ function deploy() {
 
   if [ -n "$file" ]; then
     print_and_log "Deploying $file on $instance ..."
-    
-    # wget_auth is needed for download_uri_target_to_dir
-    wget_auth=$wget_builder_auth
+    #Check if the file is a cached file, then will just install the file.
+    # If it is not cached and a local file then create a symlink of that file in cache directory otherwise
+    #We we wil consider it is a url and will try to download the file.
     ear=$cache_dir/$(basename $file)
     if [ -e "$ear" ] && [ $(is_archive_healthy $ear) -eq 1 ]; then
       print_and_log "If found a healthy $ear locally so I will not fetch it again."
+    elif [ -f "$file" ]; then
+      print_and_log " Found a local ear file $file"
+      log "Creating a symlink of the file $file to $cache_dir"
+      ln -s $file $ear
     else
+      # wget_auth is needed for download_uri_target_to_dir
+      wget_auth=$wget_builder_auth
       download_uri_target_to_dir $file $cache_dir
     fi
 

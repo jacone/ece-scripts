@@ -6,7 +6,7 @@
 ################################################################################
 
 # Common variables
-ece_scripts_version=1.0-2014-06-24-lean-974
+ece_scripts_version="straight-from-github"
 ece_scripts_home=/usr/share/escenic/ece-scripts
 log=/var/log/ece-project-builder.log
 
@@ -21,14 +21,16 @@ wget"
 add_customer=0
 given_skip_user_creation=0
 given_all_system_users=0
+first_build=0
+do_initialize=0
 
 # Add user variables
 builder_system_user=
 customer_name=
 technet_user=
 technet_password=
-user_maven_username=
-user_maven_password="CHANGE_ME"
+maven_user="maven.user"
+maven_password="maven.password"
 git_url=
 assemblytool_url=
 
@@ -40,6 +42,15 @@ builder_plugins_dir=$root_dir/plugins
 skel_dir=$root_dir/.skel
 subversion_dir=$skel_dir/.subversion
 m2_home=$skel_dir/.m2
+
+#local builder related properties
+local_mode=true
+package_for_machine=dev
+auto_deploy=true
+deploy_ear=true
+deploy_conf=deb
+do_force=0
+update_resources=0
 
 ##
 function verify_root_privilege
@@ -61,19 +72,21 @@ function verify_builder_conf
   fi
   enforce_variable customer_name "Your builder configuration file is missing the variable customer_name, exiting!"
   enforce_variable technet_user "Your builder configuration file is missing the variable technet_user, exiting!"
-  enforce_variable technet_user "Your builder configuration file is missing the variable technet_user, exiting!"
-  enforce_variable technet_user "Your builder configuration file is missing the variable technet_password, exiting!"
-  enforce_variable maven_vizrt_user "Your builder configuration file is missing the variable maven_vizrt_user, exiting!"
-  enforce_variable maven_vizrt_password "Your builder configuration file is missing the variable maven_vizrt_password, exiting!"
+  enforce_variable technet_password "Your builder configuration file is missing the variable technet_password, exiting!"
+  enforce_variable maven_user "Your builder configuration file is missing the variable maven_user, exiting!"
+  enforce_variable maven_password "Your builder configuration file is missing the variable maven_password, exiting!"
   enforce_variable assemblytool_url "Your builder configuration file is missing the variable assemblytool_url, exiting!"
+  enforce_variable maven_download_url "Your builder configuration is missing the variable maven_download_url, exiting"
+  enforce_variable branch_name "Your builder configuration is missing the variable branch_name, exiting"
+
   wget --http-user $technet_user --http-password $technet_password http://technet.escenic.com/ -qO /dev/null
   if [ $? -ne 0 ]; then
     print_and_log "Your user can't reach http://technet.escenic.com/, exiting!"
     remove_pid_and_exit_in_error
   fi
-  wget --http-user $maven_vizrt_user --http-password $maven_vizrt_password http://maven.vizrt.com/ -qO /dev/null
+  wget --http-user $maven_user --http-password $maven_password http://maven.escenic.com/ -qO /dev/null
   if [ $? -ne 0 ]; then
-    print_and_log "Your user can't reach http://maven.vizrt.com/, exiting!"
+    print_and_log "Your user can't reach http://maven.escenic.com/, exiting!"
     remove_pid_and_exit_in_error
   fi
 }
@@ -116,7 +129,7 @@ function verify_scripts
 ##
 function enforce_variable
 {
-  if [ ! -n "$(eval echo $`echo $1`)" ]; then
+  if [ -z "$(eval echo $`echo $1`)" ]; then
     print_and_log "$2"
     remove_pid_and_exit_in_error
   fi
@@ -137,13 +150,19 @@ function verify_dependencies
 }
 
 function usages(){
-  echo "Usage: ece-project-builder -c <customer-builder-configuration>(require) -s skip system user creation (optional)"
+  echo "Usage: ece-local-builder -c <customer-builder-configuration>(require) -s skip system user creation (optional)"
 }
 
 ##
 function get_user_options
 {
-  while getopts ":i:c:b:u:p:g:Vsa" opt; do
+  for el in "$1"; do
+    if [ "$el" == "initialize" ]; then
+       do_initialize=1
+       print_and_log "Initializing builder configuration ..."
+    fi
+  done
+  while getopts ":i:c:u:p:g:Vsab" opt; do
     case $opt in
       c)
         print_and_log "Customer builder configuration is given in ${OPTARG} ..."
@@ -157,6 +176,10 @@ function get_user_options
       a)
         print_and_log "Adding builder to all system users ..."
         given_all_system_users=1
+        ;;
+      b)
+        print_and_log "I will run ece-build for the first time after builder setup is finised."
+        first_build=1
         ;;
       V)
         echo "Version:" $ece_scripts_version
@@ -179,6 +202,10 @@ function get_user_options
 ##
 function execute
 {
+  if [ $do_initialize -eq 1 ]; then
+     initialize
+     return
+  else
 local users
     if [ $add_customer -eq 1 ]; then
       if [ ! -d $root_dir ]; then
@@ -192,19 +219,51 @@ local users
           do
             ensure_no_user_conflict $user $customer_name
             add_customer $user $customer_name
+            setup_nginx $user $customer_name
           done
       else
        ensure_no_user_conflict $builder_system_user $customer_name
        add_customer $builder_system_user $customer_name
+       setup_nginx $builder_system_user $customer_name
+      fi
+      setup_maven
+      authorize_users
+      disable_host_key_checking $builder_system_user
+      if [ $first_build -eq 1 ]; then
+        run_ece_build
       fi
     else
       print_and_log "No valid action chosen, exiting!" >&2
       remove_pid_and_exit_in_error
     fi
+  fi
 }
 
 
-##
+function initialize
+{
+local configuration_dir=/etc/escenic
+if [ ! -d $configuration_dir ]; then
+  run mkdir $configuration_dir
+fi
+#Adding builder.conf file
+local builder_file=/etc/escenic/builder.conf
+tee > $builder_file << EOF
+customer_name=customer-name
+technet_user=technet-username
+technet_password=technet-password
+maven_user=maven-username
+maven_password=maven-password
+git_url=ssh://git@git-ip-address/mycloud.git
+assemblytool_url=http://technet.escenic.com/downloads/release/57/assemblytool-2.0.7.zip
+local_mode=false
+auto_deploy=false
+ear_base_url=http://builder-ip-address:81
+package_for_machine=all
+branch_name=master
+maven_download_url=http://www.eu.apache.org/dist/maven/maven-3/3.3.3/binaries/apache-maven-3.3.3-bin.zip
+EOF
+}
 
 ##
 function init
@@ -438,13 +497,13 @@ depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
 <servers>
     <server>
       <id>vizrt-repo</id>
-      <username>edemo-dev</username>
-      <password>strange-preference</password>
+      <username>$maven_user</username>
+      <password>$maven_password</password>
     </server>
     <server>
       <id>vizrt-unstable</id>
-      <username>edemo-dev</username>
-      <password>strange-preference</password>
+      <username>$maven_user</username>
+      <password>$maven_password</password>
     </server>
   </servers>
   <profiles>
@@ -454,7 +513,7 @@ depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
         <repository>
           <id>vizrt-repo</id>
           <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com</url>
+          <url>http://maven.escenic.com</url>
           <layout>default</layout>
         </repository>
       </repositories>
@@ -462,7 +521,7 @@ depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
         <pluginRepository>
           <id>vizrt-repo</id>
           <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com</url>
+          <url>http://maven.escenic.com</url>
           <layout>default</layout>
         </pluginRepository>
       </pluginRepositories>
@@ -473,7 +532,7 @@ depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
         <repository>
           <id>vizrt-unstable</id>
           <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com/unstable</url>
+          <url>http://maven.escenic.com/unstable</url>
           <layout>default</layout>
         </repository>
       </repositories>
@@ -481,7 +540,7 @@ depot=./Files" > $assemblytool_home/conf/layers/vosa/Layer.properties
         <pluginRepository>
           <id>vizrt-unstable</id>
           <name>Vizrt Maven Repository</name>
-          <url>http://maven.vizrt.com/unstable</url>
+          <url>http://maven.escenic.com/unstable</url>
           <layout>default</layout>
         </pluginRepository>
       </pluginRepositories>
@@ -587,16 +646,17 @@ src_control=git
 git_user=$git_user
 git_protocol=$git_protocol
 git_base=$git_base
-ear_base_url=$ear_base_url/$1
-local_mode=true
+ear_base_url=$ear_base_url
+local_mode=$local_mode
 package_for_machine=$package_for_machine
-auto_deploy=true
-deploy_ear=true
-deploy_conf=deb" > /home/$1/.build/build.conf
+auto_deploy=$auto_deploy
+deploy_ear=$deploy_ear
+deploy_conf=$deploy_conf
+update_resources=$update_resources
+do_force=$do_force
+branch_name=$branch_name" > /home/$1/.build/build.conf
   run chown $1:$1 /home/$1/.build/build.conf
   run rsync -av $skel_dir/ /home/$1
-  run sed -i "s/maven.username/$user_maven_username/" /home/$1/.m2/settings.xml
-  run sed -i "s/maven.password/$user_maven_password/" /home/$1/.m2/settings.xml
   run chown -R $1:$1 /home/$1
   if [ ! -d /var/www/$1 ]; then
     make_dir /var/www/$1
@@ -610,20 +670,88 @@ deploy_conf=deb" > /home/$1/.build/build.conf
     print_and_log "Failed to add symlink for /var/www/$1/releases"
     remove_pid_and_exit_in_error
   fi
-  setup_nginx $1 $2
 }
 
 function setup_nginx
 {
+  local exists=$(dpkg -l | grep nginx)
+  if [ -z "$exists" ]; then
+     run apt-get -y install nginx
+  fi
+  if [ ! -d /etc/nginx/default-site ]; then
+    #We are trying to install in a fresh vm with out sdp.xml
+    run mkdir /etc/nginx/default-site
+    run rm /etc/nginx/sites-available/default
+    tee > /etc/nginx/sites-available/default << EOF
+server {
+  listen 81 default;
+  include /etc/nginx/default-site/*.conf;
+}
+
+EOF
+  fi
+
   if [ ! -e /etc/nginx/default-site/$1.conf ]; then
-    echo "location /$1/$2/releases/ {
+    echo "location /$2/releases/ {
         alias /var/www/$1/releases/;
         expires modified +310s;
 }" > /etc/nginx/default-site/$1.conf
-  fi 
-
+  fi
+  service nginx restart
 }
 
+function disable_host_key_checking
+{
+local git_host=$(echo "$git_base" | cut -d '/' -f1)
+tee > /home/$1/.ssh/config << EOF
+Host $git_host
+    StrictHostKeyChecking no
+EOF
+chown $builder_system_user:$builder_system_user /home/$1/.ssh/config
+}
+
+function setup_maven
+{
+local temdir=/tmp
+run wget --quiet $maven_download_url -O /tmp/$(basename $maven_download_url)
+run unzip /tmp/$(basename $maven_download_url) -d /usr/local/maven
+tee /etc/profile.d/envmaven.sh << EOF
+M2_HOME=/usr/local/maven/$(echo "$(basename $maven_download_url)" | cut -d'-' -f1-3)
+M2=\$M2_HOME/bin
+PATH=\$M2:\$PATH:/usr/sbin/bin:/usr/local/sbin:/usr/sbin
+EOF
+run chmod a+x /etc/profile.d/envmaven.sh
+run rm /tmp/$(basename $maven_download_url)
+}
+
+function run_ece_build
+{
+run su - $builder_system_user -c 'ece-build'
+}
+
+function authorize_users
+{
+local home_dir=/home
+users=`ls -1 $home_dir`
+  if [ ! -d $home_dir/$builder_system_user/.ssh ];then
+    run mkdir -m 700 $home_dir/$builder_system_user/.ssh
+  fi
+  if [ ! -e $home_dir/$builder_system_user/.ssh/authorized_keys ]; then
+    run touch $home_dir/$builder_system_user/.ssh/authorized_keys
+  fi
+   for user in $users
+      do
+        if [ "$user" == "$builder_system_user" ]; then
+          continue
+        fi
+        if [ -e $home_dir/$user/.ssh/authorized_keys ]; then
+         cat $home_dir/$user/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/authorized_keys
+        fi
+   done
+#special handling for the root user authorized keys
+  cat /root/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/authorized_keys
+  run chown -R $builder_system_user:$builder_system_user $home_dir/$builder_system_user/.ssh/
+}
 
 ##
 function common_post_build {
@@ -638,8 +766,10 @@ function phase_startup {
 }
 
 function pre_setup_verify {
+if [ $do_initialize -ne 1 ]; then
   verify_builder_conf
   verify_user_options
+fi
 }
 
 ##
