@@ -99,8 +99,7 @@ Running the above command will create a system user and setup the environment to
 under that user.
 
 * COPYRIGHT
-Copyright 2011-2013 Vizrt
-
+Copyright 2011-2015 Escenic
 Licensed under the Apache License, Version 2.0, see
 https://github.com/vizrt/ece-scripts/COPYING for further details.
 
