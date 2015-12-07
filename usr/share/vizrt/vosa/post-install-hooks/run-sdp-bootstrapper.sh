@@ -39,7 +39,7 @@ EOF
   $guest tee /etc/apt/preferences.d/30prefer-vizrt-akita-packages <<EOF
 Package: *
 Pin-Priority: 600
-Pin: release n=akita
+Pin: release a=unstable
 EOF
  $guest tee /etc/apt/preferences.d/40ubuntu-unzip-package <<EOF
 Package: unzip
