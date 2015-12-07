@@ -34,6 +34,7 @@ function get_publications_webapps_list() {
 
   local publication_webapps=""
   # Publication service webapp mappping
+  print_and_log "The ece-installation is running for profile $install_profile_number"
   if [ $fai_enabled -eq 1 ]; then
     if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ] || [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
       publication_webapps=${fai_publications_webapps-""}
@@ -165,6 +166,7 @@ function install_ece_instance() {
   # We set a WAR white list for all profiles except all in one
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
     local file=$escenic_conf_dir/ece-${instance_name}.conf
+    print_and_log "The ece-installation is running for profile $install_profile_number"
     print_and_log "Creating deployment white list in $file ..."
     set_conf_file_value \
       deploy_webapp_white_list \
@@ -177,7 +179,7 @@ function install_ece_instance() {
         $file
     fi
   fi
-  if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+  if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ] || [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
     local file=$escenic_conf_dir/ece-${instance_name}.conf
     print_and_log "Added publications service webapps in $file ..."
     set_conf_file_value \
