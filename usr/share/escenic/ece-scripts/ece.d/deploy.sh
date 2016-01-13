@@ -74,7 +74,7 @@ function deploy() {
     elif [ -f "$file" ]; then
       print_and_log " Found a local ear file $file"
       log "Creating a symlink of the file $file to $cache_dir"
-      ln -s $file $ear
+      run ln -s $file $ear
     else
       # wget_auth is needed for download_uri_target_to_dir
       wget_auth=$wget_builder_auth
