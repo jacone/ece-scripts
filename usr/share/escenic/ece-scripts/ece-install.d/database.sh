@@ -577,7 +577,7 @@ function create_schema() {
   if [ $db_product = "mysql" ]; then
     print_and_log "Creating DB $db_schema on $HOSTNAME ..."
     mysql -h $db_host << EOF
-create database $db_schema character set utf8 collate utf8_general_ci;
+create database $db_schema character set utf8mb4 collate utf8mb4_general_ci;
 grant all on $db_schema.* to $db_user@'%' identified by '$db_password';
 grant all on $db_schema.* to $db_user@'localhost' identified by '$db_password';
 EOF
