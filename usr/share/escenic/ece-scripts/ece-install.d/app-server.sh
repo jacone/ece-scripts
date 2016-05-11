@@ -133,9 +133,11 @@ function set_up_app_server() {
       search_host=$(echo $user_search | cut -d':' -f1)
       search_port=$(echo $user_search | cut -d':' -f2)
     fi
+
   else
     search_host=${fai_search_host-$HOSTNAME}
     search_port=${fai_search_port-$default_app_server_port}
+    solr_port=${fai_solr_port-8983}
   fi
 
   download_tomcat $download_dir
@@ -476,11 +478,16 @@ EOF
     done
   fi
 
+  local solr_editorial_url=http://${search_host}:${solr_port}/solr/editorial
+  if [ ${fai_search_legacy-0} -eq 1 ]; then
+    solr_editorial_url=http://${search_host}:${search_port}/solr/collection1
+  fi
+
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
     xmlstarlet ed -P -L \
        -s /Context -t elem -n TMP -v '' \
        -i //TMP -t attr -n name -v escenic/solr-base-uri \
-       -i //TMP -t attr -n value -v http://${search_host}:${search_port}/solr/collection1 \
+       -i //TMP -t attr -n value -v "${solr_editorial_url}" \
        -i //TMP -t attr -n type -v java.lang.String \
        -i //TMP -t attr -n override -v false \
        -r //TMP -v Environment \
@@ -499,7 +506,7 @@ EOF
        -r //TMP -v Environment \
        -s /Context -t elem -n TMP -v '' \
        -i /Context/TMP -t attr -n name -v escenic/index-update-uri \
-       -i /Context/TMP -t attr -n value -v http://${search_host}:${search_port}/solr/collection1/update/ \
+       -i /Context/TMP -t attr -n value -v ${solr_editorial_url}/update/ \
        -i /Context/TMP -t attr -n type -v java.lang.String \
        -i /Context/TMP -t attr -n override -v true \
        -r //TMP -v Environment \
@@ -523,9 +530,9 @@ EOF
 
      cat >> $tomcat_base/conf/Catalina/localhost/indexer-webapp-presentation.xml <<EOF
     <Context docBase="$\\{catalina.base}/webapps/indexer-webapp">
-      <Environment name="escenic/solr-base-uri" value="http://${search_host}:${search_port}/solr/presentation/" type="java.lang.String" override="true"/>
+      <Environment name="escenic/solr-base-uri" value="http://${search_host}:${solr_port}/solr/presentation/" type="java.lang.String" override="true"/>
       <Environment name="escenic/indexer-webservice" value="${presentation_indexer_ws_uri}" type="java.lang.String" override="true"/>
-      <Environment name="escenic/index-update-uri" value="http://${search_host}:${search_port}/solr/presentation/update/" type="java.lang.String" override="true"/>
+      <Environment name="escenic/index-update-uri" value="http://${search_host}:${solr_port}/solr/presentation/update/" type="java.lang.String" override="true"/>
       <Environment name="escenic/head-tail-storage-file" value="$escenic_data_dir/engine/head-tail-presentation.index" type="java.lang.String" override="true"/>
       <Environment name="escenic/failing-documents-storage-file" value="$escenic_data_dir/engine/failures-presentation.index" type="java.lang.String" override="true"/>
    </Context>

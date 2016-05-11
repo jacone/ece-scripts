@@ -5,7 +5,7 @@ function get_deploy_white_list() {
   local deploy_white_list=""
   local presentation_deploy_white_list="escenic-admin $(get_publication_short_name_list)"
   local editor_deploy_white_list="escenic-admin escenic studio indexer-webservice webservice webservice-extensions preview-editor-ws"
-  local search_deploy_white_list="solr indexer-webapp"
+  local search_deploy_white_list="indexer-webapp"
 
   # user's deploy white list, if present, takes precedence.
   if [ $fai_enabled -eq 1 ]; then
@@ -114,6 +114,14 @@ function deploy_conf_package() {
     --install $conf_file
 }
 
+function set_search_host_and_ports() {
+  if [ ${fai_enabled-0} -eq 1 ]; then
+    search_host=${fai_search_host-$HOSTNAME}
+    search_port=${fai_search_port-$default_app_server_port}
+    solr_port=${fai_solr_port-8983}
+  fi
+}
+
 ## $1=<default instance name>
 function install_ece_instance() {
   install_ece_third_party_packages
@@ -142,10 +150,24 @@ function install_ece_instance() {
       $ece_instance_conf_archive
   fi
 
-  if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
+  if [[ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ||
+        $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ||
+        $install_profile_number -eq $PROFILE_ALL_IN_ONE
+      ]]; then
+
+    ## Since 2013-09-05 (e6958fb9) we've had a a chicken and the egg
+    ## problem, set_up_app_server is dependent on Nursery
+    ## configuration to be there, but
+    ## set_up_basic_nursery_configuration (which again calls
+    ## set_up_search_client_nursery_conf) is dependent on values set
+    ## in set_up_app_server. Without these, the search related Nursery
+    ## components get faulty entries.
+    set_search_host_and_ports
+
     set_up_basic_nursery_configuration
     set_up_instance_specific_nursery_configuration
   fi
+
   set_up_app_server
 
   # We set a WAR white list for all profiles except all in one
@@ -881,23 +903,36 @@ function stop_and_clear_instance_if_requested() {
 function set_up_search_client_nursery_conf() {
   local dir=$common_nursery_dir/com/escenic/framework/search/solr
   make_dir $dir
-  echo "solrServerURI=http://${search_host}:${search_port}/solr" \
+  echo "solrServerURI=http://${search_host}:${solr_port}/solr" \
     >>  $dir/SolrSearchEngine.properties
 
   dir=$common_nursery_dir/com/escenic/webservice/search
   make_dir $dir
-  echo "solrURI=http://${search_host}:${search_port}/solr/select" \
+  local solr_search_url=
+
+  if [ ${fai_search_legacy-0} -eq 1 ]; then
+    sorl_search_url=http://${search_host}:${search_port}/solr/select
+  else
+    if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+      solr_search_url=http://${search_host}:${solr_port}/solr/editorial/select
+    else
+      solr_search_url=http://${search_host}:${solr_port}/solr/presentation/select
+    fi
+  fi
+
+  echo "solrURI=${solr_search_url}" \
     >> $dir/DelegatingSearchEngine.properties
 
   dir=$common_nursery_dir/com/escenic/lucy
   make_dir $dir
-  echo "solrURI=http://${search_host}:${search_port}/solr" \
+  echo "solrURI=http://${solr_search_url}" \
     >> $dir/LucySearchEngine.properties
 
   dir=$common_nursery_dir/com/escenic/forum/search/lucy
   make_dir $dir
-  echo "solrURI=http://${search_host}:${search_port}/solr" \
+  echo "solrURI=${solr_search_url}" \
     >> $dir/SearchEngine.properties
+
 }
 
 function set_up_content_engine_cron_jobs() {
