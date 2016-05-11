@@ -83,25 +83,15 @@ force_packages=0
 ece_software_setup_completed=0
 
 ############################################################################
-# For ECE 5.5
+# For ECE 5.7
 ############################################################################
 technet_download_list="
-  http://technet.escenic.com/downloads/release/55/analysis-engine-2.5.0.131590.zip
-  http://technet.escenic.com/downloads/release/55/assemblytool-2.0.4.jar
-  http://technet.escenic.com/downloads/release/55/community-engine-3.8.1.132399.zip
-  http://technet.escenic.com/downloads/release/55/engine-5.5.0.131978.zip
-  http://technet.escenic.com/downloads/release/55/forum-3.2.1.132293.zip
-  http://technet.escenic.com/downloads/release/55/geocode-2.4.1.130693.zip
-  http://technet.escenic.com/downloads/release/55/lucy-4.2.1.129603.zip
-  http://technet.escenic.com/downloads/release/55/menu-editor-2.1.1.128528.zip
-  http://technet.escenic.com/downloads/release/55/online-graphics-1.0.1.133123.zip
-  http://technet.escenic.com/downloads/release/55/poll-2.3.0.128547.zip
-  http://technet.escenic.com/downloads/release/55/vcpeditor-1.0.0.132434.zip
-  http://technet.escenic.com/downloads/release/55/video-1.2.1.132710.zip
+http://maven.escenic.com/com/escenic/engine-dist/5.7.71.178665/engine-dist-5.7.71.178665-bin.zip
+https://maven.escenic.com/com/escenic/tools/assemblytool/2.0.7/assemblytool-2.0.7.zip
 "
+
 wf_download_list="
-  http://technet.escenic.com/downloads/release/55/framework-dist-2.0.2.131581.zip
-  http://technet.escenic.com/downloads/release/55/framework-community-dist-2.0.2.131581.zip
+https://maven.escenic.com/com/escenic/widget-framework/framework-dist/3.5.1.174428/framework-dist-3.5.1.174428.zip
 "
 ############################################################################
 
@@ -564,7 +554,7 @@ function check_software_credentials() {
 
   print_and_log "Verifying that Technet credentials are OK ..."
 
-  local url=http://technet.escenic.com
+  local url=http://maven.escenic.com
   local notok=$(
     is_unauthorized_to_access_url \
       ${technet_user} \
