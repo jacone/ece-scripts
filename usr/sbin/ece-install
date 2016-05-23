@@ -58,7 +58,7 @@ db_vendor=percona
 download_dir=${escenic_cache_dir}/$(basename $0)
 log=${escenic_log_dir}/$(basename $0).log
 conf_file=$HOME/ece-install.conf
-ece_scripts_git_source=https://github.com/vizrt/ece-scripts.git
+ece_scripts_git_source=https://github.com/escenic/ece-scripts.git
 maven_opts="--batch-mode"
 wget_opts="--continue --inet4-only --quiet"
 apt_opts="--no-install-recommends"
@@ -407,8 +407,8 @@ function print_status_and_next_steps()
     if [ $install_profile_number -ne $PROFILE_RESTORE_FROM_BACKUP -a \
         $install_profile_number -ne $PROFILE_CACHE_SERVER -a \
         $install_profile_number -ne $PROFILE_WIDGET_FRAMEWORK ]; then
-        add_next_step "Install info: "\ "/usr/share/doc/escenic/ece-install-guide.txt"
-        add_next_step "Guide books: http://documentation.vizrt.com/ece-5.5.html"
+        add_next_step "UNIX man pages: $(man -k escenic | awk '{print $1;}')"
+        add_next_step "Guide books: http://docs.escenic.com/ece-5.7.html"
     fi
 
     print_next_step_list
