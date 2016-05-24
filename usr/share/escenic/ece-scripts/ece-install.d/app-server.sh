@@ -526,9 +526,9 @@ EOF
    print_and_log "Finished adding solr configuration for search"
    print_and_log "Started adding context configuration for indexer-webapp-presentation"
  
-     mkdir -p $tomcat_base/conf/Catalina/localhost/
+   mkdir -p $tomcat_base/conf/Catalina/localhost/
 
-     cat >> $tomcat_base/conf/Catalina/localhost/indexer-webapp-presentation.xml <<EOF
+   cat > $tomcat_base/conf/Catalina/localhost/indexer-webapp-presentation.xml <<EOF
     <Context docBase="$\\{catalina.base}/webapps/indexer-webapp">
       <Environment name="escenic/solr-base-uri" value="http://${search_host}:${solr_port}/solr/presentation/" type="java.lang.String" override="true"/>
       <Environment name="escenic/indexer-webservice" value="${presentation_indexer_ws_uri}" type="java.lang.String" override="true"/>
@@ -537,6 +537,7 @@ EOF
       <Environment name="escenic/failing-documents-storage-file" value="$escenic_data_dir/engine/failures-presentation.index" type="java.lang.String" override="true"/>
    </Context>
 EOF
+   pretty_print_xml $tomcat_base/conf/Catalina/localhost/indexer-webapp-presentation.xml
    print_and_log "Finished adding context for indexer-webapp-presentation"
 
   elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
@@ -554,6 +555,7 @@ EOF
        $tomcat_base/conf/context.xml
   fi
 
+  pretty_print_xml $tomcat_base/conf/context.xml
   set_up_logging
 }
 
