@@ -320,7 +320,7 @@ function set_up_engine_and_plugins() {
     verify_that_archive_is_ok $download_dir/$file
 
     if [ $(echo $file | \
-      grep -E "^engine-[0-9]|^engine-trunk-SNAPSHOT|^engine-dist" | \
+      grep -E "^engine-[0-9]|^engine-trunk-SNAPSHOT|^engine-develop-SNAPSHOT|^engine-dist" | \
       wc -l) -gt 0 ]; then
       engine_dir=$(get_base_dir_from_bundle $download_dir/$file)
       engine_file=$file
