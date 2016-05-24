@@ -588,3 +588,16 @@ function common_bashing_user_cancelled_hook() {
 function lowercase() {
   echo "$@" | tr [A-Z] [a-z]
 }
+
+### pretty_print_xml
+## Pretty prints the passed XML file
+##
+## $1 :: xml file
+function pretty_print_xml() {
+  local file=$1
+  local tmp_file=
+  tmp_file=$(mktemp)
+
+  xmllint --format "${file}" > "${tmp_file}"
+  run mv "${tmp_file}" "${file}"
+}
