@@ -739,7 +739,7 @@ function install_ece_third_party_packages
       local version=$(lsb_release -s -r | sed "s#\.##g")
     fi
 
-    if [ $(has_oracle_java_installed) -eq 0 ]; then
+    if [ "$(has_oracle_java_installed)" -eq 0 ]; then
       install_oracle_java
     fi
 
