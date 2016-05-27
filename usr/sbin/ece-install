@@ -277,10 +277,10 @@ function install_common_os_packages()
         apt-key add - 1>> $log 2>> $log
       local package_pool=${fai_apt_vizrt_pool-unstable}
       add_apt_source "deb http://apt.vizrt.com ${package_pool} main"
+      run apt-get update
     fi
     install_packages_if_missing escenic-common-scripts
   fi
-
 }
 
 # don't quote values when setting conf file values with
