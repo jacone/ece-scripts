@@ -79,7 +79,8 @@ note
 seo
 mobile-studio
 preview-editor
-live-center"
+live-center
+revision-history"
 
 declare -A project_distributions=()
 
@@ -116,6 +117,7 @@ declare -A maven_snapshot_coordinates=(
 ["mobile-studio"]="com.escenic.plugins.mobile-studio:mobile-studio:zip"
 ["preview-editor"]="com.escenic.plugins.preview-editor:preview-editor:zip"
 ["live-center"]="com.escenic.plugins.live-center:live-center:zip"
+["revision-history"]="com.escenic.plugins.revision-history:revision-history:zip"
 )
 
 declare -A maven_coordinates=(
@@ -159,6 +161,7 @@ com.escenic.plugins.vcpeditor:vcpeditor:zip"
 ["mobile-studio"]="com.escenic.plugins.mobile-studio:mobile-studio:zip"
 ["preview-editor"]="com.escenic.plugins.preview-editor:preview-editor:zip"
 ["live-center"]="com.escenic.plugins.live-center:live-center:zip"
+["revision-history"]="com.escenic.plugins.revision-history:revision-history:zip"
 )
 
 # root folders for engine and plugin distributions
@@ -1624,7 +1627,7 @@ local conf_deploy_opts="--conf"
 }
 
 function phase_deploy() {
-  if [ $auto_deploy == true ]; then
+  if [ "$local_mode" == "true" ] && [ "$auto_deploy" == "true" ]; then
     automatic_deploy
   fi
 }

@@ -132,12 +132,6 @@ function deploy() {
 
       run rm -rf $tomcat_base/work/*
 
-      for war in $dir/*.war ; do
-        if [ -d $tomcat_base/$(get_app_base $war)/$(basename $war .war) ] ; then
-          run rm -rf $tomcat_base/$(get_app_base $war)/$(basename $war .war)
-        fi
-      done
-
       # this scenario is likely when running many minimal instances of
       # tomcat and some of these are not properly initialised.
       if [ ! -d $tomcat_base/webapps ]; then
@@ -156,6 +150,21 @@ function deploy() {
         local name=$(basename $war .war)
 
         local deploy_this_war=1
+        if [ -n "$publications_webapps" ]; then
+         for el in $publications_webapps; do
+           OIFS=$IFS
+           IFS=':' read publication webapps <<< "$el"
+           IFS=','
+           for webapp in $webapps; do
+              if [ "$webapp" == "$name" ]; then
+                deploy_this_war=0
+                deploy_war $tomcat_base/webapps-${publication}/$name $war
+                break
+              fi
+           done
+           IFS=$OIFS
+        done
+      fi
         if [ -n "$deploy_webapp_white_list" ]; then
           local deploy_this_war=0
 
@@ -171,14 +180,12 @@ function deploy() {
           continue
         fi
 
-        make_dir $tomcat_base/$app_base/$name
-        run cd $tomcat_base/$app_base/$name
-        run unzip -q $war < /dev/null
-
+        deploy_war $tomcat_base/$app_base/$name $war
         if [ ${enable_memcached_support-1} -eq 1 ]; then
           add_memcached_support $tomcat_base/$app_base/$name
         fi
       done
+
       if [ $type == "search" ]; then
         if [[ -L $tomcat_base/webapps/indexer-webapp-presentation && \
               -d $tomcat_base/webapps/indexer-webapp-presentation ]]; then
@@ -207,6 +214,18 @@ function deploy() {
 
   run rm -rf ${dir}
   update_deployment_state_and_log_files $ear
+}
+## $1: webapp directory
+## $2: war file name
+function deploy_war() {
+  local app_dir=$1
+  local war_file=$2
+  if [ -d $app_dir ] ; then
+    run rm -rf $app_dir
+  fi
+  make_dir $app_dir
+  run cd $app_dir
+  run unzip -q $war_file < /dev/null
 }
 
 ## $1 : dir of the webapp

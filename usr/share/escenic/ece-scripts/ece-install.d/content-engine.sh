@@ -30,6 +30,20 @@ function get_deploy_white_list() {
   echo ${deploy_white_list}
 }
 
+function get_publications_webapps_list() {
+
+  local publication_webapps=""
+  # Publication service webapp mappping
+  if [ $fai_enabled -eq 1 ]; then
+    if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ] || [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+      publication_webapps=${fai_publications_webapps-""}
+    else
+      publication_webapps=""
+    fi
+  fi
+  echo ${publication_webapps}
+}
+
 function get_publication_short_name_list() {
   local deploy_white_list=""
 
@@ -163,7 +177,14 @@ function install_ece_instance() {
         $file
     fi
   fi
-
+  if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ] || [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+    local file=$escenic_conf_dir/ece-${instance_name}.conf
+    print_and_log "Added publications service webapps in $file ..."
+    set_conf_file_value \
+      publications_webapps \
+      $(get_publications_webapps_list) \
+      $file
+  fi
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER -a \
     $install_profile_number -ne $PROFILE_SEARCH_SERVER ]; then
     set_up_content_engine_cron_jobs
