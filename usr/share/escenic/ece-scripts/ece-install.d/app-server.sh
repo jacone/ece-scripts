@@ -378,7 +378,7 @@ EOF
                />
     <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
       <Valve className="org.apache.catalina.valves.AccessLogValve"
-             prefix="access."
+             prefix="access-publications."
              suffix=".log"
              pattern="common"
              />
