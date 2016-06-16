@@ -311,8 +311,6 @@ function get_base_dir_from_bundle() {
         done
     fi
 
-    debug "get_base_dir_from_bundle file_name="$file_name $1
-
     echo $file_name
 }
 
@@ -587,4 +585,17 @@ function common_bashing_user_cancelled_hook() {
 ## $@ :: as many strings as you like.
 function lowercase() {
   echo "$@" | tr [A-Z] [a-z]
+}
+
+### pretty_print_xml
+## Pretty prints the passed XML file
+##
+## $1 :: xml file
+function pretty_print_xml() {
+  local file=$1
+  local tmp_file=
+  tmp_file=$(mktemp)
+
+  xmllint --format "${file}" > "${tmp_file}"
+  run mv "${tmp_file}" "${file}"
 }
