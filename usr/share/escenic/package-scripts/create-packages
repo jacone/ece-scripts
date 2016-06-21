@@ -314,15 +314,15 @@ function set_up_spore() {
 
   local dir=$(mktemp -d)
   (
-    download_uri_target_to_dir \
-      https://github.com/vizrt/spore/archive/master.tar.gz \
-      $dir
     cd $dir
+    run git archive --format=tar.gz \
+    --remote=ssh://git@cci-jira-stash.ccieurope.com:7999/vosa/spore.git master \
+    --output="master.tar.gz"
     run tar xzf master.tar.gz
-    run cp $dir/spore-master/bin/* $target_dir/usr/bin
-    run cp $dir/spore-master/sbin/* $target_dir/usr/sbin
-    run cp $dir/spore-master/README.md $target_dir/usr/share/doc/spore
-    run cp -r $dir/spore-master/examples $target_dir/usr/share/doc/spore/examples
+    run cp $dir/bin/* $target_dir/usr/bin
+    run cp $dir/sbin/* $target_dir/usr/sbin
+    run cp $dir/README.md $target_dir/usr/share/doc/spore
+    run cp -r $dir/examples $target_dir/usr/share/doc/spore/examples
   )
   run rm -rf $dir
 }
