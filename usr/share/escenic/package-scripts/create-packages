@@ -265,14 +265,14 @@ function set_up_escenic-munin-plugins() {
   local dir=$(mktemp -d)
   (
     run cp -r ../../../../etc/munin/plugins/* $target_dir/etc/munin/plugins
-    run download_uri_target_to_dir \
-      https://github.com/mogsie/escenic-munin/tarball/master \
-      $dir
     cd $dir
-    tar xzf master
-    run cp $dir/mogsie-escenic-munin*/*_ $target_dir/usr/share/munin/plugins
-    run cp $dir/mogsie-escenic-munin*/README.md $doc_dir
-    run cp $dir/mogsie-escenic-munin*/site/* $doc_dir
+    run git archive --format=tar.gz \
+    --remote=ssh://git@cci-jira-stash.ccieurope.com:7999/vosa/escenic-munin.git master \
+    --output="master.tar.gz"
+    tar xzf master.tar.gz
+    run cp $dir/*_ $target_dir/usr/share/munin/plugins
+    run cp $dir/README.md $doc_dir
+    run cp $dir/site/* $doc_dir
 
     chmod 755 $file $target_dir/usr/share/munin/plugins
   )
