@@ -1,6 +1,6 @@
 # ece-install module for installing the search server
 
-solr_download_url=http://apache.uib.no/lucene/solr/6.0.0/solr-6.0.0.zip
+solr_download_url=http://apache.uib.no/lucene/solr/6.1.0/solr-6.1.0.zip
 
 ## Since solr itself talks about SOLR_HOME as where it has its data
 ## files (solr_data_dir might have been a more suitable name), we
