@@ -932,7 +932,7 @@ function set_up_search_client_nursery_conf() {
   local solr_search_url=
 
   if [ ${fai_search_legacy-0} -eq 1 ]; then
-    sorl_search_url=http://${search_host}:${search_port}/solr/select
+    solr_search_url=http://${search_host}:${search_port}/solr/select
   else
     if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
       solr_search_url=http://${search_host}:${solr_port}/solr/editorial/select
