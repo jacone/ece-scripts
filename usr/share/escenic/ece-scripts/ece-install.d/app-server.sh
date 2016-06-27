@@ -479,8 +479,10 @@ EOF
   fi
 
   local solr_editorial_url=http://${search_host}:${solr_port}/solr/editorial
+  local solr_presentation_url=http://${search_host}:${solr_port}/solr/presentation
   if [ ${fai_search_legacy-0} -eq 1 ]; then
     solr_editorial_url=http://${search_host}:${search_port}/solr/collection1
+    solr_presentation_url=http://${search_host}:${search_port}/solr/presentation
   fi
 
   if [ $install_profile_number -ne $PROFILE_ANALYSIS_SERVER ]; then
@@ -530,9 +532,9 @@ EOF
 
    cat > $tomcat_base/conf/Catalina/localhost/indexer-webapp-presentation.xml <<EOF
     <Context docBase="$\\{catalina.base}/webapps/indexer-webapp">
-      <Environment name="escenic/solr-base-uri" value="http://${search_host}:${solr_port}/solr/presentation/" type="java.lang.String" override="true"/>
+      <Environment name="escenic/solr-base-uri" value="${solr_presentation_url}" type="java.lang.String" override="true"/>
       <Environment name="escenic/indexer-webservice" value="${presentation_indexer_ws_uri}" type="java.lang.String" override="true"/>
-      <Environment name="escenic/index-update-uri" value="http://${search_host}:${solr_port}/solr/presentation/update/" type="java.lang.String" override="true"/>
+      <Environment name="escenic/index-update-uri" value="${solr_presentation_url}/update/" type="java.lang.String" override="true"/>
       <Environment name="escenic/head-tail-storage-file" value="$escenic_data_dir/engine/head-tail-presentation.index" type="java.lang.String" override="true"/>
       <Environment name="escenic/failing-documents-storage-file" value="$escenic_data_dir/engine/failures-presentation.index" type="java.lang.String" override="true"/>
    </Context>
