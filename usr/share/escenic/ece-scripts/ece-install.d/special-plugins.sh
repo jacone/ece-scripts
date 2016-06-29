@@ -7,7 +7,7 @@ function configure_seo(){
         local solr_presentation_url=http://${search_host}:${solr_port}/solr/presentation
         if [ ${fai_search_legacy-0} -eq 1 ]; then
             solr_presentation_url=http://${search_host}:${search_port}/solr/presentation
-        then
+        fi
             xmlstarlet ed -P -L \
                 -s /Context -t elem -n TMP -v '' \
                 -i //TMP -t attr -n name -v escenic/presentation-solr-base-uri \
