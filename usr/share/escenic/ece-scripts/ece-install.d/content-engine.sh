@@ -935,16 +935,17 @@ function set_up_search_client_nursery_conf() {
   dir=$common_nursery_dir/com/escenic/webservice/search
   make_dir $dir
   local solr_search_url=
-  #We need to get rid of this legacy search checking every time.
-  #TODO: Rename the legacy solr editorial core from collection1 to editorial so that it syncs
-  # together with the new Solr 6 implementation.
+  # We need to get rid of this legacy search checking every
+  # time. TODO: Rename the legacy solr editorial core from collection1
+  # to editorial so that it syncs together with the new Solr 6
+  # implementation.
   if [ ${fai_search_legacy-0} -eq 1 ]; then
     solr_search_url=${solr_base_url}/select
   else
     if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
-      solr_search_url=http://${solr_base_url}/editorial/select
+      solr_search_url=${solr_base_url}/editorial/select
     else
-      solr_search_url=http://${solr_base_url}/presentation/select
+      solr_search_url=${solr_base_url}/presentation/select
     fi
   fi
 
