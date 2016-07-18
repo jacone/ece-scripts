@@ -67,6 +67,7 @@ newsgate
 vcpeditor
 online-graphics
 widget-framework-core
+widget-framework
 widget-framework-common
 widget-framework-mobile
 widget-framework-community
@@ -111,6 +112,7 @@ declare -A maven_snapshot_coordinates=(
 ["xml-editor"]="com.escenic.plugins.xml-editor:xml-editor:zip"
 ["vcpeditor"]="com.escenic.plugins.vcpeditor:vcpeditor:zip"
 ["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
+["widget-framework"]="com.escenic.widget-framework:widget-framework:zip"
 ["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
 ["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
 ["seo"]="com.escenic.plugins.seo:seo:zip"
@@ -155,6 +157,7 @@ com.escenic.plugins.xml-editor:xml-editor:zip"
 ["vcpeditor"]="com.escenic.plugins.vcpeditor:vcpeditor-dist:zip
 com.escenic.plugins.vcpeditor:vcpeditor:zip"
 ["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
+["widget-framework"]="com.escenic.widget-framework:widget-framework:zip"
 ["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
 ["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
 ["seo"]="com.escenic.plugins.seo:seo:zip"
