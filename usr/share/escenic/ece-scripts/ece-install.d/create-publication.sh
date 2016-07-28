@@ -201,7 +201,7 @@ function create_publication_in_db() {
   run curl ${curl_opts}  \
     -F "name=${publication_name}" \
     -F "publisherName=Escenic" \
-    -F "publicationType=${publication_type}"
+    -F "publicationType=${publication_type}" \
     -F "adminPassword=admin" \
     -F "adminPasswordConfirm=admin" \
     --cookie JSESSIONID="$cookie" \
