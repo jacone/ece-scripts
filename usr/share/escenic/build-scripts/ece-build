@@ -850,7 +850,7 @@ function fetch_distributions
     if [[ ! $dist_version = "" ]]; then
 
       # remove old trunk-SNAPSHOT if present
-      if [[ $dist_version = "trunk-SNAPSHOT" ]]; then
+      if [ "$dist_version" == "trunk-SNAPSHOT" ] || [ "$dist_version" = "develop-SNAPSHOT" ]; then
         if [ -d $dists_root_dir/$f-$dist_version ]; then
           rm -rf $dists_root_dir/$f-$dist_version
         fi
@@ -864,7 +864,7 @@ function fetch_distributions
         local artifact_version=$dist_version
         local target_path=$dists_root_dir
        
-        if [[ $dist_version = "trunk-SNAPSHOT" ]]; then
+         if [ "$dist_version" == "trunk-SNAPSHOT" ] || [ "$dist_version" = "develop-SNAPSHOT" ]; then
           for h in ${maven_snapshot_coordinates["$f"]};
           do
             local dist_path=`mvn_coordinate_to_rest_call ${h}:$dist_version`
@@ -992,7 +992,7 @@ function print_unstable_distributions
 {
   for f in ${!project_distributions[@]}; do
     local coordinate=
-    if [[ ${project_distributions["$f"]} = "trunk-SNAPSHOT" ]]; then
+    if [ "${project_distributions["$f"]}" == "trunk-SNAPSHOT" ] || [ "${project_distributions["$f"]}" == "develop-SNAPSHOT" ]; then
       for g in ${maven_snapshot_coordinates["$f"]}
       do
         local dist_path=`mvn_coordinate_to_rest_call ${g}:${project_distributions["$f"]}`
