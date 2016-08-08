@@ -923,24 +923,29 @@ function stop_and_clear_instance_if_requested() {
 ## called for presentation & editorial profiles
 function set_up_search_client_nursery_conf() {
   local solr_base_url=http://${search_host}:${solr_port}/solr
-  local dir=$common_nursery_dir/com/escenic/framework/search/solr
+  # Need to fix this hardcoded editoral search url, when we haved 
+  # machine installation profile
+  local solr_search_url=${solr_base_url}/editorial/select
+  local  dir=$common_nursery_dir/com/escenic/webservice/search
   make_dir $dir
 
   if [ ${fai_search_legacy-0} -eq 1 ]; then
       solr_base_url=http://${search_host}:${search_port}/solr
+      solr_search_url=${solr_base_url}/select
   fi
-  echo "solrServerURI=${solr_base_url}" \
-    >>  $dir/SolrSearchEngine.properties
 
-  dir=$common_nursery_dir/com/escenic/webservice/search
+  echo "solrURI=${solr_search_url}" \
+    >> $dir/DelegatingSearchEngine.properties
+
+  dir=$common_nursery_dir/com/escenic/framework/search/solr
   make_dir $dir
-  local solr_search_url=
+  
   # We need to get rid of this legacy search checking every
   # time. TODO: Rename the legacy solr editorial core from collection1
   # to editorial so that it syncs together with the new Solr 6
   # implementation.
   if [ ${fai_search_legacy-0} -eq 1 ]; then
-    solr_search_url=${solr_base_url}/select
+    solr_search_url=${solr_base_url}/presentation/select
   else
     if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
       solr_search_url=${solr_base_url}/editorial/select
@@ -948,9 +953,8 @@ function set_up_search_client_nursery_conf() {
       solr_search_url=${solr_base_url}/presentation/select
     fi
   fi
-
-  echo "solrURI=${solr_search_url}" \
-    >> $dir/DelegatingSearchEngine.properties
+  echo "solrServerURI=${solr_search_url}" \
+    >>  $dir/SolrSearchEngine.properties
 
   dir=$common_nursery_dir/com/escenic/lucy
   make_dir $dir
