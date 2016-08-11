@@ -738,7 +738,9 @@ function authorize_users
         fi
     done
     #special handling for the root user authorized keys
-    cat /root/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/authorized_keys
+    if [ -e /root/.ssh/authorized_keys ]; then
+      cat /root/.ssh/authorized_keys >> $home_dir/$builder_system_user/.ssh/authorized_keys
+    fi
     run chown -R $builder_system_user:$builder_system_user $home_dir/$builder_system_user/.ssh/
 }
 
