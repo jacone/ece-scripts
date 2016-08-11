@@ -571,10 +571,21 @@ EOF
   fi
 }
 
+function check_mysql_is_running(){
+if [[ $(netstat -nlp | grep -w mysqld | wc -l) -gt 0 ]]; then
+   return 0
+else
+   return 1
+fi
+}
+
 function create_schema() {
     # we first create the DB (or, if drop_db_first is 1, we've just
     # dropped it above) before running the SQL scripts.
   if [ $db_product = "mysql" ]; then
+     if ! $(check_mysql_is_running) ; then
+ 	run service mysql start	
+     fi
     print_and_log "Creating DB $db_schema on $HOSTNAME ..."
     mysql -h $db_host << EOF
 create database $db_schema character set utf8 collate utf8_general_ci;
