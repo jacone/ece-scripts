@@ -692,6 +692,12 @@ EOF
 function disable_host_key_checking
 {
     local git_host=$(echo "$git_base" | cut -d '/' -f1)
+    if [[ ! $(echo $git_host | grep ":" | wc -l ) -eq 0 ]]; then
+       old_ifs=$IFS
+       IFS=':' read host port <<< "$git_host"
+       IFS=$old_ifs
+       git_host=$host
+    fi
     tee > /home/$1/.ssh/config << EOF
 Host $git_host
     StrictHostKeyChecking no
