@@ -73,8 +73,8 @@ function deploy() {
       print_and_log "If found a healthy $ear locally so I will not fetch it again."
     elif [ -f "$file" ]; then
       print_and_log " Found a local ear file $file"
-      log "Creating a symlink of the file $file to $cache_dir"
-      run ln -s $file $ear
+      log "Copying it to to $cache_dir"
+      run cp "${file}" "${cache_dir}"
     else
       # wget_auth is needed for download_uri_target_to_dir
       wget_auth=$wget_builder_auth
