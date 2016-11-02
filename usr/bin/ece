@@ -832,6 +832,9 @@ for el in $command; do
         deploy)
             deploy
             ;;
+        repackage)
+            repackage "${file}"
+            ;;
         assemble)
             assemble
             ;;
