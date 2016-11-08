@@ -12,23 +12,46 @@ USR_SHARE_DIR=/usr/share/escenic
 get_installed_packages_war_list() {
   find "${USR_SHARE_DIR}/escenic-"* -maxdepth 1 -name "webapps" -type d | \
     while read -r webapps_dir; do
-      find "${webapps_dir}" -name "*.war" -type f |
-        grep -w -v webservice-extensions.war
+      find "${webapps_dir}" -name "*.war" -type f
     done
 }
 
+get_installed_packages_lib_list() {
+  find "${USR_SHARE_DIR}/escenic-"* -maxdepth 1 -name "lib" -type d | \
+    while read -r lib_dir; do
+      find "${lib_dir}" -name "*.jar" -type f
+    done
+}
+
+get_installed_packages_webservice_extensions_list() {
+  find "${USR_SHARE_DIR}/escenic-"* -maxdepth 1 \
+       -name "webservice-extensions" -type d
+}
+
+get_installed_packages_webservice_list() {
+  find "${USR_SHARE_DIR}/escenic-"* -maxdepth 1 \
+       -name "webservice" -type d
+}
+
 ## $1 :: tmp dir with EAR contents
-overwrite_webapps_that_are_included_in_installed_packages() {
+remove_webapps_that_are_included_in_installed_packages() {
   local tmp_dir=$1
   for d in $(get_installed_packages_war_list); do
     for package_war in $(find "${d}" -type f -name "*.war"); do
       for ear_war in "${tmp_dir}/"*.war; do
         if [[ $(basename "${ear_war}") == $(basename "${package_war}") ]]; then
-          log "Replacing WAR in EAR, $(basename "${ear_war}"), with ${package_war}"
-          run cp "${package_war}" "${ear_war}"
+          run rm "${ear_war}"
         fi
       done
     done
+  done
+}
+
+## $1 :: tmp dir with EAR contents
+copy_webapps_that_are_included_in_installed_packages() {
+  local tmp_dir=$1
+  for war in $(get_installed_packages_war_list); do
+    run cp "${war}" "${tmp_dir}"
   done
 }
 
@@ -47,23 +70,31 @@ get_file_base() {
 }
 
 ## $1 :: tmp dir with EAR contents
-overwrite_libs_included_in_installed_packages() {
+remove_libs_included_in_installed_packages() {
   local tmp_dir=$1
-  find "${USR_SHARE_DIR}/escenic-"* -maxdepth 1 -name "lib" -type d | \
-    while read -r d; do
-      for package_jar in "${d}"/*.jar; do
-        package_jar_base=$(get_file_base "${package_jar}" jar)
+  for package_jar in $(get_installed_packages_lib_list); do
+    package_jar_base=$(get_file_base "${package_jar}" jar)
 
-        for ear_jar in "${tmp_dir}/lib/"*.jar; do
-          ear_jar_base=$(get_file_base "${ear_jar}" jar)
-          if [[ "${ear_jar_base}" == "${package_jar_base}" ]]; then
-            debug "Replacing JAR in EAR, $(basename "${ear_jar}"), with ${package_jar}"
-            run rm "${ear_jar}"
-            run cp "${package_jar}" "$(dirname "${ear_jar}")"
-          fi
-        done
-      done
+    for ear_jar in "${tmp_dir}/lib/"*.jar; do
+      ear_jar_base=$(get_file_base "${ear_jar}" jar)
+      if [[ "${ear_jar_base}" == "${package_jar_base}" ]]; then
+        debug "Removing JAR in EAR, $(basename "${ear_jar}"),
+               will be replaced with ${package_jar}"
+        run rm "${ear_jar}"
+      fi
     done
+  done
+}
+
+## $1 :: tmp dir with EAR contents
+copy_libs_included_in_installed_packages() {
+  local tmp_dir=$1
+  make_dir "${tmp_dir}/lib"
+
+  for package_jar in $(get_installed_packages_lib_list); do
+    debug "Including JAR ${package_jar} in EAR ..."
+    run cp "${package_jar}" "${tmp_dir}/lib"
+  done
 }
 
 ## $1 :: tmp dir with WAR contents
@@ -216,6 +247,55 @@ get_local_ear_reference() {
   fi
 }
 
+## $1 : WAR to update
+## $2 : directories whose contents should be merged with that of the
+##      WAR
+merge_all_dirs_to_war() {
+  local war=$1
+  local dir_list=${*:2}
+  log "Merging all $(basename "${war}")s ..."
+
+  if [ ! -e "${war}" ]; then
+    print_and_log "${war} doesn't exist!"
+    exit 1
+  fi
+
+  for dir in ${dir_list}; do
+    if [ ! -d "${dir}/webapp" ]; then
+      continue
+    fi
+    (
+      cd "${dir}/webapp"
+      zip -q -r -u "${war}" . || {
+        # see 'man zip' for more details
+        if [ $? -eq 12 ]; then
+          log "${war} already contained the contents of ${dir}/webapp"
+        else
+          remove_pid_and_exit_in_error
+        fi
+      }
+    )
+  done
+}
+
+## $1 :: tmp dir with EAR contents
+merge_all_webservice_extension_webapps() {
+  local tmp_dir=$1
+  local war=${tmp_dir}/webservice-extensions.war
+  merge_all_dirs_to_war \
+    "${war}" \
+    "$(get_installed_packages_webservice_extensions_list)"
+}
+
+## $1 :: tmp dir with EAR contents
+merge_all_webservice_webapps() {
+  local tmp_dir=$1
+  local war=${tmp_dir}/webservice.war
+  merge_all_dirs_to_war \
+    "${war}" \
+    "$(get_installed_packages_webservice_list)"
+}
+
 ## $1 :: EAR file or URI
 repackage() {
   local ear=
@@ -230,9 +310,16 @@ repackage() {
   print "Repackaging ${ear} with OS package installed JARs and WARs ..."
   start_time=$(date +%s)
   extract_archive "${ear}" "${tmp_dir}"
-  overwrite_webapps_that_are_included_in_installed_packages "${tmp_dir}"
-  overwrite_libs_included_in_installed_packages "${tmp_dir}"
+
+  remove_webapps_that_are_included_in_installed_packages "${tmp_dir}"
+  copy_webapps_that_are_included_in_installed_packages "${tmp_dir}"
+
+  remove_libs_included_in_installed_packages "${tmp_dir}"
+  copy_libs_included_in_installed_packages "${tmp_dir}"
+
   overwrite_publication_webapp_libs "${tmp_dir}"
+  merge_all_webservice_extension_webapps "${tmp_dir}"
+  merge_all_webservice_webapps "${tmp_dir}"
 
   # The ${file} variable is used by deploy.sh::deploy()
   export file=$(
