@@ -296,10 +296,23 @@ merge_all_webservice_webapps() {
     "$(get_installed_packages_webservice_list)"
 }
 
+exit_if_no_os_packages_are_installed() {
+  local packages_installed=
+  packages_installed=$(
+    find "${USR_SHARE_DIR}" -maxdepth 1 -name "escenic-*"  -type d | wc -l)
+
+  if [ "${packages_installed}" -eq 0 ]; then
+    print_and_log "No escenic packages installed on ${HOSTNAME} ☹"
+    remove_pid_and_exit_in_error
+  fi
+}
+
 ## $1 :: EAR file or URI
 repackage() {
   local ear=
   local file_or_uri=$1
+
+  exit_if_no_os_packages_are_installed
 
   ensure_ear_reference_and_lineage_sanity "${file_or_uri}"
   ear=$(get_local_ear_reference "${file_or_uri}")
