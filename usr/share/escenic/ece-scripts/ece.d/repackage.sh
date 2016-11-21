@@ -141,6 +141,8 @@ create_new_ear_in_dir() {
   local old_ear=$3
 
   local new_ear=
+  old_ear=${old_ear//-created-on-${HOSTNAME}.zip}
+
   new_ear="${result_dir}/$(date --iso)-$(date +%s)-repackaged-${old_ear}-created-on-${HOSTNAME}.zip"
   (
     run cd "${dir}"
@@ -181,7 +183,7 @@ overwrite_publication_webapp_libs() {
       # to be sure it's prestine, we delete the old war
       run rm "${war}"
       (
-        cd "${tmp_dir}"
+        cd "${tmp_dir}" || exit 1
         run zip --recurse-paths --quiet "${war}" .
       )
 
@@ -200,6 +202,7 @@ overwrite_publication_webapp_libs() {
 ## $1 :: The file or URI to an EAR, as passed to the 'ece' command
 ##       with --uri or --file.
 ensure_ear_reference_and_lineage_sanity() {
+  ## user passed a file or uri, that's easy.
   if [ -n "${file_or_uri}" ]; then
     ear_name_or_hash=$(basename "${file_or_uri}")
     return
@@ -215,9 +218,44 @@ ensure_ear_reference_and_lineage_sanity() {
   if [ -r "${deployment_log}" ]; then
     local last_deployed_ear=
     last_deployed_ear=$(awk '{print $7;}' "${deployment_log}" | tail -1)
-    ear_name_or_hash=$(awk '{print $8;}' "${deployment_log}" | tail -1)
-    file_or_uri=${cache_dir}/${last_deployed_ear}
+    last_deployed_hash=$(awk '{print $8;}' "${deployment_log}" | tail -1)
+    parent_sha_of_last=$(sed -rn  's#.*repackaged-(.*)-created-on.*#\1#p' \
+                             <<< "${last_deployed_ear}")
+    # If the user didn't pass any EAR to repackage, we want, if
+    # possible, to pick the previous EAR and re-package that. This is
+    # because we want to be able to make apt-get
+    # install/upgrade/remove idempotent, not to repackage a repackaged
+    # EAR.
+    if [ -n "${parent_sha_of_last}" ]; then
+      parent_ear_of_last=$(awk "{if (\$8 == \"${parent_sha_of_last}\") print \$7;}" \
+                               "${deployment_log}")
+      if [ -z "${parent_ear_of_last}" ]; then
+        parent_ear_of_last="does--not--exist"
+      fi
+
+      file=${cache_dir}/${parent_ear_of_last}
+      if [ -r "${file}" ]; then
+        print_and_log "Repackaging EAR ${parent_sha_of_last}
+          (parent of last deployment) ... "
+        ear_name_or_hash="${parent_sha_of_last}"
+        file_or_uri=${file}
+        return
+      fi
+    fi
+
+    # If we couldn't find the parent of the previous deployment, try
+    # to use the previously deployed EAR.
+    local file=${cache_dir}/${last_deployed_ear}
+    if [[ -z "${ear_name_or_hash}" && -r "${file}" ]]; then
+      print_and_log "Repackaging EAR ${last_deployed_ear}
+        (last deployment) ... "
+      ear_name_or_hash=${last_deployed_hash}
+      file_or_uri=${file}
+      return
+    fi
+
   elif [ -r "${default_cached_engine_ear}" ]; then
+    print_and_log "Repackaging EAR ${default_cached_engine_ear} ... "
     file_or_uri=${default_cached_engine_ear}
     ear_name_or_hash=$(basename "${default_cached_engine_ear}")
   else
@@ -236,7 +274,7 @@ get_local_ear_reference() {
   if [ -f "${file_or_uri}" ]; then
     echo "${file_or_uri}"
   else
-    export wget_auth=${wget_builder_auth}
+    export wget_auth=${wget_builder_auth-""}
 
     local file_name=
     file_name=$(basename "${file_or_uri}")
@@ -256,8 +294,9 @@ merge_all_dirs_to_war() {
   log "Merging all $(basename "${war}")s ..."
 
   if [ ! -e "${war}" ]; then
-    print_and_log "${war} doesn't exist!"
-    exit 1
+    print_and_log "${war} doesn't exist 💀
+      (perhaps you need to install the escenic-content-engine package ?)"
+    remove_pid_and_exit_in_error
   fi
 
   for dir in ${dir_list}; do
@@ -265,7 +304,7 @@ merge_all_dirs_to_war() {
       continue
     fi
     (
-      cd "${dir}/webapp"
+      cd "${dir}/webapp" || exit 1
       zip -q -r -u "${war}" . || {
         # see 'man zip' for more details
         if [ $? -eq 12 ]; then
