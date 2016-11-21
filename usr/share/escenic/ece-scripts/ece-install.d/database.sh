@@ -18,7 +18,7 @@ function get_percona_repo_url() {
 
 function get_mariadb_repo_url() {
   local distributor=$(lsb_release -i -s | tr '[A-Z]' '[a-z]')
-  echo "http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/$distributor/dists/"
+  echo "http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/${distributor}/dists/"
 }
 
 function set_up_mariadb_yum_repo() {
@@ -32,7 +32,7 @@ function set_up_mariadb_yum_repo() {
       arch=x86
     fi
     if [ $distributor = "redhatenterpriseserver" ]; then
-      $distributor=rhel
+      distributor=rhel
     fi
     local yum_url=http://yum.mariadb.org/5.5/${distributor}${release}-${arch}
     cat > $maria_db_repo <<EOF
@@ -72,17 +72,20 @@ function is_supported() {
     else
         repo_url=$(get_percona_repo_url)
     fi
-    if [ "$(get_http_response_code "$repo_url$code_name/")" == "200" ]; then
+    if [ "$(get_http_response_code "${repo_url}${code_name}/")" == "200" ]; then
         supported_code_name=0
     fi
     return $supported_code_name
 }
 
-function get_http_response_code(){
+# This function will curl the repo url and follow if there is any redirect
+# Then take the last occurance of HTTP and find the status code 
+function get_http_response_code() {
     local url=$1
-    curl -I -s $url | \
+    curl -I -L -s ${url} | \
         grep HTTP | \
-        cut -d ' ' -f2
+        tail -1 | \
+        cut -d ' ' -f2        
 }
 
 function add_gpg_key() {
