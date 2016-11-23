@@ -373,12 +373,15 @@ function extract_archive() {
     else
       run tar xjf $1
     fi
-  elif [[ "$1" == *".zip" ]]; then
+  elif [[ "$1" == *".zip" || "$1" == *".ear" ]]; then
     if [[ -n "$2" && -d "$2" ]]; then
       run unzip -q $1 -d $2
     else
       run unzip -q $1
     fi
+  else
+    print_and_log "Don't know how to extract $1"
+    exit 1
   fi
 }
 
