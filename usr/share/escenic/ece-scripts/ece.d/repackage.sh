@@ -64,9 +64,9 @@ get_file_base() {
   basename "$1" "$2" |
     sed -r \
         -e 's#[-][0-9.-]+##' \
-        -e 's#[-][a-z]+-SNAPSHOT##' \
-        -e 's#[-][0-9]+.[0-9]+-SNAPSHOT##' \
-        -e 's#[.]$##'
+        -e 's#SNAPSHOT##' \
+        -e 's#[.]$##' \
+        -e 's#(alpha|beta|rc)[.-][0-9]+##'
 }
 
 ## $1 :: tmp dir with EAR contents
