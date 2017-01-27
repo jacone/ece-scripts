@@ -10,6 +10,14 @@ test_can_get_base_name_of_develop_snapshot_dependency() {
   assertEquals "${expected}" "${actual}"
 }
 
+test_can_get_base_name_of_trunk_snapshot_dependency() {
+  local file=base-trunk-SNAPSHOT.jar
+  local expected=base
+  local actual=
+  actual=$(get_file_base ${file} .jar)
+  assertEquals "${expected}" "${actual}"
+}
+
 test_can_get_base_name_of_snapshot_dependency() {
   local file=base-2.0-SNAPSHOT.jar
   local expected=base

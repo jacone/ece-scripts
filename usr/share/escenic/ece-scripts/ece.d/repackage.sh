@@ -63,6 +63,7 @@ get_file_base() {
   basename "$1" "$2" |
     sed -r \
         -e 's#[-][0-9.-]+##' \
+        -e 's#-trunk-SNAPSHOT##' \
         -e 's#-develop-SNAPSHOT##' \
         -e 's#SNAPSHOT##' \
         -e 's#[.]$##' \
