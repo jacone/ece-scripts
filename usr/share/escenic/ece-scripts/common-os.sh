@@ -138,7 +138,7 @@ function get_tomcat_download_url() {
     local url=$tomcat_download
   else
     local url=$(
-        curl -s http://tomcat.apache.org/download-60.cgi | \
+        curl -s http://tomcat.apache.org/download-70.cgi | \
             grep tar.gz | \
             head -1 | \
             cut -d'"' -f2
