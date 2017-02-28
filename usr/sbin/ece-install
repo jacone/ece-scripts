@@ -730,7 +730,7 @@ function install_editorial_server()
 {
     print_and_log "Installing an editorial server on $HOSTNAME ..."
     type=engine
-    install_ece_instance "editor1" 0
+    install_ece_instance "${default_ece_intance_name}" 0
 }
 
 function run_hook()
