@@ -70,19 +70,8 @@ function install_cache_server() {
 
   install_varnish_software
 
-  if [ $fai_enabled -eq 0 ]; then
-    print "You must now list your backend servers."
-    print "These must be host names (not IPs) and must all be resolvable"
-    print "by your cache host ($HOSTNAME), preferably from /etc/hosts"
-    print "Seperate the entries with a space. e.g.: app1:8080 app2:8080."
-    print "Press ENTER to accept the default: ${HOSTNAME}:${appserver_port}"
-    echo -n "Your choice [${HOSTNAME}:${appserver_port}]> "
-    read backend_servers
-    cache_port=$default_cache_port
-  else
-    backend_servers=(${fai_cache_backends})
-    cache_port=${fai_cache_port-$default_cache_port}
-  fi
+  backend_servers=(${fai_cache_backends})
+  cache_port=${fai_cache_port-$default_cache_port}
 
   if [ -z "$backend_servers" ]; then
     backend_servers=("localhost:${appserver_port}")

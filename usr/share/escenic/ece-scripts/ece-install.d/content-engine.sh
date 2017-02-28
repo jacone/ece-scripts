@@ -1,3 +1,4 @@
+# -*- mode: sh; sh-shell: bash; -*-
 # ece-install module Content Engine specific code.
 
 function get_deploy_white_list() {
@@ -8,23 +9,21 @@ function get_deploy_white_list() {
   local search_deploy_white_list="solr indexer-webapp"
 
   # user's deploy white list, if present, takes precedence.
-  if [ $fai_enabled -eq 1 ]; then
-    if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
-      deploy_white_list=${fai_presentation_deploy_white_list-$presentation_deploy_white_list}
-    elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
-      deploy_white_list=${fai_editor_deploy_white_list-$editor_deploy_white_list}
-    elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
-      deploy_white_list=${fai_search_deploy_white_list-$search_deploy_white_list}
-    elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
-      local default_all_deploy_white_list="
+  if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+    deploy_white_list=${fai_presentation_deploy_white_list-$presentation_deploy_white_list}
+  elif [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+    deploy_white_list=${fai_editor_deploy_white_list-$editor_deploy_white_list}
+  elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+    deploy_white_list=${fai_search_deploy_white_list-$search_deploy_white_list}
+  elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+    local default_all_deploy_white_list="
         ${presentation_deploy_white_list}
         ${editor_deploy_white_list}
         ${search_deploy_white_list}
       "
-      deploy_white_list=${fai_all_deploy_white_list-$default_all_deploy_white_list}
-    else
-      deploy_white_list=${fai_publication_deploy_white_list-""}
-    fi
+    deploy_white_list=${fai_all_deploy_white_list-$default_all_deploy_white_list}
+  else
+    deploy_white_list=${fai_publication_deploy_white_list-""}
   fi
 
   echo ${deploy_white_list}
@@ -34,12 +33,10 @@ function get_publications_webapps_list() {
 
   local publication_webapps=""
   # Publication service webapp mappping
-  if [ $fai_enabled -eq 1 ]; then
-    if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ] || [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
-      publication_webapps=${fai_publications_webapps-""}
-    else
-      publication_webapps=""
-    fi
+  if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ] || [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+    publication_webapps=${fai_publications_webapps-""}
+  else
+    publication_webapps=""
   fi
   echo ${publication_webapps}
 }
@@ -129,11 +126,9 @@ function deploy_conf_package() {
 }
 
 function set_search_host_and_ports() {
-  if [ ${fai_enabled-0} -eq 1 ]; then
-    search_host=${fai_search_host-$HOSTNAME}
-    search_port=${fai_search_port-$default_app_server_port}
-    solr_port=${fai_solr_port-8983}
-  fi
+  search_host=${fai_search_host-$HOSTNAME}
+  search_port=${fai_search_port-$default_app_server_port}
+  solr_port=${fai_solr_port-8983}
 }
 
 ## $1=<default instance name>
@@ -598,15 +593,8 @@ function set_up_basic_nursery_configuration() {
   fi
 
   public_host_name=$HOSTNAME:${appserver_port}
-  if [ $fai_enabled -eq 1 ]; then
-    if [ -n "$fai_public_host_name" ]; then
-      public_host_name=$fai_public_host_name
-    fi
-  else
-    print "What is the public address of your website?"
-    print "Press ENTER to use the default ($public_host_name)"
-    echo -n "Your choice [$public_host_name]> "
-    read user_host_name
+  if [ -n "$fai_public_host_name" ]; then
+    public_host_name=$fai_public_host_name
   fi
 
   if [ -n "$user_host_name" ]; then
@@ -830,8 +818,7 @@ function is_installing_from_ear()
   log install_profile_number=$install_profile_number
   log ece_instance_ear_file=$ece_instance_ear_file
 
-  if [[ -z "$ece_instance_ear_file" || \
-    $fai_enabled -eq 0 ]]; then
+  if [[ -z "$ece_instance_ear_file" ]]; then
     echo 0
     return
   fi
@@ -844,8 +831,7 @@ function is_using_conf_archive(){
   log install_profile_number=$install_profile_number
   log ece_instance_conf_archive=$ece_instance_conf_archive
 
-  if [[ -z "$ece_instance_conf_archive" || \
-    $fai_enabled -eq 0 ]]; then
+  if [[ -z "$ece_instance_conf_archive" ]]; then
     echo 0
     return
   fi

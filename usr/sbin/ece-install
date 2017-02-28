@@ -483,42 +483,6 @@ EOF
   fi
 }
 
-function read_user_input()
-{
-    installation_profiles=(
-        "$PROFILE_ALL_IN_ONE - All in one, full stack on one host,"\
-" suitable for dev & test environments"
-"$PROFILE_EDITORIAL_SERVER - Editorial (publication) server"
-"$PROFILE_PRESENTATION_SERVER - Presentation server (ECE + memcached)."
-"$PROFILE_DB_SERVER - Database server"
-"$PROFILE_CACHE_SERVER - Cache server (cache and web server)"
-"$PROFILE_RMI_HUB - RMI hub"
-"$PROFILE_SEARCH_SERVER - Search server (Solr + indexer-webapp)"
-"$PROFILE_WIDGET_FRAMEWORK - Install Widget Framework."
-"$PROFILE_RESTORE_FROM_BACKUP - Restore from backup"\
-" (DB, data files, binaries, conf & publications)"
-    )
-
-    echo "Hi, which server profile do you wish to install?"$'\n'
-
-    for (( i = 0; i < ${#installation_profiles[@]}; i++ )); do
-        echo "  " ${installation_profiles[$i]}
-    done
-
-    echo $'\n'"Select 1-${#installation_profiles[@]} and press ENTER"
-    echo -n "Your choice [1]> "
-    read install_profile_number
-
-    if [ -z "$install_profile_number" ]; then
-        install_profile_number=$PROFILE_ALL_IN_ONE
-    fi
-
-    if [ $(is_number $install_profile_number) -eq 0 ]; then
-        print_and_log "Profile number, $install_profile_number, is not a number"
-        remove_pid_and_exit_in_error
-    fi
-}
-
 function assert_correct_runtime_environment()
 {
     if [ $(whoami) != "root" ]; then
@@ -587,13 +551,11 @@ function check_software_credentials() {
       print_and_log "are insufficient to access ${url} :-("
       remove_pid_and_exit_in_error
     fi
-  elif [ ${fai_enabled-0} -eq 1 ]; then
-    if [[ ${fai_wf_install-0} -eq 1 || ${fai_all_install-0} -eq 1 ]]; then
-      print_and_log "You must have a valid wf_user & wf_password"
-      print_and_log "in your ${conf_file}. If you don't have these,"
-      print_and_log "please contact support@escenic.com"
-      remove_pid_and_exit_in_error
-    fi
+  elif [[ ${fai_wf_install-0} -eq 1 || ${fai_all_install-0} -eq 1 ]]; then
+    print_and_log "You must have a valid wf_user & wf_password"
+    print_and_log "in your ${conf_file}. If you don't have these,"
+    print_and_log "please contact support@escenic.com"
+    remove_pid_and_exit_in_error
   fi
 }
 
@@ -678,24 +640,17 @@ function common_pre_install() {
 # setting this.
 function ask_for_instance_name()
 {
-    if [ ${fai_enabled-0} -eq 0 ]; then
-        print "What do you want to call this ECE instance?"
-        print "Press ENTER to accept the default instance name, $1."
-        echo -n "Your choice [$1]> "
-        read instance_name
-    else
-        if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
-            instance_name=${fai_editor_name-$1}
-        elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
-            instance_name=${fai_presentation_name-$1}
-        elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
-            instance_name=${fai_search_name-$1}
-        elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
-            instance_name=${fai_all_name-$1}
-        elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
-            instance_name=${fai_analysis_name-$1}
-        fi
-    fi
+    if [ $install_profile_number -eq $PROFILE_EDITORIAL_SERVER ]; then
+        instance_name=${fai_editor_name-$1}
+     elif [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
+        instance_name=${fai_presentation_name-$1}
+     elif [ $install_profile_number -eq $PROFILE_SEARCH_SERVER ]; then
+        instance_name=${fai_search_name-$1}
+     elif [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
+         instance_name=${fai_all_name-$1}
+     elif [ $install_profile_number -eq $PROFILE_ANALYSIS_SERVER ]; then
+         instance_name=${fai_analysis_name-$1}
+     fi
 
     if [ -z "$instance_name" ]; then
         instance_name=$1
@@ -986,13 +941,14 @@ function get_java_package_name() {
   fi
 }
 
-read_user_input "$@"
-init
-assert_correct_runtime_environment
-get_java_package_name
 
-if [ ${fai_enabled-0} -eq 1 ]; then
-    print_and_log "Full Automatic Install (FAI) enabled."
+function main() {
+    read_user_input "$@"
+    init
+    assert_correct_runtime_environment
+    get_java_package_name
+
+    print_and_log "Full Automatic Install (FAI)."
     print_and_log "All user input will be read from $conf_file"
 
     common_pre_install
@@ -1120,53 +1076,7 @@ if [ ${fai_enabled-0} -eq 1 ]; then
     fi
 
     common_post_install
-else
-    read_user_input
-    common_pre_install
+}
 
-    case $install_profile_number in
-        $PROFILE_ALL_IN_ONE)
-            install_all_in_one_environment
-            ;;
-        $PROFILE_CACHE_SERVER)
-            install_cache_server
-            ;;
-        $PROFILE_DB_SERVER)
-            install_database_server
-            ;;
-        $PROFILE_EDITORIAL_SERVER)
-            install_editorial_server
-            ;;
-        $PROFILE_PRESENTATION_SERVER)
-            install_presentation_server
-            ;;
-        $PROFILE_SEARCH_SERVER)
-            install_search_server
-            ;;
-        $PROFILE_RMI_HUB)
-            install_rmi_hub
-            ;;
-        $PROFILE_WIDGET_FRAMEWORK)
-            install_widget_framework
-            ;;
-        $PROFILE_CREATE_PUBLICATION)
-            create_publication
-            ;;
-        $PROFILE_RESTORE_FROM_BACKUP)
-            restore_from_backup
-            ;;
-        $PROFILE_VIP_PROVIDER)
-            install_vip_provider
-            ;;
-        $PROFILE_DB_BACKUP_SERVER)
-            set_up_db_backup
-            ;;
-        *)
-            print "Invalid profile number $install_profile_number, must be 1-11"
-            remove_pid_and_exit_in_error
-            ;;
-    esac
-    common_post_install
-fi
-
+main "$@"
 exit 0
