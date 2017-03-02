@@ -251,7 +251,7 @@ function install_packages_if_missing() {
 function install_common_os_packages()
 {
   print_and_log "Installing common OS packages ..."
-  local packages="curl wget unzip bc ca-certificates xml2"
+  local packages="curl wget unzip bc ca-certificates xml2 zip"
   local git_package=git
 
   if [ $on_debian_or_derivative -eq 1 ]; then
