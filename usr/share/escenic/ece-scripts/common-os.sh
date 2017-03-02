@@ -5,7 +5,8 @@
 # by torstein@escenic.com
 
 # depends on common-bashing
-common_bashing_is_loaded > /dev/null 2>&1 || source $(pwd)/common-bashing.sh
+common_bashing_is_loaded > /dev/null 2>&1 ||
+  source "${BASH_SOURCE[0]%/*}/common-bashing.sh"
 
 ## Only used if the Tomcat download mirror couldn't be determined
 fallback_tomcat_url="http://apache.uib.no/tomcat/tomcat-7/v7.0.70/bin/apache-tomcat-7.0.70.tar.gz"
@@ -134,10 +135,11 @@ function assert_commands_available() {
 }
 
 function get_tomcat_download_url() {
-  if [ -n $tomcat_download ]; then
-    local url=$tomcat_download
+  local url=
+  if [ -n "${tomcat_download}" ]; then
+    url=$tomcat_download
   else
-    local url=$(
+    url=$(
         curl -s http://tomcat.apache.org/download-70.cgi | \
             grep tar.gz | \
             head -1 | \
@@ -145,7 +147,7 @@ function get_tomcat_download_url() {
     )
   fi
 
-  if [ -z $url ]; then
+  if [ -z "${url}" ]; then
     url=$fallback_tomcat_url
     log "Failed to get Tomcat mirror URL, will use fallback URL $url"
   fi
