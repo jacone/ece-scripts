@@ -775,7 +775,7 @@ function show_all_publications() {
 }
 
 function show_all_deployments() {
-  print "These are all the publications on ${instance}:"
+  print "These are all the deployments on ${instance}:"
   cat $(get_deployment_log)
 }
 
