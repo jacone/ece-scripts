@@ -77,7 +77,7 @@ function create_publication() {
     if [ -z "${fai_publication_war}" ]; then
       # if the user hasn't set the fai_publication_war, see if the
       # demo-clean.war is available on the system.
-      local file=$escenic_root_dir/engine/contrib/wars/demo-clean.war
+      local file=$(get_content_engine_dir)/contrib/wars/demo-clean.war
       if [ -e $file ]; then
         publication_war=$file
       else

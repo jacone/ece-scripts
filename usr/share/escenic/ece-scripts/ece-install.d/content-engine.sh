@@ -137,7 +137,6 @@ function install_ece_instance() {
 
   ask_for_instance_name $1
   set_up_engine_directories
-  set_up_ece_scripts
 
   set_archive_files_depending_on_profile
 
@@ -145,6 +144,7 @@ function install_ece_instance() {
 
   download_escenic_components
   check_for_required_downloads
+  set_up_ece_scripts
   set_up_engine_and_plugins
 
   # most likely, the user is _not_ installing from archives (EAR +
@@ -336,6 +336,9 @@ function set_up_engine_and_plugins() {
   if [ $ece_software_setup_completed -eq 1 ]; then
     return
   fi
+  if [ "${fai_package_enabled-0}" -eq 1 ]; then
+    return
+  fi
 
   print_and_log "Setting up the Escenic Content Engine & its plugins ..."
   make_dir $escenic_root_dir
@@ -397,6 +400,11 @@ function set_up_engine_and_plugins() {
 }
 
 function set_up_assembly_tool() {
+  ## TODO tkj, we still need AT with non-DPRES
+  if [ "${fai_package_enabled-0}" -eq 1 ]; then
+    return
+  fi
+
   print_and_log "Setting up the Assembly Tool ..."
 
   make_dir $escenic_root_dir/assemblytool/
@@ -409,7 +417,7 @@ function set_up_assembly_tool() {
   fi
 
   # adding an instance layer to the Nursery configuration
-  run cp -r $escenic_root_dir/engine/siteconfig/bootstrap-skeleton \
+  run cp -r $(get_content_engine_dir)/siteconfig/bootstrap-skeleton \
     $escenic_root_dir/assemblytool/conf
   run cd $escenic_root_dir/assemblytool/conf/
   run cp -r layers/host layers/environment
@@ -537,6 +545,10 @@ EOF
 }
 
 function set_up_basic_nursery_configuration() {
+  if [ "${fai_package_enabled-0}" -eq 1 ]; then
+    return
+  fi
+
   print_and_log "Setting up basic Nursery configuration ..."
 
   # we always copy the default plugin configuration (even if there is
@@ -572,16 +584,16 @@ function set_up_basic_nursery_configuration() {
     else
       print "Archive $ece_instance_conf_archive doesn't have JAAS config,"
       print "I'll use standard JAAS (engine/security) instead."
-      run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/
+      run cp -r $(get_content_engine_dir)/security/ $common_nursery_dir/
     fi
 
     run cp -rn engine/siteconfig/config-skeleton/* $common_nursery_dir/
-  elif [ -d $escenic_root_dir/engine/siteconfig/config-skeleton ] ; then
+  elif [ -d $(get_content_engine_dir)/siteconfig/config-skeleton ] ; then
     print_and_log "I'm using Nursery & JAAS configuration (skeleton) " \
-      "from $escenic_root_dir/engine"
-    run cp -rn $escenic_root_dir/engine/siteconfig/config-skeleton/* \
+      "from $(get_content_engine_dir)"
+    run cp -rn $(get_content_engine_dir)/siteconfig/config-skeleton/* \
       $common_nursery_dir/
-    run cp -r $escenic_root_dir/engine/security/ $common_nursery_dir/
+    run cp -r $(get_content_engine_dir)/security/ $common_nursery_dir/
   else
     print_and_log "I'm creating an empty config tree for you, since" \
       "no content engine was downloaded."
@@ -691,6 +703,10 @@ EOF
 }
 
 function set_up_instance_specific_nursery_configuration() {
+  if [ "${fai_package_enabled-0}" -eq 1 ]; then
+    return
+  fi
+
   print_and_log "Setting up instance specific Nursery configuration ..."
 
   for el in $escenic_conf_dir/engine/instance/*; do
@@ -839,9 +855,43 @@ function is_using_conf_archive(){
   echo 1
 }
 
+function _repackage_deploy_and_restart_type()
+{
+  if [ "$(is_using_conf_archive)" -eq 1 ]; then
+    local ece_command="
+      ece \
+        -i ${instance_name} \
+        -t ${type} \
+        repackage \
+        stop \
+        deploy \
+        start \
+        --uri ${ece_instance_ear_file}
+     "
+  else
+    local ece_command="
+      ece \
+        -i ${instance_name} \
+        -t ${type} \
+        repackage \
+        stop \
+        deploy \
+        start
+    "
+  fi
+
+  su - "${ece_user}" -c "${ece_command}" &>> "${log}"
+  exit_on_error "su - ${ece_user} -c ${ece_command}"
+}
+
 function assemble_deploy_and_restart_type()
 {
   set_correct_permissions
+
+  if [ "${fai_package_enabled-0}" -eq 1 ]; then
+    _repackage_deploy_and_restart_type
+    return
+  fi
 
   # need to run clean here since we might be running multiple profiles
   # in the same ece-install process.
@@ -862,8 +912,10 @@ function assemble_deploy_and_restart_type()
 }
 
 function set_up_engine_directories() {
+  local el=
   for el in $engine_dir_list; do
-    make_dir $el
+    make_dir "${el}"
+    run chown -R "${ece_user}:${ece_group}" "${el}"
   done
 }
 

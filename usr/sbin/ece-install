@@ -53,6 +53,9 @@ ece_scripts_version="straight-from-github"
 #Set the default database vendor. Possible values are mariadb and percona
 db_vendor=percona
 
+## Map with package name to version entries. The version can be empty.
+declare -A fai_package_map
+
 #####################################################################
 
 download_dir=${escenic_cache_dir}/$(basename $0)
@@ -61,7 +64,7 @@ conf_file=$HOME/ece-install.conf
 ece_scripts_git_source=https://github.com/escenic/ece-scripts.git
 maven_opts="--batch-mode"
 wget_opts="--continue --inet4-only --quiet"
-apt_opts="--no-install-recommends"
+apt_opts='--no-install-recommends -o Dpkg::Options::=--force-confold'
 curl_opts="--silent"
 
 # hook scripts
@@ -149,10 +152,25 @@ function init() {
   trap common_bashing_user_cancelled_hook SIGINT SIGHUP
 }
 
+function get_content_engine_dir() {
+  if [ "${fai_package_enabled-0}" -eq 1 ]; then
+    find "${escenic_root_dir}"/escenic-content-engine-* -maxdepth 0 |
+      tail -n 1
+  else
+    printf "%s\n" "${escenic_root_dir}/engine"
+  fi
+}
+
 function download_escenic_components()
 {
     if [ $ece_software_setup_completed -eq 1 ]; then
         return
+    fi
+
+    if [ "${fai_package_enabled-0}" -eq 1 ]; then
+      escenic_root_dir=/usr/share/escenic
+      install_configured_escenic_packages
+      return
     fi
 
     print_and_log "Downloading software from technet.escenic.com ..."
@@ -359,8 +377,8 @@ function set_correct_permissions()
         -user ${ece_user} | \
         wc -l)
       if [ $correct_permission -gt 0 ]; then
-        log "Data directory root, $el,"
-        log "has correct permissions, skiping sub directories."
+        log "Data directory root, $el," \
+            "has correct permissions, skiping sub directories."
         continue
       fi
     fi
@@ -420,6 +438,9 @@ function print_status_and_next_steps()
 function check_for_required_downloads()
 {
   if [ $ece_software_setup_completed -eq 1 ]; then
+    return
+  fi
+  if [ "${fai_package_enabled-0}" -eq 1 ]; then
     return
   fi
 
@@ -498,8 +519,6 @@ function assert_correct_runtime_environment()
       print_and_log $conf_file "doesn't exist." \
         "I cannot live without it, so I'm exiting :-("
       remove_pid_and_exit_in_error
-    else
-      source $conf_file
     fi
 }
 
@@ -562,8 +581,6 @@ function check_software_credentials() {
 function common_pre_install() {
     print "I'm logging to $log"
 
-    run source $conf_file
-
     # These variables are placed here as all the directories can be
     # overridden in ece-install.conf
     common_nursery_dir=$escenic_conf_dir/engine/common
@@ -586,23 +603,26 @@ function common_pre_install() {
       $escenic_spool_dir/import
     "
     ece_install_env=${escenic_run_dir}/$(basename $0).env
-    ensure_variable_is_set technet_user technet_password
-    wget_auth="--http-user ${technet_user} --http-password ${technet_password}"
-
     if [ -e /etc/debian_version -a -x /usr/bin/dpkg ]; then
         on_debian_or_derivative=1
         export DEBIAN_FRONTEND=noninteractive
 
-      # chicken and the egg problem, we need lsb_release to install the
-      # packages later on, hence as soon as we know we've got a Debian
-      # based platform, we install lsb-release. Also note, the
-      # executable, lsb_release, is in the list of required binaries in
-      # install_common_os_packages.
-      install_packages_if_missing "lsb-release"
+        # chicken and the egg problem, we need lsb_release to install
+        # the packages later on, hence as soon as we know we've got a
+        # Debian based platform, we install lsb-release. Also note,
+        # the executable, lsb_release, is in the list of required
+        # binaries in install_common_os_packages.
+        #
+        # Same goes for json_xs and jq which are required for parsing
+        # YAML conf files.
+        install_packages_if_missing "lsb-release libjson-xs-perl libyaml-perl jq"
     fi
 
     if [ -e /etc/redhat-release ]; then
       on_redhat_or_derivative=1
+      # TODO: ensure provides json_xs and that it's in the default
+      # CentOS & Redhat repos: perl-Cpanel-JSON-XS, jq. Need to add
+      # the EPEL repo.
       install_packages_if_missing "redhat-lsb"
 
       if [ $(lsb_release -i | grep RedHat | wc -l) -gt 0 ]; then
@@ -610,6 +630,9 @@ function common_pre_install() {
       fi
     fi
 
+    parse_yaml_conf_file_or_source_if_sh_conf "${conf_file}"
+    ensure_variable_is_set technet_user technet_password
+    wget_auth="--http-user ${technet_user} --http-password ${technet_password}"
     check_software_credentials
     assert_commands_available lsb_release
 

@@ -101,10 +101,8 @@ function set_up_app_server() {
 
   if [ ! -d $tomcat_base ] ; then
     make_dir $tomcat_base
-    run cp -r ${appserver_parent_dir}/${tomcat_dir}/conf $tomcat_base
-  elif [ -d $tomcat_base/conf ]; then 
-    run cp -nr ${appserver_parent_dir}/${tomcat_dir}/conf/* $tomcat_base/conf/
   fi
+  run cp -rn ${appserver_parent_dir}/${tomcat_dir}/conf ${tomcat_base}/.
 
   for el in bin escenic/lib lib work logs temp webapps; do
     make_dir $tomcat_base/$el
