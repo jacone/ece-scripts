@@ -164,3 +164,16 @@ function is_escenic_xml_ok() {
 
   echo 1
 }
+
+## Returns 0 if we're installing ECE6 or later. 1 otherwise
+function is_installing_post_ece6() {
+  if [[ "${fai_package_enabled}" -eq 1 ]]; then
+    ## Either, we've got fai_package_enabled which implies ECE >= 6.
+    return 0
+  else
+    ## ...or we've got a download list with ECE6 in it. All other
+    ## cases mean 5.7
+    echo "${technet_download_list}" |
+      grep -c "engine-6." > /dev/null
+  fi
+}
