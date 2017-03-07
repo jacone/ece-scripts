@@ -667,6 +667,13 @@ repackage() {
 
   exit_if_no_os_packages_are_installed
 
+  if [[ "${type}" != "engine" ]]; then
+    print_and_log \
+      "Doesn't make sense to repackge ${type} instances →" \
+      "not repackaging EAR for ${instance}"
+    return
+  fi
+
   ensure_ear_reference_and_lineage_sanity "${file_or_uri}"
   ear=$(get_local_ear_reference "${file_or_uri}")
 
