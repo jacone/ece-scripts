@@ -175,6 +175,7 @@ function set_up_solr() {
   "
 
   print_and_log "Setting up Solr ..."
+  install_packages_if_missing lsof
   download_and_install_solr
   create_global_solr_configuration
   setup_solr_init_d_script
