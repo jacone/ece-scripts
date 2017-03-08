@@ -8,6 +8,10 @@ function get_deploy_white_list() {
   local editor_deploy_white_list="escenic-admin escenic studio indexer-webservice webservice webservice-extensions preview-editor-ws"
   local search_deploy_white_list="solr indexer-webapp"
 
+  if is_installing_post_ece6; then
+    search_deploy_white_list="indexer-webapp"
+  fi
+
   # user's deploy white list, if present, takes precedence.
   if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ]; then
     deploy_white_list=${fai_presentation_deploy_white_list-$presentation_deploy_white_list}
