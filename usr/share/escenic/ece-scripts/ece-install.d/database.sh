@@ -8,7 +8,7 @@ if [[ $(uname -m) != "x86_64" ]]; then
   percona_rpm_release_url=http://www.percona.com/downloads/percona-release/$percona_rpm_release_package_name.i386.rpm
 fi
 
-percona_ubuntu_gpg_key=1C4CBDCDCD2EFD2A
+percona_ubuntu_gpg_key=9334A25F8507EFA5
 mariadb_ubuntu_gpg_key=CBCB082A1BB943DB
 
 
