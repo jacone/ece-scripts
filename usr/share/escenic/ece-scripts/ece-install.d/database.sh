@@ -503,7 +503,6 @@ db_user=ece5user
 db_password=ece5password
 db_schema=ece5db
 db_host=localhost
-ece_home=/opt/escenic/engine
 db_product=mysql
 
 # oracle specific settings
@@ -579,8 +578,8 @@ fi
 }
 
 function create_schema() {
-    # we first create the DB (or, if drop_db_first is 1, we've just
-    # dropped it above) before running the SQL scripts.
+    # we first create the DB or, if drop_db_first is 1, we've just
+    # dropped it above before running the SQL scripts.
   if [ $db_product = "mysql" ]; then
      if ! $(check_mysql_is_running) ; then
  	run service mysql start	
@@ -638,9 +637,13 @@ function create_ecedb() {
   fi
 
   # first the ECE SQL ...
-  run_db_scripts $ece_home/database/$db_product
+  run_db_scripts $(get_content_engine_dir)/database/$db_product
+  _run_db_scripts_for_installed_plugins
 
-  # ... then, find the plugins and run their SQL scripts
+  log "${id} ${db_product}://${db_host}/${db_schema} is now ready for ${db_user}/${db_password}"
+}
+
+function _run_db_scripts_for_installed_plugins_pre_ece6() {
   for archive in $technet_download_list $ear_download_list; do
     # don't re-run the engine scripts
     if [[ $(basename ${archive}) == engine* ]]; then
@@ -663,8 +666,25 @@ function create_ecedb() {
     fi
     run_db_scripts ${escenic_root_dir}/${archive_sql_dir}
   done
+}
 
-  log "${id} ${db_product}://${db_host}/${db_schema} is now ready for ${db_user}/${db_password}"
+function _run_db_scripts_for_installed_plugins_post_ece6() {
+  find /usr/share -maxdepth 2 -name "escenic-*" -type d |
+    while read dir; do
+      local plugin_db_sql_dir=${dir}/misc/database/${db_product}
+      if [ ! -d "${plugin_db_sql_dir}" ]; then
+        continue
+      fi
+      run_db_scripts "${plugin_db_sql_dir}"
+    done
+}
+
+function _run_db_scripts_for_installed_plugins() {
+  if is_installing_post_ece6; then
+    _run_db_scripts_for_installed_plugins_post_ece6
+  else
+    _run_db_scripts_for_installed_plugins_pre_ece6
+  fi
 }
 
 ## will run the EAE scripts if they are availabe.

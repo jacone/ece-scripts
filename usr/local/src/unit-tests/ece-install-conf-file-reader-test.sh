@@ -1,6 +1,58 @@
 #! /usr/bin/env bash
 ## author: torstein@escenic.com
 
+test_can_parse_yaml_conf_db() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+  local db_user=foodbuser
+  local db_password=foodbpassword
+  local db_schema=foodbdb
+  local db_host=foodbhost
+  local db_port=foodbport
+  local db_install=yes
+
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  db:
+    install: ${db_install}
+    user: ${db_user}
+    password: ${db_password}
+    schema: ${db_schema}
+    host: ${db_host}
+    port: ${db_port}
+EOF
+
+  unset fai_db_install
+  unset fai_db_user
+  unset fai_db_password
+  unset fai_db_schema
+  unset fai_db_host
+  unset fai_db_port
+
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+
+  assertNotNull "Should set fai_db_install" "${fai_db_install}"
+  assertEquals "Should set fai_db_install" 1 "${fai_db_install}"
+
+  assertNotNull "Should set fai_db_user" "${fai_db_user}"
+  assertEquals "Should set fai_db_user" "${db_user}" "${fai_db_user}"
+
+  assertNotNull "Should set fai_db_password" "${fai_db_password}"
+  assertEquals "Should set fai_db_password" "${db_password}" "${fai_db_password}"
+
+  assertNotNull "Should set fai_db_schema" "${fai_db_schema}"
+  assertEquals "Should set fai_db_schema" "${db_schema}" "${fai_db_schema}"
+
+  assertNotNull "Should set fai_db_host" "${fai_db_host}"
+  assertEquals "Should set fai_db_host" "${db_host}" "${fai_db_host}"
+
+  assertNotNull "Should set fai_db_port" "${fai_db_port}"
+  assertEquals "Should set fai_db_port" "${db_port}" "${fai_db_port}"
+
+  rm -rf "${yaml_file}"
+}
+
 test_can_parse_yaml_conf_credentials() {
   local yaml_file=
   yaml_file=$(mktemp)
@@ -127,7 +179,8 @@ test_can_parse_yaml_conf_presentation_install() {
   cat > "${yaml_file}" <<EOF
 ---
 profiles:
-  - presentation: yes
+  presentation:
+    install: yes
 EOF
 
   unset fai_presentation_install
@@ -144,7 +197,8 @@ test_can_parse_yaml_conf_search_install() {
   cat > "${yaml_file}" <<EOF
 ---
 profiles:
-  - search: yes
+  search:
+    install: yes
 EOF
 
   unset fai_search_install
@@ -161,7 +215,8 @@ test_can_parse_yaml_conf_editor_install() {
   cat > "${yaml_file}" <<EOF
 ---
 profiles:
-  - editor: yes
+  editor:
+    install: yes
     port: 8080
     name: engine1
 EOF
@@ -179,15 +234,23 @@ test_can_parse_yaml_conf_editor_install_multi_profiles() {
   yaml_file=$(mktemp)
   cat > "${yaml_file}" <<EOF
 profiles:
-  - editor: yes
-  - search: yes
-  - db: no
+  editor:
+    install: yes
+  search:
+    install: yes
+  db:
+    install: no
 EOF
 
   unset fai_editor_install
+  unset fai_search_install
+  unset fai_db_install
+
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
   assertNotNull "Should set fai_editor_install" "${fai_editor_install}"
   assertEquals "Should set fai_editor_install" 1 "${fai_editor_install}"
+  assertEquals "Should set fai_search_install" 1 "${fai_search_install}"
+  assertNull "Should not have set fai_db_install" "${fai_db_install}"
 
   rm -rf "${yaml_file}"
 }
@@ -198,15 +261,37 @@ test_can_parse_yaml_conf_db_install() {
   cat > "${yaml_file}" <<EOF
 ---
 profiles:
-  - db: yes
-    port: 8080
-    name: engine1
+  db:
+    install: yes
 EOF
 
   unset fai_db_install
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
   assertNotNull "Should set fai_db_install" "${fai_db_install}"
   assertEquals "Should set fai_db_install" 1 "${fai_db_install}"
+
+  # now, try to set it to true
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  db:
+    install: true
+EOF
+  unset fai_db_install
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNotNull "Should set fai_db_install" "${fai_db_install}"
+  assertEquals "Should set fai_db_install" 1 "${fai_db_install}"
+
+  # now, try to set it to false
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  db:
+    install: false
+EOF
+  unset fai_db_install
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNull "Should not have set fai_db_install" "${fai_db_install}"
 
   rm -rf "${yaml_file}"
 }
@@ -217,7 +302,8 @@ test_can_parse_yaml_conf_cache_install() {
   cat > "${yaml_file}" <<EOF
 ---
 profiles:
-  - cache: yes
+  cache:
+    install: yes
 EOF
 
   unset fai_cache_install

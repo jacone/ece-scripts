@@ -548,11 +548,7 @@ EOF
   fi
 }
 
-function set_up_basic_nursery_configuration() {
-  if [ "${fai_package_enabled-0}" -eq 1 ]; then
-    return
-  fi
-
+function _set_up_basic_nursery_configuration_by_copying() {
   print_and_log "Setting up basic Nursery configuration ..."
 
   # we always copy the default plugin configuration (even if there is
@@ -606,6 +602,14 @@ function set_up_basic_nursery_configuration() {
 
   if [ -n "${a_tmp_dir}" ]; then
     run rm -rf ${a_tmp_dir}
+  fi
+}
+
+function set_up_basic_nursery_configuration() {
+  print_and_log "Setting up basic Nursery configuration ..."
+
+  if [ "${fai_package_enabled-0}" -eq 0 ]; then
+    _set_up_basic_nursery_configuration_by_copying
   fi
 
   public_host_name=$HOSTNAME:${appserver_port}

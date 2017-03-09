@@ -41,7 +41,8 @@ function set_up_ece_scripts()
   print_and_log 'Setting up the ece UNIX scripts ...'
 
   if [ $on_debian_or_derivative -eq 1 ]; then
-    install_packages_if_missing escenic-content-engine-scripts
+    # TODO tkj remove echo
+    echo install_packages_if_missing escenic-content-engine-scripts
   else
     install_ece_scripts_with_git
   fi

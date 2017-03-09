@@ -76,19 +76,15 @@ _parse_yaml_conf_file_packages() {
     version=$(_jq "${yaml_file}" .packages["${i}"].version)
     fai_package_map[${name}]=${version}
   done
-
-  for p in "${!fai_package_map[@]}"; do
-    echo p="$p" v="${fai_package_map[${p}]}"
-  done
-
 }
 
 _parse_yaml_conf_file_editor() {
   local yaml_file=$1
 
   local install_editor=no
-  install_editor=$(_jq "${yaml_file}" .profiles[].editor)
-  if [[ "${install_editor}" == "yes" ]]; then
+  install_editor=$(_jq "${yaml_file}" .profiles.editor.install)
+  if [[ "${install_editor}" == "yes" ||
+          "${install_editor}" == "true" ]]; then
     export fai_editor_install=1
   fi
 }
@@ -106,7 +102,8 @@ _parse_yaml_conf_file_environment() {
   ## fai_package_enabled=1
   local configured_use_escenic_packages=
   configured_use_escenic_packages=$(_jq "${yaml_file}" .environment[].use_escenic_packages)
-  if [[ "${configured_use_escenic_packages}" == "yes" ]]; then
+  if [[ "${configured_use_escenic_packages}" == "yes" ||
+          "${configured_use_escenic_packages}" == "true" ]]; then
     export fai_package_enabled=1
   fi
 }
@@ -115,8 +112,9 @@ _parse_yaml_conf_file_presentation() {
   local yaml_file=$1
 
   local install_presentation=no
-  install_presentation=$(_jq "${yaml_file}" .profiles[].presentation)
-  if [[ "${install_presentation}" == "yes" ]]; then
+  install_presentation=$(_jq "${yaml_file}" .profiles.presentation.install)
+  if [[ "${install_presentation}" == "yes" ||
+          "${install_presentation}" == "true" ]]; then
     export fai_presentation_install=1
   fi
 }
@@ -125,8 +123,9 @@ _parse_yaml_conf_file_search() {
   local yaml_file=$1
 
   local install_search=no
-  install_search=$(_jq "${yaml_file}" .profiles[].search)
-  if [[ "${install_search}" == "yes" ]]; then
+  install_search=$(_jq "${yaml_file}" .profiles.search.install)
+  if [[ "${install_search}" == "yes" ||
+          "${install_search}" == "true" ]]; then
     export fai_search_install=1
   fi
 }
@@ -135,8 +134,9 @@ _parse_yaml_conf_file_cache() {
   local yaml_file=$1
 
   local install_cache=no
-  install_cache=$(_jq "${yaml_file}" .profiles[].cache)
-  if [[ "${install_cache}" == "yes" ]]; then
+  install_cache=$(_jq "${yaml_file}" .profiles.cache.install)
+  if [[ "${install_cache}" == "yes" ||
+          "${install_cache}" == "true" ]]; then
     export fai_cache_install=1
   fi
 }
@@ -145,9 +145,40 @@ _parse_yaml_conf_file_db() {
   local yaml_file=$1
 
   local install_db=no
-  install_db=$(_jq "${yaml_file}" .profiles[].db)
-  if [[ "${install_db}" == "yes" ]]; then
+  install_db=$(_jq "${yaml_file}" .profiles.db.install)
+  if [[ "${install_db}" == "yes" ||
+          "${install_db}" == "true" ]]; then
     export fai_db_install=1
+  fi
+
+  local install_db_user=
+  install_db_user=$(_jq "${yaml_file}" .profiles.db.user)
+  if [ -n "${install_db_user}" ]; then
+    export fai_db_user=${install_db_user}
+  fi
+
+  local install_db_password=
+  install_db_password=$(_jq "${yaml_file}" .profiles.db.password)
+  if [ -n "${install_db_password}" ]; then
+    export fai_db_password=${install_db_password}
+  fi
+
+  local install_db_schema=
+  install_db_schema=$(_jq "${yaml_file}" .profiles.db.schema)
+  if [ -n "${install_db_schema}" ]; then
+    export fai_db_schema=${install_db_schema}
+  fi
+
+  local install_db_host=
+  install_db_host=$(_jq "${yaml_file}" .profiles.db.host)
+  if [ -n "${install_db_host}" ]; then
+    export fai_db_host=${install_db_host}
+  fi
+
+  local install_db_port=
+  install_db_port=$(_jq "${yaml_file}" .profiles.db.port)
+  if [ -n "${install_db_port}" ]; then
+    export fai_db_port=${install_db_port}
   fi
 }
 

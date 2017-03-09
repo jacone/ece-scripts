@@ -24,12 +24,16 @@ _install_prerequisites_for_updater_package() {
 ## Installs the configured escenic packages. If none were configured,
 ## just ECE will be installed.
 install_configured_escenic_packages() {
-  _install_prerequisites_for_updater_package
 
   if [ "${on_debian_or_derivative}" -eq 1 ]; then
     local escenic_deb_packages=
     local package=
     for package in "${!fai_package_map[@]}"; do
+
+      if [[ "${package}" =~ "escenic-content-engine-updater-"* ]]; then
+        _install_prerequisites_for_updater_package
+      fi
+
       local version=${fai_package_map[${package}]}
       if [ -n "${version}" ]; then
         escenic_deb_packages="${package}=${version} ${escenic_deb_packages}"
