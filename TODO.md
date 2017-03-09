@@ -7,83 +7,20 @@
 Support for installing ECE & plugins using the escenic APT
 repositories.
 
-- ✔ Editor profile
-- ✔ Presentation profile
-- ✔ Search profile
+- ✔ Editor profile (Escenic Content Engine) 
+- ✔ Presentation profile (Escenic Content Engine)
+- ✔ Search profile (ECE's indexer-webapp + Solr)
 - ✔ DB profile, ECE
 - ✔ DB profile, ECE plugins
-- Create publication(s) profile
+- Analysis profile (Escenic Analysis Engine)
+- Analysis DB profile
+- Create publication(s) profile → Move to `/usr/bin/ece`
 - Cache server profile
 
-### YAML configuration file format
+### ✔ YAML configuration file format
 
-#### ✔ Credentials (good old `technet_user`++)
-```
-credentials:
-  - site: maven.example.com
-    user: foo
-    password: bar
-```
-
-#### ✔ Editor profile
-```
-profiles:
-  editor:
-    install: yes
-```
-
-#### ✔ Presentation profile
-```
-profiles:
-  presentation:
-    install: yes
-```
-#### ✔ Search profile
-```
-profiles:
-  search:
-    install: yes
-```
-#### ✔ DB profile
-Minimum:
-```
-profiles:
-  db:
-    install: yes
-```
-
-All supported options
-```
-profiles:
-  db:
-    install: yes
-    user: dbuser
-    password: dbpassword
-    schema: dbpassword
-    host: db1
-    port: 3396
-```
-
-#### ✔ Create publication(s) profile
-```
-profiles:
-   create_publications:
-     - name: apple
-       war: apple.war
-       domain: apple.domain.com
-       aliases:
-         - apple_alias1
-         - apple_alias2
-     - name: orange
-       war: orange.war
-       domain: orange.domain.com
-       aliases:
-          - orange_alias1
-          - orange_alias2
-```
-#### Cache server profile
-#### Monitoring settings
-#### EAR to deploy
+See the [unit tests](usr/local/src/unit-tests/ece-install-conf-file-reader-test.sh) for
+configuration examples.
 
 ###  ✔ Remove the interactive mode. 
 
