@@ -79,6 +79,133 @@ EOF
   rm -rf "${yaml_file}"
 }
 
+test_can_parse_yaml_conf_create_publication() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+  local publication1_name=foopub
+  local publication1_war=pub.war
+  local publication1_domain=foo.example.com
+  local publication1_alias1=fooalias1.example.com
+  local publication1_alias2=fooalias2.example.com
+
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+   publication:
+     - name: ${publication1_name}
+       war: ${publication1_war}
+       domain: ${publication1_domain}
+       aliases:
+         - ${publication1_alias1}
+         - ${publication1_alias2}
+EOF
+
+  unset fai_publication_domain_mapping_list
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertEquals "Having pubs defined, sets enabled flag" \
+               1 \
+               "${fai_publication_create}"
+
+
+  assertNotNull "Able to parse info for creating publications" \
+                "${fai_publication_domain_mapping_list}"
+  for el in ${fai_publication_domain_mapping_list}; do
+    IFS='#' read -r publication domain aliases <<< "${el}"
+    IFS=',' read -r name war <<< "$publication"
+    assertEquals "publication name from map" \
+                 "${publication1_name}" \
+                 "${name}"
+    assertEquals "publication war from map" \
+                 "${publication1_war}" \
+                 "${war}"
+    assertEquals "publication domain from map" \
+                 "${publication1_domain}" \
+                 "${domain}"
+    assertEquals "publication aliases from map" \
+                 "${publication1_alias1},${publication1_alias2}" \
+                 "${aliases}"
+  done
+
+  rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_publication() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+  local publication1_name=foopub
+  local publication1_war=pub.war
+  local publication1_domain=foo.example.com
+  local publication1_alias1=fooalias1.example.com
+  local publication1_alias2=fooalias2.example.com
+  local publication1_aliases=${publication1_alias1},${publication1_alias2}
+
+  local publication2_name=barpub
+  local publication2_war=bar.war
+  local publication2_domain=bar.example.com
+  local publication2_alias1=baralias1.example.com
+  local publication2_alias2=baralias2.example.com
+  local publication2_aliases=${publication2_alias1},${publication2_alias2}
+
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+   publications:
+     - name: ${publication1_name}
+       war: ${publication1_war}
+       domain: ${publication1_domain}
+       aliases:
+         - ${publication1_alias1}
+         - ${publication1_alias2}
+     - name: ${publication2_name}
+       war: ${publication2_war}
+       domain: ${publication2_domain}
+       aliases:
+          - ${publication2_alias1}
+          - ${publication2_alias2}
+EOF
+
+  unset fai_publication_domain_mapping_list
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNotNull "Able to parse info for creating publications" \
+                "${fai_publication_domain_mapping_list}"
+  for el in ${fai_publication_domain_mapping_list}; do
+    IFS='#' read -r publication domain aliases <<< "${el}"
+    IFS=',' read -r name war <<< "$publication"
+
+    if [[ "${name}" == "${publication1_name}" ]]; then
+      found_publication1_name=1
+    elif [[ "${name}" == "${publication2_name}" ]]; then
+      found_publication2_name=1
+    fi
+    if [[ "${war}" == "${publication1_war}" ]]; then
+      found_publication1_war=1
+    elif [[ "${war}" == "${publication2_war}" ]]; then
+      found_publication2_war=1
+    fi
+    if [[ "${domain}" == "${publication1_domain}" ]]; then
+      found_publication1_domain=1
+    elif [[ "${domain}" == "${publication2_domain}" ]]; then
+      found_publication2_domain=1
+    fi
+    if [[ "${aliases}" == "${publication1_aliases}" ]]; then
+      found_publication1_aliases=1
+    elif [[ "${aliases}" == "${publication2_aliases}" ]]; then
+      found_publication2_aliases=1
+    fi
+  done
+
+  assertEquals "Can configure both pubs, name" 1 "${found_publication1_name}"
+  assertEquals "Can configure both pubs, name" 1 "${found_publication2_name}"
+  assertEquals "Can configure both pubs, war" 1 "${found_publication1_war}"
+  assertEquals "Can configure both pubs, war" 1 "${found_publication2_war}"
+  assertEquals "Can configure both pubs, domain" 1 "${found_publication1_domain}"
+  assertEquals "Can configure both pubs, domain" 1 "${found_publication2_domain}"
+  assertEquals "Can configure both pubs, aliases" 1 "${found_publication1_aliases}"
+  assertEquals "Can configure both pubs, aliases" 1 "${found_publication2_aliases}"
+
+  rm -rf "${yaml_file}"
+}
+
 test_can_parse_yaml_conf_packages() {
   local yaml_file=
   yaml_file=$(mktemp)
@@ -162,14 +289,24 @@ test_can_parse_yaml_conf_use_escenic_packages() {
 
   cat > "${yaml_file}" <<EOF
 ---
-environment:
-  - use_escenic_packages: yes
+packages:
+  foo: 1
 EOF
 
   unset fai_package_enabled
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
   assertNotNull "Should set fai_package_enabled" "${fai_package_enabled}"
   assertEquals "Should set fai_package_enabled" 1 "${fai_package_enabled}"
+
+  # no packages: block means don't use packages
+  cat > "${yaml_file}" <<EOF
+---
+foo:
+EOF
+
+  unset fai_package_enabled
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNull "Should NOT set fai_package_enabled" "${fai_package_enabled}"
   rm -rf "${yaml_file}"
 }
 

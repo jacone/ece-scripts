@@ -168,7 +168,6 @@ function download_escenic_components()
     fi
 
     if [ "${fai_package_enabled-0}" -eq 1 ]; then
-      escenic_root_dir=/usr/share/escenic
       install_configured_escenic_packages
       return
     fi

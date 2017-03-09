@@ -35,6 +35,7 @@ parse_yaml_conf_file_or_source_if_sh_conf() {
   _parse_yaml_conf_file_db "${yaml_file}"
   _parse_yaml_conf_file_cache "${yaml_file}"
   _parse_yaml_conf_file_credentials "${yaml_file}"
+  _parse_yaml_conf_file_publications "${yaml_file}"
   _parse_yaml_conf_file_packages "${yaml_file}"
   _parse_yaml_conf_file_environment "${yaml_file}"
 }
@@ -58,6 +59,53 @@ _parse_yaml_conf_file_credentials() {
 
 }
 
+_parse_yaml_conf_file_publications() {
+  local yaml_file=$1
+  local count=0
+  count=$(_jq "${yaml_file}" ".profiles.publications | length")
+
+  fai_publication_domain_mapping_list=""
+
+  for ((i = 0; i < count; i++)); do
+    # If there are one or more publications defined in
+    # 'publications', we assume the user wants to create these.
+    export fai_publication_create=1
+
+    local name=
+    local war=
+    local domain=
+    local aliases=
+
+    name=$(_jq "${yaml_file}" .profiles.publications["${i}"].name)
+    war=$(_jq "${yaml_file}" .profiles.publications["${i}"].war)
+
+    if [ -z "${war}" ]; then
+      war=${name}.war
+    fi
+
+    domain=$(_jq "${yaml_file}" .profiles.publications["${i}"].domain)
+    alias_count=$(_jq "${yaml_file}" ".profiles.publications[${i}].aliases | length")
+
+    for ((j = 0; j < alias_count; j++)); do
+      if [ -n "${aliases}" ]; then
+        aliases="${aliases},"
+      fi
+      aliases=${aliases}$(_jq "${yaml_file}" .profiles.publications["${i}"].aliases["${j}"])
+    done
+
+    fai_publication_domain_mapping_list="
+      ${fai_publication_domain_mapping_list}
+      ${name},${war}#${domain}"
+
+    if [ -n "${aliases}" ]; then
+      fai_publication_domain_mapping_list=${fai_publication_domain_mapping_list}"#${aliases}"
+    fi
+  done
+
+  export fai_publication_domain_mapping_list
+
+}
+
 ## Populates the global variable fai_package_map with package names
 ## and (optionally) versions.
 ##
@@ -75,6 +123,8 @@ _parse_yaml_conf_file_packages() {
     name=$(_jq "${yaml_file}" .packages["${i}"].name)
     version=$(_jq "${yaml_file}" .packages["${i}"].version)
     fai_package_map[${name}]=${version}
+    export fai_package_enabled=1
+    export escenic_root_dir=/usr/share/escenic
   done
 }
 
@@ -96,15 +146,6 @@ _parse_yaml_conf_file_environment() {
   configured_java_home=$(_jq "${yaml_file}" .environment[].java_home)
   if [[ -n "${configured_java_home}" ]]; then
     export java_home=${configured_java_home}
-  fi
-
-  ## TODO tkj: if there's a 'packages:' stanza, can just set
-  ## fai_package_enabled=1
-  local configured_use_escenic_packages=
-  configured_use_escenic_packages=$(_jq "${yaml_file}" .environment[].use_escenic_packages)
-  if [[ "${configured_use_escenic_packages}" == "yes" ||
-          "${configured_use_escenic_packages}" == "true" ]]; then
-    export fai_package_enabled=1
   fi
 }
 
