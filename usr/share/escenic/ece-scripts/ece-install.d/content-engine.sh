@@ -38,7 +38,7 @@ function get_publications_webapps_list() {
   local publication_webapps=""
   # Publication service webapp mappping
   if [ $install_profile_number -eq $PROFILE_PRESENTATION_SERVER ] || [ $install_profile_number -eq $PROFILE_ALL_IN_ONE ]; then
-    publication_webapps=${fai_publications_webapps-""}
+    publication_webapps=${fai_publication_webapps-${fai_publications_webapps-""}}
   else
     publication_webapps=""
   fi
