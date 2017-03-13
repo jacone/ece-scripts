@@ -779,9 +779,23 @@ function show_all_deployments() {
   cat $(get_deployment_log)
 }
 
+## $1 :: command
+## $..n :: the rest of the arguments passed to /usr/bin/ece
+function lookup_and_execute_dynamic_command_if_found() {
+  local command=$1
+  local requested_cmd=cmd_${command//-/_}
+  local actual_cmd=
+  actual_cmd=$(declare -F | grep -w "${requested_cmd}" | cut -d' ' -f3)
+  if [ -n "${actual_cmd}" ]; then
+    shift 1
+    "${actual_cmd}" "$@"
+    exit 0
+  fi
+}
+
 init
 read_rc_file_if_present
-set_type_command_and_instance $@
+set_type_command_and_instance "$@"
 set_id
 set_common_settings
 set_type_settings
@@ -872,6 +886,7 @@ for el in $command; do
             print_help
             ;;
         *)
+            lookup_and_execute_dynamic_command_if_found "${el}" "$@"
             print "Invalid command: '$el' :-("
             print "Try 'ece help' to get a list of all commands available."
             exit 1
