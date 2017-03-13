@@ -1,22 +1,172 @@
 #! /usr/bin/env bash
 ## author: torstein@escenic.com
 
-test_can_parse_yaml_conf_monitoring() {
+test_can_parse_yaml_conf_environment() {
   local yaml_file=
   yaml_file=$(mktemp)
-  local monitoring_install=1
+  local foo_java_home=/usr/lib/jvm/foo-java-sdk
+  local environment_type=production
+  local foo_java_version=1.8
+  local skip_password_checks=1
+  local apt_pool=testing
+  local mvn_repo1=repo1.example.com
+  local mvn_repo2=repo2.example.com
+  local conf_url=http://build.example.com/machine-conf-1.2.3.deb
+
+  cat > "${yaml_file}" <<EOF
+---
+environment:
+  type: ${environment_type}
+  java_home: ${foo_java_home}
+  java_version: ${foo_java_version}
+  skip_password_checks: true
+  conf_url: ${conf_url}
+  apt:
+    escenic:
+      pool: ${apt_pool}
+  maven:
+    repositories:
+      - ${mvn_repo1}
+      - ${mvn_repo2}
+EOF
+
+  unset java_home
+  unset fai_environment
+  unset fai_server_java_version
+  unset fai_maven_repositories
+  unset fai_conf_url
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+
+  assertNotNull "Should set java_home" "${java_home}"
+  assertEquals "Should set java_home" "${foo_java_home}" "${java_home}"
+  assertEquals "Should set fai_server_java_version" \
+               "${foo_java_version}" \
+               "${fai_server_java_version}"
+  assertEquals "Should set fai_environment (type)" \
+               "${environment_type}" \
+               "${fai_environment}"
+  assertEquals "Should set fai_apt_vizrt_pool" \
+               "${apt_pool}" \
+               "${fai_apt_vizrt_pool}"
+  assertEquals "Should set fai_skip_password_checks" \
+               "${skip_password_checks}" \
+               "${fai_skip_password_checks}"
+  assertEquals "Should set fai_maven_repositories" \
+               "${mvn_repo1} ${mvn_repo2}" \
+               "${fai_maven_repositories}"
+  assertEquals "Should set fai_conf_url" "${conf_url}" "${fai_conf_url}"
+
+  rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_editor() {
+  local editor_port=8000
+  local editor_shutdown=5000
+  local editor_redirect=4333
+  local editor_name=fooeditor1
+  local editor_host=edapp1
+
+  local yaml_file=
+  yaml_file=$(mktemp)
   cat > "${yaml_file}" <<EOF
 ---
 profiles:
-  monitoring:
+  editor:
     install: yes
+    port: ${editor_port}
+    host: ${editor_host}
+    name: ${editor_name}
+    redirect: ${editor_redirect}
+    shutdown: ${editor_shutdown}
 EOF
 
-  unset fai_monitoring_install
+  unset fai_editor_install
+  unset fai_editor_port
+  unset fai_editor_shutdown
+  unset fai_editor_redirect
+  unset fai_editor_name
+
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-  assertEquals "Wrong fai_monitoring_install" \
-               "${monitoring_install}" \
-               "${fai_monitoring_install}"
+  assertNotNull "Should set fai_editor_install" "${fai_editor_install}"
+  assertEquals "Should set fai_editor_install" 1 "${fai_editor_install}"
+  assertEquals "Should set fai_editor_port" "${editor_port}" "${fai_editor_port}"
+  assertEquals "Should set fai_editor_host" "${editor_host}" "${fai_editor_host}"
+  assertEquals "Should set fai_editor_shutdown" "${editor_shutdown}" "${fai_editor_shutdown}"
+  assertEquals "Should set fai_editor_redirect" "${editor_redirect}" "${fai_editor_redirect}"
+  assertEquals "Should set fai_editor_name" "${editor_name}" "${fai_editor_name}"
+
+  rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_presentation() {
+  local presentation_port=8000
+  local presentation_shutdown=5000
+  local presentation_redirect=4333
+  local presentation_name=presentation1
+  local presentation_host=presapp1
+  local presentation_ear=http://builder/engine.ear
+  local presentation_environment=testing
+  local presentation_deploy_white_list=foo
+  local presentation_search_indexer_ws_uri=http://engine1/indexer-webservice
+
+  local yaml_file=
+  yaml_file=$(mktemp)
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  presentation:
+    install: yes
+    ear: ${presentation_ear}
+    environment: ${presentation_environment}
+    host: ${presentation_host}
+    name: ${presentation_name}
+    port: ${presentation_port}
+    redirect: ${presentation_redirect}
+    shutdown: ${presentation_shutdown}
+    deploy_white_list: ${presentation_deploy_white_list}
+    search_indexer_ws_uri: ${presentation_search_indexer_ws_uri}
+EOF
+
+  unset fai_presentation_ear
+  unset fai_presentation_environment
+  unset fai_presentation_install
+  unset fai_presentation_name
+  unset fai_presentation_port
+  unset fai_presentation_redirect
+  unset fai_presentation_shutdown
+  unset fai_presentation_deploy_white_list
+  unset fai_presentation_search_indexer_ws_uri
+
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNotNull "Should set fai_presentation_install" "${fai_presentation_install}"
+  assertEquals "Should set fai_presentation_install" 1 "${fai_presentation_install}"
+  assertEquals "Should set fai_presentation_ear" "${presentation_ear}" "${fai_presentation_ear}"
+  assertEquals "Should set fai_presentation_environment" \
+               "${presentation_environment}" \
+               "${fai_presentation_environment}"
+  assertEquals "Should set fai_presentation_host" \
+               "${presentation_host}" \
+               "${fai_presentation_host}"
+  assertEquals "Should set fai_presentation_name" \
+               "${presentation_name}" \
+               "${fai_presentation_name}"
+  assertEquals "Should set fai_presentation_port" \
+               "${presentation_port}" \
+               "${fai_presentation_port}"
+  assertEquals "Should set fai_presentation_redirect" \
+               "${presentation_redirect}" \
+               "${fai_presentation_redirect}"
+  assertEquals "Should set fai_presentation_shutdown" \
+               "${presentation_shutdown}" \
+               "${fai_presentation_shutdown}"
+  assertEquals "Should set fai_presentation_search_indexer_ws_uri" \
+               "${presentation_search_indexer_ws_uri}" \
+               "${fai_presentation_search_indexer_ws_uri}"
+  assertEquals "Should set fai_presentation_deploy_white_list" \
+               "${presentation_deploy_white_list}" \
+               "${presentation_deploy_white_list}"
+
+  rm -rf "${yaml_file}"
 }
 
 test_can_parse_yaml_conf_db() {
@@ -93,6 +243,42 @@ EOF
   assertEquals "Should set fai_db_port" "${db_port}" "${fai_db_port}"
 
   rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_cache() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  cache:
+    install: yes
+EOF
+
+  unset fai_presentation_install
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNotNull "Should set fai_cache_install" "${fai_cache_install}"
+  assertEquals "Should set fai_cache_install" 1 "${fai_cache_install}"
+
+  rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_monitoring() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+  local monitoring_install=1
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  monitoring:
+    install: yes
+EOF
+
+  unset fai_monitoring_install
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertEquals "Wrong fai_monitoring_install" \
+               "${monitoring_install}" \
+               "${fai_monitoring_install}"
 }
 
 test_can_parse_yaml_conf_credentials() {
@@ -366,64 +552,6 @@ EOF
   rm -rf "${yaml_file}"
 }
 
-test_can_parse_yaml_conf_environment() {
-  local yaml_file=
-  yaml_file=$(mktemp)
-  local foo_java_home=/usr/lib/jvm/foo-java-sdk
-  local environment_type=production
-  local foo_java_version=1.8
-  local skip_password_checks=1
-  local apt_pool=testing
-  local mvn_repo1=repo1.example.com
-  local mvn_repo2=repo2.example.com
-  local conf_url=http://build.example.com/machine-conf-1.2.3.deb
-
-  cat > "${yaml_file}" <<EOF
----
-environment:
-  type: ${environment_type}
-  java_home: ${foo_java_home}
-  java_version: ${foo_java_version}
-  skip_password_checks: true
-  conf_url: ${conf_url}
-  apt:
-    escenic:
-      pool: ${apt_pool}
-  maven:
-    repositories:
-      - ${mvn_repo1}
-      - ${mvn_repo2}
-EOF
-
-  unset java_home
-  unset fai_environment
-  unset fai_server_java_version
-  unset fai_maven_repositories
-  unset fai_conf_url
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-
-  assertNotNull "Should set java_home" "${java_home}"
-  assertEquals "Should set java_home" "${foo_java_home}" "${java_home}"
-  assertEquals "Should set fai_server_java_version" \
-               "${foo_java_version}" \
-               "${fai_server_java_version}"
-  assertEquals "Should set fai_environment (type)" \
-               "${environment_type}" \
-               "${fai_environment}"
-  assertEquals "Should set fai_apt_vizrt_pool" \
-               "${apt_pool}" \
-               "${fai_apt_vizrt_pool}"
-  assertEquals "Should set fai_skip_password_checks" \
-               "${skip_password_checks}" \
-               "${fai_skip_password_checks}"
-  assertEquals "Should set fai_maven_repositories" \
-               "${mvn_repo1} ${mvn_repo2}" \
-               "${fai_maven_repositories}"
-  assertEquals "Should set fai_conf_url" "${conf_url}" "${fai_conf_url}"
-
-  rm -rf "${yaml_file}"
-}
-
 test_can_parse_yaml_conf_use_escenic_packages() {
   local yaml_file=
   yaml_file=$(mktemp)
@@ -533,97 +661,7 @@ EOF
   rm -rf "${yaml_file}"
 }
 
-
-test_can_parse_yaml_conf_presentation_install() {
-  local presentation_port=8000
-  local presentation_shutdown=5000
-  local presentation_redirect=4333
-  local presentation_name=presentation1
-  local presentation_host=presapp1
-  local presentation_ear=http://builder/engine.ear
-  local presentation_environment=testing
-  local presentation_deploy_white_list=foo
-  local presentation_search_indexer_ws_uri=http://engine1/indexer-webservice
-
-  local yaml_file=
-  yaml_file=$(mktemp)
-  cat > "${yaml_file}" <<EOF
----
-profiles:
-  presentation:
-    install: yes
-    ear: ${presentation_ear}
-    environment: ${presentation_environment}
-    host: ${presentation_host}
-    name: ${presentation_name}
-    port: ${presentation_port}
-    redirect: ${presentation_redirect}
-    shutdown: ${presentation_shutdown}
-    deploy_white_list: ${presentation_deploy_white_list}
-    search_indexer_ws_uri: ${presentation_search_indexer_ws_uri}
-EOF
-
-  unset fai_presentation_ear
-  unset fai_presentation_environment
-  unset fai_presentation_install
-  unset fai_presentation_name
-  unset fai_presentation_port
-  unset fai_presentation_redirect
-  unset fai_presentation_shutdown
-  unset fai_presentation_deploy_white_list
-  unset fai_presentation_search_indexer_ws_uri
-
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-  assertNotNull "Should set fai_presentation_install" "${fai_presentation_install}"
-  assertEquals "Should set fai_presentation_install" 1 "${fai_presentation_install}"
-  assertEquals "Should set fai_presentation_ear" "${presentation_ear}" "${fai_presentation_ear}"
-  assertEquals "Should set fai_presentation_environment" \
-               "${presentation_environment}" \
-               "${fai_presentation_environment}"
-  assertEquals "Should set fai_presentation_host" \
-               "${presentation_host}" \
-               "${fai_presentation_host}"
-  assertEquals "Should set fai_presentation_name" \
-               "${presentation_name}" \
-               "${fai_presentation_name}"
-  assertEquals "Should set fai_presentation_port" \
-               "${presentation_port}" \
-               "${fai_presentation_port}"
-  assertEquals "Should set fai_presentation_redirect" \
-               "${presentation_redirect}" \
-               "${fai_presentation_redirect}"
-  assertEquals "Should set fai_presentation_shutdown" \
-               "${presentation_shutdown}" \
-               "${fai_presentation_shutdown}"
-  assertEquals "Should set fai_presentation_search_indexer_ws_uri" \
-               "${presentation_search_indexer_ws_uri}" \
-               "${fai_presentation_search_indexer_ws_uri}"
-  assertEquals "Should set fai_presentation_deploy_white_list" \
-               "${presentation_deploy_white_list}" \
-               "${fai_presentation_deploy_white_list}"
-
-  rm -rf "${yaml_file}"
-}
-
-test_can_parse_yaml_conf_cache_install() {
-  local yaml_file=
-  yaml_file=$(mktemp)
-  cat > "${yaml_file}" <<EOF
----
-profiles:
-  cache:
-    install: yes
-EOF
-
-  unset fai_presentation_install
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-  assertNotNull "Should set fai_cache_install" "${fai_cache_install}"
-  assertEquals "Should set fai_cache_install" 1 "${fai_cache_install}"
-
-  rm -rf "${yaml_file}"
-}
-
-test_can_parse_yaml_conf_analysis_install() {
+test_can_parse_yaml_conf_analysis() {
   local yaml_file=
   yaml_file=$(mktemp)
 
@@ -664,7 +702,7 @@ EOF
   rm -rf "${yaml_file}"
 }
 
-test_can_parse_yaml_conf_analysis_db_install() {
+test_can_parse_yaml_conf_analysis_db() {
   local yaml_file=
   yaml_file=$(mktemp)
 
@@ -697,7 +735,7 @@ EOF
   rm -rf "${yaml_file}"
 }
 
-test_can_parse_yaml_conf_search_install() {
+test_can_parse_yaml_conf_search() {
   local search_port=8000
   local search_shutdown=5000
   local search_redirect=4333
@@ -755,49 +793,11 @@ EOF
   rm -rf "${yaml_file}"
 }
 
-test_can_parse_yaml_conf_editor_install() {
-  local editor_port=8000
-  local editor_shutdown=5000
-  local editor_redirect=4333
-  local editor_name=fooeditor1
-  local editor_host=edapp1
-
-  local yaml_file=
-  yaml_file=$(mktemp)
-  cat > "${yaml_file}" <<EOF
----
-profiles:
-  editor:
-    install: yes
-    port: ${editor_port}
-    host: ${editor_host}
-    name: ${editor_name}
-    redirect: ${editor_redirect}
-    shutdown: ${editor_shutdown}
-EOF
-
-  unset fai_editor_install
-  unset fai_editor_port
-  unset fai_editor_shutdown
-  unset fai_editor_redirect
-  unset fai_editor_name
-
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-  assertNotNull "Should set fai_editor_install" "${fai_editor_install}"
-  assertEquals "Should set fai_editor_install" 1 "${fai_editor_install}"
-  assertEquals "Should set fai_editor_port" "${editor_port}" "${fai_editor_port}"
-  assertEquals "Should set fai_editor_host" "${editor_host}" "${fai_editor_host}"
-  assertEquals "Should set fai_editor_shutdown" "${editor_shutdown}" "${fai_editor_shutdown}"
-  assertEquals "Should set fai_editor_redirect" "${editor_redirect}" "${fai_editor_redirect}"
-  assertEquals "Should set fai_editor_name" "${editor_name}" "${fai_editor_name}"
-
-  rm -rf "${yaml_file}"
-}
-
 test_can_parse_yaml_conf_editor_install_multi_profiles() {
   local yaml_file=
   yaml_file=$(mktemp)
   cat > "${yaml_file}" <<EOF
+---
 profiles:
   editor:
     install: yes
@@ -820,7 +820,7 @@ EOF
   rm -rf "${yaml_file}"
 }
 
-test_can_parse_yaml_conf_db_install() {
+test_can_parse_yaml_conf_db() {
   local yaml_file=
   yaml_file=$(mktemp)
   cat > "${yaml_file}" <<EOF
@@ -861,7 +861,7 @@ EOF
   rm -rf "${yaml_file}"
 }
 
-test_can_parse_yaml_conf_cache_install() {
+test_can_parse_yaml_conf_cache() {
   local cache_port=80
   local cache_conf_dir=/opt/etc/varnish
   local cache_be1=pres1
