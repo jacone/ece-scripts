@@ -303,8 +303,7 @@ EOF
 EOF
   if [[ ($install_profile_number == $PROFILE_EDITORIAL_SERVER || \
     $install_profile_number == $PROFILE_PRESENTATION_SERVER || \
-    $install_profile_number == $PROFILE_ALL_IN_ONE) && \
-    -n "$fai_publication_domain_mapping_list" ]]; then
+    $install_profile_number == $PROFILE_ALL_IN_ONE) ]]; then
     cat >> $tomcat_base/conf/server.xml <<EOF
         </Engine>
   </Service>
@@ -326,56 +325,6 @@ EOF
              digest="md5"
              resourceName="UserDatabase"/>
 EOF
-    for el in ${fai_publication_domain_mapping_list}; do
-      local old_ifs=$IFS
-      # the entries in the fai_publication_domain_mapping_list are on
-      # the form: <publication[,pub.war]>#<domain>[#<alias1>[,<alias2>]]
-      IFS='#'
-      read publication domain aliases <<< "$el"
-      IFS=','
-      read publication_name publication_war <<< "$publication"
-      IFS=$old_ifs
-
-      # normally the WAR is called the same as the publication, in
-      # which case we set the publication_war to the same as the
-      # publication_name.
-      if [ -z "${publication_war}" ]; then
-        publication_war=$publication_name
-      fi
-
-      ensure_domain_is_known_to_local_host ${domain}
-
-      local file=$tomcat_base/conf/server.xml
-
-      # We are using the WAR and not the publication as the base for
-      # the appBase and docBase variables here to make it possible for
-      # 'ece deploy' to figure out the same location for deploying the
-      # WARs. As 'ece deploy' doesn't have any concept of which
-      # publication the WARs belong to, we must use a scheme were it's
-      # the WAR file name which determines the webapp context.
-      cat >> $file <<EOF
-      <Host
-        name="${domain}"
-        appBase="$(get_app_base $publication_war)"
-        autoDeploy="false">
-EOF
-
-      # add the host aliases (if available)
-      for ele in $(split_string ',' $aliases); do
-        cat >> $file <<EOF
-        <Alias>$ele</Alias>
-EOF
-      done
-
-      cat >> $file <<EOF
-        <Context displayName="${domain}"
-                 docBase="$(basename ${publication_war} .war)"
-                 path=""
-        />
-      </Host>
-EOF
-      leave_trail "trail_virtual_host_${publication_name}=${domain}:${appserver_port}"
-    done
   fi
 
   cat >> $tomcat_base/conf/server.xml <<EOF

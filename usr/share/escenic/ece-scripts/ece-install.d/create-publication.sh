@@ -64,7 +64,12 @@ function create_publication() {
         publication_war=${publication_name}.war
       fi
 
-      create_the_publication $publication_name $the_tmp_dir/$publication_war $publication_type
+      create_the_publication \
+        $publication_name \
+        $the_tmp_dir/$publication_war \
+        $publication_type \
+        "${domain}" \
+        "${aliases}"
     done
 
     log "Cleaing up $the_tmp_dir ..."
@@ -96,52 +101,38 @@ function create_publication() {
 
 ## $1 :: publication name
 ## $2 :: publication war
+## $3 :: publication type
+## $4 :: publication domain, optional
+## $5 :: publication aliases, optional
 function create_the_publication() {
   local publication_name=$1
   local publication_war=$2
   local publication_type=$3
+  local publication_domain=$4
+  local publication_aliases=$5
 
-  print_and_log "Creating a publication with name" $publication_name of $publication_type type \
-    "using the publication resources from" $(basename $publication_war)
+  local the_instance=${fai_publication_use_instance-${default_ece_intance_name}}
 
-  create_publication_prepare_war_file $publication_war
-  local the_instance=${fai_publication_use_instance-$default_ece_intance_name}
-  create_publication_in_db $publication_name $publication_war $publication_type $the_instance
-  add_publication_to_deployment_lists $(basename $publication_war .war)
+  local ece_command="
+    ece -i ${the_instance} \
+        create-publication \
+        --publication ${publication_name} \
+        --update-app-server-conf \
+        --update-nursery-conf \
+        --update-ece-conf \
+        --publication-type ${publication_type} \
+        --file ${publication_war}
+  "
 
-  add_next_step "A publication with name" $publication_name \
-    "has been created using the publication resources in" \
-    $publication_war "The WAR has been added to the deployment" \
-    "white list, so that it will be included next time you do" \
-    "ece -i ${the_instance} deploy"
-}
+  if [ -n "${publication_domain}" ]; then
+    ece_command=${ece_command}" --publication-domain ${publication_domain}"
+  fi
+  if [ -n "${publication_aliases}" ]; then
+    ece_command=${ece_command}" --publication-aliases ${publication_aliases}"
+  fi
 
-## $1 : publication WAR name
-function add_publication_to_deployment_lists() {
-  run source /etc/default/ece
-  local please_add=1
-
-  for el in $engine_instance_list; do
-    local file=/etc/escenic/ece-${el}.conf
-    run source $file
-
-    for ele in $deploy_webapp_white_list; do
-      if [[ "$ele" == "$1" ]]; then
-        please_add=0
-      fi
-    done
-
-    if [ $please_add -eq 1 ]; then
-      print_and_log "Adding $1 to the deploy white list of" \
-        "instance" $el
-      deploy_webapp_white_list="$deploy_webapp_white_list $1"
-    fi
-
-    set_conf_file_value \
-      deploy_webapp_white_list \
-      $deploy_webapp_white_list \
-      $file
-  done
+  su - "${ece_user}" -c "$ece_command" &>> "${log}"
+  exit_on_error su - "${ece_user}" -c "$ece_command"
 }
 
 ## $1 :: the instance name
@@ -160,48 +151,3 @@ function ensure_that_instance_is_running() {
   sleep 60
 }
 
-## $1 :: publication name
-## $2 :: publication war
-## $3 :: instance name
-##
-## Based on Erik Mogensen's work:
-## //depot/branches/personal/mogsie/fromscratch/create-publication.sh
-function create_publication_in_db() {
-  local publication_name=$1
-  local publication_war=$2
-  local publication_type=$3
-  local instance_name=$4
-
-  print_and_log "Creating publication" ${publication_name} \
-    "using instance" $instance_name "..."
-
-  # sourcing the instance's ECE configuration to get the app server
-  # port.
-  run source /etc/escenic/ece-${instance_name}.conf
-
-  local ece_admin_uri=http://localhost:${appserver_port}/escenic-admin
-
-  local cookie=$(curl ${curl_opts} -I ${ece_admin_uri}/ | \
-    grep -i "^Set-Cookie" | \
-    sed s/.*'JSESSIONID=\([^;]*\).*'/'\1'/)
-
-  if [[ "$cookie" == "" ]] ; then
-    print_and_log "Unable to get a session cookie from instance $instance_name"
-    exit 1
-  fi
-
-  run curl ${curl_opts} \
-    -F "type=webapp" \
-    -F "resourceFile=@${publication_war}" \
-    --cookie JSESSIONID="$cookie" \
-    "${ece_admin_uri}/do/publication/resource"
-
-  run curl ${curl_opts}  \
-    -F "name=${publication_name}" \
-    -F "publisherName=Escenic" \
-    -F "publicationType=${publication_type}" \
-    -F "adminPassword=admin" \
-    -F "adminPasswordConfirm=admin" \
-    --cookie JSESSIONID="$cookie" \
-    "${ece_admin_uri}/do/publication/insert"
-}
