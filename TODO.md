@@ -12,9 +12,9 @@ repositories.
 - ✔ Search profile (ECE's indexer-webapp + Solr)
 - ✔ DB profile, ECE
 - ✔ DB profile, ECE plugins
-- Analysis profile (Escenic Analysis Engine)
+- ✔ Create publication(s) profile → Move to `/usr/bin/ece`
+- ✔ Analysis profile (Escenic Analysis Engine)
 - Analysis DB profile
-- Create publication(s) profile → Move to `/usr/bin/ece`
 - Cache server profile
 
 ### ✔ YAML configuration file format
@@ -27,13 +27,15 @@ configuration examples.
 It's rarely used and complicates the source code and configuration
 options unnecessarily.
 
-## /usr/bin/ece
+## ✔ /usr/bin/ece
 
-- Easier to extend, e.g. put `create-publication.sh` in a directory,
+- ✔ New sub command: /usr/bin/ece create-publication
+
+- ✔ Easy to extend, e.g. put `create-publication.sh` in a directory,
   e.g.`ece.d`, and get `ece create-publication`. The
   `create-publication` sub command is then included in TAB completion,
   help screens and `man` pages.
-  
+
 
 ## Version 4.x
 ###  Easier to extend `ece-install`
