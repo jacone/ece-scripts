@@ -403,27 +403,47 @@ function set_up_engine_and_plugins() {
   ece_software_setup_completed=1
 }
 
-function set_up_assembly_tool() {
-  ## TODO tkj, we still need AT with non-DPRES
+function _assembly_tool_should_set_up() {
+  if [ "${fai_package_enabled-0}" -eq 0 ]; then
+    return 0
+  elif [[ "${fai_assembly_tool_install-0}" -eq 1 ]]; then
+    return 0
+  fi
+
+  return 1
+}
+
+function _assembly_tool_install_binaries() {
+  make_dir $(_assembly_tool_get_dir)/
+
   if [ "${fai_package_enabled-0}" -eq 1 ]; then
-    return
+    # The user defines the packages/versions he/she wants in the YAML
+    # file.
+    :
+  else
+    if [ -e $download_dir/assemblytool*zip ]; then
+      run unzip -q -u -o $download_dir/assemblytool*zip \
+          -d "${escenic_root_dir}/assemblytool/"
+    elif [ -e ${download}_dir/assemblytool*jar ]; then
+      run unzip -q -u -o ${download_dir}/assemblytool*jar \
+          -d "${escenic_root_dir}/assemblytool/"
+    fi
   fi
+}
 
-  print_and_log "Setting up the Assembly Tool ..."
-
-  make_dir $escenic_root_dir/assemblytool/
-  cd $escenic_root_dir/assemblytool/
-
-  if [ -e $download_dir/assemblytool*zip ]; then
-    run unzip -q -u -o $download_dir/assemblytool*zip
-  elif [ -e $download_dir/assemblytool*jar ]; then
-    run unzip -q -u -o $download_dir/assemblytool*jar
+function _assembly_tool_get_dir() {
+  if [ "${fai_package_enabled-0}" -eq 0 ]; then
+    echo "${escenic_root_dir}/assemblytool"
+  else
+    echo "${escenic_root_dir}/escenic-assemblytool"
   fi
+}
 
+function _assembly_tool_set_up_bootstrap_conf() {
   # adding an instance layer to the Nursery configuration
   run cp -r $(get_content_engine_dir)/siteconfig/bootstrap-skeleton \
-    $escenic_root_dir/assemblytool/conf
-  run cd $escenic_root_dir/assemblytool/conf/
+    $(_assembly_tool_get_dir)/conf
+  run cd $(_assembly_tool_get_dir)/conf/
   run cp -r layers/host layers/environment
   run cp -r layers/host layers/instance
   run cp -r layers/host layers/vosa
@@ -482,13 +502,25 @@ EOF
 
   # fixing the path to the Nursery configuration according to
   # escenic_conf_dir which may have been overridden by the user.
-  for el in $(find $escenic_root_dir/assemblytool/conf -name Files.properties)
+  for el in $(find $(_assembly_tool_get_dir)/conf -name Files.properties)
   do
     sed -i "s#/etc/escenic#${escenic_conf_dir}#g" $el
   done
+}
+
+
+function set_up_assembly_tool() {
+  if ! _assembly_tool_should_set_up; then
+    return
+  fi
+
+  print_and_log "Setting up the Assembly Tool ..."
+
+  _assembly_tool_install_binaries
+  _assembly_tool_set_up_bootstrap_conf
 
   # set up which plugins to use
-  run cd $escenic_root_dir/assemblytool/
+  run cd $(_assembly_tool_get_dir)/
   make_dir plugins
   run cd plugins
   find ../../ -maxdepth 1 -type d | \
@@ -511,7 +543,7 @@ EOF
     make_ln $directory
   done
 
-  run cd $escenic_root_dir/assemblytool/
+  run cd $(_assembly_tool_get_dir)/
   run ant -q initialize
   sed -i "s~#\ engine.root\ =\ \.~engine.root=${escenic_root_dir}/engine~g" \
     assemble.properties \
@@ -523,7 +555,7 @@ EOF
     1>>$log 2>>$log
   exit_on_error "sed on assemble.properties"
 
-  make_dir $escenic_root_dir/assemblytool/publications
+  make_dir $(_assembly_tool_get_dir)/publications
 
   # Set up a publication definition
   #
@@ -535,11 +567,11 @@ EOF
   # fai_<presentation|editor>_ear for creating publication definitions
   # and WARs.
   if [[ -n "${fai_publication_name}" && -n "${fai_publication_war}" ]]; then
-    local file=$escenic_root_dir/assemblytool/publications/${fai_publication_name}.properties
+    local file=$(_assembly_tool_get_dir)/publications/${fai_publication_name}.properties
     print_and_log "Creating a publication definition for publication" \
       $fai_publication_name "..."
     run cp ${fai_publication_war} \
-      $escenic_root_dir/assemblytool/publications/${fai_publication_name}.war
+      $(_assembly_tool_get_dir)/publications/${fai_publication_name}.war
     cat > $file <<EOF
 name: ${fai_publication_name}
 source-war: ${fai_publication_name}.war
@@ -553,7 +585,7 @@ function _set_up_basic_nursery_configuration_by_copying() {
 
   # we always copy the default plugin configuration (even if there is
   # an archive)
-  for el in $escenic_root_dir/assemblytool/plugins/*; do
+  for el in $(_assembly_tool_get_dir)/plugins/*; do
     if [ ! -d $el/misc/siteconfig/ ]; then
       continue
     fi

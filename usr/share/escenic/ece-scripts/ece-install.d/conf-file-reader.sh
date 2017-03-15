@@ -41,6 +41,7 @@ parse_yaml_conf_file_or_source_if_sh_conf() {
   _parse_yaml_conf_file_packages "${yaml_file}"
   _parse_yaml_conf_file_environment "${yaml_file}"
   _parse_yaml_conf_file_monitoring "${yaml_file}"
+  _parse_yaml_conf_file_assembly_tool "${yaml_file}"
   _parse_yaml_conf_file_restore "${yaml_file}"
 }
 
@@ -272,6 +273,17 @@ _parse_yaml_conf_file_monitoring() {
   if [[ "${install_monitoring}" == "yes" ||
           "${install_monitoring}" == "true" ]]; then
     export fai_monitoring_install=1
+  fi
+}
+
+_parse_yaml_conf_file_assembly_tool() {
+  local yaml_file=$1
+
+  local install_assembly_tool=
+  install_assembly_tool=$(_jq "${yaml_file}" .profiles.assembly_tool.install)
+  if [[ "${install_assembly_tool}" == "yes" ||
+          "${install_assembly_tool}" == "true" ]]; then
+    export fai_assembly_tool_install=1
   fi
 }
 

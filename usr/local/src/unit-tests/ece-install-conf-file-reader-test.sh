@@ -298,6 +298,24 @@ EOF
                "${fai_monitoring_install}"
 }
 
+test_can_parse_yaml_conf_assembly_tool() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+  local assembly_tool_install=1
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  assembly_tool:
+    install: yes
+EOF
+
+  unset fai_assembly_tool_install
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertEquals "Wrong fai_assembly_tool_install" \
+               "${assembly_tool_install}" \
+               "${fai_assembly_tool_install}"
+}
+
 test_can_parse_yaml_conf_credentials() {
   local yaml_file=
   yaml_file=$(mktemp)
