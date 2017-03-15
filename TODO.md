@@ -3,7 +3,7 @@
 
 ## /usr/sbin/ece-install
 
-### Install ECE from APT 
+### ✔ Install ECE from APT 
 Support for installing ECE & plugins using the escenic APT
 repositories.
 
@@ -14,8 +14,9 @@ repositories.
 - ✔ DB profile, ECE plugins
 - ✔ Create publication(s) profile → Move to `/usr/bin/ece`
 - ✔ Analysis profile (Escenic Analysis Engine)
-- Analysis DB profile
-- Cache server profile
+- ✔ Analysis DB profile
+- ✔ Cache server profile
+- ✔ Assembly Tool
 
 ### ✔ YAML configuration file format
 
