@@ -246,6 +246,11 @@ EOF
 }
 
 test_can_parse_yaml_conf_cache() {
+  local be1="app1"
+  local be2="app2"
+  local conf_dir=/opt/etc/varnish
+  local port=81
+
   local yaml_file=
   yaml_file=$(mktemp)
   cat > "${yaml_file}" <<EOF
@@ -253,12 +258,24 @@ test_can_parse_yaml_conf_cache() {
 profiles:
   cache:
     install: yes
+    conf_dir: ${conf_dir}
+    port: ${port}
+    backends:
+      - ${be1}
+      - ${be2}
 EOF
 
-  unset fai_presentation_install
+  unset fai_cache_install
+  unset fai_cache_backends
+  unset fai_cache_port
+  unset fai_cache_conf_dir
+
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
   assertNotNull "Should set fai_cache_install" "${fai_cache_install}"
   assertEquals "Should set fai_cache_install" 1 "${fai_cache_install}"
+  assertEquals "fai_cache_backends" "${be1} ${be2}" "${fai_cache_backends}"
+  assertEquals "fai_cache_conf_dir" "${conf_dir}" "${fai_cache_conf_dir}"
+  assertEquals "fai_cache_port" "${port}" "${fai_cache_port}"
 
   rm -rf "${yaml_file}"
 }
