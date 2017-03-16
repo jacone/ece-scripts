@@ -89,7 +89,6 @@ _parse_yaml_conf_file_publications() {
 
     create=$(_jq "${yaml_file}" .profiles.publications["${i}"].create)
     ear=$(_jq "${yaml_file}" .profiles.publications["${i}"].ear)
-    ear=$(_jq "${yaml_file}" .profiles.publications["${i}"].ear)
     name=$(_jq "${yaml_file}" .profiles.publications["${i}"].name)
     war=$(_jq "${yaml_file}" .profiles.publications["${i}"].war)
     environment=$(_jq "${yaml_file}" .profiles.publications["${i}"].environment)
