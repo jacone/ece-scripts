@@ -386,6 +386,7 @@ test_can_parse_yaml_conf_create_publication() {
 profiles:
    publications:
      - name: ${publication1_name}
+       create: true
        war: ${publication1_war}
        war_remove_list:
          - ${publication1_remove_file1}

@@ -77,9 +77,6 @@ _parse_yaml_conf_file_publications() {
   fai_publication_domain_mapping_list=""
 
   for ((i = 0; i < count; i++)); do
-    # If there are one or more publications defined in
-    # 'publications', we assume the user wants to create these.
-    export fai_publication_create=1
 
     local name=
     local war=
@@ -90,10 +87,20 @@ _parse_yaml_conf_file_publications() {
     local environment=
     local war_remove_list=
 
+    create=$(_jq "${yaml_file}" .profiles.publications["${i}"].create)
+    ear=$(_jq "${yaml_file}" .profiles.publications["${i}"].ear)
     ear=$(_jq "${yaml_file}" .profiles.publications["${i}"].ear)
     name=$(_jq "${yaml_file}" .profiles.publications["${i}"].name)
     war=$(_jq "${yaml_file}" .profiles.publications["${i}"].war)
     environment=$(_jq "${yaml_file}" .profiles.publications["${i}"].environment)
+
+    # If there are one or more publications defined in 'publications'
+    # with create set to true, we assume the user wants to create all
+    # publications. It's safe to re-run creation for existing
+    # publications.
+    if [[ "${create}" == true || "${create}" == yes ]]; then
+      export fai_publication_create=1
+    fi
 
     if [ -z "${war}" ]; then
       war=${name}.war
