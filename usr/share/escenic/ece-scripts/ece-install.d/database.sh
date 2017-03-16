@@ -146,22 +146,23 @@ function set_up_repository_if_possible() {
       run rm /var/lib/mysql/debian-*.flag
     fi
 
-    if is_supported $code_name; then
+    # mariadb is now (2017-03-15) in offical repos in both Ubuntu and
+    # Debian - and pretty much everwhere else.
+    if [[ "${db_vendor}" == "mariadb" ]]; then
+      mysql_server_packages="mariadb-server"
+      mysql_client_packages="mariadb-client"
+      leave_trail "trail_db_vendor=mariadb"
+
+    elif is_supported $code_name; then
       add_gpg_key
 
-      if [ $db_vendor = "mariadb" ]; then
-        local distributor=$(lsb_release -i -s | tr '[A-Z]' '[a-z]')
-        add_apt_source "deb http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/$distributor ${code_name} main"
-        mysql_server_packages="mariadb-server"
-        mysql_client_packages="mariadb-client"
-        leave_trail "trail_db_vendor=mariadb"
-      else
+      if [[ $db_vendor == "percona" ]]; then
         add_apt_source "deb http://repo.percona.com/apt ${code_name} main"
         mysql_server_packages="percona-server-server"
         mysql_client_packages="percona-server-client"
         leave_trail "trail_db_vendor=percona"
       fi
-      pin
+
       if ! apt-cache > /dev/null show $mysql_server_packages; then
         print_and_log "Setting Up the $db_vendor Repository ..."
         run apt-get update

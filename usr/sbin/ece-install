@@ -50,8 +50,8 @@ java_package_name=""
 # This variable is updated by the package build scripts.
 ece_scripts_version="straight-from-github"
 
-#Set the default database vendor. Possible values are mariadb and percona
-db_vendor=percona
+# Set the default database vendor. Possible values are mariadb and percona
+db_vendor=mariadb
 
 ## Map with package name to version entries. The version can be empty.
 declare -A fai_package_map
