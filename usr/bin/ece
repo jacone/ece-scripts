@@ -152,6 +152,7 @@ function read_conf_file() {
 ## If the system is installed using the recommended paths, the method
 ## will return a list of the instances configured in
 ## ${escenic_conf_dir}/ece-*.conf
+export root_allowed_list_instances=1
 function get_instance_list() {
     local allowed_types="engine analysis changelogd search rmi-hub"
     instance_list=""
@@ -769,6 +770,7 @@ function get_escenic_admin_url() {
     echo ${url}
 }
 
+export root_allowed_list_publications=1
 function show_all_publications() {
   set_type_port
   print "These are all the publications on ${instance}:"

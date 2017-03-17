@@ -315,3 +315,6 @@ cmd_create_publication() {
     _create_publication_add_publication_to_deployment_lists "${publication}"
   fi
 }
+
+# root is allowed to run this command
+export root_allowed_create_publication=1
