@@ -29,7 +29,7 @@ everything_but_the_kitchen_sink=0
 ######################################################################
 ece_scripts_version="straight-from-github"
 type=engine
-instance=default
+instance=engine1
 command=""
 backup_exclude_binaries=0
 backup_exclude_conf=0
@@ -292,7 +292,7 @@ function set_instance_settings() {
     # We respect ece_server if it's set in any of the configuration
     # files. If it's not set there, it sets some sensible defaults.
     if [ -z "$ece_server" ]; then
-        if [ "$instance" == "default" ]; then
+        if [ "$instance" == "engine1" ]; then
             ece_server=${HOSTNAME}
         else
             ece_server=${HOSTNAME}-${instance}
@@ -319,6 +319,7 @@ function set_instance_settings() {
     #   when running in production.
     ece_args="
       -Descenic.server=$ece_server
+      -Dcom.escenic.instance=$instance
       -Djava.awt.headless=true
       -Djava.security.auth.login.config=$ece_security_configuration_dir/jaas.config
       -Djava.security.policy=$ece_security_configuration_dir/java.policy
@@ -348,10 +349,6 @@ function set_instance_settings() {
 
     if [ "$jvm_connection_settings" ]; then
       ece_args=$ece_args" "$jvm_connection_settings
-    fi
-
-    if [ "$instance" != "default" ]; then
-        ece_args=$ece_args" -Dcom.escenic.instance=$instance"
     fi
 
     if [ -n "$ece_environment" ]; then
@@ -477,21 +474,6 @@ function sanity_check() {
     fi
 
     local instance_list=$(get_instance_list)
-    # checks if the user is using the default instance when he/she
-    # really wants to start one of the instances installed on the
-    # system.
-    if [ "$instance" == "default" -a \
-        "$type" == "engine" -a \
-        $(echo $command | egrep 'help' | wc -l) -eq 0 ]; then
-        if [[ -n "$instance_list" && \
-            $(echo $instance_list | grep ' ' | wc -l) -gt 0 ]]; then
-            print "You must specify the instance with -i <instance>"
-            print "e.g. ece -i $(echo $instance_list | cut -d' ' -f1) $command"
-            print "Instances available on $HOSTNAME: $instance_list"
-            exit 1
-        fi
-    fi
-
     local instance_exists=0
     for el in $instance_list; do
       if [ $el == $instance ]; then
@@ -698,14 +680,14 @@ function set_type_command_and_instance() {
     # If the user didn't specify which instance to use and if there's
     # only one available instance, use that instead of asking the user
     # to provide it in sanity_check.
-    if [ "$instance" == "default" ]; then
+    if [ "$instance" == "engine1" ]; then
         debug "Trying to determine instance name"
         local instance_list=$(get_instance_list)
 
         if [ $(echo $instance_list | grep ' ' | wc -l) -eq 0 ]; then
             instance=$instance_list
             if [ -z "$instance" ] ; then
-              instance=default
+              instance=engine1
             fi
             debug "setting instance=$instance as there's only one"
         fi
@@ -713,11 +695,7 @@ function set_type_command_and_instance() {
 }
 
 function set_id() {
-    if [ "$instance" == "default" ]; then
-        id="["$(basename $0)"#${type}]"
-    else
-        id="["$(basename $0)"#${type}-${instance}]"
-    fi
+    id="["$(basename $0)"#${type}-${instance}]"
 
     debug type is $type \
         and command is $command \
