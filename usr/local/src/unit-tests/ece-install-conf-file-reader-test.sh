@@ -373,6 +373,11 @@ test_can_parse_yaml_conf_create_publication() {
   local publication_webapp2=loc.war
 
   local publication1_name=foopub
+  local publication1_update_app_server_conf=1
+  local publication1_update_ece_conf=1
+  local publication1_update_nursery_conf=1
+  local publication1_name=foopub
+  local publication1_name=foopub
   local publication1_remove_file1=stoo.pid
   local publication1_remove_file2=does.it
   local publication1_environment=testing
@@ -387,6 +392,9 @@ profiles:
    publications:
      - name: ${publication1_name}
        create: true
+       update_app_server_conf: true
+       update_ece_conf: true
+       update_nursery_conf: true
        war: ${publication1_war}
        war_remove_list:
          - ${publication1_remove_file1}
@@ -404,6 +412,9 @@ EOF
 
   unset fai_publication_domain_mapping_list
   unset fai_publication_ear
+  unset fai_publication_update_app_server_conf
+  unset fai_publication_update_ece_conf
+  unset fai_publication_update_nursery_conf
   unset fai_publication_war_remove_file_list
   unset fai_publication_environment
   unset fai_publication_webapps
@@ -416,6 +427,15 @@ EOF
   assertEquals "fai_publication_ear should have been set" \
                "${publication_ear}" \
                "${fai_publication_ear}"
+  assertEquals "fai_publication_update_app_server_conf should have been set" \
+               "${publication1_update_app_server_conf}" \
+               "${fai_publication_update_app_server_conf}"
+  assertEquals "fai_publication_update_nursery_conf should have been set" \
+               "${publication1_update_nursery_conf}" \
+               "${fai_publication_update_nursery_conf}"
+  assertEquals "fai_publication_update_ece_conf should have been set" \
+               "${publication1_update_ece_conf}" \
+               "${fai_publication_update_ece_conf}"
   assertEquals "fai_publication_webapps should have been set" \
                "${publication_webapp1} ${publication_webapp2}" \
                "${fai_publication_webapps}"

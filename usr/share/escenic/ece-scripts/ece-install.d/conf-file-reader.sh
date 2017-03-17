@@ -86,6 +86,9 @@ _parse_yaml_conf_file_publications() {
     local aliases=
     local environment=
     local war_remove_list=
+    local update_app_server_conf=
+    local update_ece_conf=
+    local update_nursery_conf=
 
     create=$(_jq "${yaml_file}" .profiles.publications["${i}"].create)
     ear=$(_jq "${yaml_file}" .profiles.publications["${i}"].ear)
@@ -93,16 +96,36 @@ _parse_yaml_conf_file_publications() {
     war=$(_jq "${yaml_file}" .profiles.publications["${i}"].war)
     environment=$(_jq "${yaml_file}" .profiles.publications["${i}"].environment)
 
+    update_app_server_conf=$(
+      _jq "${yaml_file}" .profiles.publications["${i}"].update_app_server_conf)
+    update_ece_conf=$(
+      _jq "${yaml_file}" .profiles.publications["${i}"].update_ece_conf)
+    update_nursery_conf=$(
+      _jq "${yaml_file}" .profiles.publications["${i}"].update_nursery_conf)
+
     # If there are one or more publications defined in 'publications'
-    # with create set to true, we assume the user wants to create all
-    # publications. It's safe to re-run creation for existing
+    # with these settings, we assume the user wants to create all
     # publications.
+    #
+    # FYI: It's safe to re-run creation for existing publications.
     if [[ "${create}" == true || "${create}" == yes ]]; then
       export fai_publication_create=1
     fi
+    if [[ "${update_nursery_conf}" == true ||
+            "${update_nursery_conf}" == yes ]]; then
+      export fai_publication_update_nursery_conf=1
+    fi
+    if [[ "${update_ece_conf}" == true ||
+            "${update_ece_conf}" == yes ]]; then
+      export fai_publication_update_ece_conf=1
+    fi
+    if [[ "${update_app_server_conf}" == true ||
+            "${update_app_server_conf}" == yes ]]; then
+      export fai_publication_update_app_server_conf=1
+    fi
 
     if [ -z "${war}" ]; then
-      war=${name}.war
+      export war=${name}.war
     fi
     if [ -n "${ear}" ]; then
       export fai_publication_ear=${ear}
