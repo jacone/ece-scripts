@@ -456,9 +456,28 @@ function set_instance_settings() {
 
 function sanity_check() {
     if [ "$(whoami)" == "root" ]; then
-        print "Sorry, you cannot be root when running $(basename $0)"
-        print "The root user can only use /etc/init.d/ece"
-        exit 1
+        local next_is_ok=0
+        for subcommand in ${command}; do
+            # ignore options, i.e. things starting with a hyphen.
+            if [[ "${subcommand}" =~ ^-.* ]]; then
+              # Allow values to options, must use this since not
+              # everything is using getopt (yet)
+              next_is_ok=1
+              continue
+            fi
+
+            if [ ${next_is_ok-0} -eq 1 ]; then
+              next_is_ok=0
+              continue
+            fi
+
+            declare | grep -q -w root_allowed_${subcommand//-/_} || {
+              print "Sorry, you cannot be root when running " \
+                    "'${BASH_SOURCE[0]##*/} ${subcommand}'." \
+                    "root can only use /etc/init.d/ece"
+              exit 1
+            }
+        done
     fi
 
     if [ "$(echo $command)" == "list-instances" ]; then
@@ -674,7 +693,11 @@ function set_type_command_and_instance() {
         fi
 
         # the only thing left at this point, is the command
-        command="$command $el"
+        if [ -n "${command}" ]; then
+          command="$command $el"
+        else
+          command=${el}
+        fi
     done
 
     # If the user didn't specify which instance to use and if there's
