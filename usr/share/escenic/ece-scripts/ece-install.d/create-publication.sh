@@ -22,17 +22,13 @@ function create_publication_prepare_war_file() {
   fi
 }
 
-function create_publication() {
-  print_and_log "Preparing publication creation ..."
-
-  # figure out which WAR to use for the publication creation
+function _create_publication_if_passed_extract_ear_to_dir() {
   local publication_war=""
   if [ -n "${fai_publication_ear}" ]; then
     print_and_log "I will create all publications in" \
                   $fai_publication_ear "using the the domain mapping list ..."
 
     ensure_variable_is_set fai_publication_domain_mapping_list
-    local the_tmp_dir=$(mktemp -d)
 
     # we're using the builder HTTP crendentials, if set, for
     # downloading the EAR.
@@ -48,15 +44,28 @@ function create_publication() {
       run cd $the_tmp_dir
       run jar xf $download_dir/$(basename $fai_publication_ear)
     )
+  fi
+}
 
+function create_publication() {
+  print_and_log "Preparing publication creation ..."
+
+  local the_tmp_dir=
+  the_tmp_dir=$(mktemp -d)
+
+  # figure out which WAR to use for the publication creation
+  _create_publication_if_passed_extract_ear_to_dir "${the_tmp_dir}"
+
+  local publication_type=${fai_publication_type-default}
+
+  if [ -n "${fai_publication_domain_mapping_list}" ]; then
     ensure_that_instance_is_running ${fai_publication_use_instance-$default_ece_intance_name}
     for el in ${fai_publication_domain_mapping_list}; do
-      local old_ifs=$IFS
       # the entries in the fai_publication_domain_mapping_list are on
       # the form: <publication[,pub.war]>#<domain>[#<alias1>[,<alias2>]]
       IFS='#' read publication domain aliases <<< "$el"
-      IFS=',' read publication_name publication_war publication_type <<< "$publication"
-      IFS=$old_ifs
+      IFS=',' read publication_name publication_war <<< "${publication}"
+      <<< "$publication"
 
       # this is the default case were the WAR is called the same as
       # the publication name with the .war suffix.
@@ -64,20 +73,24 @@ function create_publication() {
         publication_war=${publication_name}.war
       fi
 
+      ## If the WAR was provided in fai_publication_ear
+      if [ -e "${the_tmp_dir}/${publication_war}" ]; then
+        publication_war_to_use=${the_tmp_dir}/${publication_war}
+      else
+        local file=$(get_content_engine_dir)/contrib/wars/demo-clean.war
+        publication_war_to_use=${file}
+      fi
+
       create_the_publication \
-        $publication_name \
-        $the_tmp_dir/$publication_war \
-        $publication_type \
+        "${publication_name}" \
+        "${publication_war_to_use}" \
+        "${publication_type}" \
         "${domain}" \
         "${aliases}"
     done
-
-    log "Cleaing up $the_tmp_dir ..."
-    run rm -rf $the_tmp_dir
   else
     ensure_that_instance_is_running ${fai_publication_use_instance-$default_ece_intance_name}
     local publication_name=${fai_publication_name-mypub}
-    local publication_type=${fai_publication_type-default}
 
     if [ -z "${fai_publication_war}" ]; then
       # if the user hasn't set the fai_publication_war, see if the
@@ -97,6 +110,9 @@ function create_publication() {
 
     create_the_publication $publication_name $publication_war $publication_type
   fi
+
+  log "Cleaing up $the_tmp_dir ..."
+  run rm -rf $the_tmp_dir
 }
 
 ## $1 :: publication name
@@ -117,22 +133,30 @@ function create_the_publication() {
     ece -i ${the_instance} \
         create-publication \
         --publication ${publication_name} \
-        --update-app-server-conf \
-        --update-nursery-conf \
-        --update-ece-conf \
-        --publication-type ${publication_type} \
         --file ${publication_war}
   "
-
+  if [ "${fai_publication_update_nursery_conf-0}" -eq 1 ]; then
+    ece_command=${ece_command}" --update-nursery-conf"
+  fi
+  if [ "${fai_publication_update_ece_conf-0}" -eq 1 ]; then
+    ece_command=${ece_command}" --update-ece-conf"
+  fi
+  if [ "${fai_publication_update_app_server_conf-0}" -eq 1 ]; then
+    ece_command=${ece_command}" --update-app-server-conf"
+  fi
   if [ -n "${publication_domain}" ]; then
     ece_command=${ece_command}" --publication-domain ${publication_domain}"
   fi
   if [ -n "${publication_aliases}" ]; then
     ece_command=${ece_command}" --publication-aliases ${publication_aliases}"
   fi
+  if [ -n "${publication_type}" ]; then
+    ece_command=${ece_command}" --publication-type ${publication_type}"
+  fi
 
-  su - "${ece_user}" -c "$ece_command" &>> "${log}"
-  exit_on_error su - "${ece_user}" -c "$ece_command"
+  # 'ece create-publication' can be run as root
+  run ${ece_command}
+  exit_on_error "$ece_command"
 }
 
 ## $1 :: the instance name
