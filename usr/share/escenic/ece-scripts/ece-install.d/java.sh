@@ -1,7 +1,7 @@
 default_java_version=1.6
 sun_java_bin_url=http://download.oracle.com/otn-pub/java/jdk/6u39-b04/jdk-6u39-linux-i586.bin
 if [[ $(uname -m) == "x86_64" ]]; then
-  sun_java_bin_url=http://download.oracle.com/otn-pub/java/jdk/6u39-b04/jdk-6u39-linux-x64.bin
+  sun_java_bin_url=http://download.oracle.com/otn-pub/java/jdk/8u121-b13/e9e7ea248e2c4826b92b3f075a80e441/jdk-8u121-linux-x64.rpm
 fi
   
 # Install oracle java from webupd8
@@ -40,50 +40,21 @@ function install_sun_java_on_redhat() {
     return
   fi
   
-  print_and_log "Downloading Sun Java from download.oracle.com ..."
-  run cd $download_dir
-  local file_name=$(basename $sun_java_bin_url)
-  run wget --no-cookies --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com" -O $file_name $wget_opts $sun_java_bin_url
+  print_and_log "Downloading Oracle Java from download.oracle.com ..."
+  local file_name=${download_dir}/${sun_java_bin_url##*/}
+  run wget \
+      --no-cookies \
+      --header "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com ; oraclelicense=accept-securebackup-cookie" \
+      -O $file_name \
+      $wget_opts \
+      $sun_java_bin_url
 
-  # calculating start and stop offset from where to extract the zip
-  # from the java data blob. calculation taken from
-  # git://github.com/rraptorr/sun-java6.git
-  local tmp_jdk=jdk-tmp.zip
-  local binsize=$(wc -c $file_name | awk '{print $1}');
-  local zipstart=$(unzip -ql $file_name 2>&1 >/dev/null | \
-      sed -n -e 's/.* \([0-9][0-9]*\) extra bytes.*/\1/p');
-  tail -c $(expr $binsize - $zipstart) $file_name > $tmp_jdk
-  
-  run cd /opt
-  run unzip -q -o $download_dir/$tmp_jdk
-  local latest_jdk=$(find . -maxdepth 1 -type d -name "jdk*" | sort -r | head -1)
-  run rm -f /opt/jdk
-  run ln -s $latest_jdk jdk
+  run rpm -Uvh "${file_name}"
 
-  # generate jar files from the .pack files
-  for el in $(find /opt/jdk/ -name "*.pack"); do
-    file_name=$(basename $el .pack)
-    local dir=$(dirname $el)
-    run /opt/jdk/bin/unpack200 $el $dir/$file_name.jar
-  done
-
-  # update RedHat's alternatives system to use Sun Java as its
-  # default.
-  for el in java javac jar; do
-    if [ ! -e /usr/bin/$el ]; then
-      ln -s /usr/bin/$el /etc/alternatives/$el
-    fi
-    # doesn't seem to like running inside the run wrapper
-    alternatives --set $el /opt/jdk/bin/$el 1>>$log 2>>$log
-  done
-
-  # setting java_home to the newly installed location
-  java_home=/opt/jdk
-  
   local version=$(java -version 2>&1 | grep version | cut -d'"' -f2)
-  print_and_log "Sun Java $version is now installed in /opt/jdk"
+  print_and_log "Oracle Java $version is now installed"
 
-  add_next_step "By using Sun Java, you must accept this license: " \
+  add_next_step "By using Oracle Java, you must accept this license: " \
     "http://www.oracle.com/technetwork/java/javase/terms/license/"
 }
 

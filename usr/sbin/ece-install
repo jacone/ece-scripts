@@ -619,10 +619,9 @@ function common_pre_install() {
 
     if [ -e /etc/redhat-release ]; then
       on_redhat_or_derivative=1
-      # TODO: ensure provides json_xs and that it's in the default
-      # CentOS & Redhat repos: perl-Cpanel-JSON-XS, jq. Need to add
-      # the EPEL repo.
-      install_packages_if_missing "redhat-lsb"
+
+      rh_add_epel_repo
+      install_packages_if_missing "redhat-lsb jq perl-JSON-XS perl-YAML"
 
       if [ $(lsb_release -i | grep RedHat | wc -l) -gt 0 ]; then
         on_redhat=1
