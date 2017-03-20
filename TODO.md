@@ -18,6 +18,20 @@ repositories.
 - ✔ Cache server profile
 - ✔ Assembly Tool
 
+### Install ECE from RPMs
+Support for installing ECE & plugins using the escenic RPM packages.
+
+- ✔ Editor profile (Escenic Content Engine) 
+- ✔ Presentation profile (Escenic Content Engine)
+- ✔ Search profile (ECE's indexer-webapp + Solr)
+- ✔ DB profile, ECE
+- DB profile, ECE plugins
+- ✔ Create publication(s) profile → Move to `/usr/bin/ece`
+- Analysis profile (Escenic Analysis Engine)
+- Analysis DB profile
+- Cache server profile
+- Assembly Tool
+
 ### ✔ YAML configuration file format
 
 See the [unit tests](usr/local/src/unit-tests/ece-install-conf-file-reader-test.sh) for
