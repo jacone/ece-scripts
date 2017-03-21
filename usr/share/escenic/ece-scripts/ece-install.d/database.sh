@@ -571,11 +571,7 @@ EOF
 }
 
 function check_mysql_is_running(){
-if [[ $(netstat -nlp | grep -w mysqld | wc -l) -gt 0 ]]; then
-   return 0
-else
-   return 1
-fi
+  netstat -nlp | grep -q -c -w mysqld
 }
 
 function create_schema() {
