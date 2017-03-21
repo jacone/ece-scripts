@@ -253,3 +253,19 @@ function get_memory_summary_of_pid() {
 
   echo "${size} (peaked at: $peak)"
 }
+
+### Returns 0 (ok) if the passed RPM file has been installed on the
+### current machine, 1 if not.
+##
+## $1 :: RPM file reference
+function is_rpm_already_installed() {
+  local file=$1
+
+  if [ ! -e "${file}" ]; then
+    return 1
+  fi
+
+  local package_name=
+  package_name=$(rpm -qp --queryformat "%{Name}\n" "${file}")
+  rpm -q "${package_name}" &> /dev/null
+}

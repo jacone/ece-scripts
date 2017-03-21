@@ -46,7 +46,36 @@ install_configured_escenic_packages() {
         --assume-yes \
         --force-yes \
         ${escenic_deb_packages-escenic-content-engine}
+
   elif [ "${on_redhat_or_derivative}" -eq 1 ]; then
-    :
+    local package=
+    for package in "${!fai_package_map[@]}"; do
+      local version=${fai_package_map[${package}]}
+
+      if [ -z "${version}" ]; then
+        print_and_log "You must specify version of RPM package ${package}"
+        remove_pid_and_exit_in_error
+      fi
+
+      local arch=x86_64
+      if [ -n "${fai_package_arch_map[${package}]}" ]; then
+        arch=${fai_package_arch_map[${package}]}
+      fi
+
+      local rpm_url=${fai_package_rpm_base_url-http://yum.escenic.com/rpm}/${package}-${version}.${arch}.rpm
+
+      local rpm_file="${download_dir}/${rpm_url##*/}"
+      run wget \
+          --http-user "${fai_package_rpm_user}" \
+          --http-password "${fai_package_rpm_password}" \
+          --continue \
+          --output-document "${rpm_file}" \
+          "${rpm_url}"
+
+      if ! is_rpm_already_installed "${rpm_file}"; then
+        run rpm -Uvh "${rpm_file}"
+      fi
+    done
+
   fi
 }

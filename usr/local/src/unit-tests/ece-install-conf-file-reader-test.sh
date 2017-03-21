@@ -12,6 +12,7 @@ test_can_parse_yaml_conf_environment() {
   local mvn_repo1=repo1.example.com
   local mvn_repo2=repo2.example.com
   local conf_url=http://build.example.com/machine-conf-1.2.3.deb
+  local rpm_base_url=http://unstable.yum.escenic.com/rpm
 
   cat > "${yaml_file}" <<EOF
 ---
@@ -24,6 +25,10 @@ environment:
   apt:
     escenic:
       pool: ${apt_pool}
+  rpm:
+    escenic:
+      base_url: ${rpm_base_url}
+
   maven:
     repositories:
       - ${mvn_repo1}
@@ -35,6 +40,7 @@ EOF
   unset fai_server_java_version
   unset fai_maven_repositories
   unset fai_conf_url
+  unset fai_package_rpm_base_url
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
 
   assertNotNull "Should set java_home" "${java_home}"
@@ -55,6 +61,9 @@ EOF
                "${mvn_repo1} ${mvn_repo2}" \
                "${fai_maven_repositories}"
   assertEquals "Should set fai_conf_url" "${conf_url}" "${fai_conf_url}"
+  assertEquals "Should set fai_package_rpm_base_url" \
+               "${rpm_base_url}" \
+               "${fai_package_rpm_base_url}"
 
   rm -rf "${yaml_file}"
 }
@@ -107,7 +116,7 @@ test_can_parse_yaml_conf_presentation() {
   local presentation_ear=http://builder/engine.ear
   local presentation_environment=testing
   local presentation_deploy_white_list=foo
-  local presentation_search_indexer_ws_uri=http://engine1/indexer-webservice
+  local presentation_search_indexer_ws_uri=http://engine1/indexer-webservice/index/
 
   local yaml_file=
   yaml_file=$(mktemp)
@@ -323,6 +332,8 @@ test_can_parse_yaml_conf_credentials() {
   local escenic_download_password=barpassword
   local builder_download_user=buildy
   local builder_download_password=boo
+  local unstable_yum_user=once
+  local unstable_yum_password=coming
 
   cat > "${yaml_file}" <<EOF
 ---
@@ -333,10 +344,15 @@ credentials:
   - site: builder
     user: ${builder_download_user}
     password: ${builder_download_password}
+  - site: unstable.yum.escenic.com
+    user: ${unstable_yum_user}
+    password: ${unstable_yum_password}
 EOF
 
   unset technet_user
   unset technet_password
+  unset fai_package_rpm_user
+  unset fai_package_rpm_password
   unset fai_builder_http_user
   unset fai_builder_http_password
   unset fai_conf_builder_http_user
@@ -361,6 +377,40 @@ EOF
   assertEquals "Should set fai_conf_builder_http_password" \
                "${builder_download_password}" \
                "${fai_conf_builder_http_password}"
+  assertEquals "Should set fai_package_rpm_user" \
+               "${unstable_yum_user}" \
+               "${fai_package_rpm_user}"
+  assertEquals "Should set fai_package_rpm_password" \
+               "${unstable_yum_password}" \
+               "${fai_package_rpm_password}"
+
+  rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_credentials_stable_yum() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+  local stable_yum_user=always
+  local stable_yum_password=there
+
+  cat > "${yaml_file}" <<EOF
+---
+credentials:
+  - site: yum.escenic.com
+    user: ${stable_yum_user}
+    password: ${stable_yum_password}
+EOF
+
+  unset fai_package_rpm_user
+  unset fai_package_rpm_password
+
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertEquals "Should set fai_package_rpm_user" \
+               "${stable_yum_user}" \
+               "${fai_package_rpm_user}"
+  assertEquals "Should set fai_package_rpm_password" \
+               "${stable_yum_password}" \
+               "${fai_package_rpm_password}"
 
   rm -rf "${yaml_file}"
 }
@@ -807,7 +857,7 @@ test_can_parse_yaml_conf_search() {
   local search_for_editor=1
   local search_legacy=1
   local search_ear=http://builder/engine.ear
-  local search_indexer_ws_uri=http://engine/indexer-webservice
+  local search_indexer_ws_uri=http://engine/indexer-webservice/index/
 
   local yaml_file=
   yaml_file=$(mktemp)

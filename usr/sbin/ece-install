@@ -55,6 +55,8 @@ db_vendor=mariadb
 
 ## Map with package name to version entries. The version can be empty.
 declare -A fai_package_map
+## Map with package name to arch entries. The arch can be empty.
+declare -A fai_package_arch_map
 
 #####################################################################
 
@@ -425,7 +427,7 @@ function print_status_and_next_steps()
         $install_profile_number -ne $PROFILE_CACHE_SERVER -a \
         $install_profile_number -ne $PROFILE_WIDGET_FRAMEWORK ]; then
         add_next_step "UNIX man pages: $(man -k escenic | awk '{print $1;}')"
-        add_next_step "Guide books: http://docs.escenic.com/ece-5.7.html"
+        add_next_step "Guide books: http://docs.escenic.com/ece-6.0.html"
     fi
 
     print_next_step_list
@@ -620,11 +622,14 @@ function common_pre_install() {
     if [ -e /etc/redhat-release ]; then
       on_redhat_or_derivative=1
 
+      # Chicken and egg problem: we need the lsb_release command
+      # before doing anything else.
+      install_packages_if_missing "redhat-lsb"
       rh_add_epel_repo
-      install_packages_if_missing "redhat-lsb jq perl-JSON-XS perl-YAML"
+      install_packages_if_missing "jq perl-JSON-XS perl-YAML"
 
-      if [ $(lsb_release -i | grep RedHat | wc -l) -gt 0 ]; then
-        on_redhat=1
+      if [ "$(lsb_release -i | grep -c RedHat)" -gt 0 ]; then
+        export on_redhat=1
       fi
     fi
 

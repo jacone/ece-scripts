@@ -33,10 +33,70 @@ function install_oracle_java(){
   install_packages_if_missing $debian_package_name
 }
 
+## Returns 0 if Oracle Java is installed, 1 if it's not (in PATH).
+function _java_is_sun_java_already_installed() {
+  if [ -e "${java_home}/bin/java" ]; then
+    "${java_home}/bin/java" -version 2>&1 | grep -q -w HotSpot
+  elif [ -x /usr/bin/java ]; then
+    /usr/bin/java -version -version 2>&1 | grep -q -w HotSpot
+  else
+    return 1
+  fi
+}
+
+## $1 :: dir of the JDK
+function _java_update_java_env_from_jdk_dir() {
+  local dir=$1
+  update-alternatives --set java "${dir}/jre/bin/java"
+  for cmd in javac jar javap javah jstat; do
+    update-alternatives --set "${cmd}" "${dir}/bin/${cmd}"
+  done
+
+  export java_home=${dir}
+}
+
+function _java_update_java_env_from_jdk_rpm() {
+  local rpm=$1
+  local rpm_java_home=
+  rpm_java_home=$(
+    rpm -qlp "${rpm}" |
+      grep bin/javac |
+      sed 's#/bin/javac##')
+
+  _java_update_java_env_from_jdk_dir "${rpm_java_home}"
+}
+
+function _java_update_java_env_from_java_bin() {
+  local java_bin=
+  java_bin=$(which java)
+  local real_java_bin=
+
+  # the alternatives system is only two link deep:
+  #
+  # /usr/bin/java -> /etc/alternatives/java -> /actual/bin/java
+  if [ -h "${java_bin}" ]; then
+    java_bin=$(readlink "${java_bin}")
+    if [ -h "${java_bin}" ]; then
+      java_bin=$(readlink "${java_bin}")
+    fi
+  fi
+
+  real_java_bin=${java_bin}
+
+  local jdk_dir=${real_java_bin%/*}
+  # Remove jre/bin
+  jdk_dir=${jdk_dir//\/jre\/bin}
+  # If this wasn't a <jdk>/jre/bin/java reference, it's probably
+  # <jdk?>/bin/java, hence remove the bin again.
+  jdk_dir=${jdk_dir//\/bin}
+
+  _java_update_java_env_from_jdk_dir "${jdk_dir}"
+}
+
 function install_sun_java_on_redhat() {
-  if [[ $(${java_home}/bin/java -version 2>&1 | \
-    grep HotSpot | wc -l) -gt 0 ]]; then
+  if _java_is_sun_java_already_installed; then
     print_and_log "Sun Java is already installed on $HOSTNAME"
+    _java_update_java_env_from_java_bin
     return
   fi
   
@@ -49,7 +109,11 @@ function install_sun_java_on_redhat() {
       $wget_opts \
       $sun_java_bin_url
 
-  run rpm -Uvh "${file_name}"
+  if ! is_rpm_already_installed "${file_name}"; then
+    run rpm -Uvh "${file_name}"
+  fi
+
+  _java_update_java_env_from_jdk_rpm "${file_name}"
 
   local version=$(java -version 2>&1 | grep version | cut -d'"' -f2)
   print_and_log "Oracle Java $version is now installed"

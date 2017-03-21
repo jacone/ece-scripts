@@ -75,6 +75,11 @@ _parse_yaml_conf_file_credentials() {
       export fai_conf_builder_http_user=${user}
       export fai_conf_builder_http_password=${password}
     fi
+    if [[ "${site}" == yum.escenic.com ||
+            "${site}" == unstable.yum.escenic.com ]]; then
+      export fai_package_rpm_user=${user}
+      export fai_package_rpm_password=${password}
+    fi
   done
 }
 
@@ -277,6 +282,12 @@ _parse_yaml_conf_file_environment() {
   configured_apt_pool=$(_jq "${yaml_file}" .environment.apt.escenic.pool)
   if [[ -n "${configured_apt_pool}" ]]; then
     export fai_apt_vizrt_pool=${configured_apt_pool}
+  fi
+
+  local configured_rpm_base_url=
+  configured_rpm_base_url=$(_jq "${yaml_file}" .environment.rpm.escenic.base_url)
+  if [[ -n "${configured_rpm_base_url}" ]]; then
+    export fai_package_rpm_base_url=${configured_rpm_base_url}
   fi
 
   local skip_password_checks=
