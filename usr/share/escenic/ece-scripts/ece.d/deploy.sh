@@ -281,5 +281,5 @@ function remove_unwanted_libraries() {
   fi
 
   log "Removing $1/engine-config-*.jar since this is a search instance"
-  run rm $1/engine-config-*.jar
+  run find "${1}/." -maxdepth 1 -name "engine-config-*.jar" -delete
 }
