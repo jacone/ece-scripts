@@ -553,21 +553,27 @@ test_can_parse_yaml_conf_packages() {
   yaml_file=$(mktemp)
   local package_name=escenic-content-engine
   local package_version=6.1.0-2
+  local package_arch=i386
 
   cat > "${yaml_file}" <<EOF
 ---
 packages:
   - name: ${package_name}
     version: ${package_version}
+    arch: ${package_arch}
 EOF
   unset fai_package_map
+  unset fai_package_arch_map
   declare -A fai_package_map
+  declare -A fai_package_arch_map
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
 
   for name in "${!fai_package_map[@]}"; do
     local version=${fai_package_map[${name}]}
+    local arch=${fai_package_arch_map[${name}]}
     assertEquals "Should have parsed package name" "${package_name}" "${name}"
     assertEquals "Should have parsed package version" "${package_version}" "${version}"
+    assertEquals "Should have parsed package version" "${package_arch}" "${arch}"
   done
 
   rm -rf "${yaml_file}"

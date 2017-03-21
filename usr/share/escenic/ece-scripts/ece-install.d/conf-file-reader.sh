@@ -24,8 +24,17 @@ parse_yaml_conf_file_or_source_if_sh_conf() {
   assert_commands_available json_xs jq
 
   local yaml_file=$1
-  if ! is_yaml "${yaml_file}"; then
-    source "${yaml_file}"
+
+  if ! is_yaml "${yaml_file}" ; then
+    local suffix=${yaml_file##*.}
+    if [[ "${suffix}" == yaml ]]; then
+      print_and_log "Conf file ${yaml_file} isn't valid YAML," \
+                    "see ${log} for further details"
+      json_xs < "${yaml_file}" -f yaml -t json &>> "${log}"
+      remove_pid_and_exit_in_error
+    else
+      source "${yaml_file}"
+    fi
     return
   fi
 
@@ -191,9 +200,12 @@ _parse_yaml_conf_file_packages() {
   for ((i = 0; i < count; i++)); do
     local name=
     local version=
+    local arch=
     name=$(_jq "${yaml_file}" .packages["${i}"].name)
     version=$(_jq "${yaml_file}" .packages["${i}"].version)
+    arch=$(_jq "${yaml_file}" .packages["${i}"].arch)
     fai_package_map[${name}]=${version}
+    fai_package_arch_map[${name}]=${arch}
     export fai_package_enabled=1
     export escenic_root_dir=/usr/share/escenic
   done
