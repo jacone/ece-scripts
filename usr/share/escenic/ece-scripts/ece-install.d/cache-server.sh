@@ -30,10 +30,11 @@ function set_varnish_port() {
 
   local file=/etc/default/varnish
   if [ $on_redhat_or_derivative -eq 1 ]; then
-    file=/etc/sysconfig/varnish
+    # Varnish RedHat package has migrated from /etc/sysconfig/varnish
+    file=/etc/varnish/varnish.params
   fi
 
-  run sed -i -e "s/6081/${cache_port}/g" -e 's/^START=no$/START=yes/' $file
+  run sed -i -e "s/6081/${cache_port}/g" "${file}"
 }
 
 function create_varnish_conf_main() {
@@ -613,10 +614,12 @@ function create_varnish_conf() {
 
 function set_up_varnish() {
   print_and_log "Setting up Varnish to match your environment ..."
-  run /etc/init.d/varnish stop
+  run service varnish stop
   set_varnish_port
   create_varnish_conf
-  run /etc/init.d/varnish start
+
+  run systemctl enable varnish
+  run systemctl start varnish
 }
 
 function leave_cache_trails() {
