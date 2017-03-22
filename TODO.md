@@ -25,12 +25,12 @@ Support for installing ECE & plugins using the escenic RPM packages.
 - ✔ Presentation profile (Escenic Content Engine)
 - ✔ Search profile (ECE's indexer-webapp + Solr)
 - ✔ DB profile, ECE
-- DB profile, ECE plugins
+- ✔ DB profile, ECE plugins
 - ✔ Create publication(s) profile → Move to `/usr/bin/ece`
-- Analysis profile (Escenic Analysis Engine)
-- Analysis DB profile
+- ✔ Analysis profile (Escenic Analysis Engine)
+- ✔ Analysis DB profile
 - Cache server profile
-- Assembly Tool
+- ✔ Assembly Tool
 
 ### ✔ YAML configuration file format
 

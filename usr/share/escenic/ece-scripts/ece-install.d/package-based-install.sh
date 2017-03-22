@@ -69,6 +69,7 @@ install_configured_escenic_packages() {
           --http-user "${fai_package_rpm_user}" \
           --http-password "${fai_package_rpm_password}" \
           --continue \
+          --quiet \
           --output-document "${rpm_file}" \
           "${rpm_url}"
 
