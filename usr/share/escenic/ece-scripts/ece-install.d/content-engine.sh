@@ -774,11 +774,11 @@ function install_ece_third_party_packages
       apr
       memcached
       mysql-connector-java
+      tomcat-native
       wget
       xmlstarlet
     "
 
-    # TODO no tomcat APR wrappers in official repositories
     install_sun_java_on_redhat
   fi
 

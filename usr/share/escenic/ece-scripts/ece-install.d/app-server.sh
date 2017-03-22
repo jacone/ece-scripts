@@ -13,6 +13,13 @@ function set_up_jdbc_library() {
   fi
 }
 
+function set_apr_lib_dir_in_ece_instance_conf_if_needed() {
+  find /usr/lib* -maxdepth 3 -name libtcnative-1.so.0 |
+    while read -r apr_lib; do
+      set_ece_instance_conf apr_lib_dir "${apr_lib%/*}"
+    done
+}
+
 function set_up_app_server() {
   print_and_log "Setting up the application server ..."
 
@@ -113,6 +120,7 @@ function set_up_app_server() {
   set_ece_instance_conf appserver_port $appserver_port
   set_appropriate_jvm_heap_sizes
   set_http_auth_credentials_if_needed
+  set_apr_lib_dir_in_ece_instance_conf_if_needed
 
   run cd $tomcat_base/lib
 
