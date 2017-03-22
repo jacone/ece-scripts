@@ -1,67 +1,9 @@
+# -*- mode: sh; sh-shell: bash; -*-
+
 # ece-install module for installing the cache server
 
-varnish_redhat_rpm_url=http://repo.varnish-cache.org/redhat/varnish-3.0/el5/noarch/varnish-release-3.0-1.noarch.rpm
-
-function get_supported_varnish_dist_list() {
-  # list taken from http://repo.varnish-cache.org/debian/dists/, which
-  # is the same as http://repo.varnish-cache.org/ubuntu/dists/
-  curl --connect-timeout 5 \
-    --silent http://repo.varnish-cache.org/ubuntu/dists/ | \
-    grep href | \
-    cut -d'"' -f8- | \
-    grep ^[a-z] | \
-    cut -d'/' -f1
-}
-
 function install_varnish_software() {
-  if [ $on_debian_or_derivative -eq 1 ]; then
-
-    if [ $(apt-key list | grep varnish-software.com | wc -l) -eq 0 ]; then
-      curl ${curl_opts} \
-        http://repo.varnish-cache.org/debian/GPG-key.txt \
-        2>> $log | \
-        apt-key add - \
-        1>>$log 2>>$log
-      run apt-get update
-    fi
-
-    local code_name=$(lsb_release -s -c)
-    local supported_code_name=0
-    local supported_list="$(get_supported_varnish_dist_list)"
-    for el in $supported_list; do
-      if [ $code_name = $el ]; then
-        supported_code_name=1
-      fi
-    done
-
-    local dist_name=$(lsb_release -i -s | tr [A-Z] [a-z])
-    if [ $supported_code_name -eq 1 ]; then
-      add_apt_source "deb http://repo.varnish-cache.org/${dist_name}/ ${code_name} varnish-3.0"
-    elif [ $supported_code_name -eq 1 ]; then
-      add_apt_source "deb http://repo.varnish-cache.org/${dist_name}/ ${code_name} varnish-3.0"
-    else
-      print_and_log "Your distribution ${code_name} isn't supported" \
-        "by the Varnish repositories. I'll use version Varnish from your" \
-        "distribution's repositories instead"
-    fi
-
-  elif [[ $on_redhat_or_derivative -eq 1 &&
-        $(rpm -qa | grep varnish-release | wc -l) -lt 1 ]]; then
-    print "Installing the Varnish repository RPM"
-    run rpm --nosignature -i $varnish_redhat_rpm_url
-  fi
-
-  if [[ ${code_name} == "precise" ]]; then
-    # currently, 2012-10-09, the precise packages are not signed by
-    # the Varnish key.
-    local old_force_packages=${force_packages-0}
-    force_packages=1
-    install_packages_if_missing varnish
-    force_packages=${old_force_packages}
-  else
-    install_packages_if_missing varnish
-  fi
-
+  install_packages_if_missing varnish
   assert_commands_available varnishd
 }
 
