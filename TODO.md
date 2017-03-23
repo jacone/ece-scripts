@@ -18,7 +18,7 @@ repositories.
 - ✔ Cache server profile
 - ✔ Assembly Tool
 
-### Install ECE from RPMs
+### ✔ Install ECE from RPMs
 Support for installing ECE & plugins using the escenic RPM packages.
 
 - ✔ Editor profile (Escenic Content Engine) 
@@ -32,10 +32,10 @@ Support for installing ECE & plugins using the escenic RPM packages.
 - ✔ Cache server profile
 - ✔ Assembly Tool
 
-### Support for Varnish 4
+### ✔ Support for Varnish 4
 
 Varnish 3 has reached its end of life and Varnish 4 is in the official
-repositories of Debian stable, Ubuntu LTS and CentOS 7.
+repositories of Debian stable, Ubuntu LTS and CentOS 7 and RedHat 7.
 
 ### ✔ YAML configuration file format
 
