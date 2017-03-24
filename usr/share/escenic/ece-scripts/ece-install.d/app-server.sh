@@ -3,11 +3,14 @@ function set_up_jdbc_library() {
   if [ -n "$jdbc_driver" -a -e "$jdbc_driver" ]; then
     make_ln $jdbc_driver
   elif [ $db_vendor = "mariadb" ]; then
-    print_and_log "Downloading MariaDB jdbc driver."
+    local mariadb_jdbc_url=https://downloads.mariadb.org/f/mariadb-java-client-1.1.0/mariadb-java-client-1.1.0.jar
+    print_and_log "Downloading MariaDB jdbc driver ${mariadb_jdbc_url}"
+    local mariadb_jdbc_jar=${mariadb_jdbc_url##*/}
     download_uri_target_to_dir \
-        https://downloads.mariadb.org/f/mariadb-java-client-1.1.0/mariadb-java-client-1.1.0.jar/from/http:/ftp.heanet.ie/mirrors/mariadb \
-        .
-    mv mariadb mariadb-java-client-1.1.0.jar
+      "${mariadb_jdbc_url}" \
+      "${download_dir}" \
+      "${mariadb_jdbc_jar}"
+    run cp "${download_dir}/${mariadb_jdbc_jar}" "${tomcat_base}/lib"
   else
     make_ln /usr/share/java/mysql-connector-java.jar      
   fi
