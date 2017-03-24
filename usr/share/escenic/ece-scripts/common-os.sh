@@ -267,5 +267,10 @@ function is_rpm_already_installed() {
 
   local package_name=
   package_name=$(rpm -qp --queryformat "%{Name}\n" "${file}")
+  is_rpm_already_installed_by_name "${package_name}"
+}
+
+function is_rpm_already_installed_by_name() {
+  local package_name=$1
   rpm -q "${package_name}" &> /dev/null
 }

@@ -15,6 +15,10 @@ rh_add_epel_repo() {
   local major=7
   major=$(lsb_release -r |
             sed -n -r 's#Release:[^0-9]*([0-9]+)\..*#\1#p')
-  local url=https://dl.fedoraproject.org/pub/epel/epel-release-latest-${major}.noarch.rpm
-  run rpm -Uvh "${url}"
+  local package_name=epel-release
+  local url=https://dl.fedoraproject.org/pub/epel/${package_name}-latest-${major}.noarch.rpm
+
+  if ! is_rpm_already_installed_by_name "${package_name}"; then
+    run rpm -Uvh "${url}"
+  fi
 }
