@@ -21,37 +21,10 @@ function get_mariadb_repo_url() {
   echo "http://ftp.heanet.ie/mirrors/mariadb/repo/5.5/${distributor}/dists/"
 }
 
-function set_up_mariadb_yum_repo() {
-  local maria_db_repo=/etc/yum.repos.d/mariadb.repo
-  if [ ! -e $maria_db_repo ]; then
-    print_and_log "Setting up the MariaDB repository ..."
-    local distributor=$(lsb_release -i -s | tr '[A-Z]' '[a-z]')
-    local release=$(lsb_release -r -s | sed -e 's/\([0-9]*\).*/\1/')
-    local arch=amd64
-    if [[ $(uname -m) != "x86_64" ]]; then
-      arch=x86
-    fi
-    if [ $distributor = "redhatenterpriseserver" ]; then
-      distributor=rhel
-    fi
-    local yum_url=http://yum.mariadb.org/5.5/${distributor}${release}-${arch}
-    cat > $maria_db_repo <<EOF
-# Created by $(basename $0) @ $(date)
-# http://downloads.mariadb.org/mariadb/repositories/
-[mariadb]
-name = MariaDB
-baseurl = ${yum_url}
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-EOF
-  fi
-}
-
-function set_up_redhat_repository_if_possible() {
+function set_up_redhat_mariadb_repository_if_necessary() {
   if [ $db_vendor = "mariadb" ]; then
-    set_up_mariadb_yum_repo
-    mysql_server_packages="MariaDB-server"
-    mysql_client_packages="MariaDB-client"
+    mysql_server_packages="mariadb-server"
+    mysql_client_packages="mariadb"
   else
     print_and_log "Setting up the Percona repository ..."
 
@@ -179,7 +152,7 @@ function set_up_repository_if_possible() {
       leave_trail "trail_db_vendor=mysql"
     fi
   elif [ $on_redhat_or_derivative -eq 1 ]; then
-    set_up_redhat_repository_if_possible
+    set_up_redhat_mariadb_repository_if_necessary
   fi
 }
 
@@ -190,12 +163,10 @@ function install_mysql_server_software() {
     install_packages_if_missing $mysql_server_packages
     force_packages=0
 
-    if [ $on_redhat_or_derivative -eq 1 ]; then
-      run chkconfig --level 35 mysql on
-      run /etc/init.d/mysql restart
+    if [ $on_debian_or_derivative -eq 1 ]; then
+      assert_commands_available mysqld
     fi
 
-    assert_commands_available mysqld
   else
     # when only running the SQL scripts, typically when using Amazon
     # RDS, we need the mysql-client.
@@ -220,11 +191,14 @@ function install_database_server() {
     force_packages=0
 
     if [ $on_redhat_or_derivative -eq 1 ]; then
-      run chkconfig --level 35 mysql on
-      run /etc/init.d/mysql restart
+      if [[ "${db_vendor}" == mariadb ]]; then
+        run systemctl enable mariadb
+        run systemctl start mariadb
+      fi
+    else
+      assert_commands_available mysqld
     fi
 
-    assert_commands_available mysqld
   else
     # when only running the SQL scripts, typically when using Amazon
     # RDS, we need the mysql-client.
@@ -578,9 +552,13 @@ function create_schema() {
     # we first create the DB or, if drop_db_first is 1, we've just
     # dropped it above before running the SQL scripts.
   if [ $db_product = "mysql" ]; then
-     if ! $(check_mysql_is_running) ; then
- 	run service mysql start	
-     fi
+    if ! $(check_mysql_is_running) ; then
+      if [[ "${db_vendor}" == mariadb ]]; then
+ 	run service mariadb start
+      else
+ 	run service mysql start
+      fi
+    fi
     print_and_log "Creating DB $db_schema on $HOSTNAME ..."
     mysql -h $db_host << EOF
 create database $db_schema character set utf8 collate utf8_general_ci;
