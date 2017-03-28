@@ -294,7 +294,7 @@ function install_common_os_packages()
     if [ ${fai_offline_mode-0} -eq 0 ]; then
       curl -s http://apt.escenic.com/archive.key 2>> $log | \
         apt-key add - 1>> $log 2>> $log
-      local package_pool=${fai_apt_vizrt_pool-unstable}
+      local package_pool=${fai_apt_vizrt_pool-stable}
       add_apt_source "deb http://apt.escenic.com ${package_pool} main"
       run apt-get update
     fi
