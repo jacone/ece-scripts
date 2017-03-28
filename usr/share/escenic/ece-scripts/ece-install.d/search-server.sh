@@ -163,7 +163,7 @@ function setup_solr_init_d_script() {
 }
 
 function start_solr() {
-  run /etc/init.d/solr start
+  run /etc/init.d/solr restart
 }
 
 function set_up_solr() {
