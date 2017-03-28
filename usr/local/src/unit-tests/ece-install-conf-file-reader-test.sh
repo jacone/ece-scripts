@@ -13,6 +13,8 @@ test_can_parse_yaml_conf_environment() {
   local mvn_repo2=repo2.example.com
   local conf_url=http://build.example.com/machine-conf-1.2.3.deb
   local rpm_base_url=http://unstable.yum.escenic.com/rpm
+  local deb_base_url=http://unstable.apt.escenic.com
+  local deb_not_apt=1
 
   cat > "${yaml_file}" <<EOF
 ---
@@ -25,6 +27,10 @@ environment:
   apt:
     escenic:
       pool: ${apt_pool}
+  deb:
+    escenic:
+      use_deb_not_apt: true
+      base_url: ${deb_base_url}
   rpm:
     escenic:
       base_url: ${rpm_base_url}
@@ -41,6 +47,8 @@ EOF
   unset fai_maven_repositories
   unset fai_conf_url
   unset fai_package_rpm_base_url
+  unset fai_package_deb_not_apt
+
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
 
   assertNotNull "Should set java_home" "${java_home}"
@@ -64,6 +72,12 @@ EOF
   assertEquals "Should set fai_package_rpm_base_url" \
                "${rpm_base_url}" \
                "${fai_package_rpm_base_url}"
+  assertEquals "Should set fai_package_deb_base_url" \
+               "${deb_base_url}" \
+               "${fai_package_deb_base_url}"
+  assertEquals "Should set fai_package_deb_not_apt" \
+               "${deb_not_apt}" \
+               "${fai_package_deb_not_apt}"
 
   rm -rf "${yaml_file}"
 }
@@ -334,6 +348,8 @@ test_can_parse_yaml_conf_credentials() {
   local builder_download_password=boo
   local unstable_yum_user=once
   local unstable_yum_password=coming
+  local unstable_apt_user=two
+  local unstable_apt_password=twice
 
   cat > "${yaml_file}" <<EOF
 ---
@@ -347,12 +363,17 @@ credentials:
   - site: unstable.yum.escenic.com
     user: ${unstable_yum_user}
     password: ${unstable_yum_password}
+  - site: unstable.apt.escenic.com
+    user: ${unstable_apt_user}
+    password: ${unstable_apt_password}
 EOF
 
   unset technet_user
   unset technet_password
   unset fai_package_rpm_user
   unset fai_package_rpm_password
+  unset fai_package_apt_user
+  unset fai_package_apt_password
   unset fai_builder_http_user
   unset fai_builder_http_password
   unset fai_conf_builder_http_user
@@ -383,6 +404,12 @@ EOF
   assertEquals "Should set fai_package_rpm_password" \
                "${unstable_yum_password}" \
                "${fai_package_rpm_password}"
+  assertEquals "Should set fai_package_apt_user" \
+               "${unstable_apt_user}" \
+               "${fai_package_apt_user}"
+  assertEquals "Should set fai_package_apt_password" \
+               "${unstable_apt_password}" \
+               "${fai_package_apt_password}"
 
   rm -rf "${yaml_file}"
 }
@@ -411,6 +438,34 @@ EOF
   assertEquals "Should set fai_package_rpm_password" \
                "${stable_yum_password}" \
                "${fai_package_rpm_password}"
+
+  rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_credentials_stable_apt() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+  local stable_apt_user=always
+  local stable_apt_password=there
+
+  cat > "${yaml_file}" <<EOF
+---
+credentials:
+  - site: apt.escenic.com
+    user: ${stable_apt_user}
+    password: ${stable_apt_password}
+EOF
+
+  unset fai_package_apt_user
+  unset fai_package_apt_password
+
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertEquals "Should set fai_package_apt_user" \
+               "${stable_apt_user}" \
+               "${fai_package_apt_user}"
+  assertEquals "Should set fai_package_apt_password" \
+               "${stable_apt_password}" \
+               "${fai_package_apt_password}"
 
   rm -rf "${yaml_file}"
 }

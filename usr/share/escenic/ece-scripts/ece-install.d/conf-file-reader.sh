@@ -80,6 +80,11 @@ _parse_yaml_conf_file_credentials() {
       export fai_package_rpm_user=${user}
       export fai_package_rpm_password=${password}
     fi
+    if [[ "${site}" == apt.escenic.com ||
+            "${site}" == unstable.apt.escenic.com ]]; then
+      export fai_package_apt_user=${user}
+      export fai_package_apt_password=${password}
+    fi
   done
 }
 
@@ -284,10 +289,23 @@ _parse_yaml_conf_file_environment() {
     export fai_apt_vizrt_pool=${configured_apt_pool}
   fi
 
+  local configured_deb_not_apt=
+  configured_deb_not_apt=$(_jq "${yaml_file}" .environment.deb.escenic.use_deb_not_apt)
+  if [[ "${configured_deb_not_apt}" == "yes" ||
+          "${configured_deb_not_apt}" == "true" ]]; then
+    export fai_package_deb_not_apt=1
+  fi
+
   local configured_rpm_base_url=
   configured_rpm_base_url=$(_jq "${yaml_file}" .environment.rpm.escenic.base_url)
   if [[ -n "${configured_rpm_base_url}" ]]; then
     export fai_package_rpm_base_url=${configured_rpm_base_url}
+  fi
+
+  local configured_deb_base_url=
+  configured_deb_base_url=$(_jq "${yaml_file}" .environment.deb.escenic.base_url)
+  if [[ -n "${configured_deb_base_url}" ]]; then
+    export fai_package_deb_base_url=${configured_deb_base_url}
   fi
 
   local skip_password_checks=
