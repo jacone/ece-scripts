@@ -35,8 +35,8 @@ function _create_publication_if_passed_extract_ear_to_dir() {
     if [[ -n "${fai_builder_http_user}" && \
             -n "${fai_builder_http_password}" ]]; then
       wget_auth="
-          --http-user $fai_builder_http_user
-          --http-password $fai_builder_http_password
+          --http-user \"${fai_builder_http_user}\"
+          --http-password \"${fai_builder_http_password}\"
         "
     fi
     download_uri_target_to_dir $fai_publication_ear $download_dir
