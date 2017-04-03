@@ -298,7 +298,11 @@ function install_common_os_packages()
       add_apt_source "deb http://apt.escenic.com ${package_pool} main"
       run apt-get update
     fi
-    install_packages_if_missing escenic-common-scripts
+
+    # Allow manually installed escenic-common-scripts
+    if [ ! -e /usr/share/escenic/ece-scripts/common-bashing.sh ]; then
+      install_packages_if_missing escenic-common-scripts
+    fi
   fi
 }
 
