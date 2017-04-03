@@ -217,7 +217,7 @@ function add_apt_source() {
     return
   fi
 
-  if [ $(grep -r "$@" /etc/apt/sources.list* | wc -l) -lt 1 ]; then
+  if [ "$(grep -r "${url}" /etc/apt/sources.list* | wc -l)" -lt 1 ]; then
     echo "# added by $(basename $0) @ $(date)" >> $escenic_sources
     echo "$@" >> $escenic_sources
   fi
