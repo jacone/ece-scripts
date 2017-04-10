@@ -1,3 +1,5 @@
+# -*- mode: sh; sh-shell: bash; -*-
+
 # ece-install module for installing the memory cache
 
 function install_memory_cache()
@@ -6,7 +8,7 @@ function install_memory_cache()
 
   install_packages_if_missing "memcached"
   if [ $on_redhat_or_derivative -eq 1 ]; then
-    run /etc/init.d/memcached restart
+    run service memcached restart
   fi
   
   assert_commands_available memcached
