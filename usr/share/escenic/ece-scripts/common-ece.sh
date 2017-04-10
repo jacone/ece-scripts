@@ -93,7 +93,9 @@ webapps_in_standard_webapps_list="
   live-center-editorial
   live-center
   live-center-presentation-webservice
+  video-presentation-webservice
   revision-history
+  resolver
 "
 
 ### is_webapp_a_publication
