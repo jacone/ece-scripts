@@ -168,7 +168,10 @@ _create_publication_create_publication_in_db() {
   local ece_admin_uri=http://localhost:${appserver_port}/escenic-admin
   local cookie=
   cookie=$(
-    curl --head "${ece_admin_uri}"/ --silent |
+    curl \
+      "${curl_appserver_auth}" \
+      --head "${ece_admin_uri}"/ \
+      --silent |
       grep -i "^Set-Cookie" |
       sed s/.*'JSESSIONID=\([^;]*\).*'/'\1'/)
 
@@ -178,12 +181,14 @@ _create_publication_create_publication_in_db() {
   fi
 
   run curl \
+      "${curl_appserver_auth}" \
       -F "type=webapp" \
       -F "resourceFile=@${publication_war}" \
       --cookie JSESSIONID="${cookie}" \
       "${ece_admin_uri}/do/publication/resource"
 
   run curl  \
+      "${curl_appserver_auth}" \
       -F "name=${publication_name}" \
       -F "publisherName=Escenic" \
       -F "publicationType=${publication_type}" \
