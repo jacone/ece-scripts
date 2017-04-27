@@ -192,6 +192,64 @@ EOF
   rm -rf "${yaml_file}"
 }
 
+test_can_parse_yaml_conf_search() {
+  local search_port=8000
+  local search_shutdown=5000
+  local search_redirect=4333
+  local search_name=search1
+  local search_host=searchhost
+  local search_legacy=1
+  local search_for_editor=1
+  local search_legacy=1
+  local search_ear=http://builder/engine.ear
+  local search_indexer_ws_uri=http://engine/indexer-webservice/index/
+
+  local yaml_file=
+  yaml_file=$(mktemp)
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  search:
+    install: yes
+    legacy: yes
+    ear: ${search_ear}
+    for_editor: true
+    indexer_ws_uri: ${search_indexer_ws_uri}
+    port: ${search_port}
+    host: ${search_host}
+    name: ${search_name}
+    redirect: ${search_redirect}
+    shutdown: ${search_shutdown}
+EOF
+
+  unset fai_search_install
+  unset fai_search_host
+  unset fai_search_port
+  unset fai_search_shutdown
+  unset fai_search_redirect
+  unset fai_search_name
+  unset fai_search_legacy
+  unset fai_search_for_editor
+  unset fai_search_ear
+  unset fai_search_indexer_ws_uri
+
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNotNull "Should set fai_search_install" "${fai_search_install}"
+  assertEquals "Should set fai_search_install" 1 "${fai_search_install}"
+
+  assertEquals "Should set fai_search_host" "${search_host}" "${fai_search_host}"
+  assertEquals "Should set fai_search_port" "${search_port}" "${fai_search_port}"
+  assertEquals "Should set fai_search_shutdown" "${search_shutdown}" "${fai_search_shutdown}"
+  assertEquals "Should set fai_search_redirect" "${search_redirect}" "${fai_search_redirect}"
+  assertEquals "Should set fai_search_name" "${search_name}" "${fai_search_name}"
+  assertEquals "Should set fai_search_legacy" "${search_legacy}" "${fai_search_legacy}"
+  assertEquals "Should set fai_search_for_editor" "${search_for_editor}" "${fai_search_for_editor}"
+  assertEquals "Should set fai_search_ear" "${search_ear}" "${fai_search_ear}"
+  assertEquals "Should set fai_search_indexer_ws_uri" "${search_indexer_ws_uri}" "${fai_search_indexer_ws_uri}"
+
+  rm -rf "${yaml_file}"
+}
+
 test_can_parse_yaml_conf_db() {
   local yaml_file=
   yaml_file=$(mktemp)
@@ -301,24 +359,6 @@ EOF
   assertEquals "fai_cache_port" "${port}" "${fai_cache_port}"
 
   rm -rf "${yaml_file}"
-}
-
-test_can_parse_yaml_conf_monitoring() {
-  local yaml_file=
-  yaml_file=$(mktemp)
-  local monitoring_install=1
-  cat > "${yaml_file}" <<EOF
----
-profiles:
-  monitoring:
-    install: yes
-EOF
-
-  unset fai_monitoring_install
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-  assertEquals "Wrong fai_monitoring_install" \
-               "${monitoring_install}" \
-               "${fai_monitoring_install}"
 }
 
 test_can_parse_yaml_conf_assembly_tool() {
@@ -719,7 +759,81 @@ EOF
   rm -rf "${yaml_file}"
 }
 
-test_can_parse_yaml_conf_use_escenic_packages() {
+test_can_parse_yaml_conf_analysis() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+
+  local analysis_port=9000
+  local analysis_name=stats1
+  local analysis_shutdown=5553
+  local analysis_redirect=4553
+  local analysis_host=stats1
+
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  analysis:
+    install: yes
+    name: ${analysis_name}
+    port: ${analysis_port}
+    host: ${analysis_host}
+    shutdown: ${analysis_shutdown}
+    redirect: ${analysis_redirect}
+EOF
+
+  unset fai_analysis_install
+  unset fai_analysis_name
+  unset fai_analysis_port
+  unset fai_analysis_host
+  unset fai_analysis_shutdown
+  unset fai_analysis_redirect
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+
+  assertNotNull "Should set fai_analysis_install" "${fai_analysis_install}"
+  assertEquals "Should set fai_analysis_install" 1 "${fai_analysis_install}"
+  assertEquals "Should set fai_analysis_name" "${analysis_name}" "${fai_analysis_name}"
+  assertEquals "Should set fai_analysis_port" "${analysis_port}" "${fai_analysis_port}"
+  assertEquals "Should set fai_analysis_host" "${analysis_host}" "${fai_analysis_host}"
+  assertEquals "Should set fai_analysis_shutdown" "${analysis_shutdown}" "${fai_analysis_shutdown}"
+  assertEquals "Should set fai_analysis_redirect" "${analysis_redirect}" "${fai_analysis_redirect}"
+
+  rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_analysis_db() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+
+  local analysis_db_user=foouser
+  local analysis_db_password=foopass
+  local analysis_db_schema=fooanalysis_db
+
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  analysis_db:
+    install: yes
+    user: ${analysis_db_user}
+    password: ${analysis_db_password}
+    schema: ${analysis_db_schema}
+EOF
+
+  unset fai_analysis_db_install
+  unset fai_analysis_db_user
+  unset fai_analysis_db_password
+  unset fai_analysis_db_schema
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+
+  assertNotNull "Should set fai_analysis_install" "${fai_analysis_install}"
+  assertEquals "Should set fai_analysis_install" 1 "${fai_analysis_install}"
+  assertEquals "Should set fai_analysis_db_user" "${analysis_db_user}" "${fai_analysis_db_user}"
+  assertEquals "Should set fai_analysis_db_password" "${analysis_db_password}" "${fai_analysis_db_password}"
+  assertEquals "Should set fai_analysis_db_schema" "${analysis_db_schema}" "${fai_analysis_db_schema}"
+
+  rm -rf "${yaml_file}"
+}
+
+_test_can_parse_yaml_conf_use_escenic_packages() {
   local yaml_file=
   yaml_file=$(mktemp)
   local foo_java_home=/usr/lib/jvm/foo-java-sdk
@@ -828,138 +942,6 @@ EOF
   rm -rf "${yaml_file}"
 }
 
-test_can_parse_yaml_conf_analysis() {
-  local yaml_file=
-  yaml_file=$(mktemp)
-
-  local analysis_port=9000
-  local analysis_name=stats1
-  local analysis_shutdown=5553
-  local analysis_redirect=4553
-  local analysis_host=stats1
-
-  cat > "${yaml_file}" <<EOF
----
-profiles:
-  analysis:
-    install: yes
-    name: ${analysis_name}
-    port: ${analysis_port}
-    host: ${analysis_host}
-    shutdown: ${analysis_shutdown}
-    redirect: ${analysis_redirect}
-EOF
-
-  unset fai_analysis_install
-  unset fai_analysis_name
-  unset fai_analysis_port
-  unset fai_analysis_host
-  unset fai_analysis_shutdown
-  unset fai_analysis_redirect
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-
-  assertNotNull "Should set fai_analysis_install" "${fai_analysis_install}"
-  assertEquals "Should set fai_analysis_install" 1 "${fai_analysis_install}"
-  assertEquals "Should set fai_analysis_name" "${analysis_name}" "${fai_analysis_name}"
-  assertEquals "Should set fai_analysis_port" "${analysis_port}" "${fai_analysis_port}"
-  assertEquals "Should set fai_analysis_host" "${analysis_host}" "${fai_analysis_host}"
-  assertEquals "Should set fai_analysis_shutdown" "${analysis_shutdown}" "${fai_analysis_shutdown}"
-  assertEquals "Should set fai_analysis_redirect" "${analysis_redirect}" "${fai_analysis_redirect}"
-
-  rm -rf "${yaml_file}"
-}
-
-test_can_parse_yaml_conf_analysis_db() {
-  local yaml_file=
-  yaml_file=$(mktemp)
-
-  local analysis_db_user=foouser
-  local analysis_db_password=foopass
-  local analysis_db_schema=fooanalysis_db
-
-  cat > "${yaml_file}" <<EOF
----
-profiles:
-  analysis_db:
-    install: yes
-    user: ${analysis_db_user}
-    password: ${analysis_db_password}
-    schema: ${analysis_db_schema}
-EOF
-
-  unset fai_analysis_db_install
-  unset fai_analysis_db_user
-  unset fai_analysis_db_password
-  unset fai_analysis_db_schema
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-
-  assertNotNull "Should set fai_analysis_install" "${fai_analysis_install}"
-  assertEquals "Should set fai_analysis_install" 1 "${fai_analysis_install}"
-  assertEquals "Should set fai_analysis_db_user" "${analysis_db_user}" "${fai_analysis_db_user}"
-  assertEquals "Should set fai_analysis_db_password" "${analysis_db_password}" "${fai_analysis_db_password}"
-  assertEquals "Should set fai_analysis_db_schema" "${analysis_db_schema}" "${fai_analysis_db_schema}"
-
-  rm -rf "${yaml_file}"
-}
-
-test_can_parse_yaml_conf_search() {
-  local search_port=8000
-  local search_shutdown=5000
-  local search_redirect=4333
-  local search_name=search1
-  local search_host=searchhost
-  local search_legacy=1
-  local search_for_editor=1
-  local search_legacy=1
-  local search_ear=http://builder/engine.ear
-  local search_indexer_ws_uri=http://engine/indexer-webservice/index/
-
-  local yaml_file=
-  yaml_file=$(mktemp)
-  cat > "${yaml_file}" <<EOF
----
-profiles:
-  search:
-    install: yes
-    legacy: yes
-    ear: ${search_ear}
-    for_editor: true
-    indexer_ws_uri: ${search_indexer_ws_uri}
-    port: ${search_port}
-    host: ${search_host}
-    name: ${search_name}
-    redirect: ${search_redirect}
-    shutdown: ${search_shutdown}
-EOF
-
-  unset fai_search_install
-  unset fai_search_host
-  unset fai_search_port
-  unset fai_search_shutdown
-  unset fai_search_redirect
-  unset fai_search_name
-  unset fai_search_legacy
-  unset fai_search_for_editor
-  unset fai_search_ear
-  unset fai_search_indexer_ws_uri
-
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-  assertNotNull "Should set fai_search_install" "${fai_search_install}"
-  assertEquals "Should set fai_search_install" 1 "${fai_search_install}"
-
-  assertEquals "Should set fai_search_host" "${search_host}" "${fai_search_host}"
-  assertEquals "Should set fai_search_port" "${search_port}" "${fai_search_port}"
-  assertEquals "Should set fai_search_shutdown" "${search_shutdown}" "${fai_search_shutdown}"
-  assertEquals "Should set fai_search_redirect" "${search_redirect}" "${fai_search_redirect}"
-  assertEquals "Should set fai_search_name" "${search_name}" "${fai_search_name}"
-  assertEquals "Should set fai_search_legacy" "${search_legacy}" "${fai_search_legacy}"
-  assertEquals "Should set fai_search_for_editor" "${search_for_editor}" "${fai_search_for_editor}"
-  assertEquals "Should set fai_search_ear" "${search_ear}" "${fai_search_ear}"
-  assertEquals "Should set fai_search_indexer_ws_uri" "${search_indexer_ws_uri}" "${fai_search_indexer_ws_uri}"
-
-  rm -rf "${yaml_file}"
-}
-
 test_can_parse_yaml_conf_editor_install_multi_profiles() {
   local yaml_file=
   yaml_file=$(mktemp)
@@ -982,47 +964,6 @@ EOF
   assertNotNull "Should set fai_editor_install" "${fai_editor_install}"
   assertEquals "Should set fai_editor_install" 1 "${fai_editor_install}"
   assertEquals "Should set fai_search_install" 1 "${fai_search_install}"
-  assertNull "Should not have set fai_db_install" "${fai_db_install}"
-
-  rm -rf "${yaml_file}"
-}
-
-test_can_parse_yaml_conf_db() {
-  local yaml_file=
-  yaml_file=$(mktemp)
-  cat > "${yaml_file}" <<EOF
----
-profiles:
-  db:
-    install: yes
-EOF
-
-  unset fai_db_install
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-  assertNotNull "Should set fai_db_install" "${fai_db_install}"
-  assertEquals "Should set fai_db_install" 1 "${fai_db_install}"
-
-  # now, try to set it to true
-  cat > "${yaml_file}" <<EOF
----
-profiles:
-  db:
-    install: true
-EOF
-  unset fai_db_install
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
-  assertNotNull "Should set fai_db_install" "${fai_db_install}"
-  assertEquals "Should set fai_db_install" 1 "${fai_db_install}"
-
-  # now, try to set it to false
-  cat > "${yaml_file}" <<EOF
----
-profiles:
-  db:
-    install: false
-EOF
-  unset fai_db_install
-  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
   assertNull "Should not have set fai_db_install" "${fai_db_install}"
 
   rm -rf "${yaml_file}"
@@ -1103,6 +1044,24 @@ EOF
   assertEquals "${expected}" "${actual}"
 
   rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_monitoring() {
+  local yaml_file=
+  yaml_file=$(mktemp)
+  local monitoring_install=1
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  monitoring:
+    install: yes
+EOF
+
+  unset fai_monitoring_install
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertEquals "Wrong fai_monitoring_install" \
+               "${monitoring_install}" \
+               "${fai_monitoring_install}"
 }
 
 ## @override shunit2
