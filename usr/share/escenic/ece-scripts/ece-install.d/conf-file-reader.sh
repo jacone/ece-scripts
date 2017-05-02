@@ -260,6 +260,13 @@ _parse_yaml_conf_file_editor() {
   if [ -n "${install_editor_redirect}" ]; then
     export fai_editor_redirect=${install_editor_redirect}
   fi
+
+  local install_editor_deploy_white_list=
+  install_editor_deploy_white_list=$(
+    _jq "${yaml_file}" .profiles.editor.deploy_white_list)
+  if [ -n "${install_editor_deploy_white_list}" ]; then
+    export fai_editor_deploy_white_list=${install_editor_deploy_white_list}
+  fi
 }
 
 _parse_yaml_conf_file_environment() {
