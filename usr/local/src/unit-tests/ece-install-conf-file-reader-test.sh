@@ -269,6 +269,7 @@ test_can_parse_yaml_conf_db() {
   local db_master=1
   local db_drop_old_db_first=1
   local db_replication=1
+  local _db_vendor=foodb
 
   cat > "${yaml_file}" <<EOF
 ---
@@ -284,6 +285,7 @@ profiles:
     port: ${db_port}
     drop_old_db_first: yes
     replication: yes
+    vendor: ${_db_vendor}
 EOF
 
   unset fai_db_install
@@ -296,6 +298,8 @@ EOF
   unset fai_db_ear
   unset fai_db_drop_old_db_first
   unset fai_db_replication
+  unset db_vendor
+
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
 
   assertNotNull "Should set fai_db_install" "${fai_db_install}"
@@ -328,6 +332,9 @@ EOF
 
   assertNotNull "Should set fai_db_port" "${fai_db_port}"
   assertEquals "Should set fai_db_port" "${db_port}" "${fai_db_port}"
+
+  assertNotNull "Should set db_vendor" "${db_vendor}"
+  assertEquals "Should set db_vendor" "${_db_vendor}" "${db_vendor}"
 
   rm -rf "${yaml_file}"
 }

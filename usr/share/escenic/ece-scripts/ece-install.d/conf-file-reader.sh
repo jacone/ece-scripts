@@ -723,6 +723,12 @@ _parse_yaml_conf_file_db() {
   if [ -n "${install_db_ear}" ]; then
     export fai_db_ear=${install_db_ear}
   fi
+
+  local install_db_vendor=
+  install_db_vendor=$(_jq "${yaml_file}" .profiles.db.vendor)
+  if [ -n "${install_db_vendor}" ]; then
+    export db_vendor=${install_db_vendor}
+  fi
 }
 
 _parse_yaml_conf_file_analysis_db() {
