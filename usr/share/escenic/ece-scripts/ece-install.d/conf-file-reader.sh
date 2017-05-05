@@ -52,6 +52,7 @@ parse_yaml_conf_file_or_source_if_sh_conf() {
   _parse_yaml_conf_file_monitoring "${yaml_file}"
   _parse_yaml_conf_file_assembly_tool "${yaml_file}"
   _parse_yaml_conf_file_restore "${yaml_file}"
+  _parse_yaml_conf_file_cue "${yaml_file}"
 }
 
 _parse_yaml_conf_file_credentials() {
@@ -259,6 +260,12 @@ _parse_yaml_conf_file_editor() {
   install_editor_redirect=$(_jq "${yaml_file}" .profiles.editor.redirect)
   if [ -n "${install_editor_redirect}" ]; then
     export fai_editor_redirect=${install_editor_redirect}
+  fi
+
+  local install_editor_ear=
+  install_editor_ear=$(_jq "${yaml_file}" .profiles.editor.ear)
+  if [ -n "${install_editor_ear}" ]; then
+    export fai_editor_ear=${install_editor_ear}
   fi
 }
 
@@ -756,6 +763,29 @@ _parse_yaml_conf_file_analysis_db() {
   install_analysis_db_port=$(_jq "${yaml_file}" .profiles.analysis_db.port)
   if [ -n "${install_analysis_db_port}" ]; then
     export fai_analysis_db_port=${install_analysis_db_port}
+  fi
+}
+
+_parse_yaml_conf_file_cue() {
+  local yaml_file=$1
+
+  local install_cue=no
+  install_cue=$(_jq "${yaml_file}" .profiles.cue.install)
+  if [[ "${install_cue}" == "yes" ||
+          "${install_cue}" == "true" ]]; then
+    export fai_cue_install=1
+  fi
+
+  local install_cue_backend_ece=
+  install_cue_backend_ece=$(_jq "${yaml_file}" .profiles.cue.backend_ece)
+  if [ -n "${install_cue_backend_ece}" ]; then
+    export fai_cue_backend_ece=${install_cue_backend_ece}
+  fi
+
+  local install_cue_backend_ng=
+  install_cue_backend_ng=$(_jq "${yaml_file}" .profiles.cue.backend_ng)
+  if [ -n "${install_cue_backend_ng}" ]; then
+    export fai_cue_backend_ng=${install_cue_backend_ng}
   fi
 }
 
