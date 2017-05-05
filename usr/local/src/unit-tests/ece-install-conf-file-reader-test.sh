@@ -368,6 +368,8 @@ EOF
 test_can_parse_yaml_conf_cue() {
   local cue_backend_ece=http://ece.example.com
   local cue_backend_ng=http://ng.example.com
+  local cue_cors_origin1=editor.example.com
+  local cue_cors_origin2=cue.example.com
 
   local yaml_file=
   yaml_file=$(mktemp)
@@ -378,17 +380,22 @@ profiles:
     install: yes
     backend_ece: ${cue_backend_ece}
     backend_ng: ${cue_backend_ng}
+    cors_origins:
+      - ${cue_cors_origin1}
+      - ${cue_cors_origin2}
 EOF
 
   unset fai_cue_install
   unset fai_cue_backend_ece
   unset fai_cue_backend_ng
+  unset fai_cue_cors_origins
 
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
   assertNotNull "Should set fai_cue_install" "${fai_cue_install}"
   assertEquals "Should set fai_cue_install" 1 "${fai_cue_install}"
   assertEquals "fai_cue_backend_ece" "${cue_backend_ece}" "${fai_cue_backend_ece}"
   assertEquals "fai_cue_backend_ng" "${cue_backend_ng}" "${fai_cue_backend_ng}"
+  assertEquals "fai_cue_cors_origins" "${cue_cors_origin1} ${cue_cors_origin2}" "${fai_cue_cors_origins}"
 
   rm -rf "${yaml_file}"
 }

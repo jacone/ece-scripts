@@ -787,6 +787,18 @@ _parse_yaml_conf_file_cue() {
   if [ -n "${install_cue_backend_ng}" ]; then
     export fai_cue_backend_ng=${install_cue_backend_ng}
   fi
+
+  local count=0
+  count=$(_jq "${yaml_file}" ".profiles.cue.cors_origins | length")
+  for ((i = 0; i < count; i++)); do
+    local cors_origin=
+    cors_origin=$(_jq "${yaml_file}" .profiles.cue.cors_origins["${i}"])
+    if [ -n "${fai_cue_cors_origins}" ]; then
+      export fai_cue_cors_origins=${fai_cue_cors_origins}" "${cors_origin}
+    else
+      export fai_cue_cors_origins=${cors_origin}
+    fi
+  done
 }
 
 _jq() {
