@@ -361,6 +361,78 @@ EOF
   rm -rf "${yaml_file}"
 }
 
+test_can_parse_yaml_conf_nfs_server() {
+  local nfs_server_address="nfs.example.com"
+  local nfs_allowed_client_network="10.0.0.1/24"
+  local nfs_export_list="/var/exports/app1 /var/exports/app2"
+  local nfs_client_mount_point_parent=/mnt
+  local port=81
+
+  local yaml_file=
+  yaml_file=$(mktemp)
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  nfs_server:
+    install: yes
+    server_address: ${nfs_server_address}
+    allowed_client_network: ${nfs_allowed_client_network}
+    export_list: ${nfs_export_list}
+    client_mount_point_parent: ${nfs_client_mount_point_parent}
+EOF
+
+  unset fai_nfs_export_list
+  unset fai_nfs_server_address
+  unset fai_nfs_server_install
+  unset fai_nfs_allowed_client_network
+  unset fai_nfs_client_mount_point_parent
+
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNotNull "Should set fai_nfs_server_install" "${fai_nfs_server_install}"
+  assertEquals "Should set fai_nfs_server_install" 1 "${fai_nfs_server_install}"
+  assertEquals "fai_nfs_server_address" "${nfs_server_address}" "${fai_nfs_server_address}"
+  assertEquals "fai_nfs_allowed_client_network" "${nfs_allowed_client_network}" "${fai_nfs_allowed_client_network}"
+  assertEquals "fai_nfs_export_list" "${nfs_export_list}" "${fai_nfs_export_list}"
+
+  rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_nfs_client() {
+  local nfs_server_address="nfs.example.com"
+  local nfs_allowed_client_network="10.0.0.1/24"
+  local nfs_export_list="/var/exports/app1 /var/exports/app2"
+  local nfs_client_mount_point_parent=/mnt
+  local port=81
+
+  local yaml_file=
+  yaml_file=$(mktemp)
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  nfs_client:
+    install: yes
+    server_address: ${nfs_server_address}
+    allowed_client_network: ${nfs_allowed_client_network}
+    export_list: ${nfs_export_list}
+    client_mount_point_parent: ${nfs_client_mount_point_parent}
+EOF
+
+  unset fai_nfs_export_list
+  unset fai_nfs_server_address
+  unset fai_nfs_client_install
+  unset fai_nfs_allowed_client_network
+  unset fai_nfs_client_mount_point_parent
+
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNotNull "Should set fai_nfs_client_install" "${fai_nfs_client_install}"
+  assertEquals "Should set fai_nfs_client_install" 1 "${fai_nfs_client_install}"
+  assertEquals "fai_nfs_server_address" "${nfs_server_address}" "${fai_nfs_server_address}"
+  assertEquals "fai_nfs_allowed_client_network" "${nfs_allowed_client_network}" "${fai_nfs_allowed_client_network}"
+  assertEquals "fai_nfs_export_list" "${nfs_export_list}" "${fai_nfs_export_list}"
+
+  rm -rf "${yaml_file}"
+}
+
 test_can_parse_yaml_conf_assembly_tool() {
   local yaml_file=
   yaml_file=$(mktemp)
