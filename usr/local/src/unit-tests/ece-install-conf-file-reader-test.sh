@@ -22,6 +22,7 @@ environment:
   type: ${environment_type}
   java_home: ${foo_java_home}
   java_version: ${foo_java_version}
+  java_oracle_licence_accepted: true
   skip_password_checks: true
   conf_url: ${conf_url}
   apt:
@@ -43,7 +44,8 @@ EOF
 
   unset java_home
   unset fai_environment
-  unset fai_server_java_version
+  unset fai_java_version
+  unset fai_java_oracle_licence_accepted
   unset fai_maven_repositories
   unset fai_conf_url
   unset fai_package_rpm_base_url
@@ -53,9 +55,12 @@ EOF
 
   assertNotNull "Should set java_home" "${java_home}"
   assertEquals "Should set java_home" "${foo_java_home}" "${java_home}"
-  assertEquals "Should set fai_server_java_version" \
+  assertEquals "Should set fai_java_version" \
                "${foo_java_version}" \
-               "${fai_server_java_version}"
+               "${fai_java_version}"
+  assertEquals "Should set fai_java_oracle_licence_accepted" \
+               1 \
+               "${fai_java_oracle_licence_accepted}"
   assertEquals "Should set fai_environment (type)" \
                "${environment_type}" \
                "${fai_environment}"
