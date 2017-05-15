@@ -761,6 +761,7 @@ function install_ece_third_party_packages
       libapr1
       libtcnative-1
       libmysql-java
+      libxml2-utils
       memcached
       xml-twig-tools
       wget
@@ -772,6 +773,7 @@ function install_ece_third_party_packages
       ant-contrib
       ant-nodeps
       apr
+      libxml2
       memcached
       mysql-connector-java
       tomcat-native
