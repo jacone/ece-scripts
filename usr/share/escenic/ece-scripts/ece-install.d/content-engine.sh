@@ -723,10 +723,6 @@ function install_ece_third_party_packages
 
   if [ $on_debian_or_derivative -eq 1 ]; then
     if [ $on_ubuntu -eq 1 ]; then
-      # Sun Java was removed in Ubuntu in 11.10 and later also from
-      # LTS 10.04, hence Hardy is the last one with these package now
-      # (2012-02-20 11:22)
-      local version_needs_local_java_deb=1004
       local version=$(lsb_release -s -r | sed "s#\.##g")
 
       add_apt_source \
@@ -743,10 +739,6 @@ function install_ece_third_party_packages
         add_apt_source "deb http://ftp.${mirror_country_suffix}.debian.org/debian/ $(lsb_release -s -c) contrib non-free"
       fi
 
-      # Sun Java will be removed in the next Debian stable,
-      # wheezy (either 6.1 or 7.0 not announced yet, current in
-      # squeeze/6.0, hence setting 6.1 here).
-      local version_needs_local_java_deb=610
       local version=$(lsb_release -s -r | sed "s#\.##g")
     fi
 
