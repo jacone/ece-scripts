@@ -52,6 +52,8 @@ parse_yaml_conf_file_or_source_if_sh_conf() {
   _parse_yaml_conf_file_monitoring "${yaml_file}"
   _parse_yaml_conf_file_assembly_tool "${yaml_file}"
   _parse_yaml_conf_file_restore "${yaml_file}"
+  _parse_yaml_conf_file_nfs_server "${yaml_file}"
+  _parse_yaml_conf_file_nfs_client "${yaml_file}"
 }
 
 _parse_yaml_conf_file_credentials() {
@@ -361,6 +363,76 @@ _parse_yaml_conf_file_assembly_tool() {
   if [[ "${install_assembly_tool}" == "yes" ||
           "${install_assembly_tool}" == "true" ]]; then
     export fai_assembly_tool_install=1
+  fi
+}
+
+_parse_yaml_conf_file_nfs_server() {
+  local yaml_file=$1
+
+  local install_nfs=
+  install_server_nfs=$(_jq "${yaml_file}" .profiles.nfs_server.install)
+  if [[ "${install_server_nfs}" == "yes" ||
+          "${install_server_nfs}" == "true" ]]; then
+    export fai_nfs_server_install=1
+  fi
+
+  local nfs_server_address=
+  nfs_server_address=$(_jq "${yaml_file}" .profiles.nfs_server.server_address)
+  if [ -n "${nfs_server_address}" ]; then
+    export fai_nfs_server_address=${nfs_server_address}
+  fi
+
+  local nfs_allowed_client_network=
+  nfs_allowed_client_network=$(_jq "${yaml_file}" .profiles.nfs_server.allowed_client_network)
+  if [ -n "${nfs_allowed_client_network}" ]; then
+    export fai_nfs_allowed_client_network=${nfs_allowed_client_network}
+  fi
+
+  local nfs_client_mount_point_parent=
+  nfs_client_mount_point_parent=$(_jq "${yaml_file}" .profiles.nfs_server.client_mount_point_parent)
+  if [ -n "${nfs_client_mount_point_parent}" ]; then
+    export fai_nfs_client_mount_point_parent=${nfs_client_mount_point_parent}
+  fi
+
+  local nfs_export_list=
+  nfs_export_list=$(_jq "${yaml_file}" .profiles.nfs_server.export_list)
+  if [ -n "${nfs_export_list}" ]; then
+    export fai_nfs_export_list=${nfs_export_list}
+  fi
+}
+
+_parse_yaml_conf_file_nfs_client() {
+  local yaml_file=$1
+
+  local install_client_nfs=
+  install_client_nfs=$(_jq "${yaml_file}" .profiles.nfs_client.install)
+  if [[ "${install_client_nfs}" == "yes" ||
+          "${install_client_nfs}" == "true" ]]; then
+    export fai_nfs_client_install=1
+  fi
+
+  local nfs_server_address=
+  nfs_server_address=$(_jq "${yaml_file}" .profiles.nfs_client.server_address)
+  if [ -n "${nfs_server_address}" ]; then
+    export fai_nfs_server_address=${nfs_server_address}
+  fi
+
+  local nfs_allowed_client_network=
+  nfs_allowed_client_network=$(_jq "${yaml_file}" .profiles.nfs_client.allowed_client_network)
+  if [ -n "${nfs_allowed_client_network}" ]; then
+    export fai_nfs_allowed_client_network=${nfs_allowed_client_network}
+  fi
+
+  local nfs_client_mount_point_parent=
+  nfs_client_mount_point_parent=$(_jq "${yaml_file}" .profiles.nfs_client.client_mount_point_parent)
+  if [ -n "${nfs_client_mount_point_parent}" ]; then
+    export fai_nfs_client_mount_point_parent=${nfs_client_mount_point_parent}
+  fi
+
+  local nfs_export_list=
+  nfs_export_list=$(_jq "${yaml_file}" .profiles.nfs_client.export_list)
+  if [ -n "${nfs_export_list}" ]; then
+    export fai_nfs_export_list=${nfs_export_list}
   fi
 }
 
