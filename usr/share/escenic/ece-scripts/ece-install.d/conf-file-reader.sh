@@ -280,10 +280,18 @@ _parse_yaml_conf_file_environment() {
     export java_home=${configured_java_home}
   fi
 
+  local configured_java_oracle_licence_accepted=
+  configured_java_oracle_licence_accepted=$(
+    _jq "${yaml_file}" .environment.java_oracle_licence_accepted)
+  if [[ "${configured_java_oracle_licence_accepted}" == "yes" ||
+          "${configured_java_oracle_licence_accepted}" == "true" ]]; then
+    export fai_java_oracle_licence_accepted=1
+  fi
+
   local configured_java_version=
   configured_java_version=$(_jq "${yaml_file}" .environment.java_version)
   if [[ -n "${configured_java_version}" ]]; then
-    export fai_server_java_version=${configured_java_version}
+    export fai_java_version=${configured_java_version}
   fi
 
   local configured_environment=
