@@ -217,7 +217,12 @@ function add_apt_source() {
     return
   fi
 
-  if [ "$(grep -r "${url}" /etc/apt/sources.list* | wc -l)" -lt 1 ]; then
+  # Remove HTTP scheme and user/pass when checking if the source
+  # already exists.
+  local url_fragment=${url##*://}
+  url_fragment=${url_fragment##*@}
+
+  if [ "$(grep -r "${url_fragment}" /etc/apt/sources.list* | wc -l)" -lt 1 ]; then
     echo "# added by $(basename $0) @ $(date)" >> $escenic_sources
     echo "$@" >> $escenic_sources
   fi

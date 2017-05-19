@@ -958,31 +958,10 @@ function read_user_input() {
   done
 }
 
-function get_java_package_name() {
-  # The script will install oracle java installer package on Debian based
-  # systems and this is the path of the JAVA home with this package. If
-  # you're using a different system or have other preferences, change
-  # java_home in your ece-install.conf
-  default_java_version=1.6
-  server_java_version=${fai_server_java_version-${default_java_version}}
-  if [ $server_java_version = "1.6" ]; then
-    java_package_name="oracle-java6-installer"
-  elif [ $server_java_version = "1.7" ]; then
-    java_package_name="oracle-java7-installer"
-  #elif [ $server_java_version = "1.8" ]; then
-  #  java_package_name="oracle-java8-installer"
-  else
-    # Setting it back to default
-    java_package_name=""
-  fi
-}
-
-
 function main() {
     read_user_input "$@"
     init
     assert_correct_runtime_environment
-    get_java_package_name
 
     print_and_log "Full Automatic Install (FAI)."
     print_and_log "All user input will be read from $conf_file"

@@ -22,6 +22,7 @@ environment:
   type: ${environment_type}
   java_home: ${foo_java_home}
   java_version: ${foo_java_version}
+  java_oracle_licence_accepted: true
   skip_password_checks: true
   conf_url: ${conf_url}
   apt:
@@ -43,7 +44,8 @@ EOF
 
   unset java_home
   unset fai_environment
-  unset fai_server_java_version
+  unset fai_java_version
+  unset fai_java_oracle_licence_accepted
   unset fai_maven_repositories
   unset fai_conf_url
   unset fai_package_rpm_base_url
@@ -53,9 +55,12 @@ EOF
 
   assertNotNull "Should set java_home" "${java_home}"
   assertEquals "Should set java_home" "${foo_java_home}" "${java_home}"
-  assertEquals "Should set fai_server_java_version" \
+  assertEquals "Should set fai_java_version" \
                "${foo_java_version}" \
-               "${fai_server_java_version}"
+               "${fai_java_version}"
+  assertEquals "Should set fai_java_oracle_licence_accepted" \
+               1 \
+               "${fai_java_oracle_licence_accepted}"
   assertEquals "Should set fai_environment (type)" \
                "${environment_type}" \
                "${fai_environment}"
@@ -409,6 +414,78 @@ EOF
   assertEquals "fai_cue_backend_ece" "${cue_backend_ece}" "${fai_cue_backend_ece}"
   assertEquals "fai_cue_backend_ng" "${cue_backend_ng}" "${fai_cue_backend_ng}"
   assertEquals "fai_cue_cors_origins" "${cue_cors_origin1} ${cue_cors_origin2}" "${fai_cue_cors_origins}"
+
+  rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_nfs_server() {
+  local nfs_server_address="nfs.example.com"
+  local nfs_allowed_client_network="10.0.0.1/24"
+  local nfs_export_list="/var/exports/app1 /var/exports/app2"
+  local nfs_client_mount_point_parent=/mnt
+  local port=81
+
+  local yaml_file=
+  yaml_file=$(mktemp)
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  nfs_server:
+    install: yes
+    server_address: ${nfs_server_address}
+    allowed_client_network: ${nfs_allowed_client_network}
+    export_list: ${nfs_export_list}
+    client_mount_point_parent: ${nfs_client_mount_point_parent}
+EOF
+
+  unset fai_nfs_export_list
+  unset fai_nfs_server_address
+  unset fai_nfs_server_install
+  unset fai_nfs_allowed_client_network
+  unset fai_nfs_client_mount_point_parent
+
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNotNull "Should set fai_nfs_server_install" "${fai_nfs_server_install}"
+  assertEquals "Should set fai_nfs_server_install" 1 "${fai_nfs_server_install}"
+  assertEquals "fai_nfs_server_address" "${nfs_server_address}" "${fai_nfs_server_address}"
+  assertEquals "fai_nfs_allowed_client_network" "${nfs_allowed_client_network}" "${fai_nfs_allowed_client_network}"
+  assertEquals "fai_nfs_export_list" "${nfs_export_list}" "${fai_nfs_export_list}"
+
+  rm -rf "${yaml_file}"
+}
+
+test_can_parse_yaml_conf_nfs_client() {
+  local nfs_server_address="nfs.example.com"
+  local nfs_allowed_client_network="10.0.0.1/24"
+  local nfs_export_list="/var/exports/app1 /var/exports/app2"
+  local nfs_client_mount_point_parent=/mnt
+  local port=81
+
+  local yaml_file=
+  yaml_file=$(mktemp)
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  nfs_client:
+    install: yes
+    server_address: ${nfs_server_address}
+    allowed_client_network: ${nfs_allowed_client_network}
+    export_list: ${nfs_export_list}
+    client_mount_point_parent: ${nfs_client_mount_point_parent}
+EOF
+
+  unset fai_nfs_export_list
+  unset fai_nfs_server_address
+  unset fai_nfs_client_install
+  unset fai_nfs_allowed_client_network
+  unset fai_nfs_client_mount_point_parent
+
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNotNull "Should set fai_nfs_client_install" "${fai_nfs_client_install}"
+  assertEquals "Should set fai_nfs_client_install" 1 "${fai_nfs_client_install}"
+  assertEquals "fai_nfs_server_address" "${nfs_server_address}" "${fai_nfs_server_address}"
+  assertEquals "fai_nfs_allowed_client_network" "${nfs_allowed_client_network}" "${fai_nfs_allowed_client_network}"
+  assertEquals "fai_nfs_export_list" "${nfs_export_list}" "${fai_nfs_export_list}"
 
   rm -rf "${yaml_file}"
 }
