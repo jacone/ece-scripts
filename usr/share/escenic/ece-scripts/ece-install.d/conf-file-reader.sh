@@ -267,6 +267,13 @@ _parse_yaml_conf_file_editor() {
   if [ -n "${install_editor_ear}" ]; then
     export fai_editor_ear=${install_editor_ear}
   fi
+
+  local install_editor_deploy_white_list=
+  install_editor_deploy_white_list=$(
+    _jq "${yaml_file}" .profiles.editor.deploy_white_list)
+  if [ -n "${install_editor_deploy_white_list}" ]; then
+    export fai_editor_deploy_white_list=${install_editor_deploy_white_list}
+  fi
 }
 
 _parse_yaml_conf_file_environment() {
@@ -722,6 +729,12 @@ _parse_yaml_conf_file_db() {
   install_db_ear=$(_jq "${yaml_file}" .profiles.db.ear)
   if [ -n "${install_db_ear}" ]; then
     export fai_db_ear=${install_db_ear}
+  fi
+
+  local install_db_vendor=
+  install_db_vendor=$(_jq "${yaml_file}" .profiles.db.vendor)
+  if [ -n "${install_db_vendor}" ]; then
+    export db_vendor=${install_db_vendor}
   fi
 }
 

@@ -89,6 +89,7 @@ test_can_parse_yaml_conf_editor() {
   local editor_name=fooeditor1
   local editor_host=edapp1
   local editor_ear=http://builder/engine.ear
+  local editor_deploy_white_list=foo
 
   local yaml_file=
   yaml_file=$(mktemp)
@@ -103,6 +104,7 @@ profiles:
     redirect: ${editor_redirect}
     shutdown: ${editor_shutdown}
     ear: ${editor_ear}
+    deploy_white_list: ${editor_deploy_white_list}
 EOF
 
   unset fai_editor_install
@@ -111,6 +113,7 @@ EOF
   unset fai_editor_redirect
   unset fai_editor_name
   unset fai_editor_ear
+  unset fai_editor_deploy_white_list
 
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
   assertNotNull "Should set fai_editor_install" "${fai_editor_install}"
@@ -121,6 +124,9 @@ EOF
   assertEquals "Should set fai_editor_redirect" "${editor_redirect}" "${fai_editor_redirect}"
   assertEquals "Should set fai_editor_name" "${editor_name}" "${fai_editor_name}"
   assertEquals "Should set fai_editor_ear" "${editor_ear}" "${fai_editor_ear}"
+  assertEquals "Should set fai_editor_deploy_white_list" \
+               "${editor_deploy_white_list}" \
+               "${fai_editor_deploy_white_list}"
 
   rm -rf "${yaml_file}"
 }
@@ -191,7 +197,7 @@ EOF
                "${fai_presentation_search_indexer_ws_uri}"
   assertEquals "Should set fai_presentation_deploy_white_list" \
                "${presentation_deploy_white_list}" \
-               "${presentation_deploy_white_list}"
+               "${fai_presentation_deploy_white_list}"
 
   rm -rf "${yaml_file}"
 }
@@ -267,6 +273,7 @@ test_can_parse_yaml_conf_db() {
   local db_master=1
   local db_drop_old_db_first=1
   local db_replication=1
+  local _db_vendor=foodb
 
   cat > "${yaml_file}" <<EOF
 ---
@@ -282,6 +289,7 @@ profiles:
     port: ${db_port}
     drop_old_db_first: yes
     replication: yes
+    vendor: ${_db_vendor}
 EOF
 
   unset fai_db_install
@@ -294,6 +302,8 @@ EOF
   unset fai_db_ear
   unset fai_db_drop_old_db_first
   unset fai_db_replication
+  unset db_vendor
+
   parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
 
   assertNotNull "Should set fai_db_install" "${fai_db_install}"
@@ -326,6 +336,9 @@ EOF
 
   assertNotNull "Should set fai_db_port" "${fai_db_port}"
   assertEquals "Should set fai_db_port" "${db_port}" "${fai_db_port}"
+
+  assertNotNull "Should set db_vendor" "${db_vendor}"
+  assertEquals "Should set db_vendor" "${_db_vendor}" "${db_vendor}"
 
   rm -rf "${yaml_file}"
 }
