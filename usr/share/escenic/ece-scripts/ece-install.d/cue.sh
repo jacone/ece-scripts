@@ -150,7 +150,7 @@ endpoints:
   escenic: ${fai_cue_backend_ece-/webservice/index.xml}
 EOF
       if [ -n "${fai_cue_backend_ng}" ]; then
-        echo "  newsgate: ${fai_cue_backend_ece}" >> "${file}"
+        echo "  newsgate: ${fai_cue_backend_ng}" >> "${file}"
       fi
     done
 
