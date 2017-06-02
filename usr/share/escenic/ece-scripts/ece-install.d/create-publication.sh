@@ -62,10 +62,9 @@ function create_publication() {
     ensure_that_instance_is_running ${fai_publication_use_instance-$default_ece_intance_name}
     for el in ${fai_publication_domain_mapping_list}; do
       # the entries in the fai_publication_domain_mapping_list are on
-      # the form: <publication[,pub.war]>#<domain>[#<alias1>[,<alias2>]]
+      # the form: <publication[,pub.war][,type]>#<domain>[#<alias1>[,<alias2>]]
       IFS='#' read publication domain aliases <<< "$el"
-      IFS=',' read publication_name publication_war <<< "${publication}"
-      <<< "$publication"
+      IFS=',' read publication_name publication_war publication_type <<< "${publication}"
 
       # this is the default case were the WAR is called the same as
       # the publication name with the .war suffix.
@@ -84,7 +83,7 @@ function create_publication() {
       create_the_publication \
         "${publication_name}" \
         "${publication_war_to_use}" \
-        "${publication_type}" \
+        "${publication_type-default}" \
         "${domain}" \
         "${aliases}"
     done
