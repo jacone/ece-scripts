@@ -73,7 +73,6 @@ include "compression.vcl";
 include "robots-on-beta.vcl";
 include "cookie-cleaner.vcl";
 include "caching-policies.vcl";
-include "varnish-hacks.vcl";
 include "redirects.vcl";
 include "cache-statistics.vcl";
 include "error-pages.vcl";
