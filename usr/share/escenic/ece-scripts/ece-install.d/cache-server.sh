@@ -42,7 +42,7 @@ function set_varnish_port() {
     [Service]
 ExecStart=
 ExecStart=/usr/sbin/varnishd \
-  -a :80 \
+  -a :${cache_port} \
   -T localhost:6082 \
   -f /etc/varnish/default.vcl \
   -S /etc/varnish/secret \
