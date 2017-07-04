@@ -4,13 +4,13 @@ When you have problems with `/usr/bin/ece`, `/usr/sbin/ece-install` or
 any of the other commands on this repository, please provide us with a
 couple of things:
 
-## The versions of ece and ece-install
+## 1 — The versions of ece and ece-install
 
 ```
 $ grep ^ece_scripts_version= /usr/{sbin/ece-install,bin/ece}
 ```
 
-## The version of your operating system
+## 2 — The version of your operating system
 
 Just run these three commands and give us the output:
 ```
@@ -19,15 +19,15 @@ $ cat /etc/debian_version
 $ cat /etc/redhat-release
 ```
 
-## For ece-install problems
-Your `ece-install.conf` or `ece-install.yaml` file.
+## 3 — For ece-install problems
+3.1) Your `ece-install.conf` or `ece-install.yaml` file.
 
-The contents of your sources.list (if you're on Debian/Ubuntu):
+3.2) The contents of your sources.list (if you're on Debian/Ubuntu):
 ```
 $ grep -r escenic /etc/apt/sources.list*
 ```
 
-The log files of both `ece-install` and the instances you're setting up
+3.3) The log files of both `ece-install` and the instances you're setting up
 (here, `engine1` is the instance):
 
 ```
@@ -39,4 +39,21 @@ The log files of both `ece-install` and the instances you're setting up
 /var/log/escenic/engine1-messages
 ```
 
+## 4 - For `/usr/bin/ece` or `/etc/init.d/ece` problems
+4.1 — The configuration files for your ece command
+```
+/etc/default/ece
+/ece/escenic/ece.conf
+/etc/escenic/ece-engine1.conf
+```
+
+4.2 The log files of the instance you're working with (`engine1` is the
+default):
+
+```
+/var/log/escenic/engine1.out
+/var/log/escenic/engine1-catalina.out
+/var/log/escenic/engine1-tomcat
+/var/log/escenic/engine1-messages
+```
 
