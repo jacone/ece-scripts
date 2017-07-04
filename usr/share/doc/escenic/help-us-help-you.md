@@ -2,7 +2,7 @@
 
 When you have problems with `/usr/bin/ece`, `/usr/sbin/ece-install` or
 any of the other commands on this repository, please provide us with a
-couple of things:
+couple of things so that we can help you in the best way possible:
 
 ## 1 — The versions of ece and ece-install
 
@@ -72,6 +72,7 @@ cat /etc/redhat-release
 # Sources list(s):
 grep -r escenic /etc/apt/sources.list*
 
+# Conf and log files:
 tar czf /tmp/$(date --iso)-debug-files.tar.gz \
   /var/log/escenic/ece-install.log \
   /var/log/escenic/engine1.out \
@@ -81,8 +82,8 @@ tar czf /tmp/$(date --iso)-debug-files.tar.gz \
   /etc/default/ece \
   /ece/escenic/ece.conf \
   /etc/escenic/ece-engine1.conf \
-  /root/ece-install.conf \
-  /root/ece-install.yaml
+  /root/*.conf \
+  /root/*.yaml
   
 echo "Now, send this archive to us:" /tmp/$(date --iso)-debug-files.tar.gz
 
