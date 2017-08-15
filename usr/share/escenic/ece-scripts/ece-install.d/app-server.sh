@@ -296,6 +296,23 @@ EOF
                proxyPort="443"
                scheme="https"
     />
+EOF
+
+  if [[ ${fai_editor_install-0} -eq 1 ||
+        ${fai_presentation_install-0} -eq 1 ]]; then
+    cat >> $tomcat_base/conf/server.xml <<EOF
+    <Connector port="${fai_sse_proxy_ece_port-8083}"
+               protocol="HTTP/1.1"
+               connectionTimeout="20000"
+               URIEncoding="UTF-8"
+               compression="off"
+               redirectPort="${fai_sse_proxy_ece_redirect-8443}"
+               proxyPort="${fai_sse_proxy_exposed_port-80}"
+    />
+EOF
+  fi
+
+  cat >> $tomcat_base/conf/server.xml <<EOF
     <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
       <Valve className="org.apache.catalina.valves.AccessLogValve"
              prefix="access."

@@ -422,6 +422,61 @@ EOF
   rm -rf "${yaml_file}"
 }
 
+test_can_parse_yaml_conf_sse_proxy() {
+  local exposed_port=80
+  local exposed_host=proxy.example.com
+  local sse_proxy_ece_port=8083
+  local sse_proxy_ece_redirect=8443
+  local sse_proxy_backend1_uri=http://foo
+  local sse_proxy_backend1_user=foo
+  local sse_proxy_backend1_password=p
+  local sse_proxy_backend2_uri=http://bar
+  local sse_proxy_backend2_user=bar
+  local sse_proxy_backend2_password=b
+
+  local yaml_file=
+  yaml_file=$(mktemp)
+  cat > "${yaml_file}" <<EOF
+---
+profiles:
+  sse_proxy:
+    install: yes
+    exposed_host: ${exposed_host}
+    exposed_port: ${exposed_port}
+    ece_port: ${sse_proxy_ece_port}
+    ece_redirect: ${sse_proxy_ece_redirect}
+    backends:
+      - uri: ${sse_proxy_backend1_uri}
+        user: ${sse_proxy_backend1_user}
+        password: ${sse_proxy_backend1_password}
+      - uri: ${sse_proxy_backend2_uri}
+        user: ${sse_proxy_backend2_user}
+        password: ${sse_proxy_backend2_password}
+EOF
+
+  unset fai_sse_proxy_backends
+  unset fai_sse_proxy_ece_port
+  unset fai_sse_proxy_ece_redirect
+  unset fai_sse_proxy_exposed_host
+  unset fai_sse_proxy_exposed_port
+  unset fai_sse_proxy_install
+
+  sse_proxy_backends="${sse_proxy_backend2_uri} ${sse_proxy_backend2_user} ${sse_proxy_backend2_password}
+${sse_proxy_backend1_uri} ${sse_proxy_backend1_user} ${sse_proxy_backend1_password}
+"
+
+  parse_yaml_conf_file_or_source_if_sh_conf "${yaml_file}"
+  assertNotNull "Should set fai_sse_install" "${fai_sse_proxy_install}"
+  assertEquals "Should set fai_sse_proxy_install" 1 "${fai_sse_proxy_install}"
+  assertEquals "Should set fai_sse_proxy_exposed_host" "${exposed_host}" "${fai_sse_proxy_exposed_host}"
+  assertEquals "Should set fai_sse_proxy_exposed_port" "${exposed_port}" "${fai_sse_proxy_exposed_port}"
+  assertEquals "Should set fai_sse_proxy_ece_port" "${sse_proxy_ece_port}" "${fai_sse_proxy_ece_port}"
+  assertEquals "Should set fai_sse_proxy_ece_redirect" "${sse_proxy_ece_redirect}" "${fai_sse_proxy_ece_redirect}"
+  assertEquals "Should set fai_sse_proxy_backends" "${sse_proxy_backends}" "${fai_sse_proxy_backends}"
+
+  rm -rf "${yaml_file}"
+}
+
 test_can_parse_yaml_conf_nfs_server() {
   local nfs_server_address="nfs.example.com"
   local nfs_allowed_client_network="10.0.0.1/24"
