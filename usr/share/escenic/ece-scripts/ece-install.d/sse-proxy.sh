@@ -60,7 +60,7 @@ _sse_configure_nursery() {
   exposed_proxy_uri=http://${fai_sse_proxy_exposed_host-${HOSTNAME}}:${fai_sse_proxy_exposed_port-80}
 
   local file=/etc/escenic/engine/common/com/escenic/livecenter/Configuration.properties
-  mkdir -p $(dirname "${file}")
+  make_dir $(dirname "${file}")
   if [ -e "${file}" ]; then
     run sed -i "s#presentationSseProxyUri=.*#presentationSseProxyUri=${exposed_proxy_uri}#" "${file}"
   else
@@ -70,7 +70,7 @@ EOF
   fi
 
   file=/etc/escenic/engine/webapp/webservice/com/escenic/webservice/resources/ChangelogFeed.properties
-  mkdir -p $(dirname "${file}")
+  make_dir $(dirname "${file}")
   if [ -e "${file}" ]; then
     run sed -i "s#sseEndpoint=.*#sseEndpoint=${exposed_proxy_uri}#" "${file}"
   else
@@ -143,7 +143,8 @@ _sse_configure() {
 
 _sse_restart_services() {
   print_and_log "SSE proxy: Restarting all related services ..."
-  run /etc/init.d/sse-proxy restart
+  /etc/init.d/sse-proxy stop &>> "${log}" || true
+  run /etc/init.d/sse-proxy start
 
   # Works on Debian and  RedHat based systems.
   if [ -x /usr/sbin/service ]; then
