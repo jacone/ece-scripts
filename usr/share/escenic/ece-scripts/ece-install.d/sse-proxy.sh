@@ -147,8 +147,10 @@ _sse_restart_services() {
   run /etc/init.d/sse-proxy start
 
   # Works on Debian and  RedHat based systems.
-  if [ -x /usr/sbin/service ]; then
+  if [ "${on_debian_or_derivative}" -eq 1 ]; then
     run service nginx reload
+  elif [ "${on_redhat_or_derivative}" -eq 1 ]; then
+    run systemctl restart nginx
   else
     run /etc/init.d/nginx restart
   fi
