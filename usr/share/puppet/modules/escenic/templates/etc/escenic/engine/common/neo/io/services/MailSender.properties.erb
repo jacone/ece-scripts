@@ -1,0 +1,118 @@
+######################################################################
+# MAIL HOST NAME                                                     #
+######################################################################
+# The hostname (or IP address) of the mail server to use.  The
+# destination must be running a mail server accepting connections of
+# type smtp.
+#
+# Example:
+#   mailHost=mail.mycompany.com
+#
+# There is no default value. This must be configured in order for
+# Escenic to send mail.
+######################################################################
+# mailHost=
+
+
+######################################################################
+# MAILER NAME                                                        #
+######################################################################
+# The value to place in the "X-Mailer" header, if none is specified
+# by the mailing application.  In most cases, the default value can
+# be used.
+#
+# Example:
+#   defaultMailerName=Escenic Mail Sender
+#
+# Default:
+#   defaultMailerName=Escenic Mail Gateway
+#
+######################################################################
+# defaultMailerName=Escenic Mail Gateway
+
+
+######################################################################
+# DEFAULT MAIL SENDER                                                #
+######################################################################
+# The value to use as the sender, if none is specified by the mailing
+# application.  This value must be specified in order for mail to
+# work.  
+#
+# Example:
+#   defaultSender=escenic@myhost.com
+#
+# Example:
+#   defaultSender=support@my-hosting-partner.com
+#
+# Default:
+#   defaultSender=
+#
+######################################################################
+# defaultSender=
+
+
+
+######################################################################
+# DEFAULT SUBJECT                                                    #
+######################################################################
+# The value to use as the sender, if none is specified by the mailing
+# application.  In most cases, the default value can be used.
+#
+# Example:
+#   defaultSender=Corporation dot com Ltd.
+#
+# Default:
+#   defaultSender=Escenic
+#
+######################################################################
+# defaultSubject=No Subject Specified
+
+
+
+######################################################################
+# ADDITIONAL RECIPIENTS                                              #
+######################################################################
+# Any additional recipients that should be used when sending e-mail.
+# These recipients will receive any e-mail being sent out using this
+# e-mail component.
+#
+# Example:
+#   additionalRecipients=admin@mycompany.com
+#
+# Example:
+#   additionalRecipients=john@example.com,doe@example.com
+#
+# Default:
+#   additionalRecipients=
+# (no additional recpipents)
+#
+######################################################################
+# additionalRecipients=
+
+
+
+
+######################################################################
+# ENABLED                                                            #
+######################################################################
+# By default, the mail component in Escenic is disabled, because it
+# produces lots of error messages if it is not configured correctly.
+# When the mail component is configured correctly, change the
+# enabled value to "true" to enable mail sending.
+#
+# In a production environment, it is also useful to be able to halt
+# mail sending in case of mail server outages, or abuse of Escenic's
+# mail services.
+#
+# Note that if enabled=false, then an IllegalStateException will be
+# thrown to the caller, which is expected to handle this situation
+# gracefully.
+#
+# Example:
+#   enabled=true
+#
+# Default:
+#   enabled=false
+#
+######################################################################
+# enabled=false

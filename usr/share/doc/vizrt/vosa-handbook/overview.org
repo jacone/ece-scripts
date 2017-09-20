@@ -1,0 +1,6 @@
+* Getting the Overview
+
+#+ATTR_HTML: alt="ECE architecture"
+[[file:./graphics/architecture.svg][./graphics/architecture.svg]]
+
+#+INCLUDE: "overview-generated.org"

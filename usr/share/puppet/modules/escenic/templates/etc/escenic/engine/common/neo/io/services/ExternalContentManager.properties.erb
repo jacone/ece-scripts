@@ -1,0 +1,44 @@
+##########################################
+# Time (in seconds) content is valid in cache without being accessed. 
+# After this time content will be expired. Validtime should be set
+# higher than minutes-property defined in neo/io/schedules/ExternalContentUpdater 
+# and higher than refreshtime
+# 
+# Default: 3600
+#
+# Example:
+#   validTime=900 #every 15 minutes
+##########################################
+#validTime=
+
+##########################################
+# Time (in seconds) before content should be refreshed. 
+# Refreshtime should be set lower than validtime
+#
+# Default:  900 
+#
+# Example:
+#   refreshTime=600
+##########################################
+#refreshTime
+
+##########################################
+# Default timeout ( in milliseconds) on http get
+# 
+# Default: 2000
+#
+# Example:
+#   defaultTimeout=4000
+##########################################
+#defaultTimeout=
+
+##########################################
+# Timeout (in milliseconds) used when doing background refresh. 
+# Can be longer than 'normal' timeout
+#
+# Default: 6000
+#
+# Example:
+#   refreshTimeout=10000
+##########################################
+#refreshTimeout=

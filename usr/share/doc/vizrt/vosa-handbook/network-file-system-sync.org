@@ -1,0 +1,9 @@
+** Syncing the Master & Slave NFS
+
+The NFS slave on <%= trail_nfs_slave_host %> replicates the master NFS
+on <%= trail_nfs_master_host %> using an hourly cron job.
+
+This is initiated by a file on <%= trail_nfs_slave_host %>'s
+=/etc/cron.hourly= directory which calls the
+=/usr/bin/sync-network-drive= with the appropriate parameters to sync
+the <%= trail_nfs_export_list %>.

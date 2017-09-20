@@ -1,0 +1,14 @@
+blockdiag {
+  orientation = portrait;
+
+  pres1-apt [ label ="pres1: apt-get", color = "orange" ];
+  control-apt [ label ="control: apt-cacher", color = "green" ];
+  pres1-get [ label ="pres1: http_proxy=control:3128", color = "orange" ];
+  control-get [ label ="control: squid:3128", color = "green" ];
+  apt [ label ="vosa apt repo", color = "brown" ];
+  
+  pres1-apt -> control-apt -> apt, official-apt-repos, 3rd-party-apt-repos;
+  pres1-get -> control-get -> technet, ftp.vizrt.com [ label = "GETs" ];
+
+    
+}

@@ -1,0 +1,177 @@
+#+TITLE: ece-deploy
+#+AUTHOR: Escenic Cloud Team
+#+MAN_CLASS_OPTIONS: section-id:8
+#+OPTIONS: H:6 num:5 toc:2
+
+* NAME
+ece-deploy
+
+* SYNOPSIS
+ece-deploy [[[--ear uri-to-ear]]] [[[--conf uri-to-conf]]] [[[--force]]]
+[[[--update-publication-resources]]] [[[--list-deployments]]]
+[[[--rollback deployment-id]]]
+
+* DESCRIPTION
+The ece-deploy command will help you with the following tasks:
+
+- [[Deploying a new EAR file]]
+- [[Deploying a new configuration package]]
+- [[Updating publication resources]] of all publications
+- [[Rollback to a previous deployment]]
+- [[Get an overview of all deployments]] by ece-deploy
+
+* OPTIONS
+** --ear uri-to-ear
+The URI to the EAR file to use for the deployment, typically, this
+will be a file on a build server.
+
+** --conf uri-to-conf
+The URI to the configuration package to use for the deployment on this
+machine, typically, this will be a file on a build server. This also can
+be a configuration package file location, which is in this machine.
+
+** --force
+Use force whenever necessary to get an automatic deployment. This is
+typically for forcing various parts of the configuration package when
+the package manager would chose a more cautious solution (typically to
+keep the local version of configuration files that differ).
+
+** --update-publication-resources
+Update all the publication resources for all the publications
+found inside the EAR file.
+
+** --list-deployments
+List all the deployments previously done on this machine.
+
+** --rollback deployment-id
+Rollback to the deployment ID specified.
+
+* Background
+As you may know, there's already a nice way of deploying an EAR file
+to an ECE, EAE or search instance by the way of:
+#+BEGIN_SRC sh
+$ ece -i <instance> \\
+  --uri http://my.builder.com/snow-2.3.ear
+#+END_SRC
+
+This approach has some limitations, however:
+
+1. It only deploys on one instance. Normally, production systems have
+   at least two, one ECE and one search instance. Since people
+   generally only are interested in the changes on the ECE instance,
+   they forget to deploy to the search instance. Over time, the
+   version of the ECE binaries running on these two instance drift
+   apart.
+2. It doesn't update the publication resources, so that operators must
+   also do a ece -i <instance> -r <resource> -p <publication> update
+   for each of the publication resources that the developers say have
+   changed. Again, people only do the minimum of what they need to do
+   and often the necessary publication resources are not updated, or
+   only content-type is updated and the rest is left out. Again,
+   things start to drift apart.
+3. It doesn't update the system configuration. A new EAR deployment
+   works in tandem with a DEB or RPM configuration package. Often, a
+   new feature or bug fix on your website requires also changes to the
+   configuration of some of the components outside of the JSPs and CSS
+   style sheets. Again, operators would need to update the system
+   configurations after running ece deploy --uri <uri>.
+
+The ece-deploy command addresses all these issues. It doesn't
+re-implement anything of the functionality which is already in place
+in ece deploy but builds upon it and adds new features such as the
+capability to roll back and provide full diffs of everything that was
+changed.
+
+As you see in this guide, each deployment gets its own ID. The reason
+why ece-deploy has its own deployment ID and doesn't use the version
+of the EAR & configuration package, is that it's possible to make
+several deployments of the same EAR/configuration package, even on the
+same host. Furthermore, ece-deploy deploys on several instances, not
+only one. And lastly, it's even possible to choose whether or not to
+update the publication resources. Hence, ece-deploy has its own IDs
+and database of its deployments to make everything reproduce-able.
+
+* Examples
+** Deploying a new EAR file
+#+BEGIN_SRC sh
+# ece-deploy --ear http://my.builder.com/snow-2.3.ear
+#+END_SRC
+
+** Deploying a new configuration package using uri
+#+BEGIN_SRC sh
+# ece-deploy --conf http://my.builder.com/vosa-conf-pres1-2.3.deb
+#+END_SRC
+
+** Deploying a new configuration package file
+#+BEGIN_SRC sh
+# ece-deploy --conf /path/to/vosa-conf-pres1-2.3.deb
+#+END_SRC
+
+** Updating publication resources
+#+BEGIN_SRC sh
+# ece-deploy --ear http://my.builder.com/snow-2.3.ear \\
+   --update-publication-resources
+#+END_SRC
+
+** Deploying everything with one command
+It's of course possible to deploy both the EAR and DEB at the same
+time and also update the publication resources with one call to
+ece-deploy:
+
+#+BEGIN_SRC sh
+# ece-deploy --ear http://my.builder.com/snow-2.3.ear \\
+   --conf http://my.builder.com/vosa-conf-pres1-2.3.deb \\
+   --update-publication-resources
+#+END_SRC
+
+** Rollback to a previous deployment
+Perhaps the coolest feature of ece-deploy, is that it can roll back to
+any of the previous deployments that you have done with
+ece-deploy. First, get hold of the deployment ID you want from the [[Get an overview of all
+ deployments][list of all previous deployments]] and then pass this ID to the
+--rollback switch:
+
+#+BEGIN_SRC sh
+# ece-deploy --rollback pres1-1356015120 \\
+    --update-publication-resources
+#+END_SRC
+
+As before, the --update-publication-resource is optional.
+
+** Get an overview of all deployments
+#+BEGIN_SRC sh
+# ece-deploy --list-deployments
+- Deployment pres1-320868 was made @ Wed Dec 12 19:31:08 IST 2012
+- Deployment pres1-390454 was made @ Thu Dec 13 14:50:54 IST 2012
+#+END_SRC
+
+Having the ID, let's you [[Rollback to a previous version][roll back to that version]] and it lets you
+examine the state of the system before that deployment was made, what
+the state was afterwards and view full diffs of all configuration
+files that were changed as a part of that deployment.
+
+All the deployment history is easily browsable under:
+#+BEGIN_SRC sh
+/var/lib/escenic/ece-deploy/<deployment-id>
+#+END_SRC
+
+* Requirements
+As you can see from the code examples (they all start with a #),
+ece-deploy must be run as root or with sudo.
+
+Furthermore, it requires the system to be set up with ece-install
+or have corresponding structure. Among other things, this means that
+all the instances to deploy to are listed correctly in
+/etc/default/ece and information on how to access the build and app
+servers is present in /etc/escenic/ece.conf and
+/etc/escenic/ece-<instance>.conf.
+
+
+* COPYRIGHT
+Copyright 2011-2015 Escenic
+
+Licensed under the Apache License, Version 2.0, see
+https://github.com/escenic/ece-scripts/COPYING for further details.
+
+* AUTHOR
+Torstein Krause Johansen

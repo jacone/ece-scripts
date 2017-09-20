@@ -1,0 +1,66 @@
+* Monitoring
+
+On a VOSA system you have several tools to aid you in getting an
+overview of how your system is doing, how it is configured and how it
+has been behaving from its inception till the present.
+
+** system-info
+
+*** On the Command Line
+On any VOSA host, you can execute the command system-info. If you
+execute this command as root, you better pass a parameter to tell it
+the user under which ECE, EAE and the Search instance are running as
+(typically "escenic"):
+
+#+BEGIN_SRC text
+# system-info -u escenic  
+#+END_SRC
+
+*** In the Web Browser
+All VOSA hosts also has a (maximum) one minute old HTML report from
+system-info running on port ~5678~. 
+
+** Hugin
+Hugin is an automatic, frequent aggregation of the system-info data of
+all the hosts in your habitat. It does this by asking the hossts to
+produce a system-info report in YAML and check the files into a
+version repository.
+
+When browsing the Hugin web interface at
+http://<%= trail_monitoring_host %>.<%= trail_network_name %>:5679/ you can quickly 
+see all changes on the various servers. A change could be a new
+service which is all of a sudden listening on a new port or that the
+version of a installed package has changed. Nothing escapes Hugin's
+watchful eyes!
+ 
+** Munin
+Each VOSA habitat has its own Munin installation where you can see the
+trending of your site. I.e. how it has been behaving the last days,
+weeks and months.
+
+The address to your Munin instance is is:
+ http://<%= trail_monitoring_host %>.<%= trail_network_name %>/munin/
+
+You can add/edit server nodes to monitor here in the monitoring server -
+/etc/munin/munin-conf.d/escenic.conf
+
+** Icinga (enhanced Nagios)
+Icinga gives a good overview of the current health of the
+habitat. Head over to
+ http://<%= trail_monitoring_host %>.<%= trail_network_name %>/icinga/ 
+to get updates on host & service uptimes and disk fill rates. This is
+also the place were you'll schedule any maintenance work you do to
+prevent unnecessary alerts filling up your mobile phone and email
+inboxes.
+
+check\_mk plugin for nagios does the automated monitoring configuration, which saves a lot of manual configuration effort. If you need to add/edit new nodes to monitor then-
+- Add/edit node entry in /etc/check\_mk/main.mk file
+- Create Inventory of the new checks -
+#+BEGIN_SRC text
+# check_mk -I
+#+END_SRC
+- Update the checks for check\_mk -
+#+BEGIN_SRC text
+# check_mk -O
+#+END_SRC
+

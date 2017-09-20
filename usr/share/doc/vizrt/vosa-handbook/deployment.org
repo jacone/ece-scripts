@@ -1,0 +1,409 @@
+* Deployment
+** Building a New EAR File and Configuration Packages
+For a full deployment, two artifacts are needed: an EAR file and a
+configuration package for each of the machines. The build server
+provides you with both.
+
+*** Build from from your Hipchat room
+You can start a build right from your chatroom! Go to the <%= trail_customer_shortname %> Hipchat room named: <%= trail_customer_hipchat_room_name %> or go to Hipchat in your [[https://vizrtcustomers.hipchat.com/chat][browser]].
+
+When you are in the chatroom type:
+#+BEGIN_SRC sh
+guru: build trunk
+#+END_SRC
+(As of this writing it was not possible to build from a tag or a branch yet)
+
+The chatroom will report on the progress of your build but if you are impatient you can type:
+#+BEGIN_SRC sh
+guru: jobs
+#+END_SRC
+
+Once the build is done, the URI of the finished EAR file is printed in
+the chat room. This is the URI you use for the =ece deploy= command below.
+
+In future you will also be able to deploy an EAR to staging in the chatroom.
+
+*** Build from the command line on your build server
+Log on to the build server as the user for the given habitat and run
+the build script:
+
+#+BEGIN_SRC sh
+$ ssh <%= trail_builder_user %>@<%= trail_builder_host %>
+$ ece-build
+#+END_SRC
+This will build from trunk.
+
+If you wish to build from a tag in Subversion you do:
+#+BEGIN_SRC sh
+$ ece-build -t <tagname>
+#+END_SRC
+
+And to build a branch you can use the =-b= parameter instead:
+#+BEGIN_SRC sh
+$ ece-build -b <branchname>
+#+END_SRC
+
+Once the build is done, the URI of the finished EAR file and the
+corresponding configuration packages for all the machines in your
+environment are printed out in the shell:
+#+BEGIN_SRC text
+[ece-build-0] Starting release creation! @ <%= trail_today_date %>
+[ece-build-0] Additional output can be found in /home/<%= trail_builder_user %>/ece-build.log
+[ece-build-477] Generating change log for revision 6307 ...
+[ece-build-515] Configuration packages available here:
+[ece-build-515] http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/vosa-conf-${HOSTNAME}-1-<%= trail_builder_user %>-trunk-r6307.deb
+[ece-build-515] Replace '${HOSTNAME}' with any of: [ <%= trail_presentation_host_list %>
+[ece-build-515] <%= trail_editor_host %> <%= trail_staging_editor_host %> ] for the other machines' conf packages.
+[ece-build-515] BUILD SUCCESSFUL! @ <%= trail_today_date %>
+[ece-build-515] You'll find the release here:
+[ece-build-515] http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev6307-<%= trail_today_date %>_1225.ear
+#+END_SRC
+
+The EAR and configuration package URIs can be used by the =ece deploy= command [[Making a full deployment][as described below]].
+
+** Preparing to Deploy to Production
+The first thing you need to do, is to [[Get the current version of the
+EAR and configuration packages]]
+
+If the version of the EAR and vosa-conf package differ, you must find
+out why (ask your colleagues) or if there are any notable changes that
+has been skipped (this is normally the case, that someone has updated
+the EAR without updating the conf package. However, this *should*
+never happen if everyone always uses =ece-deploy=.
+
+*** Read Through the Change Log and Code Diff
+Second, read through [[Build changelogs][all the change logs and code diffs]] for the new EAR
+and conf packages.
+
+You will see a number of files e.g.:
+#+BEGIN_SRC text
+from-6100-to-6200.report
+from-6100-to-6200.diff
+from-6200-to-6250.report
+from-6200-to-6250.diff
+from-6250-to-6255.report
+from-6250-to-6255.diff
+#+END_SRC
+
+Now, if the new EAR you  [[Build new EAR][built on the build server]] has revision =6255= and
+the current deployed EAR has revision =6200=, you must look at the
+files which contains the changes in between, namely:
+=from-6200-to-6250.report=,
+=from-6200-to-6250.diff=,
+=from-6250-to-6255.report= and =from-6250-to-6255.diff=.
+
+It's important that you confirm that all JIRA issues found in the
+report files are fixed.
+
+*** Deploy & test on staging
+Log on to <%= trail_staging_editor_host %>, [[Making a full deployment][make a full deployment]] and
+[[Seeing the status of all instances][ensure that your ECE, Search and EAE instances are running]]
+
+Once this is through, you then need to [[Performing a smoke test][perform a smoke test]] to see
+that the site(s) are still basically working.
+
+Once this is done, ensure that all the listed JIRA issues in the
+report files are tested on <%= trail_uat_url %> and closed. If you cannot
+close one, make a new issue for the resulting work and close it
+anyway.
+
+To make a link to this deployment into the CRM, copy and paste the
+list of Jira issues in a support case (by email or otherwise) and make
+sure that the subject contains the name of the EAR file.
+
+** Deploying to a production system
+Deployments to production are only done by operators in the Support group of Vizrt Online in Dhaka or Oslo.
+
+*** Check list before you start
+If you are getting ready to deploy to a production system you have to follow the next checklist:
+0. Verify that you are not the same person who did the changes to the code :-)
+1. Has the EAR & configuration package been properly _release_ tested?
+1. Has the EAR & configuration package been properly _smoke_ tested?
+2. Do the release notes match the changes made to the code and do they make sense?
+3. Are the changes in the EAR causing you to feel that the service will fail after deploy?
+5. Is someone you trust available to help you if you run into trouble rolling back?
+6. Does the site on staging show the differences expected when reading the release notes?
+
+If any of these prerequisites is not in place you should refuse the deploy request and notify the user how they can convince you to perform the deploy.
+
+*** Steps to make the deployment
+If, on the other hand, you can answer yes to all of the above, you can
+go ahead and deploy on production. The steps are pretty much the same
+as described in [[Deploy & test on staging]], with the exception that you
+also must:
+
+1. First, [[Schedule downtime]] of each machine you Update
+2. If the machine you're updating, you must remove it from the load
+   balancer (<%= trail_lb_host %>) that receives the incoming web
+   traffic.
+3. Log on to the machine and [[Making a full deployment][make the deployment]]
+4. Remove the scheduled downtime of the machine from
+   http://<%= trail_monitoring_host %>.<%= trail_network_name %>/icinga
+
+** Seeing the status of all instances
+This will show the status of all ECEs, EAEs, search instances &
+RMI-hub on the machine:
+
+#+BEGIN_SRC text
+$ sudo /etc/init.d/ece status
+[ece#engine-engine1] UP 0d 0h 1m 53s
+[ece#search-search1] UP 0d 0h 1m 53s
+[ece#analysis-analysis1] UP 0d 0h 1m 53s
+#+END_SRC
+
+** Build changelogs
+Each time <%= trail_builder_host %> builds a new EAR and configuration
+packages, it also creates two files which describe all the changes
+between the previous build and the current one. For each build, there
+are two files: one report file with excerpts from all JIRA issues
+mentioned in the commit messages and one diff file with all the code
+changes.
+
+You can access these changelogs under http://<%= trail_builder_host %>/<%= trail_builder_user %>/changelogs
+As you will see, it keeps changelogs for trunk and the different branches in separate
+directories under.
+
+The report files contain a generated summary of the related JIRA
+issues that have been worked on with this build, as well as a _risk
+assessment score_. This score is calculated from the code diffs and
+diff contexts.
+
+** Making a full deployment
+Log on to the machine you want to make deployment on and use
+=ece-deploy= to deploy everything:
+
+#+BEGIN_SRC text
+$ sudo ece-deploy \
+  --ear  http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev6307-<%= trail_today_date %>_1225.ear \
+  --conf http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/vosa-conf-${HOSTNAME}-1-<%= trail_builder_user %>-trunk-r6307.deb \
+  --update-publication-resources
+#+END_SRC
+The EAR and DEB file is what [[Building a New EAR File and Configuration Packages][you got from the build server]]
+
+This will deploy the new configuration, update all the publication
+resources of all your publications and update all ECEs, search
+instances and EAEs you have on your machine. =ece-deploy= looks in
+=/etc/default/ece= to determine which instances to deploy to, just
+like how =/etc/init.d/ece= decides which instances to start and stop.
+
+If anything goes wrong, you can just [[Rolling back to a previous version][roll back to a previous version]]
+
+** Rolling back to a previous version
+You can roll back to any previous deployment you've done using
+=ece-deploy=. To get a list of all previous deployments done with
+=ece-deploy=, you do:
+#+BEGIN_SRC sh
+$ ssh <%= trail_presentation_host %>
+$ sudo ece-deploy --list-deployments
+   - Deployment <%= trail_presentation_host %>-1354540403 was made @ Mon Dec 3 18:43:23 IST 2012
+   - Deployment <%= trail_presentation_host %>-1354621048 was made @ Tue Dec 4 17:07:28 IST 2012
+   - Deployment <%= trail_presentation_host %>-1355319440 was made @ Wed Dec 12 19:07:20 IST 2012
+   - Deployment <%= trail_presentation_host %>-1355320868 was made @ Wed Dec 12 19:31:08 IST 2012
+   - Deployment <%= trail_presentation_host %>-1355390454 was made @ Thu Dec 13 14:50:54 IST 2012
+#+END_SRC
+
+Normally, the previous one will be the right one to roll back to, but
+if you've played a lot back and forth If you don't know which one to
+choose, then pick the one that's fairly recent and has been running
+for a long time, i.e., there's a long span between that deployment and
+the next one.
+
+From the output above, we see that the one from the 4th of December
+has been running the longest, so we roll back to that one with a
+simple command:
+#+BEGIN_SRC sh
+$ sudo ece-deploy \
+    --rollback <%= trail_presentation_host %>-1354621048 \
+    --update-publication-resources
+#+END_SRC
+
+The reason why =ece-deploy= has its own deployment ID and doesn't use
+the version of the EAR & configuration package, is that it's possible
+to make several deployments of the same EAR/configuration package,
+even on the same host. Furthermore, =ece-deploy= deploys on several
+instances, not only one. And lastly, it's even possible to choose
+whether or not to update the publication resources. Hence,
+=ece-deploy= has its own IDs and database of its deployments to make
+everything reproduce-able.
+
+In this connection, it should also be noted that each of the ECE
+instances also have their own [[Instance deployment log]]
+
+** Performing a smoke test
+The command below will call the local ECE with
+=Host= header set and output the amount of bytes returned. If this
+number is less than a few thousand, you should immediately investigate
+why. Also, we check that there's a =<title/>= element returned from
+the front page of each of the domains:
+#+BEGIN_SRC text
+$ for host in <%= trail_virtual_host_list %>; do \
+    echo "${host}'s title:"
+    curl --silent --header "Host: $host" http://localhost:8080/ | grep -A 1 '<title>'; \
+    echo "${host}'s front page bytes:"; \
+    curl --silent --header "Host: $host" http://localhost:8080/ | wc -c; \
+  done
+#+END_SRC
+
+** Manually deploying a new EAR file to an ECE instance
+We strongly recommend that you [[Making a full deployment][use ece-deploy to deploy a new EAR
+file]]. If you only want to deploy the EAR and not the configuration
+package, you can just call =ece-deploy= without the =--conf=
+parameter.
+
+However, if you for some reason, perhaps you don't have root privileges on the machine, and want to deploy an EAR to a specific instance, you can use =ece deploy= (note that =ece-deploy= is different from =ece deploy=):
+
+#+BEGIN_SRC sh
+$ ece -i engine1 \
+    --uri http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4121-<%= trail_today_date %>_1524.ear \
+    deploy \
+    restart
+#+END_SRC
+
+You can confirm that the instance came up again by querying =ece -i
+engine1 info | grep -i EAR= or looking in the [[Instance deployment log][deployment log for the instance]]
+to see that the new EAR has been deployed.
+
+** Manually deploying a new EAR file to a search instance
+Again, we recommend you using =ece-deploy= for this, but if you really
+want to do it explicitly for a search instance, this is the same as
+[[Manually deploying a new EAR file to an ECE instance]] except that you
+must add =-type search= to the =ece= command:
+
+#+BEGIN_SRC sh
+$ ece -i search1 \
+    -t search \
+    --uri http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4121-<%= trail_today_date %>_1524.ear \
+    deploy \
+    restart
+#+END_SRC
+
+** Instance deployment log
+Each of the ECE, EAE and search instances also have their own
+deployment log where the EAR used whenever running
+=ece -i <%= trail_presentation_host %> deploy= along with its MD5 sum and the date
+of deployment is available:
+#+BEGIN_SRC sh
+$ ece -i engine1 list-deployments
+[ece#engine-engine1] These are all the deployments made on engine1:
+Wed Dec 12 19:11:39 IST 2012 <%= trail_customer_acronym %>-trunk-rev6259-2012-10-12_1322.ear c6c7643234asdfasdfdf7f7f0001612e
+Wed Dec 12 19:31:35 IST 2012 <%= trail_customer_acronym %>-trunk-rev6260-2012-12-12_1401.ear c6c762523db66ae21cdf7f7f00016f7f
+#+END_SRC
+This log file is automatically updated when you use the =ece-deploy= command.
+
+** Updating Server Configuration
+*** Make changes to the =server-admin= tree
+In the <%= trail_builder_user %> source tree, there is a directory
+called =server-admin=. This contains all the files that are hand
+crafted because the file values cannot be generated by simply running
+=ece-install= with the correct parameters.
+
+The structure is as follows: =server-admin/<common|<machine>>/<full
+file path>=. Below are some examples to help illustrate how to use
+this file tree:
+
+#+BEGIN_SRC text
+(1) server-admin/common
+(2) server-admin/common/etc/hosts.d
+(3) server-admin/<%= trail_presentation_host %>/etc/escenic/ece-engine1.conf
+(4) server-admin/<%= trail_db_master_host %>/etc/mysql/my.cnf
+#+END_SRC
+|------+-----------------------------------------------------------------------------------------|
+| Path | Description                                                                             |
+|------+-----------------------------------------------------------------------------------------|
+| (1)  | Common files for all machines.                                                          |
+| (2)  | Files that together generate the =/etc/hosts= when you [[Building new configuration packages]] |
+| (3)  | The =/etc/escenic/ece-engine1.conf= specific for <%= trail_presentation_host %>         |
+| (4)  | The =/etc/mysql/my.cnf= specificf for the <%= trail_db_master_host %> machine.          |
+|------+-----------------------------------------------------------------------------------------|
+
+There will always be _some_ files in your =server-admin= tree, but as
+a rule of thumb, try to keep this to a minimum.
+
+=ece-install= (and the OS package of course) should provide sensible
+defaults for most components given that you pass it the appropriate
+settings in the machine's =ece-install.conf=, so ultimately, you'd
+only have to check in the =ece-install.conf= for the
+<%= trail_control_host %> machine so that it's able to install the
+other machines, plus the appropriate file(s) in
+=server-admin/common/etc/hosts.d=.
+
+Let's say we want to change the memory setting in =ece-engine1.conf=
+for the =<%= trail_presentation_host %>= machine only. Go to your
+checked out <%= trail_builder_user %> source code and edit the file
+(or indeed add it if it's not already there, in which case would mean
+that you're running with the defaults set up by =ece-install=):
+
+#+BEGIN_SRC text
+$ vi ~/src/<%= trail_builder_user %>/server-admin/<%= trail_presentation_host %>/etc/escenic/ece-engine1.conf
+#+END_SRC
+
+Make your changes and then commit them using an appropriate ticked ID
+in the log message, e.g.:
+#+BEGIN_SRC sh
+$ svn ci ~/src/<%= trail_builder_user %>/server-admin/<%= trail_presentation_host %>/etc/escenic/ece-engine1.conf \
+      -m "<%= trail_builder_user %>-344: increased the max and min heap sizes to 4GB because we've got so many objects"
+#+END_SRC
+
+That's it, your changes will be included in all the relevant
+configuration packages when you [[Building a New EAR File and Configuration Packages][issue a new build]].
+
+*** Deploying a Configuration Package
+Log on to the different hosts and call =ece-deploy= with the =--conf=
+parameter to install the package (you normally do this together with
+the EAR file, but for the sake of the example, you /can/ just deploy
+the conf package): Here, we use <%= trail_presentation_host %> as an
+example:
+
+#+BEGIN_SRC text
+$ ssh <%= trail_presentation_host %>
+$ sudo ece-deploy \
+         --conf http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/vosa-conf-<%= trail_presentation_host %>-1-<%= trail_builder_user %>-trunk-r4899.deb
+#+END_SRC
+
+Because of the mighty =dpkg= and the =DEB= package format, you'll get
+prompted for any abnormalities, like if someone has changed any of the
+conf package files locally since you last updated the package, if
+you've got other, conflicting configuration packages installed on so
+on.
+
+Now, you have full control over your configuration being in sync with your EAR deployment. You can easily confirm this, see
+[[Get the current version of the EAR and configuration package]]
+
+** Get the current version of the EAR and configuration package
+There are two ways to see which EAR file is currently deployed, the easiest is:
+#+BEGIN_SRC text
+$ ece -i engine1 list-deployments | tail -1
+Thu Dec 13 15:05:41 IST 2012 <%= trail_customer_acronym %>-trunk-rev6260-2012-12-12_1401.ear c6c762523db66ae21cdf7f7f00016f7f
+#+END_SRC
+The second way, is to search in the output from the =ece info= command:
+#+BEGIN_SRC text
+$ ece -i engine1 info | grep -A 1 EAR
+[ece#engine-engine1] |-> EAR used:
+[ece#engine-engine1] http://<%= trail_builder_host %>/<%= trail_builder_user %>/releases/<%= trail_builder_user %>-trunk-rev4899-<%= trail_today_date %>_1524.ear
+#+END_SRC
+
+
+To see which version of the system configuration is deployed on the machine, do:
+#+BEGIN_SRC text
+$ dpkg -l vosa-conf-<%= trail_presentation_host %> | grep ^ii
+ii  vosa-conf-<%= trail_presentation_host %> 1-<%=trail_customer_acronym %>-trunk-r6260  Server configuration for <%= trail_presentation_host %>
+#+END_SRC
+This version should correspond to the EAR version. If not, you should
+ask around to the other operators to find out why these
+differ. Normally, these two should always be in sync.
+** Schedule downtime
+Whenever you're going to make changes that you know or fear will
+disrupt services so that you'll activate the monitoring system's
+checks, you should schedule the downtime so that the monitoring server
+is on your team and doesn't [[http://en.wikipedia.org/wiki/Cry_Wolf][cry wolf]].
+
+You can either schedule down time of a particular machine by using the
+web interface at http://<%= trail_monitoring_host %>.<%= trail_network_name %>/icinga or by
+logging on to <%= trail_control_host %> and use the command
+=downtime=:
+
+#+BEGIN_SRC sh
+$ ssh <%= trail_control_host %>
+$ echo "Upgrading <%= trail_presentation_host %> to fix caching problem" | \
+  downtime -i <%= trail_presentation_host %> 1 hours
+#+END_SRC

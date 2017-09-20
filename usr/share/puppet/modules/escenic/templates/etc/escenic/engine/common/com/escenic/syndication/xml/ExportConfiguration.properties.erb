@@ -1,0 +1,41 @@
+#
+# $Header: //depot/escenic/engine-dist/branches/5.3/src/main/resources/siteconfig/config-skeleton/com/escenic/syndication/xml/ExportConfiguration.properties#1 $
+#
+# Copyright (C) 2009 Escenic.
+# All Rights Reserved.  No use, copying or distribution of this
+# work may be made except in accordance with a valid license
+# agreement from Escenic.  This notice must be
+# included on all copies, modifications and derivatives of this
+# work.
+#
+
+#Export Configuration template
+$class=com.escenic.syndication.xml.ExportConfiguration
+name=Default export configuration (Please override with you own local configuration)
+
+objectLoader=/io/api/ObjectLoader
+entityResolver=/neo/io/services/ClasspathEntityResolver
+exportWriter=./StandardExportWriter
+transformer=./ExportTransformer
+
+# Which objects to export
+#objectTypes=*
+#sections=*
+#sectionsById=
+#publicationId=a valid publication id
+#enabled=false
+#disableEvents=false
+## Include referred objects
+#includeReferredObjects=true
+## Include referred binary files
+#includeReferredFiles=true
+
+## Where to look for xsl templates
+# templateDirectory=/absolute/path/to/xsl/directory
+# Default do not cache xsl
+#cache=false
+# Do not export objects that are imported
+#import=false
+
+### Setting default output directory
+#exportTarget=file://${java.io.tmpdir}

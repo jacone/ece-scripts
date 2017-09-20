@@ -1,0 +1,111 @@
+############################################################################
+# Generic publication configuration file                                   #
+#                                                                          #
+# Normally, the optional configuration entries don't need to be touched    #
+# for a development server.                                                #
+#                                                                          #
+# Please note that many of these values are case sensitive!                #
+############################################################################
+
+
+### ------------------------------------------------------------------- ###
+### ------------------------------------------------------ Optional --- ###
+### ------------------------------------------------------------------- ###
+
+############################################################################
+# Define the default mapping for the root directory for a publication
+############################################################################
+# Based on the publication name, Escenic has to figure out where to place
+# (and later on where to find) the web application corresponding to each
+# publication.
+#
+# Escenic does this by defining a "template" for the root directory, and
+# the text "{publicationName}" will be replaced by the name of the
+# publication.
+#
+# Default value:
+#   rootDirectory=${/ServerConfig.filePublicationRoot}{publicationName}/
+#     #  a publication's root directory is defined to be the 
+#     #  "filePublicationRoot" parameter, followed by the publication name,
+#     #  followed by a trailing slash.
+#
+# Example:
+#   rootDirectory=/var/spool/escenic/{publicationName}/webapp/
+#     # a publication with name "xyzzy" will be placed in the 
+#     # /var/spool/escenic/xyzzy/webapp/ directory.
+#
+############################################################################
+# rootDirectory=${/ServerConfig.filePublicationRoot}{publicationName}/
+
+
+############################################################################
+# Define the default mapping for the "root url" for a publication
+############################################################################
+# This setting affects the URL's that will be presented on the web, and what
+# URL the publication will expect to find its own content.
+#
+# The calculated URL will also have effect on "preview" functionality, and
+# static HTML caching of pages.
+#
+# This setting has to end in a trailing slash for Escenic to work properly.
+#
+# Default value:
+#   url=${/ServerConfig.webPublicationRoot}{publicationName}/
+#     #  a publication's root directory is defined to be the 
+#     #  "webPublicationRoot" parameter, followed by the publication name,
+#     #  followed by a trailing slash.
+#     #  Since "webPublicationRoot" is by default "http://localhost:8080/"
+#     #  a publication called xyzzy will get the URL "http://localhost:8080/xyzzy/"
+#
+# Example:
+#   url=http://{publicationName}/
+#     # a publication with name "www.xyzzy.com" will get the URL
+#     # http://www.xyzzy.com/
+#
+############################################################################
+# url=${/ServerConfig.webPublicationRoot}{publicationName}/
+
+
+
+############################################################################
+# Define the default mapping for the multimedia archive for a publication
+############################################################################
+# This setting affects the placement of the multimedia archive for a given
+# publication.
+#
+# This setting has to end in a trailing slash for Escenic to work properly.
+#
+# Default value: (blank; mediaDirectory defaults to "multimedia" inside
+#                 the publication's root directory)
+#
+# Example:
+#   mediaDirectory=/mnt/sharedimages/{publicationName}/
+#     # a publication with name "www.xyzzy.com" will get the URL
+#     # /mnt/multimedia/www.xyzzy.com/ instead of the default
+#     # multimedia directory inside the publication's root.
+#
+############################################################################
+# mediaDirectory=
+
+
+
+############################################################################
+# Define the default mapping for the multimedia URL for a publication
+############################################################################
+# This setting affects the placement of the multimedia archive for a given
+# publication.
+#
+# This setting has to end in a trailing slash for Escenic to work properly.
+#
+# Default value: (blank; mediaUrl defaults to "multimedia" inside
+#                 the publication's root URL)
+#
+# Example:
+#   mediaUrl=http://sharedimages.mysite.com/{publicationName}/
+#     # a publication with name "www.xyzzy.com" will get the URL
+#     # http://sharedimages.mysite.com/www.xyzzy.com/ instead of the default
+#     # "multimedia" inside the publication's root URL.
+#
+############################################################################
+# mediaUrl=
+

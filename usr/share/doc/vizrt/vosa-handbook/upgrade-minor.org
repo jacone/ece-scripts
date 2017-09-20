@@ -1,0 +1,20 @@
+* Template plan for upgrading from Escenic *.x.* to *.y.* (minor version upgrade)
+When an Escenic cluster needs to be upgraded we perform the following steps.
+1. TODO (operator) Make a branch in subversion of the escenic customer project.
+2. TODO (operator) Write a script to Upgrade the dev image db and mm (make available as deb package).
+3. TODO (operator) Change the root pom in the customer project to reflect the target version.
+4. TODO (operator) Make an ear and test it in the dev image.
+5. TODO (operator) Provide the tested dev image to the customer and point out the standard template upgrade issues.
+6. TODO (template dev) Wait for template development to upgrade the templates.
+7. TODO (operator) Create a test server so the new stuff can be tried by editorial when the templates are ready.
+8. TODO (operator) Create an automatic daily copied and upgraded new db and mm. 
+9. TODO (operator) Create a production platform with full redundancy but small scale that points to it.
+10. TODO (users) Do user acceptence testing on the new production platform.
+11. TODO (operator, users) Agree with customers when to switch to the new system.
+12. TODO (operator) stop the automatic daily copy and upgrade script.
+13. TODO (operator) make the old system unavailable
+14. TODO (users) Start using the new system
+15. TODO (users) Report problems as they arise
+16. TODO (operator) rollback:  make the new system unavailable and the old system available.
+17. TODO (operator) commit: destroy the old system
+

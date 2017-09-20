@@ -1,0 +1,19 @@
+# auto completion for the vosa command.                    -*- sh -*-
+
+_vosa_commands()
+{
+    local cur=${COMP_WORDS[COMP_CWORD]}
+    local prev=${COMP_WORDS[COMP_CWORD-1]}
+
+    commands=$(
+        vosa commands | cut -f3 -d' ' | cut -f1 -d':'
+    )
+    
+    # default completions is the list of commands
+    completions="$commands"
+
+    COMPREPLY=( $(compgen -W "$completions" -- $cur) )
+}
+
+complete -o default -F _vosa_commands vosa
+

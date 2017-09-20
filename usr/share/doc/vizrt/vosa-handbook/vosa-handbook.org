@@ -1,0 +1,26 @@
+#+TITLE: <%=trail_customer_shortname%> VOSA Guide
+#+AUTHOR: Vizrt Online / The SaaS Team
+#+OPTIONS: toc:2 
+#+DRAWERS: PLANTUML PROPERTIES
+#+STYLE: <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+#+OPTIONS: skip:t
+#+TEXT: <%= trail_service_header_org %>
+#+TEXT: [TABLE-OF-CONTENTS]
+#+INCLUDE: "overview.org"
+#+INCLUDE: "vizrt-services.org"
+#+INCLUDE: "admin-pac.org"
+#+INCLUDE: "operating-system-maintenance.org" 
+#+INCLUDE: "deployment.org"
+#+INCLUDE: "content-engine.org"
+#+INCLUDE: "search-server.org"
+#+INCLUDE: "database.org"
+#+INCLUDE: "cache-server.org"
+#+INCLUDE: "network-file-system.org"
+#+INCLUDE: "backups.org"
+#+INCLUDE: "monitoring.org"
+#+INCLUDE: "ssh-access.org"
+#+INCLUDE: "privatekeys.org"
+#+INCLUDE: "host-naming.org"
+#+INCLUDE: "development-process.org"
+#+INCLUDE: "jarfiles.org"
+#+INCLUDE: "amazon.org"

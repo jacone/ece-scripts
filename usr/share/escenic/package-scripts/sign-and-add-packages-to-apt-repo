@@ -1,0 +1,37 @@
+#! /usr/bin/env bash
+
+dir=$1
+
+# suite is either stable or unstable (testing hasn't been added yet),
+# default is stable.
+suite=${2-stable}
+log=/tmp/$(basename $0).log
+apt_repo_dir=/var/www/apt
+gpg_key=8267B8FD
+
+if [[ ${dir}x == "x" || ! -d $dir ]]; then
+  echo "You must pass a valid directory to $(basename $0)"
+  echo "For example:"
+  echo "$(basename $0) /tmp/dir-with-a-lot-of-deb-files"
+  exit 1
+fi
+
+echo "I'm logging to $log"
+
+function get_package_name() {
+  dpkg --info $1 | sed 's/^[ ]//'g | grep ^Package | cut -d':' -f2
+}
+
+for el in $dir/*.deb; do
+  echo "Signing and adding $(basename $el) to the APT repository ... "
+  dpkg-sig --sign builder -k $gpg_key $el
+  # reprepro -Vb $apt_repo_dir remove $suite $(get_package_name $el)
+
+  if [[ $(basename $(dirname $el)) == "non-free" ]]; then
+      component=non-free
+  else
+      component=main
+  fi
+  
+  reprepro --ask-passphrase -Vb $apt_repo_dir -C $component includedeb $suite $el
+done

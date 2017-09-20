@@ -1,0 +1,92 @@
+
+** Changing the Master DB
+At install time, <%= trail_db_master_host %> was the master DB and
+<%= trail_db_slave_host %> was the slave.
+
+If you for some reason need to change the master to the slave, for
+instance if you need to take down the server for maintenance, you must
+do following steps described in this section.
+
+*** Prepare <%= trail_db_slave_host %> to become the new master
+#+BEGIN_SRC text
+$ ssh root@<%= trail_db_slave_host %> 
+# mysql <%= trail_db_schema %> 
+#+END_SRC
+
+You must then stop the IO thread of the slave:
+#+BEGIN_SRC text
+mysql> stop slave io_thread;
+#+END_SRC
+
+Next, you must wait for <%= trail_db_slave_host %> to chew through everything
+that <%= trail_db_master_host %> has sent it. This information is stored in
+<%= trail_db_slave_host %>'s process list. To see how it's doing, do:
+#+BEGIN_SRC text
+mysql> show processlist;
+#+END_SRC
+
+What you're looking for, is for the slave to say: ~Slave has read all
+relay log~. When ~show processlist~ says that, <%= trail_db_slave_host %> is
+ready to become master. 
+
+If there's no mention of the relay at all, it could mean that
+<%= trail_db_slave_host %> has been replicating <%= trail_db_master_host %> at all, or
+that it's slave status have been turned off some while ago. As the
+administrator, you must be the judge of that.
+
+*** Promote <%= trail_db_slave_host %> to master
+Still in <%= trail_db_slave_host %>'s mysql shell, do:
+#+BEGIN_SRC text
+mysql> stop slave;
+mysql> reset master;
+#+END_SRC
+
+*** Make sure the replication user is available on <%= trail_db_slave_host %>
+This is the user the slave uses to replicate the master. Since
+<%= trail_db_slave_host %> hasn't done any replication before, you might want
+to ensure that the replication user is there. The user and password
+of the replication user is typically different than that of the user
+ECE uses to access the DB.  
+
+#+BEGIN_SRC text
+grant replication slave on *.* 
+  to 'replicationuser'@'%' 
+  identified by 'replicationpassword';
+flush privileges;
+#+END_SRC
+
+*** Set <%= trail_db_master_host %> as slave of <%= trail_db_slave_host %>
+The steps are as follows: get the binary log position from
+<%= trail_db_slave_host %> and
+set <%= trail_db_master_host %> to be slave of <%= trail_db_slave_host %>.
+
+First, get the binary log & position from <%= trail_db_slave_host %>:
+#+BEGIN_SRC text
+$ ssh root@<%= trail_db_slave_host %>
+# mysql <%= trail_db_schema %>
+mysql> show master status;
+#+END_SRC
+
+The log file and the position are pretty much all that's outputted
+from the mysql command above, so there shouldn't be anything to
+confuse you.
+
+Next, log on to <%= trail_db_master_host %> and make it be a slave of
+<%= trail_db_slave_host %>:
+#+BEGIN_SRC sql
+reset master;
+slave stop;
+
+change master to
+  master_host='<%= trail_db_slave_host %>',
+  master_user='replicationuser',
+  master_password='replicationpassword',
+  master_log_file='<%= trail_db_slave_host %>-bin-file',
+  master_log_pos=<position>
+;
+
+slave start;
+#+END_SRC
+
+
+

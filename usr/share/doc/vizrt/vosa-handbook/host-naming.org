@@ -1,0 +1,83 @@
+* VOSA DNS naming conventions  
+This document assumes knowledge of the [[http://en.wikipedia.org/wiki/Domain_Name_System][global DNS system]].
+
+Using hostnames to reach a service is preferred over using IP addresses directly because it gives us more routing flexibility. We can for instance change the IP address of a service without changing the client configuration.
+
+We have a standard for naming policy for machines and their roles. The following paragraphs describes it.
+
+** VOSA standard network naming
+We use a standard naming scheme for all machines and virtual roles that we control. These names are built up out of the following name components: 
+
+- <network> :: Often named after a location or a datacenter provider.
+- <machine> :: A name that reflects the capabilities of the machine. It might not perform all of those capabilities at all times.
+- <virtual role> :: A name that reflects a specific role that is performed. One machine can have more than one virtual role. 
+- <ou> :: The lowercase name that represents an organizational unit often referred to as a customer or company.
+
+Applying the above to make full names:
+
+- Machine roles :: <machine>.<network>.<ou>.cust.vizrtsaas.com
+- Global virtual roles :: <virtual role>.<ou>.cust.vizrtsaas.com
+- Local virtual roles :: <virtual role>.<network>.<ou>.cust.vizrtsaas.com 
+
+** <%= trail_customer_shortname %> Network naming
+
+| <%= trail_customer_shortname %> customer domain name         | <%= trail_customer_acronym %>.cust.vizrtsaas.com                                                       |
+| <%= trail_customer_shortname %> virtual role names        | <vrtual role>.<%= trail_customer_acronym %>.cust.vizrtsaas.com                                         |
+| <%= trail_customer_shortname %> remote datacentre assets | <machine>.<%= trail_customer_remote_datacentre %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com      |
+| <%= trail_customer_shortname %> office network assets    | <machine>.<%= trail_customer_office_network %>.<%= trail_customer_acronym %>.cust.vizrtsaas.com        |
+
+
+** Machine names
+
+The names of machine should reflect their capabilities to perform specific virtual roles. It is our goal to install machines in ways that allow to perform as many virtual roles as possible. However we are not quite there yet so many standard machine names resemble virtual role names.
+
+The follwing machine names are common in VOSA clusters:
+
+*** General
+- Control :: (control) Dedicated machine to perform as an SSH entrypoint for operators. 
+- Monitoring :: (mon) Dedicated machine that harvest samples of performance metrics from all the machines and sending out events when performance or capacity limits are exceded.
+
+*** VME Online
+All VME Online machines can be made redundant if there is a stable network connection between them. If a role is only represented once it does not get a number. if there are more, a number is added to the name. 
+/Controller:/
+(vmeo-controller*) All vmeo clusters need a VME controller. It might do everything or delegate some work to the other vmeo machines.
+
+The following machine roles are controlled by the controller:
+- Transcoder :: (vmeo-transcoder*) transcodes any ingested video to any variant
+- Encoder :: (vmeo-encoder*) can encode an incoming stream or SDI cable to an ipstream that is used for streaming.
+- Delivery :: (vmeo-delivery*) Delivers video files over http for video on demand(VOD). It can also take streams from reporter or encoder and deliveres [[http://en.wikipedia.org/wiki/Flash_Video][Flash]] and [[http://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol][RTSP]] 
+- Segmenter :: (vmeo-segmenter*) Takes streams from reporter of encoder and delviers [[http://en.wikipedia.org/wiki/HTTP_Live_Streaming][HLS]]
+- Reporter :: (vmeo-reporter*) receives live streams form the viz reporter app on mobile devices.
+
+*** Escenic
+- Escenic Presentation :: (pres*) Dedicated machine for generating webpages by merging content from a database with html from JSP files.
+- Escenic Editorial :: (edit*) Dedicated machine for Content Studio webservice, Imports
+- Escenic Analysis :: (analysis) Dedicated machine for counting pageimpressions for use by the webpages to present lists that depend on performance of specific content items.
+
+** Virtual roles and IP addresses
+Virtual roles are often a single point of failure so we must distribute the capability to perform any virual role over multiple machines or privide very easy restore from a backup. Many machines should have the ability to perform a virtual role but at least one machine should actually play the virtual role at any time. If a virtual role  is clustered, the virtual role hostname might resolve to several ip addresses or the virtual role hostnames might be numbered.
+
+When a machine assumes a virtual role it often claims the corresponding [[http://en.wikipedia.org/wiki/Virtual_IP_address][virtual IP address]] (VIP). A VIP can sometimes be claimed automatically if a [[http://en.wikipedia.org/wiki/Heartbeat_(program)][Linux-HA setup]] is installed.
+
+*** Virtual role names
+
+- Monitoring :: (mon.<ou>.cust.vizrtsaas.com) The monitoring role
+- Control :: (control.<ou>.cust.vizrtsaas.com) The control role 
+- Proxy Gateway :: (proxy-<network>.<ou>.vizrtsaas.com)
+
+*** VME-online
+
+- Controller :: (vmeoc.<ou>.cust.vizrtsaas.com) The virtual role of runing the database and the JBOSS server containing the Diactus Web Application. VMEO machines are all installed with all VMEO capabilities (Escenic migrating to the same policy but is not quite there yet)
+- Transcoder :: (vmeot*.<ou>.cust.vizrtsaas.com) Providing transcoding capacity to the controller.
+- Delivery :: (vmeod*.<ou>.cust.vizrtsaas.com) Endpoint for publishing video on demand and live video streaming.
+
+*** Escenic
+
+- Analysis :: (analysis.<ou>.cust.vizrtsaas.com) the analysis webservices
+- Editorial :: (edit.<ou>.cust.vizrtsaas.com) Content Studio webservice and Indexer Webservice. Currently ther can only be one.
+- Import jobs :: (import.<ou>.cust.vizrtsaas.com) All periodic downloads of external content currently going on.
+- NFS master :: (nfs.<ou>.cust.vizrtsaas.com) The nfs server
+- Presentation :: (pres*.<ou>.cust.vizrtsaas.com) The presentation hosts currently configured on the loadbalancer.
+
+
+

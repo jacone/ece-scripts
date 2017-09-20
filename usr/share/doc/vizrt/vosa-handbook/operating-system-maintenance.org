@@ -1,0 +1,56 @@
+* Operating System Maintenance
+
+Before proceeding, please note that this is serious stuff. To update
+the OS packages, you should feel comfortable resolving typical RPM or
+DEB conflicts and set aside enough time to deal with any package
+breakage which might occur. 
+
+All servers, both the Ubuntu and RedHat ones, are running stable
+branches of their OS, so normally, there will be no breakage, and
+upgrades should be safe to be carried out on a regular (bi-weekly for
+instance) basis. However, you should always be fully alert when making
+these updates and be sure to have enough time on your hands to resolve
+any issues before going ahead with the upgrades below.
+
+** Debian based operating systems
+This applies to OSs like Debian, Ubuntu and Mint.
+
+In the example below, we update the Ubuntu servers called
+<%= trail_presentation_host%> <%= trail_editor_host %> <%= trail_import_host %>
+<%= trail_monitoring_host %> <%= trail_analysis_host %> from the comfort of
+<%= trail_control_host %>.
+
+#+BEGIN_SRC sh
+$ for el in \
+   <%= trail_presentation_host %> \
+   <%= trail_editor_host %> \
+   <%= trail_import_host %> \
+   <%= trail_monitoring_host %> \
+   <%= trail_analysis_host %> \
+  ; do \
+      echo "Now upgrading $el"; \
+      sudo ssh root@$el 'apt-get -qq update && apt-get -q upgrade' ; \
+  done
+#+END_SRC
+
+
+** RedHat based operating systems
+This applies to OSs like CentOS, RedHat and Fedora:
+
+In the example below, we update the RedHat servers called
+<%= trail_presentation_host%> <%= trail_editor_host %> <%= trail_import_host %>
+<%= trail_monitoring_host %> <%= trail_analysis_host %> from the comfort of
+<%= trail_control_host %>:
+
+#+BEGIN_SRC sh
+$ for el in \
+   <%= trail_presentation_host %> \
+   <%= trail_editor_host %> \
+   <%= trail_import_host %> \
+   <%= trail_monitoring_host %> \
+   <%= trail_analysis_host %> \
+  ; do \
+      echo "Now upgrading $el";
+      ssh $el yum update; 
+  done
+#+END_SRC

@@ -1,0 +1,1657 @@
+#! /usr/bin/env bash
+
+################################################################################
+#
+# BUILDER - build server script
+#
+################################################################################
+
+# common variables
+ece_scripts_version="straight-from-github"
+ece_scripts_home=/usr/share/escenic/ece-scripts
+log=~/ece-build.log
+
+# build related variables
+build_date=`date +%F_%H%M`
+maven_build_offline=0
+maven_opts="-U clean install"
+skip_ear=0
+clean_repo=0
+update_repo=0
+project_pom_versions=""
+ear_base_url=http://builder.vizrtsaas.com
+#Mode to use keep git local changes
+local_mode=false
+auto_deploy=false
+deploy_ear=false
+deploy_conf=""
+package_for_machine="all"
+generate_changelog=0
+do_force=0
+deploy_resources=0
+
+# standard java locations
+#TODO:take java home location dynamically
+java_6_sun=/usr/lib/jvm/java-6-sun
+java_7_oracle=/usr/lib/jvm/java-7-oracle
+java_8_oracle=/usr/lib/jvm/jdk-8-oracle-x64
+
+# ece-build platform dependencies
+dependencies="tar
+sed
+ant
+git
+svn
+mvn
+zip
+unzip
+wget
+xml2"
+
+# plugins available for inclusion in project build
+escenic_identifiers="engine
+community-engine
+forum
+geocode
+analysis-engine
+xml-editor
+menu-editor
+section-feed
+dashboard
+poll
+lucy
+reporter
+video
+newsroom
+newsgate
+vcpeditor
+online-graphics
+widget-framework-core
+widget-framework
+widget-framework-common
+widget-framework-mobile
+widget-framework-community
+widget-framework-syndication
+mobile-expansion
+semantic-cxense
+snapshot
+changelog
+note
+seo
+mobile-studio
+preview-editor
+live-center
+live
+revision-history"
+
+declare -A project_distributions=()
+
+project_maven_coordinates=""
+
+declare -A maven_snapshot_coordinates=(
+["assemblytool"]="com.escenic.tools:assemblytool:jar"
+["engine"]="com.escenic:engine-dist:zip:bin
+com.escenic:engine:zip"
+["analysis-engine"]="com.escenic.plugins.analysis-engine:analysis-engine:zip"
+["changelog"]="com.escenic.changelog:changelog:zip"
+["dashboard"]="com.escenic.plugins.dashboard:dashboard:zip"
+["forum"]="com.escenic.plugins.forum:forum:zip"
+["geocode"]="com.escenic.plugins.geocode:geocode:zip"
+["lucy"]="com.escenic.plugins.lucy:lucy:zip"
+["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor:zip"
+["mobile-expansion"]="com.escenic.plugins.mobile-expansion:mobile-expansion-dist:zip"
+["newsroom"]="com.escenic.plugins.newsroom:newsroom:zip"
+["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
+["note"]="com.escenic.plugins.note:note:zip"
+["poll"]="com.escenic.plugins.poll:poll:zip"
+["reporter"]="com.escenic.plugins.reporter:reporter:zip"
+["section-feed"]="com.escenic.plugins.section-feed:section-feed:zip"
+["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense:zip"
+["snapshot"]="com.escenic.plugins.snapshot:snapshot:zip"
+["community-engine"]="com.escenic.plugins.community:community-engine:zip"
+["online-graphics"]="com.escenic.plugins.online-graphics:online-graphics:zip"
+["video"]="com.escenic.plugins.video:video:zip"
+["xml-editor"]="com.escenic.plugins.xml-editor:xml-editor:zip"
+["vcpeditor"]="com.escenic.plugins.vcpeditor:vcpeditor:zip"
+["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
+["widget-framework"]="com.escenic.widget-framework:widget-framework:zip"
+["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
+["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
+["seo"]="com.escenic.plugins.seo:seo:zip"
+["mobile-studio"]="com.escenic.plugins.mobile-studio:mobile-studio:zip"
+["preview-editor"]="com.escenic.plugins.preview-editor:preview-editor:zip"
+["live-center"]="com.escenic.plugins.live-center:live-center:zip"
+["live"]="com.escenic.plugins.live:live:zip"
+["revision-history"]="com.escenic.plugins.revision-history:revision-history:zip"
+)
+
+declare -A maven_coordinates=(
+["assemblytool"]="com.escenic.tools:assemblytool:jar"
+["engine"]="com.escenic:engine-dist:zip:bin
+com.escenic:engine:zip"
+["analysis-engine"]="com.escenic.plugins.analysis:analysis-engine:zip
+com.escenic.plugins.analysis-engine:analysis-engine:zip"
+["changelog"]="com.escenic.changelog:changelog:zip"
+["dashboard"]="com.escenic.plugins.dashboard:dashboard:zip"
+["forum"]="com.escenic.plugins.forum:forum:zip"
+["geocode"]="com.escenic.plugins.geocode:geocode-dist:zip
+com.escenic.plugins.geocode:geocode:zip"
+["lucy"]="com.escenic.plugins.lucy:lucy-dist:zip
+com.escenic.plugins.lucy:lucy:zip"
+["menu-editor"]="com.escenic.plugins.menu-editor:menu-editor-dist:zip
+com.escenic.plugins.menu-editor:menu-editor:zip"
+["mobile-expansion"]="com.escenic.plugins.mobile-expansion:mobile-expansion-dist:zip"
+["newsroom"]="com.escenic.plugins.newsroom:newsroom-dist:zip
+com.escenic.plugins.newsroom:newsroom:zip"
+["newsgate"]="com.escenic.plugins.newsgate:newsgate:zip"
+["note"]="com.escenic.plugins.note:note:zip"
+["poll"]="com.escenic.plugins.poll:poll:zip"
+["reporter"]="com.escenic.plugins.reporter:reporter:zip"
+["section-feed"]="com.escenic.plugins.section-feed:section-feed-dist:zip
+com.escenic.plugins.section-feed:section-feed:zip"
+["semantic-cxense"]="com.escenic.plugins.semantic:semantic-cxense-dist:zip
+com.escenic.plugins.semantic:semantic-cxense:zip"
+["snapshot"]="com.escenic.plugins.snapshot:snapshot-dist:zip
+com.escenic.plugins.snapshot:snapshot:zip"
+["community-engine"]="com.escenic.plugins.community:community-engine:zip"
+["online-graphics"]="com.escenic.plugins.online-graphics:online-graphics:zip"
+["video"]="com.escenic.plugins.video:video:zip"
+["xml-editor"]="com.escenic.plugins.xml-editor:xml-editor-dist:zip
+com.escenic.plugins.xml-editor:xml-editor:zip"
+["vcpeditor"]="com.escenic.plugins.vcpeditor:vcpeditor-dist:zip
+com.escenic.plugins.vcpeditor:vcpeditor:zip"
+["widget-framework-core"]="com.escenic.widget-framework:framework-dist:zip"
+["widget-framework"]="com.escenic.widget-framework:widget-framework:zip"
+["widget-framework-community"]="com.escenic.widget-framework:framework-community-dist:zip"
+["widget-framework-mobile"]="com.escenic.widget-framework:framework-mobile-dist:zip"
+["seo"]="com.escenic.plugins.seo:seo:zip"
+["mobile-studio"]="com.escenic.plugins.mobile-studio:mobile-studio:zip"
+["preview-editor"]="com.escenic.plugins.preview-editor:preview-editor:zip"
+["live-center"]="com.escenic.plugins.live-center:live-center:zip"
+["live"]="com.escenic.plugins.live:live:zip"
+["revision-history"]="com.escenic.plugins.revision-history:revision-history:zip"
+)
+
+# root folders for engine and plugin distributions
+builder_root_dir=/home/builder
+builder_engine_dir=$builder_root_dir/engine
+builder_plugins_dir=$builder_root_dir/plugins
+builder_assemblytool_dir=$builder_root_dir/assemblytool
+
+# local folders for engine and plugin distributions
+dists_root_dir=~/.dists
+dists_tmp_dir=$dists_root_dir/tmp
+
+# assemblytool root folders
+assemblytool_root_dir=~/assemblytool
+assemblytool_pub_dir=$assemblytool_root_dir/publications
+assemblytool_lib_dir=$assemblytool_root_dir/lib
+
+# user specific variables
+conf_file=~/.build/build.conf
+maven_conf_file=~/.m2/settings.xml
+project_src_dir=~/src
+project_src_master_dir=~/src_master
+project_assembly_dir=$project_src_dir/project-assembly
+project_assembly_target_dir=$project_assembly_dir/target
+release_dir=~/releases
+plugin_dir=~/plugins
+engine_root_dir=~/engine
+
+##
+function init
+{
+  init_failed=0
+  if [ ! -d $ece_scripts_home ]; then
+    init_failed=1
+    error_message="The directory for ece-scripts $ece_scripts_home does not exist, exiting!"
+  elif [ ! -e $ece_scripts_home/common-bashing.sh ]; then
+    init_failed=1
+    error_message="The script $ece_scripts_home/common-bashing.sh does not exist, exiting!"
+  elif [ ! -e $ece_scripts_home/common-io.sh ]; then
+    init_failed=1
+    error_message="The script $ece_scripts_home/common-io.sh does not exist, exiting!"
+  fi
+  if [ $init_failed -eq 0 ]; then
+    source $ece_scripts_home/common-bashing.sh
+    source $ece_scripts_home/common-io.sh
+  else
+    echo "$error_message"
+    exit 1
+  fi
+
+  # set pid
+  pid_file=~/ece-build.pid
+
+  if [ -e $pid_file ]; then
+    echo "Instance of $(basename $0) already running!"
+    exit 1
+  else
+    create_pid
+  fi
+  
+  trap common_bashing_exit_hook_with_log_recap EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
+}
+
+## To make your script call this whenever it does a controlled exit,
+## either by running through the script, call this hook.
+##
+## Put this line at the start of your script:
+##
+## trap common_bashing_exit_hooki_with_log_recap EXIT
+##
+## $@ :: signal
+function common_bashing_exit_hook_with_log_recap() {
+  local RETVAL=$?
+  if [ $RETVAL -ne 0 ]; then
+    print "BUILD FAILED/CANCELED"
+    print "### start tail review of $log ###"
+    tail -n 25 $log
+    print "### end of review ###"
+  fi
+  remove_pid
+  remove_lock
+  kill $$
+}
+
+### run
+## Runs the passed command & arguments and log both standard error and
+## standard out. If the command exits cleanly, the calling code will
+## continue, however, if the command you passed to run failed, the run
+## wrapper will log the call stack and exit in error.
+##
+## $@ :: list of strings making up your command. Everything except
+##       pipes can be bassed
+function run_wrapper() {
+  if [ ! -e $log ]; then
+    touch $log || {
+      echo "Couldn't create $log"
+      exit 1
+    }
+  fi
+
+  "${@}" 1>>$log 2>>$log
+  
+  local RETVAL=$?
+  if [ $RETVAL -ne 0 ]; then
+    print_and_log "The command <${@}> run as user $USER $(red FAILED)" \
+      "(the command exited with code ${code}), I'll exit now :-("
+    exit 1 
+  fi
+}
+
+##
+function fetch_configuration
+{
+  if [ -e $conf_file ]; then
+    source $conf_file
+  else
+    print_and_log "Your user is missing the $conf_file, exiting!"
+    exit 1
+  fi 
+}
+
+##
+function verify_configuration {
+  enforce_variable customer "Your $conf_file is missing the variable 'customer', exiting!"
+  if [ -z $src_control ]; then
+
+    log "No source control system chosen, I will assume that you are using subversion!"
+    src_control=svn
+
+  fi
+  if [[ "$src_control" = "svn" ]]; then 
+
+    enforce_variable svn_base "Your $conf_file is missing the variable 'svn_base', exiting!"
+    enforce_variable svn_user "Your $conf_file is missing the variable 'svn_user', exiting!"
+    
+    enforce_variable svn_password "Your $conf_file is missing the variable 'svn_password', exiting!"
+    
+    # append a / to svn_base if not present
+    [[ $svn_base != */ ]] && svn_base="$svn_base"/
+
+  elif [[ "$src_control" = "git" ]]; then
+    
+    if [ -z $git_protocol ]; then
+      log "No protocol chosen for git, I will assume that you are using https!"
+      git_protocol=https
+    fi
+    if [[ "$git_protocol" = "https" ]]; then
+      enforce_variable git_password "Your $conf_file is missing the variable 'git_password', exiting!"
+    elif [[ "$git_protocol" = "ssh" ]]; then
+      log "SSH protocol chosen for git, I will not use password based authentication!"
+    else
+      print_and_log "The chosen protocol $git_protocol for $src_control is NOT supported, exiting!"
+      exit 1
+    fi
+
+    enforce_variable git_base "Your $conf_file is missing the variable 'git_base', exiting!"
+    enforce_variable git_user "Your $conf_file is missing the variable 'git_user', exiting!"
+    if [[ ! -z $jira_base_url ]]; then
+      enforce_variable jira_user "Your $conf_file is missing the variable 'jira_user', exiting!"
+      enforce_variable jira_password "Your $conf_file is missing the variable 'jira_password', exiting!"
+    fi    
+  else
+    print_and_log "The chosen source control system $src_control is NOT supported, exiting!"
+    exit 1
+  fi
+}
+
+##
+function enforce_variable
+{
+  if [ ! -n "$(eval echo $`echo $1`)" ]; then
+    print_and_log "$2"
+    exit 1
+  fi
+}
+
+##
+function verify_dependencies
+{
+  for f in $dependencies
+  do
+    verify_command $f
+  done
+}
+
+##
+function verify_command {
+  command -v $1 >/dev/null 2>&1 || { print >&2 "I require $1 but it's not installed, exiting!"; exit 1; }
+}
+
+##
+function verify_java 
+{
+  if !dpkg-query -W sun-java6-jdk > /dev/null 2>&1; then
+    print_and_log "Required package sun-java6-jdk is not installed, exiting!"
+    exit 1
+  fi
+}
+
+##
+function get_user_options
+{
+  while getopts ":b:t:m:osrfcuV" opt; do
+    case $opt in
+      b)
+        svn_path=branches/${OPTARG}
+        branch_name="${OPTARG}"
+        release_label=branch-${OPTARG}
+        ;;
+      t)
+        svn_path=tags/${OPTARG}
+        release_label=tag-${OPTARG}
+        ;;
+      m)
+        package_for_machine=${OPTARG}
+        ;;
+      o)
+        maven_build_offline=1
+        maven_opts="-o $maven_opts"
+        print_and_log "Maven offline mode in effect!"
+        ;;
+      c)
+        clean_repo=1
+        print_and_log "Git repository clean up mode in effect!"
+        ;;
+      u)
+        update_repo=1
+        print_and_log "Git repository update  mode in effect!"
+        ;;
+      f)
+        do_force=1
+        print_and_log "Will use force to deploy configuration package for local deployment as requested"
+        ;;
+      r)
+        deploy_resources=1
+        print_and_log "Will update pulbication resources as requested"
+        ;;
+      V)
+        echo "Version:" $ece_scripts_version
+        exit 0
+        ;;
+      \?)
+        print "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+      :)
+        print "Option -$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+    esac
+  done
+}
+
+##
+function symlink_assemblytool
+{
+
+  # try and retrieve assemblytool version from project
+  for f in $project_pom_versions; do
+    if [[ $f == assemblytool=* ]]; then
+      local assemblytool_release=`echo $f | sed 's/=/-/g'`
+      local assemblytool_link_target=~/$assemblytool_release
+      break
+    fi
+  done
+
+  # differentiate between the old and new setup of assemblytool on builder
+  if [ -d $assemblytool_root_dir ] && [ ! -h $assemblytool_root_dir ]; then
+    # identify and migrate projects still using the old assemblytool setup
+    if [ -z $assemblytool_release ]; then
+      print_and_log "Your project should start using <escenic.assemblytool.version> in your pom.xml to be compatible with newer versions of Escenic Content Engine!"
+    else
+      run_wrapper rm -rf $assemblytool_root_dir
+    fi
+  elif [ -h $assemblytool_root_dir ]; then
+    # remove assemblytool symlink if present
+    run_wrapper rm -f $assemblytool_root_dir
+  fi
+
+  # standard execution with the assemblytool directory link not yet present
+  if [ ! -d $assemblytool_root_dir ]; then
+    # fail if assemblytool version has not been specified in pom.xml
+    if [ -z $assemblytool_release ]; then
+      print_and_log "You need to specify the <escenic.assemblytool.version> in your pom.xml, exiting!"
+      exit 1
+    elif [ ! -d $assemblytool_link_target ]; then
+      print_and_log "Your project requires $assemblytool_release, but it's not present in your home directory, I will try to fetch it from builder..."
+      if [ -d $builder_assemblytool_dir/$assemblytool_release ]; then
+        run_wrapper cp -r $builder_assemblytool_dir/$assemblytool_release ~/.
+        print_and_log "The request $assemblytool_release has been added to your users home directory."
+      else
+        print_and_log "The requested $assemblytool_release does not exist on the platform and needs to be added by an operator, exiting!"
+        exit 1
+      fi
+    fi
+    # create assemblytool symlink based on the request project version
+    run_wrapper ln -s $assemblytool_link_target $assemblytool_root_dir
+  fi
+}
+
+##
+function clean_assemblytool
+{
+  if [ -e "$assemblytool_pub_dir" ]; then
+    run_wrapper rm -f $assemblytool_pub_dir/*
+  fi
+  if [ ! -d $assemblytool_pub_dir ]; then
+    make_dir $assemblytool_pub_dir
+  fi
+  if [ -e "$assemblytool_lib_dir" ]; then
+    run_wrapper rm -f $assemblytool_lib_dir/*
+  fi
+  if [ ! -d $assemblytool_lib_dir ]; then
+    make_dir $assemblytool_lib_dir
+  fi
+}
+
+##
+function verify_assemblytool
+{
+  if [ ! -d $assemblytool_pub_dir ]; then
+    make_dir $assemblytool_pub_dir
+    print_and_log "$assemblytool_pub_dir did not exist so it has been created."
+  fi
+  if [ ! -d $assemblytool_lib_dir ]; then
+    make_dir $assemblytool_lib_dir
+    print_and_log "$assemblytool_lib_dir did not exist so it has been created."
+  fi
+  if [ ! -d $release_dir ]; then
+    make_dir $release_dir
+    run_wrapper chmod 775 $release_dir
+    print_and_log "$release_dir did not exist so it has been created."
+  fi
+}
+
+## 
+function clean_customer_home
+{
+  # clean up plugin directory if it exists
+  if [ -d "$plugin_dir" ]; then
+    run_wrapper rm -rf $plugin_dir/*
+  else
+    make_dir $plugin_dir
+  fi
+
+  # remove engine symlink if it exists 
+  if [ -h "$engine_root_dir" ]; then
+    run_wrapper rm -f $engine_root_dir
+  fi
+
+  # drop and recreate project src directory if it exists
+  if [ -d $project_src_dir  ] && ([ $clean_repo -eq 1 ] || [ $local_mode == false ]); then
+    print_and_log "Cleaning up project source directory $project_src_dir"
+    run_wrapper rm -rf $project_src_dir
+  fi
+}
+
+##
+function add_global_libs
+{
+local project_engine_version
+local engine_minor_version
+local engine_major_version
+local engine_version
+  for f in $project_pom_versions; do
+    if [[ $f == engine=* ]]; then
+      local project_engine_version=`echo $f | sed 's/=/-/g'`
+      print_and_log " project engine verion $project_engine_version"
+      break
+    fi
+  done
+ engine_major_version=`echo $project_engine_version | cut -d'-' -f2 | cut -d'.' -f1`
+ engine_minor_version=`echo $project_engine_version | cut -d'-' -f2 | cut -d'.' -f2`
+ engine_version=$engine_major_version$engine_minor_version
+ if [[  "$engine_version" -lt "57" ]] ; then
+  if [ -e $builder_root_dir/lib/java_memcached-release_2.0.1.jar ]; then
+    run_wrapper ln -s $builder_root_dir/lib/java_memcached-release_2.0.1.jar $assemblytool_lib_dir/
+  else
+    print_and_log "The global library $builder_root_dir/lib/java_memcached-release_2.0.1.jar is missing, exiting!"
+    exit 1
+  fi
+ else
+  print_and_log "Skip java_memcache jar cause it is distributed with $project_engine_version"
+ fi
+}
+
+##
+function svn_fail_early
+{
+  if [ -z "$svn_path" ]; then
+    svn_path=trunk
+    release_label=$svn_path
+    log "No svn path chosen, will use 'trunk'."
+  fi
+  run_wrapper svn checkout --quiet --non-interactive --depth empty --username $svn_user  --password $svn_password $svn_base$svn_path $project_src_dir/.
+}
+
+##
+function git_checkout
+{
+  release_label=trunk
+  if [[ "$git_protocol" = "https" ]]; then
+    local git_repo_uri="https://$git_user:$git_password@$git_base"
+  elif [[ "$git_protocol" = "ssh" ]]; then
+    local git_repo_uri="ssh://$git_user@$git_base"
+  else
+    print_and_log "The chosen protocol $git_protocol for git is NOT supported, exiting!"
+    exit 1
+  fi
+  # Check the remote branch exists for not
+  if [ -n "$branch_name" ]; then
+    local exists=$(git ls-remote --heads $git_repo_uri | grep $branch_name)
+    if [ -z "$exists" ]; then
+      print_and_log "The request branch $branch_name does NOT exist, exiting!"
+      exit 1
+    fi
+    release_label=branch-$branch_name
+    git_path="-b $branch_name"
+  fi
+
+  
+  if [ -d $project_src_master_dir ]; then
+    cd $project_src_master_dir
+    git show-ref --quiet --verify "refs/heads/master"
+    if [ ! $? = 0 ]; then
+      run_wrapper rm -rf $project_src_master_dir
+    fi
+  fi
+  if [ ! -d $project_src_master_dir ]; then
+    make_dir $project_src_master_dir
+    run_wrapper git clone $git_repo_uri $project_src_master_dir
+  fi
+  cd $project_src_master_dir
+  clean_up
+  run_wrapper git checkout master
+  update_repository
+  clean_up
+  # git checkout
+  if [ ! -d $project_src_dir ]; then
+    run_wrapper git clone $git_path $project_src_master_dir $project_src_dir
+  fi
+  if [ $local_mode == true ]; then
+    print_and_log "Switching to local mode. You can use -u to update and -c to clean your local git repo"
+    if [ $clean_repo -eq 1 ]; then
+      clean_up
+    fi
+    if [ -z "$branch_name" ]; then
+        branch_name=master
+        git_path="-b $branch_name"
+    fi
+    cd $project_src_dir
+    run_wrapper git remote update
+    run_wrapper git fetch
+    checkout_repo
+    if [ $update_repo -eq 1 ]; then
+      update_repository
+    fi
+  fi
+  revision=`git describe --always`
+  if [[ $revision = "" ]]; then
+    print_and_log "Failed to fetch current revision number, exiting!"
+    exit 1
+  fi
+
+  if [ -z "$branch_name" ]; then
+    git_path="-b $branch_name"
+  fi
+}
+## Git update repository 
+function update_repository
+{
+  run_wrapper git remote update
+  run_wrapper git fetch
+  checkout_repo
+  run_wrapper git pull
+}
+
+function checkout_repo
+{
+  if [ -n "$branch_name" ]; then
+    git show-ref --quiet --verify "refs/heads/$branch_name"
+    if [ $? = 0 ]; then
+    print_and_log "Checkout src directory to $branch_name"
+      run_wrapper git checkout $branch_name
+    else
+      run_wrapper git checkout -b $branch_name origin/$branch_name
+    fi
+  fi
+}
+
+
+## Git local repository clean up
+function clean_up
+{
+  run_wrapper git clean -d -x -f
+  run_wrapper git checkout * 
+}
+
+##
+function project_verify_assembly
+{
+  if [[ "$src_control" = "svn" ]]; then
+    run_wrapper svn update --quiet --non-interactive --set-depth infinity $project_src_dir/pom.xml $project_src_dir/project-assembly 
+  fi
+  if [ ! -d $project_assembly_dir ]; then
+    print_and_log "Your project does not contain the project-assembly module and is thereby not certified to use the ece-builder, exiting!"
+    exit 1
+  elif [ ! -e $project_assembly_dir/src/main/assembly/assembly.xml ]; then
+    print_and_log "Your project does not have a $project_assembly_dir/src/main/assembly/assembly.xml and is thereby not certified to use the ece-builder, exiting!"
+    exit 1
+  fi
+}
+
+##
+function retrieve_project_pom_versions
+{
+  if [ -e $project_src_dir/pom.xml ];then
+    project_pom_versions=`xml2 < $project_src_dir/pom.xml | grep '^/project/properties/escenic\.' | sed -n -e 's,.*properties/escenic\.,,' -e 's,\.version,,p'`
+    for f in $project_pom_versions; do
+      for g in $escenic_identifiers; do
+        if [[ $f == $g=* ]]; then
+          project_distributions+=(["$g"]=${f//*=})
+        fi
+      done
+    done
+  else
+    print_and_log "Your projects pom.xml is missing, exiting!"
+    exit 1
+  fi
+}
+
+##
+function mvn_coordinate_to_url
+{
+  # url to be returned
+  local url
+
+  # coordinate is e.g. com.escenic:engine-dist:zip:bin:5.5.2.137014
+  # or com.escenic.plugins.forum:forum:zip:3.2.1.132293
+  # groupid:artifactid:[packaging:[classifier:]]version
+  local coordinate=$1
+
+  # local variables parsed from coordinate
+  local groupid
+  local artifactid
+  local version
+  local packaging
+  local classifier
+
+  # chomp groupid: --> artifactid:[packaging:[classifier:]]version
+  groupid=${coordinate/:*}
+  coordinate=${coordinate#${groupid}:}
+
+  # chomp artifactid: --> [packaging:[classifier:]]version
+  artifactid=${coordinate/:*}
+  coordinate=${coordinate#${artifactid}:}
+
+  # chomp version --> [packaging[:classifier]]
+  version=${coordinate/*:}
+  coordinate=${coordinate%${version}}
+  coordinate=${coordinate%:}
+
+  classifier=
+  packaging=
+
+  if [ ! -z "$coordinate" ] ; then
+    # chomp packaging --> [classifier]
+    packaging=${coordinate/:*}
+    coordinate=${coordinate#${packaging}}
+    coordinate=${coordinate#:}
+  fi
+
+  if [ ! -z "$coordinate" ] ; then
+    # chomp classifier
+    classifier=$coordinate
+    coordinate=
+  fi
+
+  echo "${groupid//.//}/${artifactid}/$version/${artifactid}-${version}${classifier:+-${classifier}}.$packaging"
+
+}
+
+##
+function mvn_coordinate_to_rest_call
+{
+  # url to be returned
+  local url
+
+  # coordinate is e.g. com.escenic:engine-dist:zip:bin:trunk-SNAPSHOT
+  # or com.escenic.plugins.forum:forum:zip:trunk-SNAPSHOT
+  # groupid:artifactid:[packaging:[classifier:]]version
+  local coordinate=$1
+
+  # local variables parsed from coordinate
+  local groupid
+  local artifactid
+  local version
+  local packaging
+  local classifier
+
+  # chomp groupid: --> artifactid:[packaging:[classifier:]]version
+  groupid=${coordinate/:*}
+  coordinate=${coordinate#${groupid}:}
+
+  # chomp artifactid: --> [packaging:[classifier:]]version
+  artifactid=${coordinate/:*}
+  coordinate=${coordinate#${artifactid}:}
+
+  # chomp version --> [packaging[:classifier]]
+  version=${coordinate/*:}
+  coordinate=${coordinate%${version}}
+  coordinate=${coordinate%:}
+
+  classifier=
+  packaging=
+
+  if [ ! -z "$coordinate" ] ; then
+    # chomp packaging --> [classifier]
+    packaging=${coordinate/:*}
+    coordinate=${coordinate#${packaging}}
+    coordinate=${coordinate#:}
+  fi
+
+  if [ ! -z "$coordinate" ] ; then
+    # chomp classifier
+    classifier=$coordinate
+    coordinate=
+  fi
+
+  echo "&g=${groupid}&a=${artifactid}&v=$version&a=${artifactid}&e=${packaging}${classifier:+&c=${classifier}}"
+}
+
+##
+function set_java_home
+{
+  project_java_version=`xml2 < $project_src_dir/pom.xml | grep '^/project/build/plugins/plugin/configuration/target=' | sed -n -e 's,.*project/build/plugins/plugin/configuration/target=,,p'`
+  if [ -z $project_java_version ]; then
+    print_and_log "You need to specify the java taget version for the maven-compiler-plugin in your pom.xml as this is used by this script to determine which java to use, exiting!"
+    exit 1
+  elif [[ $project_java_version == "1.6" ]]; then
+    if [ -d $java_6_sun ]; then
+      export JAVA_HOME=$java_6_sun
+    else
+      print_and_log "The expected home directory, $java_6_sun, for you requested java version does not exist on the platform and needs to be added, exiting!"
+      exit 1
+    fi
+  elif [[ $project_java_version == "1.7" ]]; then
+    if [ -d $java_7_oracle ]; then
+      export JAVA_HOME=$java_7_oracle
+    else
+      print_and_log "The expected home directory, $java_7_oracle, for you requested java version does not exist on the platform and needs to be added, exiting!"
+      exit 1
+    fi
+  elif [[ $project_java_version == "1.8" ]]; then
+    if [ -d $java_8_oracle ]; then
+      export JAVA_HOME=$java_8_oracle
+    else
+      print_and_log "The expected home directory, $java_8_oracle, for you requested java version does not exist on the platform and needs to be added, exiting!"
+      exit 1
+    fi
+  else
+    print_and_log "The requested java version $project_java_version is not supported or has been specified using an incorrect format, exiting!"
+  fi
+}
+
+##
+function fetch_distributions
+{
+  # create $dists_root_dir if needed
+  if [ ! -d $dists_root_dir ]; then
+    run_wrapper mkdir -p $dists_root_dir
+  fi
+  
+  # iterate over all distributions in the project
+  for f in ${!project_distributions[@]};
+  do
+
+    # extract the version from the list of project distributions
+    local dist_version=${project_distributions["$f"]}
+    
+    # double check that the version isn't null
+    if [[ ! $dist_version = "" ]]; then
+
+      # remove old trunk-SNAPSHOT if present
+      if [ "$dist_version" == "trunk-SNAPSHOT" ] || [ "$dist_version" = "develop-SNAPSHOT" ]; then
+        if [ -d $dists_root_dir/$f-$dist_version ]; then
+          rm -rf $dists_root_dir/$f-$dist_version
+        fi
+      fi
+
+      # check if the distribution is already present in the local dists directory
+      if [ ! -d $dists_root_dir/$f-$dist_version ]; then
+
+        # create a url from the maven coordinate of the distribution
+        local artifact_pattern=$f
+        local artifact_version=$dist_version
+        local target_path=$dists_root_dir
+       
+         if [ "$dist_version" == "trunk-SNAPSHOT" ] || [ "$dist_version" = "develop-SNAPSHOT" ]; then
+          for h in ${maven_snapshot_coordinates["$f"]};
+          do
+            local dist_path=`mvn_coordinate_to_rest_call ${h}:$dist_version`
+            request_snapshot $dist_path
+          done
+        else
+          for h in ${maven_coordinates["$f"]};
+          do
+            local dist_path=`mvn_coordinate_to_url ${h}:$dist_version`
+            request_distribution $dist_path
+          done
+        fi 
+
+        if [ -e $dists_tmp_dir/distribution.zip ]; then
+          run_wrapper cd $dists_tmp_dir
+          run_wrapper unzip -q $dists_tmp_dir/distribution.zip
+          run_wrapper rm -f $dists_tmp_dir/distribution.zip
+
+          # analyze unpacked resource
+          for g in $(ls -d $dists_tmp_dir/*);
+          do
+            local skip_artifact=0
+            local artifact_filename=$(basename "$g")
+            echo "$artifact_filename" | grep '[0-9]' | grep -q "$artifact_pattern"
+            if [ $? = 0 ]; then
+              log "The resulting directory contains numbers and \"$artifact_pattern\" so it is most likely valid."
+            else
+              echo "$artifact_filename" | grep -q "$artifact_pattern"
+              if [ $? = 0 ]; then
+                log "$artifact_path was identified as $artifact_pattern, but failed the naming convention test after being unpacked, trying to recover..."
+                if [ ! -d $dists_root_dir/$artifact_pattern-$dist_version ]; then
+                  log "$artifact_path was recovered as a $artifact_pattern and will be added as $artifact_pattern-$dist_version"
+                else
+                  log "$artifact_path was identified as $artifact_pattern, but $artifact_pattern-$dist_version already exists so it will not be added."
+                  skip_artifact=1
+                fi
+              else
+                log "$g is not a valid artifact, ignoring."
+                skip_artifact=1
+              fi
+            fi
+            if [ $skip_artifact -eq 0 ]; then
+              run_wrapper mv $g $target_path/$artifact_pattern-$artifact_version
+              log "Distribution $artifact_pattern-$artifact_version sucessfully added."
+            fi
+          done
+        else
+          log "Download failed! - trying to fallback to old school..."
+          if [ -d $builder_plugins_dir/$artifact_pattern-$artifact_version ]; then
+            run_wrapper cp -R $builder_plugins_dir/$artifact_pattern-$artifact_version $target_path/$artifact_pattern-$artifact_version
+            log "Distribution $artifact_pattern-$artifact_version sucessfully added."
+          elif [ -d $builder_engine_dir/$artifact_pattern-$artifact_version ]; then
+            run_wrapper cp -R $builder_engine_dir/$artifact_pattern-$artifact_version $target_path/$artifact_pattern-$artifact_version
+            log "Distribution $artifact_pattern-$artifact_version sucessfully added."
+          else
+            print_and_log "Download failed! The distribution named $f with relative path - $dist_path could not be found in any of the repositories. This must be handled by an operator."
+            exit 1 
+          fi
+        fi
+      fi
+    fi
+  done
+}
+
+##
+function request_distribution
+{
+  local dist_path=$1
+  if [ ! -z $dist_path ]; then
+    distribution_exists http://maven.escenic.com/$dist_path
+    local ret_val=$?
+    if [ $ret_val -eq 0 ]; then
+      download_distribution http://maven.escenic.com/$dist_path
+    else
+      distribution_exists http://maven.escenic.com/unstable/$dist_path
+      local ret_val=$?
+      if [ $ret_val -eq 0 ]; then
+        download_distribution http://maven.escenic.com/unstable/$dist_path
+      fi      
+    fi
+  fi
+}
+
+##
+function request_snapshot
+{
+  local dist_path=$1
+  if [ ! -z $dist_path ]; then
+    distribution_exists http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
+    local ret_val=$?
+    if [ $ret_val -eq 0 ]; then
+      download_distribution http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
+    fi
+  fi
+}
+
+##
+function distribution_exists
+{
+  local url=$1
+  log "Trying to download - $url"
+  wget --spider -q --http-user $maven_user --http-password $maven_password $url
+}
+
+##
+function download_distribution
+{
+  # url to download
+  local url=$1
+
+  # clean up tmp directory
+  if [ -d $dists_tmp_dir ]; then
+    run_wrapper rm -rf $dists_tmp_dir
+  fi
+ 
+  # re-create tmp directory
+  run_wrapper mkdir -p $dists_tmp_dir
+
+  # download the distribution
+  run_wrapper wget -q --http-user $maven_user --http-password $maven_password $url -O $dists_tmp_dir/distribution.zip
+}
+
+##
+function print_unstable_distributions
+{
+  for f in ${!project_distributions[@]}; do
+    local coordinate=
+    if [ "${project_distributions["$f"]}" == "trunk-SNAPSHOT" ] || [ "${project_distributions["$f"]}" == "develop-SNAPSHOT" ]; then
+      for g in ${maven_snapshot_coordinates["$f"]}
+      do
+        local dist_path=`mvn_coordinate_to_rest_call ${g}:${project_distributions["$f"]}`
+        distribution_exists http://repo.dev.escenic.com/service/local/artifact/maven/redirect?r=trunk$dist_path
+        if [ $? -eq 0 ]; then
+          print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+          local coordinate=$g
+        else
+          log "WARNING - $f version ${project_distributions["$f"]} is not available in the maven repository! This might cause unpredictable results in your server installations!"
+        fi
+      done
+    else
+      for g in ${maven_coordinates["$f"]}
+      do
+        local dist_path=`mvn_coordinate_to_url ${g}:${project_distributions["$f"]}`
+        if [ ! -z $dist_path ]; then
+          distribution_exists http://maven.escenic.com/$dist_path
+          if [ $? -ne 0 ]; then
+            distribution_exists http://maven.escenic.com/unstable/$dist_path
+            if [ $? -eq 0 ]; then
+              print_and_log "WARNING - $f version ${project_distributions["$f"]} is not supported!"
+              local coordinate=$g
+            else
+              log "WARNING - $f version ${project_distributions["$f"]} is not available in the maven repository! This might cause unpredictable results in your server installations!"
+            fi
+          else
+            local coordinate=$g
+          fi
+        fi
+      done
+    fi
+    if [[ $coordinate = "" ]]; then
+      local coordinate=$g
+    fi
+    project_maven_coordinates+="${coordinate}:${project_distributions["$f"]}"$'\n'
+  done
+}
+
+##
+function symlink_ece_components
+{
+  for f in ${!project_distributions[@]};
+  do
+    version=${project_distributions["$f"]}
+    if [[ ! $version = "" ]]; then
+      if [[ "$f" = "engine" ]]; then
+        run_wrapper ln -s $dists_root_dir/$f-$version $engine_root_dir 
+      else
+        run_wrapper ln -s $dists_root_dir/$f-$version $plugin_dir/$f 
+      fi
+    fi
+  done
+}
+
+##
+function verify_requested_versions
+{
+  verification_failed=0
+  if [ ! -d $engine_root_dir ]; then
+    broken_link=`readlink $engine_root_dir`
+    print_and_log "The requested engine $broken_link does not exist on the platform and must be added!"
+    verification_failed=1
+  fi
+  for f in $(ls -d $plugin_dir/*);
+  do
+    if [ ! -d $f ]; then
+      broken_link=`readlink $f`
+      print_and_log "The requested plugin $broken_link does not exist on the platform and must be added!"
+      verification_failed=1
+    fi
+  done
+  if [ $verification_failed -eq 1 ]; then
+    print_and_log "You have broken symlinks indicating that some requested version(s) of engine and/or plugins are missing!"
+    print_and_log "BUILD FAILED!"
+    exit 1
+  fi
+}
+
+##
+function verify_maven_proxy
+{
+  if [ -e $maven_conf_file ]; then
+    maven_credentials=`xml2 < $maven_conf_file | grep '^/settings/servers'`
+    stable=vizrt-repo
+    process=0
+    for f in $maven_credentials; do
+      if [[ "$f" == *id=* ]]; then
+        local server=`echo $f | sed -n -e 's,.*id=,,p'`
+        if [[ "$server" == "$stable" ]]; then
+          process=1
+        else
+          process=0
+        fi
+      elif [ $process -eq 1 ]; then
+        if [[ "$f" == *username=* ]]; then
+          maven_user=`echo $f | sed -n -e 's,.*username=,,p'`
+        elif [[ "$f" == *password=* ]]; then
+          maven_password=`echo $f | sed -n -e 's,.*password=,,p'`
+        fi
+      fi
+    done
+    if [[ $maven_user = "" ]] || [[ $maven_password = "" ]]; then
+      print_and_log "Your $maven_conf_file is missing the username and/or the password for the maven proxy, exiting!"
+      exit 1
+    else
+      if [ $maven_build_offline -eq 1 ]; then
+        print_and_log "Skipping maven proxy verification as you've chosen offline mode!"
+      else
+        wget --http-user $maven_user --http-password $maven_password http://maven.escenic.com -qO /dev/null
+        RETVAL=$?
+        if [ $RETVAL -ne 0 ]; then
+          print_and_log "Your user can't reach http://maven.escenic.com, exiting!"
+          exit 1
+        fi
+      fi
+    fi
+  else
+    print_and_log "Your user does not have a ~/.m2/settings.xml, exiting!"
+    exit 1
+  fi
+}
+
+## 
+function svn_checkout
+{
+  run_wrapper svn checkout --quiet --non-interactive --depth infinity --username $svn_user --password $svn_password $svn_base$svn_path $project_src_dir/.
+  revision=`svn info $project_src_dir | grep -i Revision | awk '{print $2}'`
+  if [[ $revision = "" ]]; then
+    print_and_log "Failed to fetch current revision number, exiting!"
+    exit 1
+  fi
+}
+
+##
+function maven_build
+{
+  run_wrapper cd $project_src_dir
+  run_wrapper mvn $maven_opts
+}
+
+##
+function symlink_project_assembly
+{
+  run_wrapper cd $project_assembly_target_dir
+  run_wrapper unzip -q project-assembly.zip
+  # global classpath
+  if [ -e "$project_assembly_target_dir/lib" ]; then
+    for f in $(ls -d $project_assembly_target_dir/lib/* | grep .jar);
+    do 
+      run_wrapper ln -s $f $assemblytool_lib_dir;
+    done
+  fi
+  # publications
+  if [ -e "$project_assembly_target_dir/wars" ]; then
+    for f in $(ls -d $project_assembly_target_dir/wars/* | grep .war);
+    do
+      run_wrapper ln -s $f $assemblytool_pub_dir;
+    done
+  fi
+  # custom plugins
+  if [ -e "$project_assembly_target_dir/plugins" ]; then
+    for f in $(ls -d $project_assembly_target_dir/plugins/* | grep .zip);
+    do
+      run_wrapper unzip $f -d $plugin_dir
+    done
+  fi
+}
+
+##
+function generate_publication_properties
+{
+  for f in $(ls $assemblytool_pub_dir | grep .war)
+  do
+    echo "source-war:$f
+context-root:/${f%.war}" > $assemblytool_pub_dir/${f%.war}.properties
+  done
+  if [ -d $plugin_dir/dashboard ]; then
+    log "Adding an assembly descriptor for Dashboard ..."
+    echo "source-war: ../../plugins/dashboard/wars/dashboard-webapp.war
+context-root: /dashboard" > $assemblytool_pub_dir/dashboard.properties
+  fi
+  if [ -d $plugin_dir/newsgate ]; then
+    log "Adding an assembly descriptor for Newsgate Webservice ..."
+    if [ -e $plugin_dir/newsgate/webapps/newsgate-webservice.war ]; then
+      echo "source-war: ../../plugins/newsgate/webapps/newsgate-webservice.war
+context-root: /newsgate-webservice" > $assemblytool_pub_dir/newsgate-webservice.properties
+    else
+      echo "source-war: ../../plugins/newsgate/wars/newsgate-webservice.war
+context-root: /newsgate-webservice" > $assemblytool_pub_dir/newsgate-webservice.properties
+    fi
+  fi
+}
+
+##
+function ant_build
+{
+  run_wrapper cd $assemblytool_root_dir
+  run_wrapper ant -q clean ear -DskipRedundancyCheck=true
+}
+
+##
+function add_distributions_to_ear
+{
+  if [ -e $assemblytool_root_dir/dist/engine.ear ]; then
+    run_wrapper mkdir $assemblytool_root_dir/dist/META-INF
+    # iterate over all known distribution identifiers
+    for f in $project_maven_coordinates
+    do
+      echo "$f" >> $assemblytool_root_dir/dist/META-INF/escenic-distributions.txt
+    done
+    run_wrapper cd $assemblytool_root_dir/dist
+    run_wrapper zip -u $assemblytool_root_dir/dist/engine.ear META-INF/escenic-distributions.txt
+  else
+    print_and_log "Assemblytool finished, but the .ear is missing, exiting!"
+    exit 1
+  fi
+}
+
+##
+function publish_ear 
+{
+  resulting_ear=$customer-$release_label-rev$revision-$build_date.ear
+  if [ -e $assemblytool_root_dir/dist/engine.ear ]; then 
+    run_wrapper cp $assemblytool_root_dir/dist/engine.ear $release_dir/$resulting_ear
+    
+    # remove old style latest link
+    if [ -e $release_dir/latest ]; then
+      run_wrapper rm -f $release_dir/latest
+    fi
+    
+    # add new latest.ear link
+    run_wrapper ln -fs $release_dir/$resulting_ear $release_dir/$customer-$release_label-latest.ear
+  else
+    print_and_log "I'm done, but the .ear is still missing, exiting!"
+    exit 1
+  fi
+}
+
+## Creates deb and rpm package for machines specified in 
+## <project>/server-admin directory.
+##
+## This function takes two parameters. It can be called like below
+## make_conf_package <machine> <project_configuration_directory>
+##  
+function make_conf_package() {
+   local machine=$1
+   local conf_dir=$2
+    # work dir
+    local target_dir=$(mktemp -d)
+
+    # /etc/hosts
+    mkdir -p $target_dir/etc
+    local hosts_output="$(get_etc_hosts_for_machine ${machine} $conf_dir)"
+    if [ ! -z "$hosts_output" ]; then
+      echo "$hosts_output" > $target_dir/etc/hosts
+    fi
+
+    # copy common and machine specific files
+    for el in common ${machine}; do
+      if [[ -d $conf_dir/$el && \
+        $(find $conf_dir/$el -maxdepth 1 | egrep -v ".git|.svn" | wc -l) -gt 1 ]]; then
+        run_wrapper cp -rf $conf_dir/$el/* $target_dir/
+      fi
+    done
+
+    # delete those pesky .svn folders
+    find $target_dir -name .svn -type d | xargs rm -rf
+
+    # add the truth
+    local file=$project_src_dir/doc/vosa-handbook/create-handbook.conf
+    if [ -e $file ]; then
+      local dir=$target_dir/etc/vizrt
+      run_wrapper mkdir -p $dir
+      run_wrapper cp $file $dir/truth.conf
+    fi
+
+    # mark all files as conf files
+    local conffiles_file=$target_dir/DEBIAN/conffiles
+    run_wrapper mkdir -p $(dirname $conffiles_file)
+    find $target_dir -type f | \
+      egrep "etc|conf" | \
+      egrep -v DEBIAN | \
+      sed "s#$target_dir##" \
+      > $conffiles_file
+
+    # debian control file
+    local control_file=$target_dir/DEBIAN/control
+    local package_name=vosa-conf-${machine}
+    local package_version=1-${customer}-${release_label}-r${revision}
+    cat > $control_file <<EOF
+Package: $package_name
+Version: $package_version
+Section: base
+Priority: optional
+Architecture: all
+Maintainer: ${package_maintainer_name-VizrtOnline} <${package_maintainer_email-vizrt.online@vizrt.com}>
+Description: Server configuration for ${machine}
+  This package is generated by the Vizrt SaaS script $(basename $0)
+  on $HOSTNAME based on the contents of the $(basename $conf_dir)
+  directory in the ${USER} user's Version Control System.
+EOF
+
+    # changelogs
+    local package_changelog_dir=${target_dir}/usr/share/doc/vizrt/$package_name
+    make_dir $package_changelog_dir
+    if [[ "$src_control" = "svn" ]]; then
+         local svn_base_dir=$(lowercase $(basename $svn_base))
+         local change_log_dir=$HOME/.generate-changelog/${svn_base_dir}/${svn_path}
+    elif [[ "$src_control" = "git" ]]; then
+         # get git repo's name
+         local git_base_dir=$(lowercase $(basename $git_base))
+         # get git repo's branch name
+         local git_path_dir=$branch_name
+         local change_log_dir=$HOME/.generate-git-changelog/${git_base_dir}/${git_path_dir}
+    fi
+
+    if [ -d  $change_log_dir ]; then
+      run_wrapper cp ${change_log_dir}/* $package_changelog_dir
+    fi
+
+    # build the package
+    if [ ! -x /usr/bin/dpkg-deb ]; then
+      print_and_log "You must have dpkg-deb installed to create packages :-("
+      return
+    fi
+
+    run_wrapper dpkg-deb --build $target_dir
+    mv ${target_dir}.deb $target_dir/${package_name}-${package_version}.deb
+
+    if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
+      (
+        run_wrapper cd $target_dir
+        run_wrapper fakeroot alien --keep-version --to-rpm --scripts \
+          ${package_name}-${package_version}.deb
+      )
+    else
+      print_and_log "You must have 'alien' and 'fakeroot' installed to create RPMs"
+    fi
+
+    # move the machine's DEB and RPM packges to the release directory
+    run_wrapper mv $target_dir/*.{deb,rpm} $release_dir/
+    local release_version=${package_name}-${package_version}
+    # adding latest links for conf packages
+    run_wrapper ln -sf $release_dir/$release_version.deb $release_dir/vosa-conf-${machine}-1-${customer}-${release_label}-latest.deb
+    run_wrapper ln -sf $release_dir/vosa-conf-${machine}-1_${customer//-/_}_${release_label//-/_}-r${revision}.noarch.rpm \
+                       $release_dir/vosa-conf-${machine}-1_${customer//-/_}_${release_label//-/_}-latest.noarch.rpm
+
+    # remove work directory
+    run_wrapper rm -rf $target_dir
+    
+    #Let´s print the package links 
+}
+## This function prints the debian package links for the given machine
+## Call print_deb_package_link <machine>
+function print_deb_package_link() {
+  local machine=$1
+  print_and_log "--- .deb configuration package for $machine machine  ---"
+  print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-1-${customer}-${release_label}-r${revision}.deb"
+}
+## This function prints the rpm package links for the given machine
+## Call print_rpm_package_link <machine>
+function print_rpm_package_link() {
+  local machine=$1
+  print_and_log "--- .rpm configuration package for $machine machine  ---"
+  print_and_log "$ear_base_url/$customer/releases/vosa-conf-${machine}-1_${customer//-/_}_${release_label//-/_}-r${revision}.noarch.rpm"
+}
+
+## creates DEB and RPM packages with the server configuration for all
+## of the machines available in <project>/server-admin/<machine
+## instance>
+##
+## Common files are taken from <project>/server-admin/common.
+##
+## If <project>/server-admin doesn't exist, the method simply returns.
+function create_machine_conf_packages() {
+  local conf_dir=$project_src_dir/server-admin
+  
+  if [ ! -d $conf_dir ]; then
+    return
+  fi
+  
+ # As both control run same function
+ #if [[ "$src_control" = svn ]]; then
+    #generate_new_changelog
+ #elif [[ "$src_control" = git ]]; then
+    #generate_new_changelog
+ #fi
+ if [ $generate_changelog -eq 1 ]; then
+    generate_new_changelog
+ fi
+  local machine_list=$(
+    find $conf_dir -maxdepth 1 -type d | \
+      egrep -v "common|.svn" | \
+      sed -e "s#$conf_dir##g" -e "s#^/##g" | \
+      sort | \
+      grep [a-z]
+  )
+  if [ -z "$machine_list" ]; then
+    print_and_log "Your project does not have any folders, except maybe common, under server-admin so no configuration packages will be generated."
+    return
+  fi
+  if [ -z "$package_for_machine" ] || [ "$package_for_machine" == "all" ]; then
+    print_and_log "The configuration package_for_machine is Empty or set to all!"
+    print_and_log "I will build configuration packages for all the machines."
+   for machine in $machine_list; do
+      #create the package for machine
+      make_conf_package $machine $conf_dir
+      #first print the deb package link for machine
+      print_deb_package_link $machine
+      #second print the rpm package link for the machine
+      print_rpm_package_link $machine
+    done
+  elif [[ "$machine_list" =~ "$package_for_machine" ]];then
+    make_conf_package $package_for_machine $conf_dir
+    print_deb_package_link $package_for_machine
+    print_rpm_package_link $package_for_machine
+  else 
+    print_and_log "We have not found any conf directory for the desired machine `$package_for_machine` under $conf_dir ! Please check the machine name is correct"
+    print_and_log "I will not generate any configuration packages then! Please set the package_for_machine correclty!"
+  fi
+}
+
+##
+function generate_new_changelog() {
+  print_and_log "Generating change log for revision $revision" ...
+  (
+    cd ${project_src_dir}
+    local previous_revision=PREV
+    
+    if [[ "$src_control" = "svn" ]]; then
+    previous_revision=$(
+      ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
+        grep -v latest | \
+        sed 's/.*r\([0-9]*\).deb/\1/g' | \
+        sort | \
+        uniq | \
+        tail -1
+    )
+    elif [[ "$src_control" = "git" ]]; then
+    previous_revision=$(
+      ls $release_dir/vosa-conf-*-${release_label}-*.deb 2>/dev/null | \
+        grep -v latest | \
+        sort | \
+        uniq | \
+        tail -1 | \
+        sed 's/.*r\([0-9a-z]*\).deb/\1/g'
+    )
+    fi
+
+    # in case we don't have any previous builds, we don't pass
+    # anything in the from parameters.
+    local from_option=""
+    if [ -n "${previous_revision}" ]; then
+      from_option="--from $previous_revision"
+    fi  
+
+    if [[ "$src_control" = "svn" ]]; then 
+    	run_wrapper generate-changelog \
+    	  --project $(basename $svn_base) \
+    	  --user $svn_user \
+    	  --password $svn_password \
+    	  ${from_option} \
+    	  --to $revision
+    elif [[ "$src_control" = "git" ]]; then
+        # --project git repo name and branch
+	if [[ ! -z $jira_base_url ]]; then 
+    	run_wrapper generate-git-changelog \
+    	  --project $(basename $git_base)/$branch_name \
+    	  --user $jira_user \
+          --password $jira_password \
+    	  ${from_option} \
+    	  --to $revision \
+          --jirabaseurl $jira_base_url
+	else
+    	run_wrapper generate-git-changelog \
+    	  --project $(basename $git_base)/$branch_name \
+    	  ${from_option} \
+    	  --to $revision 
+	fi
+    fi    
+
+  )
+}
+
+## Generates the /etc/hosts file for the given machine.
+## 
+## $1 :: the machine name
+## $2 :: the server-admin directory
+function get_etc_hosts_for_machine() {
+  if [ -z "$1" -o -z "$2" ]; then
+    return
+  fi
+  
+  local instance=$1
+  local files_dir=$2
+  
+  if [ ! -d $files_dir/common/etc/hosts.d ]; then
+    return
+  fi
+
+  cat <<EOF
+########################################################################
+## /etc/hosts generated by $(basename $0) on ${HOSTNAME}
+########################################################################
+127.0.0.1	localhost
+127.0.1.1	${instance}
+
+## The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+########################################################################
+EOF
+
+  local find_dirs=${files_dir}/common/etc/hosts.d
+  if [ -d ${files_dir}/${instance}/etc/hosts.d ]; then
+    find_dirs="$find_dirs ${files_dir}/${instance}/etc/hosts.d"
+  fi
+  
+  find  \
+    $find_dirs \
+    -maxdepth 1 \
+    -type f | while read f; do
+    cat <<EOF
+## From ${HOSTNAME}:${f}
+$(cat $f)
+
+EOF
+  done
+}
+
+##
+function print_result
+{
+  print_and_log "BUILD SUCCESSFUL! @ $(date)"
+  if [ $skip_ear -eq 1 ]; then
+    print_and_log "Only configuration packages has been created in this release!"
+  else
+    print_and_log "You'll find the release here: $ear_base_url/$customer/releases/$resulting_ear"
+  fi
+}
+
+##
+function phase_startup {
+  init
+  print_and_log "Starting release creation! @ $(date)"
+  print_and_log "Additional output can be found in $log"
+  fetch_configuration
+  get_user_options "${@}"
+}
+
+##
+function phase_verify_platform
+{
+  verify_dependencies
+  verify_java
+}
+
+##
+function phase_verify_user
+{
+  verify_maven_proxy
+  verify_configuration
+}
+
+##
+function phase_clean_up
+{
+  clean_customer_home
+}
+
+##
+function phase_verify_project
+{
+  if [[ "$src_control" = "git" ]]; then
+    git_checkout
+  else
+    svn_fail_early
+  fi
+  project_verify_assembly
+  retrieve_project_pom_versions
+  print_unstable_distributions
+  set_java_home
+  symlink_assemblytool
+  clean_assemblytool
+  verify_assemblytool
+  fetch_distributions
+  symlink_ece_components
+  verify_requested_versions
+  add_global_libs
+}
+
+##
+function phase_release
+{
+  if [[ "$src_control" = "svn" ]]; then
+    svn_checkout
+  fi
+  if [ $skip_ear -eq 0 ]; then
+    maven_build
+    symlink_project_assembly
+    generate_publication_properties
+    ant_build
+    add_distributions_to_ear
+    publish_ear
+  else
+    print_and_log "Creation of .ear file skipped as requested!"    
+  fi
+  create_machine_conf_packages
+  print_result
+}
+## Used to deploy ear and conf packages after built
+function automatic_deploy(){
+local ear_deploy_opts="--ear"
+local conf_deploy_opts="--conf"
+  if [ $do_force -eq 1 ]; then
+     conf_deploy_opts="--force $conf_deploy_opts"
+  fi
+  if [ $deploy_resources -eq 1 ]; then
+     ear_deploy_opts="--update-publication-resources $ear_deploy_opts"
+  fi
+  if [ $deploy_ear == true ]; then
+    ece-deploy $ear_deploy_opts ~/releases/$resulting_ear
+  fi
+
+  if [ "$deploy_conf" == "deb" ]; then
+    ece-deploy $conf_deploy_opts ~/releases/vosa-conf-${package_for_machine}-1-${customer}-${release_label}-latest.deb
+  fi
+
+  if [ "$deploy_conf" == "rpm" ]; then
+    ece-deploy $conf_deploy_opts ~/releases/vosa-conf-${package_for_machine}-1_${customer}_${release_label}-latest.noarch.rpm
+  fi
+}
+
+function phase_deploy() {
+  if [ "$local_mode" == "true" ] && [ "$auto_deploy" == "true" ]; then
+    automatic_deploy
+  fi
+}
+
+##
+function phase_shutdown
+{
+  :
+}
+
+## ece-build execution
+phase_startup "${@}"
+phase_verify_platform
+phase_verify_user
+phase_clean_up
+phase_verify_project
+phase_release
+phase_deploy
+phase_shutdown

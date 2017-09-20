@@ -1,0 +1,15 @@
+* Glossary
+
+# Tip 1: if you use Emacs to edit this file, you can hit C-c C-c to
+# re-format/structure the table.
+# 
+# Tip 2: if you use Emacs to edit this file, you can get alphabetical
+# sorting of the entries in this table if you mark the entries and
+# then do: M-x sort-lines
+
+|----------+----------------------------------------------------------------------------------------------|
+| Term     | Explanation                                                                                  |
+|----------+----------------------------------------------------------------------------------------------|
+| Habitat  | Collection of machines which makes up an environment, such as testing, staging & production. |
+| Trending | Seeing the behavioural statistics of a server over longer amount of time                     |
+|----------+----------------------------------------------------------------------------------------------|

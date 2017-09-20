@@ -1,0 +1,418 @@
+#! /usr/bin/env bash
+
+## Runs one VOSA import job one time. The output is XML suitable for
+## the standard Escenic Syndication XML import job.
+##
+## The script can also create an import job from an import job archive
+##
+##  See /usr/share/doc/vizrt/vosa-handbook/import-jobs.org for more
+##  details on the structures this command operates on.
+
+function bootstrap_thyself() {
+  # first, try to be nice, then check the standard location
+  local dir=$(dirname $0)/../share/escenic/ece-scripts
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
+
+  local common_libraries="
+    common-bashing.sh
+    common-ece.sh
+    common-io.sh
+    common-os.sh
+  "
+
+  for el in $common_libraries; do
+    source $dir/$el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+
+  for el in $dir/$(basename $0).d/*.sh; do
+    source $el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+}
+
+bootstrap_thyself
+
+# internal variables
+escenic_group=escenic
+escenic_spool_base_dir=/var/spool/escenic/import
+escenic_user=escenic
+job_name=""
+log_base_dir=/var/log/escenic
+ece_scripts_version="straight-from-github"
+
+log=$log_base_dir/$(basename $0).log
+nursery_base_dir=/etc/escenic/engine/common
+publication_name=""
+raw_spool_base_dir=/var/spool/escenic/raw
+raw_state_base_dir=/var/lib/escenic/raw
+raw_transformation_base_dir=/var/cache/escenic/import
+raw_transformed_base_dir=/var/backups/escenic/import
+transformers_base_dir=/usr/share/escenic/import
+arg_regex_of_file="^(.*)$"
+arg_write_url=""
+
+# available commands/operations for ece-import
+COMMAND_IMPORT=1
+COMMAND_CREATE_IMPORT_CONFIGURATION=2
+COMMAND_DOWNLOAD_RAW_DATA=3
+command=$COMMAND_IMPORT
+
+function get_user_input() {
+  local next_is_name=0
+  local next_is_publication=0
+  local next_is_import_archive=0
+  local next_is_nursery_base_dir=0
+  local next_is_escenic_user=0
+  local next_is_escenic_group=0
+  local next_is_user=0
+  local next_is_password=0
+  local next_is_uri=0
+  local next_is_http_proxy=0
+  local next_is_regex_of_file=0
+  local next_is_write_url=0
+
+  for el in $@; do
+    if [[ "$el" == "-n" || "$el" == "--name" ]]; then
+      next_is_name=1
+    elif [[ "$el" == "-p" || "$el" == "--publication" ]]; then
+      next_is_publication=1
+    elif [[ "$el" == "-f" || "$el" == "--import-archive" ]]; then
+      next_is_import_archive=1
+    elif [[ "$el" == "--escenic-user" ]]; then
+      next_is_escenic_user=1
+    elif [[ "$el" == "--escenic-group" ]]; then
+      next_is_escenic_group=1
+    elif [[ "$el" == "--nursery-base-dir" ]]; then
+      next_is_nursery_base_dir=1
+    elif [[ "$el" == "--user" ]]; then
+      next_is_user=1
+    elif [[ "$el" == "--password" ]]; then
+      next_is_password=1
+    elif [[ "$el" == "--uri" ]]; then
+      next_is_uri=1
+    elif [[ "$el" == "--regex-of-file" ]]; then
+      next_is_regex=1
+    elif [[ "$el" == "--write_url" ]]; then
+      next_is_write_url=1
+    elif [[ "$el" == "--directories-only" ]]; then
+      directories_only=1
+    elif [[ "$el" == "--http-proxy" ]]; then
+      next_is_http_proxy=1
+    elif [ "$el" == "--version" -o "$el" == "-V" ]; then
+      echo "Version:" $ece_scripts_version
+      exit 0
+    elif [ $next_is_name -eq 1 ]; then
+      job_name=$el
+      next_is_name=0
+    elif [ $next_is_publication -eq 1 ]; then
+      publication_name=$el
+      next_is_publication=0
+    elif [ $next_is_import_archive -eq 1 ]; then
+      import_archive=$el
+      next_is_import_archive=0
+    elif [ $next_is_nursery_base_dir -eq 1 ]; then
+      nursery_base_dir=$el
+      next_is_nursery_base_dir=0
+    elif [ $next_is_escenic_user -eq 1 ]; then
+      escenic_user=$el
+      next_is_escenic_user=0
+    elif [ $next_is_escenic_group -eq 1 ]; then
+      escenic_group=$el
+      next_is_escenic_group=0
+    elif [ $next_is_user -eq 1 ]; then
+      user=$el
+      next_is_user=0
+    elif [ $next_is_password -eq 1 ]; then
+      password=$el
+      next_is_password=0
+    elif [ $next_is_uri -eq 1 ]; then
+      uri=$el
+      next_is_uri=0
+    elif [ $next_is_regex_of_file -eq 1 ]; then
+      arg_regex_of_file=$el
+      next_is_regex_of_file=0
+    elif [ $next_is_write_url -eq 1 ]; then
+      arg_write_url=$el
+      next_is_write_url=0
+    elif [ $next_is_http_proxy -eq 1 ]; then
+      the_http_proxy="$el"
+      next_is_http_proxy=0
+    else
+      if [[ "$el" == "create" ]]; then
+        command=$COMMAND_CREATE_IMPORT_CONFIGURATION
+      elif [[ "$el" == "download-import-data" ]]; then
+        command=$COMMAND_DOWNLOAD_RAW_DATA
+      fi
+    fi
+  done
+
+  local errors=0
+  if [ -z "$job_name" -a -z "${import_archive}" ]; then
+    print_and_log "You must specify which import job to run"
+    print_and_log "E.g.: $(basename $0) --name video"
+    errors=1
+  fi
+  if [ -z "$publication_name" -a -z "${import_archive}" ]; then
+    print_and_log "You must specify the publication name"
+    print_and_log "E.g.: $(basename $0) --publication mypub"
+    errors=1
+  fi
+
+  if [ -n "${import_archive}" -a ! -r "${import_archive}" ]; then
+    print_and_log "You have specified an import job archive file" \
+      "but it doesn't exist :-("
+    errors=1
+  fi
+
+  if [ $command -eq $COMMAND_DOWNLOAD_RAW_DATA ]; then
+    if [ -z "$user" ]; then
+      print_and_log "You must specify the the user"
+      print_and_log "E.g.: $(basename $0) --user lisa"
+      errors=1
+    fi
+    if [ -z "$password" ]; then
+      print_and_log "You must specify the the user"
+      print_and_log "E.g.: $(basename $0) --password foo"
+      errors=1
+    fi
+    if [ -z "$uri" ]; then
+      print_and_log "You must specify the the URI"
+      print_and_log "E.g.: $(basename $0) --uri http://feeds.com/myfeed"
+      errors=1
+    fi
+  fi
+
+  if [ $errors -eq 1 ]; then
+    remove_pid_and_exit_in_error
+  fi
+}
+
+## $1 :: the transformer (file name, relative or absoulte)
+function is_transformer_supported() {
+  if [ -z $1 ]; then
+    return
+  fi
+
+  local supported_transformer_list="pl py sh xsl"
+  for el in $supported_transformer_list; do
+    if [[ "$1" == *"${el}" ]]; then
+      echo 1
+      return
+    fi
+  done
+
+  echo 0
+}
+
+## $1 :: file
+function perform_transformations() {
+  for el in $transformers_base_dir/$publication_name/$job_name/transformers/[0-9]*; do
+    if [ $(is_transformer_supported $el) -eq 0 ]; then
+      log "$(yellow WARNING) The transformer $el isn't supported by $(basename $0)"
+      continue
+    fi
+
+    log "Applying transformation $(basename $el) to $1"
+
+    if [[ "$el" == *".sh" ]]; then
+      bash $el $1 >> $log 2>> $log
+
+      if [ $? -gt 0 ]; then
+        handle_transformation_error $el $1
+        return
+      fi
+    elif [[ "$el" == *".xsl" ]]; then
+      xsltproc --output ${1}.tmp ${el} ${1} >> $log 2>> $log
+
+      if [ $? -gt 0 ]; then
+        handle_transformation_error $el $1
+        return
+      else
+        run mv ${1}.tmp ${1}
+      fi
+    elif [[ "$el" == *".pl" ]]; then
+      perl $el $1 >> $log 2>> $log
+      if [ $? -gt 0 ]; then
+        handle_transformation_error $el $1
+        return
+      fi
+    elif [[ "$el" == *".py" ]]; then
+      python $el $1 >> $log 2>> $log
+      if [ $? -gt 0 ]; then
+        handle_transformation_error $el $1
+        return
+      fi
+    fi
+    transformation_count=$(( transformation_count + 1 ))
+  done
+}
+
+## Will log the transformer error and move it to the error archive.
+##
+## $1 :: transformer
+## $2 :: the raw/input file
+function handle_transformation_error() {
+  local dir=$raw_transformed_base_dir/$publication_name/$job_name/failed
+  log "$(red FAILED) The transformation $1 on file $2" \
+    "moving $2 to $dir and skipping to the next XML file"
+  run mv $2 $dir
+}
+
+import_error_count=0
+
+## $1 :: the directory to check for multimedia files.
+## $2 :: the directory to move any of these multimedia files to
+function move_any_multimedia_files_if_present() {
+  if [ ! -d $1 -o ! -d $2 ]; then
+    return
+  fi
+
+  local multimedia_file_count=$(
+    ls $1 | egrep -i ".(png|gif|jpg|jpeg|pdf)$" | wc -l
+  )
+  if [ $multimedia_file_count -gt 0 ]; then
+    log "Moving ${multimedia_file_count} multimedia files from $1 to $2"
+    mv $1/*.{png,gif,jpg,jpeg,pdf} $2 >> $log 2>/dev/null
+  fi
+}
+
+function import_raw_files() {
+  raw_file_count=0
+  for f in $(find $raw_spool_base_dir/$publication_name/$job_name -type f); do
+    raw_file_count=$(( raw_file_count + 1 ))
+    transformation_count=0
+    print_and_log "Importing raw XML #${raw_file_count}: $(basename $f) ..."
+    local file=$raw_transformation_base_dir/$publication_name/$job_name/$(basename $f)
+    run cp $f $file
+    perform_transformations $file
+
+    log "Applied $transformation_count transformations to $file"
+    if [ $(is_escenic_xml_ok $file) -eq 1 ]; then
+      local dir=$escenic_spool_base_dir/$publication_name/$job_name/new
+      log "Transformed XML is OK, moving transformed file to" $dir
+      move_any_multimedia_files_if_present $(dirname $file) $dir
+      run mv $file $dir
+      dir=$raw_transformed_base_dir/$publication_name/$job_name/succeeded
+      log "Transformed XML is OK, moving original raw XML to" $dir \
+        "and gzip-ing it."
+      run mv $f $dir
+      run gzip --force $dir/$(basename $f)
+    else
+      local dir=$raw_transformed_base_dir/$publication_name/$job_name/failed
+      log $(red ERROR) "Transformed XML #${raw_file_count}," \
+        $file "isn't valid Escenic Syndication XML, so moving it to" $dir
+      run mv $f $dir
+      import_error_count=$(( import_error_count + 1 ))
+    fi
+  done
+}
+
+function verify_import_job_configuration() {
+  verify_writable_dir_list \
+    $raw_spool_base_dir/$publication_name/$job_name \
+    $raw_state_base_dir/$publication_name/$job_name \
+    $raw_transformation_base_dir/$publication_name/$job_name \
+    $raw_transformed_base_dir/$publication_name/$job_name \
+    $escenic_spool_base_dir/$publication_name/$job_name/new \
+    $escenic_spool_base_dir/$publication_name/$job_name/archive \
+    $escenic_spool_base_dir/$publication_name/$job_name/error
+  verify_readable_dir_list $transformers_base_dir/$publication_name/$job_name
+
+  local dir=$transformers_base_dir/$publication_name/$job_name/transformers
+  local tranformation_count=$(
+    ls $dir | \
+      grep ^[0-9] | \
+      egrep ".sh$|.pl$|.py$|.xsl$" | \
+      wc -l
+  )
+
+  if [ $command -eq $COMMAND_IMPORT -a $tranformation_count -lt 1 ]; then
+    print_and_log "$(yellow WARNING) No transformers found in" \
+      "$dir/, I'm assuming the incoming" \
+      "data is already tranformed into Escenic Syndication XML"
+  fi
+
+  print_and_log "Running import" $job_name \
+    "for publication" $publication_name
+}
+
+function print_report() {
+  if [ $command -eq $COMMAND_IMPORT ]; then
+    print_and_log "Number of raw XML files processed:" $raw_file_count
+    print_and_log "Number of raw XML successes:" \
+      $(green $(( raw_file_count - import_error_count )))
+    print_and_log "Number of raw XML errors:" $(red $import_error_count)
+  fi
+}
+
+assert_commands_available xsltproc xmllint xml_grep
+get_user_input $@
+
+function run_import() {
+  pid_file=${pid_file/%.pid/-run-import.pid}
+  lock_file=${lock_file/%.lock/-run-import.lock}
+  common_pre_run
+
+  verify_import_job_configuration
+  import_raw_files
+  common_post_run
+}
+
+function run_create_import_configuration() {
+  pid_file=${pid_file/%.pid/-create.pid}
+  lock_file=${lock_file/%.lock/-create.lock}
+  common_pre_run
+
+  if [ -z $import_archive ]; then
+    if [ ${directories_only-0} -eq 0 ]; then
+      create_import_configuration $publication_name $job_name
+    fi
+    create_import_directories $publication_name $job_name
+  else
+    apply_import_archive
+  fi
+
+  common_post_run
+}
+
+function run_download_raw_data() {
+  pid_file=${pid_file/%.pid/-download.pid}
+  lock_file=${lock_file/%.lock/-download.lock}
+
+  common_pre_run
+  verify_import_job_configuration
+  download_latest_files
+  common_post_run
+}
+
+function common_pre_run() {
+  print_and_log "Started @ $(date), I'm logging to $log"
+  create_pid
+  create_lock_or_fail
+}
+
+function common_post_run() {
+  print_manual_steps
+  print_report
+
+  print_and_log "Finished @ $(date), enjoy thyself!"
+  remove_pid
+  remove_lock
+}
+
+if [[ "$command" == $COMMAND_IMPORT ]]; then
+  run_import
+elif [[ "$command" == $COMMAND_CREATE_IMPORT_CONFIGURATION ]]; then
+  run_create_import_configuration
+elif [[ "$command" == $COMMAND_DOWNLOAD_RAW_DATA  ]]; then
+  run_download_raw_data
+fi

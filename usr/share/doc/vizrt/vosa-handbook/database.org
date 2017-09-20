@@ -1,0 +1,9 @@
+* Database
+
+A <%= trail_db_vendor %> DB has been installed in your habitat.
+
+[[file:./graphics/db.svg][./graphics/db.svg]]
+
+
+
+

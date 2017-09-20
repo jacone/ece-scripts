@@ -1,0 +1,32 @@
+# Hostname of the Oracle WebCache host (default: localhost).
+# host=localhost
+
+# Invalidation port number (see OWC admin page -> ports -> operation ports) (default: 9401).
+# port=9401
+
+# Username
+# webcacheUser=ias_admin
+
+# Password
+# webcachePassword=
+
+# Set this to true to enable the service at startup of ECE or false to disable it (default: false).
+# enabled=false
+
+# Wait this number of ms before updating (default: 5000).
+# waitMilliSecsBeforeUpdating=5000
+
+# Number of times to retry updating OWC if it fails (default: 3).
+# retryLimit=3
+
+# Interval to clear the retry list (default: 3600000 = 1 hour).
+# retryClearInterval=3600000
+
+# Socket timeout (in ms), 0=infinite (default: 0).
+# soTimeout=0
+
+# Force this port number in URLs sent to OWC (0=don't change) (default: 0).
+# Use this to change the port number in URLs returned by ECE.
+# Example: when ECE returns http://myserver.com/article123.ece or http://myserver.com:80/article123.ece 
+# using forcePort=7777 will send http://myserver.com:7777/article123.ece to OWC.
+# forcePort=0

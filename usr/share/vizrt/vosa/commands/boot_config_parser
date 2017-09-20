@@ -1,0 +1,33 @@
+# bash functions common to the vosa commands
+# specifically functions to aid parsing boot.conf files
+
+boot_config_memory=
+boot_config_processor_affinity=
+boot_config_vnc_port=
+boot_config_bridge=
+
+
+function boot_config_memory() {
+  boot_config_memory=$1
+}
+
+function boot_config_processor_affinity() {
+  boot_config_processor_affinity=$1
+}
+
+function boot_config_vnc_port() {
+  boot_config_vnc_port=$1
+}
+
+function boot_config_bridge() {
+  boot_config_bridge=$1
+}
+
+# Handle arrays
+
+# declare -a ssh_keys
+
+#function install_config_ssh_keys() {
+#  ssh_keys=( "${ssh_keys[@]}" "$1" )
+#}
+

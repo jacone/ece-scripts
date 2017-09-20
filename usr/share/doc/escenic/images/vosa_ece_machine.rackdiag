@@ -1,0 +1,11 @@
+rackdiag {
+  rack {
+    ascending;
+    
+    4U;
+    1: cache-server:80
+    2: content-engine:8080
+    3: memory-cache:11211
+    4: search-server:8180
+  }
+}

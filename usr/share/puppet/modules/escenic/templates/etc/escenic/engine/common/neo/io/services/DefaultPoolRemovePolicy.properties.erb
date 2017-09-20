@@ -1,0 +1,59 @@
+###################################################################
+# POOL REMOVE POLICY
+###################################################################
+# This is used from PoolRemoveService to decide which articles should
+# be remove from a pool. 
+# This default implementation will keep the size of the pool at the 
+# limit defined in PoolRemoveService.properties by removing articles
+# from each column defined in the grid layout, beginning at last one,
+# until the limit is reached.
+# It will always leave the number of articles corresponding to the defined
+# number of elements in each column. If articles have been removed
+# from all columns without reaching the limit, articles may also
+# be removed from the workdesk.
+
+
+###################################################################
+# ARTCLES LEFT ON WORKDESK
+###################################################################
+# If it is necessary to remove articles from the workdesk, this 
+# number decides how many to leave.
+#
+# Default value: 5
+#
+# Example:
+#   articlesLeftOnWorkdesk=2
+###################################################################
+# articlesLeftOnWorkdesk=5
+
+
+###################################################################
+# COLUMN BUFFER
+###################################################################
+# This number will be added to the defined number of elements for each
+# column when deciding how many articles should be left in the 
+# column.
+#
+# Default value: 0
+#
+# Example:
+#   columnbuffer=2
+###################################################################
+# columnBuffer=5
+
+###################################################################
+# WORKDESK SORT ORDER
+###################################################################
+# Should the articles on wordesk be sorted before removing? Possible 
+# values are "none" and "articleId". If set to "none", articles will 
+# have the same order as in Studio and WebStudio. Articles will be 
+# removed from the bottom of the list. If set to "articleId", articles
+# will be sorted in articleId order. Articles with lowest id (oldest
+# articles) will be removed.
+#
+# Default value: none
+#
+# Example:
+#   workdeskSortOrder=articleId
+###################################################################
+# workdeskSortOrder=none

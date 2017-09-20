@@ -1,0 +1,92 @@
+# bash functions common to the vosa commands
+# e.g. parsing a config file
+
+
+unset amazon_config_key
+unset amazon_config_certificate
+unset amazon_config_user_data
+unset amazon_config_region
+unset amazon_config_availability_zone
+unset amazon_config_ssh_keypair
+unset amazon_config_ssh_access
+unset amazon_config_ip_address
+unset amazon_config_ssh_private_key
+unset amazon_config_image
+unset amazon_config_type
+unset amazon_config_subnet
+unset amazon_config_group
+amazon_config_initial_disk_size=8
+
+
+function amazon_config_key() {
+  amazon_config_key=$1
+}
+
+function amazon_config_certificate() {
+  amazon_config_certificate=$1
+}
+
+function amazon_config_access_key_id() {
+  amazon_config_access_key_id=$1
+}
+
+function amazon_config_secret_access_key_file() {
+  amazon_config_secret_access_key_file=$1
+}
+
+function amazon_config_user_data() {
+  amazon_config_user_data=$1
+}
+
+function amazon_config_region() {
+  amazon_config_region=$1
+}
+
+function amazon_config_availability_zone() {
+  amazon_config_availability_zone=$1
+}
+
+function amazon_config_ssh_keypair() {
+  amazon_config_ssh_keypair=$1
+}
+
+function amazon_config_ssh_access() {
+  amazon_config_ssh_access=$1
+}
+
+function amazon_config_ip_address() {
+  amazon_config_ip_address=$1
+}
+
+function amazon_config_ssh_private_key() {
+  amazon_config_ssh_private_key=$1
+}
+
+function amazon_config_image() {
+  amazon_config_image=$1
+}
+
+function amazon_config_type() {
+  amazon_config_type=$1
+}
+
+function amazon_config_subnet() {
+  amazon_config_subnet=$1
+}
+
+function amazon_config_initial_disk_size() {
+  amazon_config_initial_disk_size=$1
+}
+
+function amazon_config_group() {
+  amazon_config_group+="$1 "
+}
+
+# Handle arrays
+
+declare -a amazon_config_postinstall
+
+function amazon_config_postinstall() {
+  amazon_config_postinstall=( "${amazon_config_postinstall[@]}" "$1" )
+}
+

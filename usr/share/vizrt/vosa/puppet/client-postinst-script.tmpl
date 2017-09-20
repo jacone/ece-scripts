@@ -1,0 +1,67 @@
+#!/bin/bash
+
+## This file is generated from /var/lib/vizrt/vosa/puppet/client-postinst-script.tmpl!!!
+
+ssh -F $2/ssh.conf root@guest tee > /dev/null -a /etc/hosts <<EOF
+@@IPADDRESS@@	@@HOSTNAME@@
+EOF
+
+# First get newly installed packages to not auto-start on installation:
+ssh -F $2/ssh.conf root@guest tee > /dev/null /usr/sbin/policy-rc.d  <<EOF
+#!/bin/sh
+exit 101
+EOF
+ssh -F $2/ssh.conf root@guest chmod +x /usr/sbin/policy-rc.d
+
+
+# Install the puppet master package on the guest, and overwrite the configuration file
+ssh -F $2/ssh.conf root@guest apt-get -y install puppet || exit 2
+ssh -F $2/ssh.conf root@guest tee > /dev/null /etc/puppet/puppet.conf <<EOF
+[main]
+logdir = /var/log/puppet
+vardir = /var/lib/puppet
+ssldir = /var/lib/puppet/ssl
+rundir = /var/run/puppet
+factpath = \$vardir/lib/facter
+templatedir = \$confdir/templates
+prerun_command = /etc/puppet/etckeeper-commit-pre
+postrun_command = /etc/puppet/etckeeper-commit-post
+
+[master]
+ssl_client_header = SSL_CLIENT_S_DN
+ssl_client_verify_header = SSL_CLIENT_VERIFY
+
+[agent]
+server = @@HOSTNAME@@
+certname = "generic-@@HOSTNAME@@-client"
+node_name = "facter"
+node_name_fact = "hostname"
+runinterval = 15
+environment = production
+EOF
+
+ssh -F $2/ssh.conf root@guest mkdir -p /var/lib/puppet/ssl/private_keys
+ssh -F $2/ssh.conf root@guest mkdir -p /var/lib/puppet/ssl/certs
+ssh -F $2/ssh.conf root@guest chmod 0751 /var/lib/puppet/ssl
+ssh -F $2/ssh.conf root@guest chmod 0750 /var/lib/puppet/ssl/private_keys
+ssh -F $2/ssh.conf root@guest tee > /dev/null /var/lib/puppet/ssl/private_keys/generic-@@HOSTNAME@@-client.pem <<EOF
+@@PRIVATE_KEY@@
+EOF
+# Change permissions to match what is expected of private eys...
+ssh -F $2/ssh.conf root@guest chmod 0600 /var/lib/puppet/ssl/private_keys/generic-@@HOSTNAME@@-client.pem 
+
+ssh -F $2/ssh.conf root@guest tee > /dev/null /var/lib/puppet/ssl/certs/generic-@@HOSTNAME@@-client.pem <<EOF
+@@CERTIFICATE@@
+EOF
+
+# Change ownership as per a default install of puppet
+ssh -F $2/ssh.conf root@guest chown --recursive puppet:root /var/lib/puppet/ssl/
+
+# Allow future installations to auto-start their services...
+ssh -F $2/ssh.conf root@guest rm -f /usr/sbin/policy-rc.d || exit 2
+
+
+
+# Make it possible to start puppet
+ssh -F $2/ssh.conf root@guest perl -pi -e 's/^START=.*/START=yes/' /etc/default/puppet || exit 2
+

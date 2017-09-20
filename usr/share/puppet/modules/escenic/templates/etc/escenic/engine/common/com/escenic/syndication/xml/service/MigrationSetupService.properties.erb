@@ -1,0 +1,25 @@
+$class=com.escenic.syndication.xml.service.MigrationSetupService
+
+# The directory where the import directories will be created. The migration
+# setup service creates directories in the following structure:
+#
+# ${migrationDirectory}
+# |-- publicationA (The "import" directory of this import configuration)
+#    |-- archive (The "archive" directory for this import configuration)
+#    |-- error (The "error" directory for this import configuration)
+# |-- publicationB
+#    |-- archive
+#    |-- error
+# ...(These directories are created for each publication)
+#
+# The directory structure is created when the application server starts. If
+# you create a publication, then you can use the doStartService/doStopService
+# method to recreate the import configurations for all publications again.
+#
+migrationDirectory=/var/spool/escenic/migration
+
+# The import reporter that will be used for all of the import configurations.
+# Please consult the Syndication Guide for further details on how to configure
+# an import reporter.
+#
+importReporter=/com/escenic/syndication/xml/ImportReporter

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Hugin script to tell hugin how to collect publication resources
+
+# xml_pp is needed for this
+if ! which xml_pp > /dev/null ; then
+  echo 'xml_pp not installed'
+  exit 1
+fi
+
+# A vosa system declaration too.
+if [ ! -r /etc/vosa-service-declaration.conf ] ; then
+  echo 'A vosa system declaration is needed'
+  exit 1
+fi
+
+
+xml_resources="
+/escenic/content-type
+/escenic/layout-group
+/escenic/plugin/menu
+"
+
+text_resources="
+/escenic/feature
+"
+
+. /etc/vosa-service-declaration.conf 
+
+# TODO: grab port number from somewhere
+pubs=( $trail_publication_domain_mapping_list )
+for pub in "${pubs[@]/\#*/}" ; do
+  for resource in $xml_resources ; do
+    name=${resource//[\/]/-}
+    echo "escenic-publication-${pub}$name" "curl -s http://localhost:8080/escenic-admin/publication-resources/$pub$resource | xml_pp -e UTF-8"
+  done
+  for resource in $text_resources ; do
+    name=${resource//[\/]/-}
+    echo "escenic-publication-${pub}$name" "curl -s http://localhost:8080/escenic-admin/publication-resources/$pub$resource"
+  done
+  echo "escenic-publication-${pub}-section-parameters" "curl -s http://localhost:8080/escenic-admin/section-parameters/$pub/ | grep -v ^# | sort -n"
+done
+
+

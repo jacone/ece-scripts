@@ -1,0 +1,412 @@
+#+TITLE: The ece-import Guide
+#+AUTHOR: Escenic Cloud Team
+#+OPTIONS: H:6 num:5 toc:2
+
+* NAME
+ece-import - command for managing integration with and imports of
+external content into the Escenic Content Engine (ECE).
+
+* SYNOPSIS
+ece-import [[[--name name]]] [[[--publication publication]]] [[[--user user]]] [[[--password password]]] COMMAND
+
+* OPTIONS
+** --name name
+The name of the import job
+** --publication publication
+The publication name that this job belongs to.
+** --user user
+The HTTP user to access the download data (optional). This option only
+applies when running the [[download-import-data]] command.
+** --password password
+The HTTP password to access the download data. This option only
+applies when running the [[download-import-data]] command.
+
+* COMMANDS
+** create
+ece-import will happily set up a new import job for you.
+The preferred way is to use an import archive, which you typically get
+from the web site developers who've created the XSL files and so
+on. When you have such an import archive, you apply it like this:
+#+BEGIN_SRC text
+# ece-import --import-archive import-archive.zip create
+#+END_SRC
+
+See [[Structure of an import archive]] for a detailed specification on how
+to create such an archive yourself.
+
+Alternatively, you can set up an import job without an import archive:
+#+BEGIN_SRC text
+# ece-import \\
+  --name myjob \\
+  --publication mypub \\
+  create
+#+END_SRC
+
+In both cases, *ece-import* will set up the file structure for your
+import job. If you're not using an import archive you'll have to
+either put your transformers & [[cron]] jobs on the system yourself, or
+make sure that the XML you want import already is in the Escenic
+Syndication XML format.
+
+** download-import-data
+There's built-in support in *ece-import* for downloading files from
+any FTP or HTTP server. Everything it needs to run this, is passed
+from the command line:
+#+BEGIN_SRC text
+$ ece-import \\
+  --name myjob \\
+  --publication mypub \\
+  --user my-ftp-user \\
+  --password my-ftp-password \\
+  --uri http://news-feed.com/my-import-job-feed \\
+  download-import-data
+#+END_SRC
+
+You can safely re-run this as many times as you wish, *ece-import*
+will keep track of previously downloaded files and will not allow you
+to run parallel processes to download date. If you ever need to
+re-download third party data, you can remove the corresponding
+resource from */var/lib/escenic/raw/mypub/myjob/download.state*
+
+** Running an import job
+This is the standard command/operation of *ece-import*, to take 3rd
+party XML present in the raw spool, apply all transformations on it
+and move the finished XML to the Escenic import spool.
+
+When running it, you just need to pass the import job name and
+publication name:
+#+BEGIN_SRC text
+$ ece-import \\
+  --name myjob \\
+  --publication mypub
+#+END_SRC
+
+* DESCRIPTION
+*ece-import* is the center piece of your infrastructure when
+integrating and importing third party content with ECE. Here follows
+is a quick run through of how it all fits together.
+
+#+BEGIN_SRC text
+(1) ece-import create
+      → new directories
+      → new Nursery configuration files
+      → instructions on how to add the new job to ECE
+      → new cron jobs
+
+(2) cron → ece-import download-import-data
+      → /var/spool/escenic/raw/mypub/myjob/1.xml
+
+(3) cron → ece-import →
+      transformers/01-download-images-referenced-in-xml.sh →
+      transformers/02-fix-image-colour-spaces.pl →
+      transformers/03-tidy-up-xml.py →
+      transformers/04-convert-to-escenic-xml.xsl
+      → /var/spool/escenic/import/mypub/myjob/1.xml
+
+(4) ECE/XMLImportSchedule → imports article into ECE
+#+END_SRC
+
+** (1)
+Call *ece-import create* with or with an import archive to set up all
+the necessary directories, Nursery configuration files, [[cron]] jobs
+and so on for a new job.
+
+** (2)
+Cron calls *ece-import download-import-data* which downloads any new
+XML (or other) file to */var/spool/escenic/raw/mypub/myjob*.
+
+** (3)
+Again, [[cron]] (this can be the same cron script, which runs after a
+successful run of (2)) runs *ece-import*, this time without a
+command. This task will iterate through all the transformers
+inside */usr/share/escenic/import/mypub/myjob/transformers* and pass
+the *1.xml* file to each of them.
+
+Once this is done, *ece-import* checks if the resulting file is a well
+formed XML file and that it looks like the Escenic syndication XML
+format.
+
+If it passes these tests, *ece-import* moves the *1.xml* to the spool
+directory for the ECE Import service to notice it. The file is now
+in */var/spool/escenic/import/mypub/myjob/1.xml*
+
+** (4)
+The standard ECE Import service detects that there is a new XML file
+for it in the Escenic Syndication XML format and imports it into
+ECE. Users should now see the fresh article in e.g. Escenic Content
+Studio.
+
+** Further reading
+For further explanation of why *ece-import* was created and rationale
+for how it was implemented, see the [[BACKGROUND]] section.
+
+* Structure of an import archive
+When creating a new import configuration for your project, the
+following directory structure is required:
+
+#+BEGIN_SRC text
+<pub>/<import name>
+<pub>/<import name>/transformers/<number>-<transformer task>.xsl
+<pub>/<import name>/cron.hourly/<cron job command>
+<pub>/<import name>/cron.every.five.minutes/<cron job command>
+#+END_SRC
+
+- publication name :: the name of the publication for which the import
+     job(s) are defined. You can have more than one publication in
+     each zip archive.
+- import job name :: lowercase with hyphens between words (if more
+     than one)
+- transformers :: directory with files prefixed with *<number>-*,
+                  indicating the order of transformation to apply to
+                  your import job. If this is a xsl file, *ece-import*
+                  will run *xsltproc* on the file, whereas .sh files
+                  will be run in a bash wrapper.
+
+                  Each of the transformers will be called with one
+                  argument, namely the input XML data. Each
+                  transformer is responsible to write changes back to
+                  the file.
+- cron.hourly :: commands to be run every our. These will be put
+                 in */etc/cron.hourly* on the import server. Be sure
+                 to set the execute bit on the file and note that as
+                 with all cron jobs, the file cannot have a file
+                 suffix.
+- cron.every.five.minutes :: commands to run every five minutes.
+
+Here, you see we have one publication called *mypub* with one import
+job called *myjob* and a second publication with the name *otherpub*
+which has the import job *otherjob*.
+
+#+BEGIN_SRC text
+$ unzip -t my-great-import-archive.zip.zip
+mypub/myjob/transformers/01-fix-encoding.sh
+mypub/myjob/transformers/02-convert-all-cows-to-ducks.xsl
+mypub/myjob/transformers/02-convert-duck-to-escenic-xml.xsl
+mypub/myjob/cron.hourly/get-files-from-myjob-ftp
+mypub/myjob/cron.every.five.minutes/ask-for-public-ip
+otherpub/otherjob/transformers/01-from-other-to-escenic-xml.xsl
+#+END_SRC
+
+As you can guess from the file names,
+the *02-convert-all-cows-to-ducks.xsl* stylesheet will be first
+applied to the incoming data (normally XML) and
+the *02-convert-duck-to-escenic-xml.xsl* will be applied next before
+the resulting Escenic XML will be imported into the Escenic Content
+Engine.
+
+* BACKGROUND
+The motivation for creating *ece-import* was to tackle a number of
+problems we have seen over and over again in countless projects
+related to importing third party content into ECE.
+
+** Easy to set up new import jobs
+Integrating ECE with external systems to get the external data into
+ECE has always been a challenging task. First off, it's the setting up
+of an ECE import job, which demands several *.properties* files to be
+written, put in the correct path on the file system, and added to the
+correct *Initial.properties* to be bootstrapped.
+
+Another problem we've seen over and over again, is that all the
+relevant directories either were not present, had the wrong
+permissions or the import directories were created under the wrong
+paths. All of which made the ECE import fail.
+
+Using ece-import [[create]], you don't have to worry about creating the
+relevant Nursery components, create sufficient directory structure
+with correct permissions or what the new stanza
+in *Initial.properties* must look like to load your new import job
+Nursery component.
+
+** Easier to make error free import data
+But this is just the start of problems so many projects have faced up
+through the years. The transformation of the external data, say a feed
+from a new agency or video meta data from a streaming video service,
+is another challenge. To transform these external formats, often a
+different XML format, which sadly very often neither validates, has
+the correct file encoding or is not even well formed (!). The related
+images are also often faulty, having the wrong colour space or has
+file names containing non-printable characters, which again are
+impossible, or difficult to refer to in an error free way from the XML
+files.
+
+All of the above make the ECE import fail.  Since such errors easily
+drowns in the other ECE log errors and are time consuming to replay,
+we wanted to move the complexity of the import job away from the ECE
+XML import framework so that the Escenic import configuration could be
+as simple as possible, only relating to the standard Escenic XML
+syndication format.
+
+By using *ece-import* it is really easy for you to write simple, small
+BASH, Python or Perl scripts which can perform small "massaging" tasks
+that you'd otherwise would have to do in a manual step prior to
+feeding the external data to the ECE importer. For instance, to change
+the encoding on the incoming XML files from ISO-8859-1 to UTF-8, you
+could write create a new transformer
+called *01-convert-from-iso-8859-1-to-utf-8.sh* like this:
+#+BEGIN_SRC text
+#! /usr/bin/env bash
+iconv --from-code "iso-8859-1" --to-code "utf-8" $1
+#+END_SRC
+and put it
+in */usr/share/escenic/import/mypub/myjob/transformers*. Now, this
+script would be called once for each new XML file.
+
+Before, all of these "massaging scripts" were called manually on a
+fresh batch of imports (or say migration data), before the data was
+passed on to the ECE import job. Now, all of these scripts can be
+incorporated into the main import process, having a clear structure,
+order of execution, error handling and logging.
+
+** Easy to debug transformations
+In a standard ECE import job setup, you will have one or more import
+filters which in turn run an XSL sheet. If something goes wrong with
+one of them, most Escenic engineers and consultants (and probably
+customer admins too), would test the transformation using a command
+line tool such as *xsltproc*
+#+BEGIN_SRC text
+$ xsltproc from-reuters-to-escenic.xsl some-reuters-article.xml
+#+END_SRC
+
+The reason that most people use this approach as this is far easier
+than re-configuring the import job to use the ECE import job debug
+filter, which involves editing *.properties* file(s), turning on debug
+in the running app server log configuration and peeking in the correct
+log file.
+
+By using *ece-import*, everything is set up to be easy to retry
+manually. The whole concept is that it should be easy to take just one
+step and execute it from the command line. *ece-import* provides
+extensive messages about everything it's doing
+in */var/log/escenic/ece-import.log* and you should have no problems
+checking each of the transformation steps by yourself by reading it.
+
+** Easy to download data from FTP and HTTP sources
+Downloading data from external sources via FTP or HTTP has been done
+so many times, often with buggy shell code, leaving the scripts
+running multiple times in paralell, re-downloading the same files
+over and over again, or failing because the output of the directory index
+listing has changed.
+
+By using [[download-import-data][ece-import download-import-data]] you get tried and tested code
+for doing this which addresses all of the above problems:
+- Works with all web servers and all FTP servers
+- Doesn't depend on the directory listing format, the locale of the
+  web server or any other, non-standard pre-requisite.
+- Keeps track of the state of previous runs/downloads for the
+  different import jobs
+- Ensures that only one instance of the download job is running at
+  any given time.
+- Runs on any Linux or UNIX system, using standard BASH and cron
+  building blocks.
+
+** No additional configuration
+There are enough configuration files on a production system, so
+the *ece-import* itself doesn't have any configuration files to add
+to that burden. Everything it needs is read from the command line
+options or from configuration files already present on the system.
+
+* CREATING TRANSFORMERS
+You can write a transformer in either XSL, Perl, Python or BASH. You
+put it in *<pub>/<job>/transformers/<number>-<transformer task>.<{xsl,pl,py,sh}>*
+and specify the order in which it should run by setting the <number>
+before/after your other transformers (if any, many folks only have one
+transformer which is an XSL file).
+
+All transformers are run by the ece-import command and they get one
+argument, namely the raw XML file from the 3rd party system. All
+transformers work on the same XML file, so that changes done in
+e.g. *01-first.sh* are passed on to *02-second.pl*. Each transformer
+must read the file and write to the same file. That's the contract.
+
+Here's an example of a transformer that downloads all the pictures
+mentioned in the raw XML. ece-import will copy any multimedia files
+to the ECE import spool for you, so the transformer only needs to
+worry about downloading these to the directory of the incoming XML
+file:
+
+#+BEGIN_SRC sh
+#! /usr/bin/env bash
+
+# Command which will download all thumbnails listed in the XML
+# exported from VMEO.
+#
+# It is normally called from ece-import, but can also be called
+# directly (when debugging).
+
+xpath_to_get_thumbnail_urls"/didl:DIDL/didl:Item/didl:Component/didl:Decommandor/didl:Statement/mpeg7:Mpeg7/mpeg7:Decommandion/mpeg7:Summarization/mpeg7:Summary/mpeg7:VisualSummaryComponent/mpeg7:ImageLocator/mpeg7:MediaUri"
+
+# $1 is the raw XML
+cat "$1" | \\
+  xml_grep --nowrap --cond $xpath_to_get_thumbnail_urls | \\
+  sed 's/></>\n</g' | \\
+  sed "s#.*>\(.*\)<.*#\1#g" | while read url; do
+  wget \\
+    --quiet \\
+    --continue \\
+    --output-document $(dirname $1)/$(basename $url) \\
+    $url;
+done
+#+END_SRC
+
+* FILES
+- /usr/share/escenic/import/<pub>/<job> :: Directory holding
+     the [[cron]] scripts and transformers of the import job. Normally,
+     set up by the *ece-import* [[create]] command.
+
+- /var/spool/escenic/raw/<pub>/<job> :: The *ece-import*
+     [[download-import-data]] command will download files to this
+     directory and when *ece-import* is invoked with the standard
+     operation, it will look in here for new 3rd party XML files.
+
+- /var/spool/escenic/import/<pub>/<job> :: Once *ece-import* has
+     applied all the transformations on the 3rd party XML and it has
+     been checked to be valid Escenic XML, the file is put in
+     here. The ECE XML Import Service looks in this directory for new
+     files to import.
+
+- /var/cache/escenic/import/<pub>/<job>/<file> :: This is the work
+     directory of *ece-import* where raw 3rd party XML files are put
+     while being processed by the transformers.
+
+- /var/backups/escenic/import/<pub>/<job>/succeeded/<file>.gz :: When
+     3rd party XML has been successfully transformed, the original
+     XML is compressed with [[gzip]] and put here.
+
+- /var/backups/escenic/import/<pub>/<job>/failed/<file> :: When
+     3rd party XML fails to be transformed, the original
+     XML is moved here. It's not compressed to make it as easy as
+     possible to retry it.
+
+- /var/log/escenic/ece-import.log :: *ece-import* writes detailed
+     transcripts of everything it does to this file making it easy
+     for you to replay any of the steps.
+
+- /var/run/escenic/ece-import-<command>.lock :: *ece-import* will
+     create different lock files depending on the three
+     commands/operations it supports. I.e. a long running download of
+     3rd party data (*ece-import download-import-data*) will not stop a
+     regular import to run (*ece-import*).
+
+- /var/lib/escenic/raw/<pub>/<job>/download.state :: State file
+     holding all the URLs (HTTP or FTP) that *ece-import* has
+     downloaded before.
+
+* TROUBLESHOOTING
+
+To trigger a (re)import of an already imported file,
+- edit the /var/lib/escenic/raw/<pub>/<job>/download.state file as the escenic user and remove the respective filenames 
+or 
+- use sed '/pattern to match/d' sed /var/lib/escenic/raw/<pub>/<job>/download.state > /var/lib/escenic/raw/<pub>/<job>/download.newstate
+- verify that /var/lib/escenic/raw/<pub>/<job>/download.newstate is good
+- mv /var/lib/escenic/raw/<pub>/<job>/download.newstate /var/lib/escenic/raw/<pub>/<job>/download.state
+
+then wait a while for the import to happen again. or trigger it with the ece-import command.
+
+* COPYRIGHT
+Copyright 2012-2015 Escenic
+
+Licensed under the Apache License, Version 2.0, see
+https://github.com/escenic/ece-scripts/COPYING for further details.
+
+* AUTHOR
+Torstein Krause Johansen

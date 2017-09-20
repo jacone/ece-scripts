@@ -1,0 +1,9 @@
+rackdiag {
+  rack {
+    ascending;
+    
+    2U;
+    1: analysis-engine:8080
+    2: db:3306
+  }
+}

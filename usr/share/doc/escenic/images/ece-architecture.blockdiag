@@ -1,0 +1,42 @@
+# a typical ECE production environment
+blockdiag {
+    orientation = portrait;
+
+    internet [ shape = "cloud" ];
+    cache1 [ color = "green" ];
+    cache2 [ color = "green" ];
+    pres1 [ color = "orange" ];
+    pres2 [ color = "orange" ];
+    pres3 [ color = "orange" ];
+    db1 [ shape = "flowchart.database" ];
+    db2 [ shape = "flowchart.database" ];
+    editor1 [ color = "orange" ];
+    editor2 [ color = "orange" ];
+    journalist [ shape = "actor" ];
+    
+    group {
+        pres1;
+        pres2;
+        pres3;
+        color = "white";
+    };
+    # group {
+    #     cache1;
+    #     cache2;
+    #     color = "green";
+    # }
+    
+    internet -> lb -> cache1, cache2;
+    cache1 -> pres1, pres2, pres3;
+    cache2 -> pres1, pres2, pres3;
+    pres1 -> db-vip, nfs-vip, search1;
+    pres2 -> db-vip, nfs-vip, search1;
+    pres3 -> db-vip, nfs-vip, search1;
+
+    journalist -> editor1 -> db-vip, nfs-vip, search2;
+    import -> editor2 -> db-vip, nfs-vip, search2;
+    
+    db-vip -> db1, db2;
+    db1 <-> db2;
+    nfs-vip -> nfs1, nfs2;
+}

@@ -1,0 +1,38 @@
+$class=neo.xredsys.api.media.ProxyImageVersionGenerator
+
+############################################################################
+# RMI HOST NAME
+############################################################################
+# Defines the url to the remote service which generates image versions
+#
+# Example:
+#   host=localhost
+#   host=192.168.2.3
+#   host=rmiregistry.mycompany.com
+############################################################################
+registryHost=${/RMI.host}
+
+############################################################################
+# RMI PORT
+############################################################################
+#
+# Defines the port in which the remote service is running
+#
+# Example:
+#   port=8800
+#   port=13581
+#
+############################################################################
+registryPort=${/RMI.port}
+
+############################################################################
+# RMI BINDNAME
+############################################################################
+#
+# Defines the bindname of the remote service
+#
+# Default:
+#   /RemoteVersionGenerator
+#
+############################################################################
+bindName=/RemoteVersionGenerator

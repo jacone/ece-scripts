@@ -1,0 +1,33 @@
+#! /usr/bin/env bash
+
+# cron script to remove old escenic related log files. It's safe to
+# install this cron script on all servers, also the ones that don't
+# have Escenic Content Engine or Escenic Analysis Engine installed.
+
+function remove_old_escenic_log_files() {
+  if [ ! -e /etc/init.d/ece ]; then
+    return
+  fi
+
+  /etc/init.d/ece remove-old-log-files
+}
+
+if [ -r /etc/default/ece ]; then
+  source /etc/default/ece
+  if [ ${remove_old_log_files-0} -eq 1 ]; then
+    remove_old_escenic_log_files
+  fi
+fi
+
+# Added to take care of left over ear files in escenic cache by ece-install and ece-deploy
+if [ -r /etc/escenic/ece.conf ]; then
+  source /etc/escenic/ece.conf
+  if [ ! -z "${cache_dir}" ] && [ -d "${cache_dir}" ] ; then
+    nice find "${cache_dir}" -maxdepth 1 -type f -mtime +5 -delete
+  fi
+
+fi
+
+# Now clean the /tmp directory as well
+nice find /tmp -type f -mtime +3 -delete
+

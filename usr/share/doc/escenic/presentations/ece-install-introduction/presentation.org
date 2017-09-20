@@ -1,0 +1,129 @@
+#+TITLE: BASH all you want: ece-install 
+#+AUTHOR: Torstein Krause Johansen 
+#+EMAIL: tkj@escenic.com
+#+DATE: 2012-03-30
+
+* Agenda
+- The Challenge
+- What? (is ece-install)
+- Why? (should anyone want to use ece-install)
+- What Does It Need? (to run)
+- For Whom? (is ece-install intended for)
+- Show Me! (how to use ece-install)
+- How? (can I get started using ece-install)
+
+* The Challenge
+[[file:2012-03-30-times-online.png]]
+
+* The Challenge - II
+[[file:ece-architecture.png][ece-architecture.png]]
+
+* What?
+ece-install is a a shell command which gives you full automatic
+installation of:
+
+- Escenic Content Engine & all plugins
+- Escenic Analysis Engine
+- Standalone search instances (Solr + indexer)
+- Database
+- NFS
+
+and ...
+
+* What? - II
+
+Full automatic installation of:
+- Cache server
+- High availability services (HA)
+- Monitoring clients
+- Monitoring server
+- Host self reporting 
+- and yes, even the RMI Hub  
+
+* What? - III
+
+Does all the hard bits for you, like:
+- Cache server with cookie stripping, load balancing,
+  session binding, locked down security.
+- Master/slave database setup with HA services and virtual IPs.
+- Analysis Engine (stats) with production ready settings.
+
+and there's more ...
+
+* What? - IV
+
+- Separate search instances, 
+- Tweaked JVM parameters, GC strategies that's known to work
+- DB pool settings that's been tested for high load
+- Proper logging (yes, there are endless systems were this is not set
+  up correctly). 
+
+* Why?
+- Instead of one week, you'll spend one day, perhaps even less.
+- You will get production quality settings from day one.
+- Benefit from best practices from experienced Escenic engineers,
+  customers & partners.
+
+* Why? - II
+- Web site will function better from day one
+- Web site will perform better from day one
+- Reduces installation costs
+- Reduces maintenance costs
+
+* Why? - III
+Not only for production environments, using ece-install, you'll also
+find it's:
+
+- Easy to set up proper staging environments
+- Easy to set up proper testing environments
+- Easy to set up development environments
+
+* What Does It Need?
+- The latest stable Ubuntu, Debian, CentOS or RedHat Linux
+  distribution installed.
+- A network connection
+
+Yes, that's it.
+
+* For Whom?
+
+- Professional Services
+- QA
+- R & D
+- SaaS / VOSA
+- Escenic partners
+- Experienced customers
+
+* Show Me!
+
+- Install two presentation servers
+- Install a cache server with load balancing
+- Check out its new self reporting module
+
+
+* How?
+
+- git clone https://github.com/escenic/ece-scripts/ (or zip download)
+- Daily builds of DEB and RPM packages from
+  http://hudson.dev.escenic.com
+
+* How - II
+- Documentation:
+  /usr/share/doc/escenic/ece-install-guide.org
+- Screencasts (instruction videos): http://www.screenr.com/user/skybert
+
+* To Sum It All Up
+- Full automatic install of all components of an ECE production
+  environment
+- Production ready settings out of the box
+- Up to date, generated documentation & monitoring included 
+- You only needs a Linux machine with a network connection
+- Daily DEB & RPM packages available
+
+* 問題?
+
+- Questions to torstein@escenic.com
+- Or ask on the SaaS mailing list: saas@lists.escenic.com
+- Or pop by the SaaS chat room: saas@conference.ardendo.se
+
+* Xièxiè!

@@ -1,0 +1,13 @@
+nwdiag {
+  group {
+    color = "orange";
+    nfs1;
+    nfs2;
+  }
+  
+  network nfs-vip {
+    address = "192.168.1.200";
+    nfs1 [ address = "192.168.1.122", description = "NFS master" ];
+    nfs2 [ address = "192.168.1.123", description = "NFS slave" ];
+  }
+}

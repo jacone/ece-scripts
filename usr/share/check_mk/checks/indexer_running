@@ -1,0 +1,76 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# expected line is
+#<time-stamp-epoch> indexer_running <yes/no/NO> <indexing time/age of head-tail file> <head from file> <head from DB> <comment>
+# 
+
+import time
+
+def inventory_indexer_running(info):
+    items = []
+    for line in info:
+        item = line[1]
+        items.append((item, None))
+    return items
+
+
+def check_indexer_running(item, params, info):
+    for line in info:
+        state=3
+        msg="No data for " + line[1]
+        result=state, msg
+        if line[1] == item:
+            sample_epoch=int(line[0])
+            running=line[2]
+            age=line[3]
+            filehead=line[4]
+            dbhead=line[5]
+#            comment=line[6:]
+            curr_epoch=int(time.time())
+            if (sample_epoch + 90) < curr_epoch:
+                state=2             
+                msg="Data is not updated."
+                result=state, msg
+                return result
+            #msg=" ".join(str(w) for w in line[2:])
+            if running == "NO":
+                state=2
+                msg="CRITICAL. Stopped for "+ age +" min. Head in file:"+ filehead +" and DB:" + dbhead  
+            elif running == "no":
+                state=1
+                msg="WARNING. Stopped for "+ age +" min. Head in file:"+ filehead +" and DB:" + dbhead
+            else:
+                state=0
+                msg="OK. Last index took "+ age +" min. Head in file:"+ filehead +" and DB:" + dbhead
+            result=state, msg
+            return result
+
+check_info['indexer_running'] = (
+        check_indexer_running,
+        "%s",
+        1,
+        inventory_indexer_running)

@@ -1,0 +1,24 @@
+##############################################################################
+# Dependent Cache Manager
+##############################################################################
+# Manages the underlying cache mechanism that e.g. util:cache is using
+##############################################################################
+
+##############################################################################
+# postponeTime
+##############################################################################
+# The time delay for when a dependent cache's objects are
+# expired. The default value is 4000 milliseconds. This causes
+# updates to objects cached by util:cache to be stale for at least
+# 4000 milliseconds. The reason for having this is that it takes the
+# presentation layer at least 1000 milliseconds to generate the new
+# content. Increase the value if content that is cached by
+# util:cache is not up to date. 
+#
+# Example:
+#   postponeTime=10000
+#
+# Default:
+#    postponeTime=4000
+##############################################################################
+#postponeTime=

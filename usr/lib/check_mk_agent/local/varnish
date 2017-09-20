@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# Monitors the varnish access log to see if the number of 404s or other
+# errors exceed various thresholds.
+
+# Checks are only made if varnish has START=yes in its /etc/default/varnish.
+
+# This check_mk plug-in results in checks called
+# varnish_health-404  -  Monitors the number of 404 responses from the site
+# varnish_health-other - Monitors the number of non-404 error responses
+#                        from the site, e.g. 503 etc.
+#
+# The hardcoded thresholds are:
+#  >5% 404 -> warning
+#  >30% 404 -> critical
+#  >1% other errors -> warning
+#  >10% other errors -> critical
+
+
+warning404=200   # 404 requests per 1000 (12%)
+critical404=300 # 404 requests per 1000 (30%)
+warningerr=20   # failed requests per 1000 (2%)
+criticalerr=100 # requests per 1000 (10%)
+name="varnish_health"
+
+function determine_health() {
+  results=( $(varnishncsa -d -F %s | awk 'BEGIN { err404=0; err = 0; ok=0; } { if ($1 == 404) err404 = err404 +1 ; else if ($1 >= 400) err = err + 1; else ok = ok + 1 } END { factor404=int(err404*1000/(ok+err+err404+1)); factorerr=int(err*1000/(ok+err+err404+1)); print factor404 "\t" factorerr "\t"  ok "\t" err404 "\t" err } ') )
+  if [ ${PIPESTATUS[0]} != 0 ] ; then
+    echo "3 ${name}-404 - varnishncsa executed with ${PIPESTATUS[0]}"
+    echo "3 ${name}-other - varnishncsa executed with ${PIPESTATUS[0]}"
+    exit
+  fi
+
+  #     type   factor         ok            failed          warn       crit
+  check "404" ${results[0]} $((${results[2]} + ${results[4]})) ${results[3]} $warning404 $critical404
+  check "other" ${results[1]} $((${results[2]} + ${results[3]})) ${results[4]} $warningerr $criticalerr
+}
+
+
+#usage "percentage 55 1000"
+# echos 5.5%
+function percentage() {
+  local result=$(( $1 * 1000 / $2 ))
+  local intpart=$(( $result / 10))
+  local decpart=".$(( $result % 10))"
+  if [ $decpart == ".0" ] ; then
+    decpart=
+  fi
+  echo $intpart$decpart
+}
+
+function check() {
+  message=OK
+  state=0
+  if [ $2 -gt $6 ] ; then
+    state=2
+    message=CRITICAL
+  elif [ $2 -gt $5 ] ; then
+    state=1
+    message=WARNING
+  fi
+  if [ $(( $3 + $4 )) -lt 3000 ] ; then
+    if [ $state -gt 0 ] ; then
+      state=0
+      message="(Only $(( $3 + $4)) requests sampled; forcing OK) $message"
+    fi
+  fi
+  message="$message: $(percentage $4 "$(($3+$4))")% of requests ($4/$(($3+$4))) responded with HTTP $1"
+  echo "$state $name-$1 factor=$2|ok=$3|err=$4 $message"
+}
+
+if [ -r /etc/default/varnish ] ; then
+  (
+    . /etc/default/varnish
+    export START
+  )
+  if [ $START=yes ] ; then
+    varnishncsa=$(which varnishncsa)
+    if [ ! -z $varnishncsa ] ; then
+      determine_health
+    fi
+  fi
+fi
+

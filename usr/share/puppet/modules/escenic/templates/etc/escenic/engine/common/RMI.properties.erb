@@ -1,0 +1,64 @@
+############################################################################
+# RMI port setup file.  This file simply defines the host name and port
+# number where the RMI registry is located, for the services which
+# this physical server will register its RMI services.
+#
+# The defaults provided should suit almost all installations. 
+############################################################################
+
+
+### ------------------------------------------------------------------- ###
+### ------------------------------------------------------ Optional --- ###
+### ------------------------------------------------------------------- ###
+
+############################################################################
+# RMI PORT
+############################################################################
+# Engine (by default) starts an RMI registry on the following port, which
+# enables servers in a multi-server environment, and Escenic Content Studio
+# to contact it.  By default, this is done on port 8123.
+#
+# Escenic Content Engine also registers all its local services to this
+# local RMI registry.
+#
+# The default value should suffice in most cases.
+#
+# Default:
+#   port=8123
+#
+# Example:
+#   port=8800
+#   port=13581
+#
+############################################################################
+# port=8123
+
+
+
+
+############################################################################
+# RMI HOST NAME
+############################################################################
+# Escenic Content Engine registers all its local services to the registry
+# specified by the "host" property.  by default, it accesses the RMI
+# registry that it starts itself; located on the "local" host called
+# "127.0.0.1" (localhost).
+#
+# If, for some reason, a different RMI registry is to be used, simply
+# specify the host name, and all services will be registered on the remote
+# RMI registry.
+#
+# The default value should suffice in most cases.
+#
+# Default:
+#   host=127.0.0.1
+#
+# Example:
+#   host=localhost
+#   host=192.168.2.3
+#   host=rmiregistry.mycompany.com
+#
+############################################################################
+# host=127.0.0.1
+
+

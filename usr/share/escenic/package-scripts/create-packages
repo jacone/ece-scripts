@@ -1,0 +1,424 @@
+#! /usr/bin/env bash
+
+# script for creating DEB and RPM packages of the vosa, ece-install
+# and ece scripts.
+
+# by torstein@escenic.com
+
+target_dir=/tmp/$(basename $0)-$(date --iso)
+package_name=escenic-content-engine-installer
+package_version=$(date +%Y-%m-%d.%H%M%S)
+default_maintainer_name="Torstein Krause Johansen"
+default_maintainer_email=torstein@escenic.com
+log=$HOME/.$(basename $0).log
+
+function clean_up() {
+  rm -rf $target_dir
+}
+
+function list_packages_that_can_be_built() {
+  declare -F | grep set_up | cut -d'_' -f3-
+}
+
+function get_user_options() {
+  while getopts ":p:e:n:r:l" opt; do
+    case $opt in
+      l)
+        list_packages_that_can_be_built
+        exit 0
+        ;;
+      e)
+        maintainer_email=${OPTARG}
+        ;;
+      n)
+        maintainer_name=${OPTARG}
+        ;;
+      r)
+        package_version=${OPTARG}
+        ;;
+      p)
+        package_name=${OPTARG}
+        ;;
+      \?)
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+      :)
+        echo "Option -$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+    esac
+  done
+
+}
+
+function create_target_directory() {
+  print_and_log "Creating package" $package_name "..."
+  set_up_${package_name} 2>/dev/null|| {
+    print_and_log "I don't know how to create package" $package_name ":-("
+    exit 1
+  }
+
+  debian_dir=$target_dir/DEBIAN
+  make_dir $debian_dir
+  run cp debian/${package_name}/* $debian_dir
+}
+
+## $1 :: the directory that holds the org files, from which to
+## generate man pages.
+
+## $2 :: target file of then man page (before gzip-ed)
+function create_man_pages() {
+  for org_file in $(find $target_dir -name "*-guide.org"); do
+    local target_man=$(basename ${org_file})
+    target_man=${target_dir}/usr/share/man/man1/${target_man%-guide.org}.1
+
+    print_and_log "Generating man pages from" $(basename ${org_file}) "..."
+
+    emacs --batch \
+      --load emacs/org-export-setup.el \
+      --file ${org_file} \
+      --funcall org-e-man-export-to-man \
+      >> $log \
+      2>> $log
+
+    local dot_man_file=$(dirname $org_file)/$(basename $org_file .org).man
+    if [ ! -e $dot_man_file ]; then
+      print_and_log "Man generation $(red failed), see ${log} and run" \
+        "[ bash -x" $(basename $0) "] from the command prompt to figure out why."
+      continue
+    fi
+
+    make_dir $(dirname ${target_man})
+    run mv ${dot_man_file} ${target_man}
+    run gzip ${target_man}
+
+    run rm $org_file
+  done
+}
+
+function set_up_escenic-content-engine-installer() {
+  make_dir $target_dir/{etc,usr,/etc/default}
+  make_dir $target_dir/usr/{bin,sbin,share/doc}
+  make_dir $target_dir/usr/share/doc/escenic/examples
+  make_dir $target_dir/usr/share/escenic/ece-scripts
+  make_dir $target_dir/etc/bash_completion.d
+
+  run cp ../../../../etc/bash_completion.d/ece-install \
+    $target_dir/etc/bash_completion.d/
+  run cp -r ../../../sbin/ece-install $target_dir/usr/sbin/
+  run cp -r ../../escenic/ece-scripts/ece-install.d/ \
+    $target_dir/usr/share/escenic/ece-scripts/
+  run cp -r ../../doc/escenic/ece-install-guide.org \
+    $target_dir/usr/share/doc/escenic
+  run cp -r ../../doc/escenic/examples/ece-install-*.conf \
+    $target_dir/usr/share/doc/escenic/examples/
+}
+
+function set_up_escenic-build-scripts() {
+  local doc_dir=$target_dir/usr/share/doc/escenic-build-scripts
+  make_dir $target_dir/usr/bin
+  make_dir $doc_dir
+  run cp ../build-scripts/ece-build $target_dir/usr/bin/ece-build
+  run cp ../build-scripts/ece-builder $target_dir/usr/bin/ece-builder
+  run cp ../build-scripts/ece-local-builder $target_dir/usr/bin/ece-local-builder
+  run cp ../build-scripts/ece-build-guide $target_dir/usr/bin/ece-build-guide
+
+  run cp -r ../../doc/escenic/ece-build-guide.org $doc_dir
+  run cp -r ../../doc/escenic/ece-builder-guide.org $doc_dir
+  run cp -r ../../doc/escenic/ece-local-builder-guide.org $doc_dir
+}
+
+function set_up_escenic-content-engine-scripts() {
+  local doc_dir=$target_dir/usr/share/doc/escenic/escenic-content-engine-scripts
+  make_dir $target_dir/etc/bash_completion.d
+  make_dir $target_dir/etc/cron.daily/
+  make_dir $target_dir/etc/init.d
+  make_dir $doc_dir
+  make_dir $target_dir/usr/share/escenic/ece-scripts
+  make_dir $target_dir/usr/{bin,sbin,share/doc}
+  make_dir $target_dir/{etc/escenic,usr,/etc/default}
+
+  # bin
+  local bin_list='ece ece-import'
+  for el in $bin_list; do
+    run cp -r ../../../bin/$el $target_dir/usr/bin/
+    run cp -r ../../escenic/ece-scripts/${el}.d/ \
+      $target_dir/usr/share/escenic/ece-scripts/
+  done
+
+  # sbin
+  run cp ../../../sbin/ece-deploy $target_dir/usr/sbin/
+
+  # conf
+  run cp ../../../../etc/bash_completion.d/{ece,ece-import,ece-deploy} \
+    $target_dir/etc/bash_completion.d
+  run cp -r ../../../../etc/default/ece $target_dir/etc/default/
+  run cp -r ../../../../etc/escenic/ece.conf $target_dir/etc/escenic/
+  run cp -r ../../../../etc/init.d/ece $target_dir/etc/init.d/
+
+  # doc
+  run cp ../../doc/escenic/ece-guide.org $doc_dir/
+  run cp ../../doc/escenic/ece-deploy-guide.org $doc_dir/
+  run cp ../../doc/escenic/ece-import-guide.org $doc_dir/
+  local examples_dir=$doc_dir/examples/etc/default
+  make_dir $examples_dir
+  run cp ../../../../etc/default/ece $examples_dir
+  run cp ../../../../etc/escenic/ece.conf $doc_dir/examples/etc
+
+  # cron
+  run cp -r ../../../../etc/cron.daily/remove-old-escenic-log-files \
+    $target_dir/etc/cron.daily/
+
+  # logrotate for tomcat catalina out
+  run cp -r ../../../../etc/logrotate.d \
+    $target_dir/etc/
+
+  # hugin
+  run cp -r ../../../../usr/share/hugin \
+    $target_dir/usr/share/
+}
+
+function set_up_vosa() {
+  make_dir $target_dir/{etc,usr,/etc/default}
+  make_dir $target_dir/usr/{bin,sbin,share/doc}
+  make_dir $target_dir/usr/share/doc/vosa
+  make_dir $target_dir/etc/bash_completion.d
+  make_dir $target_dir/etc/init.d
+
+  run cp -r ../../../bin/vosa $target_dir/usr/bin/
+  run cp -r ../../../bin/vosa-push $target_dir/usr/bin/
+  run cp -r ../../vizrt/ $target_dir/usr/share/
+  run cp -r ../../doc/vizrt/*.org $target_dir/usr/share/doc/vosa/
+  run cp -r ../../../../etc/bash_completion.d/vosa \
+    $target_dir/etc/bash_completion.d/
+  run cp -r ../../../../etc/init.d/vosa $target_dir/etc/init.d/
+
+  # dev image script
+  run cp ../build-scripts/ece-dev-image $target_dir/usr/bin/ece-dev-image
+
+}
+
+function set_up_escenic-common-scripts() {
+  make_dir $target_dir/{etc,usr,/etc/default}
+  make_dir $target_dir/usr/{bin,sbin,share/doc}
+  make_dir $target_dir/usr/share/doc/escenic
+  make_dir $target_dir/usr/share/escenic/ece-scripts
+
+  # system-info is useful for all packages, hence goes to
+  # escenic-common-scripts.
+  run cp -r ../../../bin/system-info $target_dir/usr/bin/
+  run cp -r ../../../bin/generate-changelog $target_dir/usr/bin/
+  run cp -r ../../../bin/generate-git-changelog $target_dir/usr/bin/
+  run cp -r ../../escenic/ece-scripts/system-info.d \
+    $target_dir/usr/share/escenic/ece-scripts/
+  run cp ../../../../etc/default/system-info $target_dir/etc/default/
+  run cp ../../doc/escenic/system-info-guide.org \
+    $target_dir/usr/share/doc/escenic
+  run cp ../../doc/escenic/generate-changelog-guide.org \
+    $target_dir/usr/share/doc/escenic
+
+  # both the installer and ece-scripts use the common scripts and
+  # web resources.
+  run cp -r ../../escenic/ece-scripts/common* \
+    $target_dir/usr/share/escenic/ece-scripts/
+  run cp -r ../../escenic/ece-scripts/*.css \
+    $target_dir/usr/share/escenic/ece-scripts/
+  run cp -r ../../escenic/ece-scripts/*.html \
+    $target_dir/usr/share/escenic/ece-scripts/
+
+  # everyone can need some network syncing
+  run cp -r ../../../bin/sync-network-drive $target_dir/usr/bin/
+}
+
+function set_up_escenic-check-mk-server-plugins() {
+  make_dir $target_dir/usr/share/check_mk/checks
+  run cp -r ../../../share/check_mk/checks/* \
+    $target_dir/usr/share/check_mk/checks/
+}
+
+function set_up_escenic-check-mk-plugins() {
+  make_dir $target_dir/usr/lib/check_mk_agent/local
+  make_dir $target_dir/usr/lib/check_mk_agent/plugins
+  make_dir $target_dir/etc/cron.d $target_dir/usr/lib/periodic-check $target_dir/var/cache/periodic-check
+#  chown nagios:nagios "$target_dir/var/cache/periodic-check"
+#  chown nagios:nagios "$target_dir/usr/lib/periodic-check"
+  run cp -r ../../../lib/check_mk_agent/plugins/* \
+    $target_dir/usr/lib/check_mk_agent/plugins/
+  run cp -r ../../../lib/check_mk_agent/local/* \
+    $target_dir/usr/lib/check_mk_agent/local/
+  run cp -r ../../../lib/periodic-check/* \
+    $target_dir/usr/lib/periodic-check/
+  run cp  ../../../../etc/cron.d/periodic-check \
+    $target_dir/etc/cron.d/periodic-check
+  run cp  ../../../../var/cache/periodic-check/* \
+    $target_dir/var/cache/periodic-check/
+}
+
+function set_up_escenic-munin-plugins() {
+  make_dir $target_dir/usr/share/munin/plugins
+  make_dir $target_dir/etc/munin/plugins
+  local doc_dir=$target_dir/usr/share/doc/escenic/escenic-munin-plugin
+  make_dir $doc_dir
+
+  local dir=$(mktemp -d)
+  (
+    run cp -r ../../../../etc/munin/plugins/* $target_dir/etc/munin/plugins
+    cd $dir
+    run git archive --format=tar.gz \
+    --remote=ssh://git@cci-jira-stash.ccieurope.com:7999/vosa/escenic-munin.git master \
+    --output="master.tar.gz"
+    tar xzf master.tar.gz
+    run cp $dir/*_ $target_dir/usr/share/munin/plugins
+    run cp $dir/README.md $doc_dir
+    run cp $dir/site/* $doc_dir
+
+    chmod 755 $file $target_dir/usr/share/munin/plugins
+  )
+  rm -rf $dir
+}
+
+function set_up_hugin-node() {
+  make_dir $target_dir/etc/hugin/{hugin.often,hugin.hourly,hugin.daily,hugin.weekly}
+  make_dir $target_dir/etc/{cron.d,sudoers.d}
+  make_dir $target_dir/usr/{bin,share/doc/hugin,share/hugin/{plugins,helpers,formatters}}
+  make_dir $target_dir/var/lib/hugin
+
+  local dir=$(mktemp -d)
+  (
+    download_uri_target_to_dir \
+      https://bitbucket.org/mogsie/hugin/get/default.tar.gz \
+      $dir
+    cd $dir
+    run tar xzf default.tar.gz
+    run cp $dir/mogsie-hugin-*/bin/* $target_dir/usr/bin
+    run cp $dir/mogsie-hugin-*/helpers/* $target_dir/usr/share/hugin/helpers/
+    run cp $dir/mogsie-hugin-*/etc/* $target_dir/etc/hugin/
+    run cp $dir/mogsie-hugin-*/sudoers/* $target_dir/etc/sudoers.d/
+    run cp $dir/mogsie-hugin-*/cron/* $target_dir/etc/cron.d/
+    run cp $dir/mogsie-hugin-*/checks/* $target_dir/usr/share/hugin/plugins/
+    run cp $dir/mogsie-hugin-*/formatters/* $target_dir/usr/share/hugin/formatters/
+    run cp $dir/mogsie-hugin-*/*.md $target_dir/usr/share/doc/hugin
+    run cp $dir/mogsie-hugin-*/*.org $target_dir/usr/share/doc/hugin
+    run cp $dir/mogsie-hugin-*/LICENSE $target_dir/usr/share/doc/hugin
+
+    # chmod 755 $file $target_dir/usr/bin/*
+  )
+  run rm -rf $dir
+}
+
+function set_up_spore() {
+  make_dir $target_dir/usr/{bin,sbin} \
+    $target_dir/usr/share/doc/spore
+
+  local dir=$(mktemp -d)
+  (
+    cd $dir
+    run git archive --format=tar.gz \
+    --remote=ssh://git@cci-jira-stash.ccieurope.com:7999/vosa/spore.git master \
+    --output="master.tar.gz"
+    run tar xzf master.tar.gz
+    run cp $dir/bin/* $target_dir/usr/bin
+    run cp $dir/sbin/* $target_dir/usr/sbin
+    run cp $dir/README.md $target_dir/usr/share/doc/spore
+    run cp -r $dir/examples $target_dir/usr/share/doc/spore/examples
+  )
+  run rm -rf $dir
+}
+
+function get_name() {
+  echo ${maintainer_name-$default_maintainer_name}
+}
+
+function get_email() {
+  echo ${maintainer_email-$default_maintainer_email}
+}
+
+function create_packages() {
+  run sed -i "s#VERSION#${package_version}#g" $debian_dir/control
+  run sed -i "s#MAINTAINER_NAME#$(get_name)#g" $debian_dir/control
+  run sed -i "s#MAINTAINER_EMAIL#$(get_email)#g" $debian_dir/control
+  find ${target_dir}/usr/{bin,sbin}/ -type f 2>/dev/null | while read f; do
+    sed -i "s#^ece_scripts_version=.*#ece_scripts_version=${package_version}#g" \
+      $f
+  done
+
+  # Mark everything the package provides in /etc as a conf file
+  find "${target_dir}" -type f |
+    egrep "etc|conf" |
+    egrep -v "DEBIAN|/doc/" |
+    sed "s#${target_dir}##" \
+        > "${debian_dir}/conffiles"
+
+  # fix permissions
+  if [ -e $debian_dir/postinst ]; then
+    run chmod 755 $debian_dir/postinst
+  fi
+
+  if [ ! -x /usr/bin/dpkg-deb ]; then
+    print_and_log "You must have dpkg-deb installed :-("
+    exit 1
+  fi
+
+  fakeroot dpkg-deb --build $target_dir \
+    2>&1 > /dev/null
+  mv ${target_dir}.deb $target_dir/${package_name}-${package_version}.deb
+
+  if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
+    (
+      cd $target_dir
+      run fakeroot alien --keep-version --to-rpm --scripts \
+        ${package_name}-${package_version}.deb
+    )
+  else
+    print_and_log "You must have 'alien' and 'fakeroot' installed to create RPMs"
+    exit 1
+  fi
+}
+
+function list_packages() {
+  print_and_log "Sir, the packages are now ready:" \
+    $target_dir/*.{deb,rpm}
+}
+
+function bootstrap_thyself() {
+  # first, try to be nice, then check the standard location
+  local dir=$(dirname $0)/../ece-scripts
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
+
+  local common_libraries="
+    common-bashing.sh
+    common-io.sh
+    common-os.sh
+    common-ece.sh
+  "
+
+  for el in $common_libraries; do
+    source $dir/$el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+
+  # override the default pid file location so that create-packages can
+  # be run as an unprivileged user
+  pid_file=$HOME/.$(basename $0).pid
+  create_pid
+
+  # hooks for when the scirpt exits cleanly and when a user or someone
+  # kills the process
+  trap common_bashing_exit_hook EXIT
+  trap common_bashing_user_cancelled_hook SIGINT SIGHUP
+
+}
+
+bootstrap_thyself
+clean_up
+get_user_options $@
+create_target_directory
+create_man_pages
+create_packages
+list_packages
