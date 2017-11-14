@@ -1,0 +1,127 @@
+* SSH Access
+
+This chapter describes how you can access the <%= trail_network_name %>
+network using SSH and assumes that you have your [[http://en.wikipedia.org/wiki/Secure_Shell#Key_management][SSH key]] on the
+<%= trail_gk_host %> and all over the <%= trail_network_name %>.
+
+It also assumes that the gateway IP of your office/network has been
+added to the access control list of hosts/networks which are allowed
+to access the gatekeeper.
+
+** Generate an SSH key on Linux or Mac OS X
+*** Check to see if you already have a key you can use
+You only need to do this if you don't already have an SSH key. The
+keys are normally stored in ~$HOME/.ssh~ so have a look here to see if
+you have any:
+#+BEGIN_SRC text
+$ ls ~/.ssh 
+authorized_keys  id_rsa  id_rsa.pub  known_hosts
+#+END_SRC
+If you see the ~id_rsa~ and ~id_dsa.pub~, you already have one. They
+can also be called something with ~dsa~ or indeed anything (the
+~id_rsa[.pub]~ are just the default).
+
+*** Generate a new SSH key
+To generate a new key, you can do:
+#+BEGIN_SRC text
+$ ssh-keygen -t rsa
+#+END_SRC
+
+Just hit enter when you're prompted for the name of the file. When
+asked for a key password, be sure to set one. This is important, all
+your SSH keys should have a password set. If not, anyone can copy your
+keys and log on to all the servers where you've previously been
+granted access.
+
+If you wish to set the password on an old key, or set a new password,
+you can do this by
+#+BEGIN_SRC text
+$ ssh-keygen -f id_rsa -p
+#+END_SRC
+
+The ~id_rsa~ above corresponds to the ~$HOME/.ssh/id_rsa~ file.
+
+*** Add your SSH key to your key agent
+On your local machine, load your SSH key into your key agent. On Linux
+and Mac OS X, this should only be a matter of:
+#+BEGIN_SRC text
+$ ssh-add  
+#+END_SRC
+Asking the SSH key agent for all keys should now list your key. Note
+that if you have multiple keys, or have called your one key something
+different that what's default, you must pass the key name to the
+~ssh-add~ command above.
+
+Once you're done adding your key(s), confirm their presence in the key
+ring with:
+#+BEGIN_SRC text
+$ ssh-add -l
+2048 33:49:02:c5:30:8d:2e:9g:28:82:3a:89:5c:b3:5d:a3 /home/myuser/.ssh/id_rsa (RSA)
+#+END_SRC
+
+
+** Generate an SSH key on Windows
+
+*** Using Putty
+
+/Generating your key:/
+- Install the full Putty package including puttygen by using the Windows Installaller that is downloadable [[http://putty][here]]
+- Run puttygen
+- Generate your personal key (It wants you to move your mouse around a bit)
+[[./graphics/puttygen1.png]]
+- Give your key a name and enter a passphrase. We use keys for better security. Choosing a weak password will not help. It is called a [[http://en.wikipedia.org/wiki/Passphrase][passphrase]] because your are expected to enter a sentence and not just a word.
+[[./graphics/puttygen2.png]]
+
+/Storing your key:/
+
+Make a directory like C:\Users\thv.VIZRTINT\.ssh. Do not spread your key around further. If you loose your key because your laptop crashes, you can allways create a new one. Save your key as .pkk and as .pem
+- Save your key in and Privacy-enhanced Electronic Mail format(.pem)
+[[./graphics/puttygen3.png]]
+
+- Save your key in a Putty Private Key File(.pkk) 
+[[./graphics/puttygen4.png]]
+
+**** Using Pagent
+Pagent is Putties [[http://en.wikipedia.org/wiki/Ssh-agent][SSH agent]]. Using am SSH agent makes the use of keys a lot easier. An SSH agent runs in the background to supply a key to any putty-ssh login you might perform during the day without retyping your passphrase.
+
+Pagent lets you load keys interactively or on the command line.
+[[./graphics/pagent.png]]
+
+*** Using Cygwin
+
+Install [[http://cygwin.com][Cygwin]] and be sure to check for the =openssh-client= package
+when running =setup.exe=:
+
+[[./graphics/cygwin-openssh.png]]
+
+Once the installation is done, you should have a =cygwin= icon to
+click on:
+[[http://x.cygwin.com/cygwin-icon.gif]] This will open a Unix like shell
+on your Windows computer, in which you can use many of the standard
+Unix commands, such as =ls=, =cd=, =cp=, =rsync= & =grep=.
+
+In the Cygwin shell, you now run the same =ssh= command that you'd
+have on Linux. This command is what you can see being used and
+you can use the instructions above in the [[Generate an SSH key on Linux
+or Mac OS X]] section to generate and use your SSH key.
+
+
+** Log on to the gatekeeper
+On your local machine, do:
+#+BEGIN_SRC text
+$ ssh <gatekeeper host> 
+#+END_SRC
+
+** Log on to the control server
+Once you're on <%= trail_gk_host %> should be able to log on to the
+control server:
+#+BEGIN_SRC text
+$ ssh <%= trail_control_host %>
+#+END_SRC
+
+From the control server, you can access any of the machines in the
+<%= trail_network_name %>, e.g.:
+#+BEGIN_SRC text
+$ ssh <%= trail_presentation_host %>
+#+END_SRC
+

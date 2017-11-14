@@ -1,0 +1,7 @@
+#! /usr/bin/env bash
+
+munin-node-configure --shell --suggest | bash
+service munin-node restart
+
+exit 0
+

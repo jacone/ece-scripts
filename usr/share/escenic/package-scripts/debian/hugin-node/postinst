@@ -1,0 +1,31 @@
+#! /bin/sh
+
+set -e
+
+prevver="$2"
+
+add_hugin_system_user() {
+	if ! getent passwd hugin >/dev/null; then
+		adduser --group --system --no-create-home --home /var/lib/hugin hugin
+	fi
+}
+
+fixperms() {
+        dpkg-statoverride --list /var/lib/hugin >/dev/null || \
+		dpkg-statoverride --update --add hugin root 0755 /var/lib/hugin
+}
+
+case "$1" in
+	configure)
+		add_hugin_system_user
+		fixperms
+		;;
+	triggered|abort-upgrade|abort-deconfigure|abort-remove)
+		:
+		;;
+	*)
+		echo "Called with unknown argument $1, bailing out."
+		exit 1
+		;;
+esac
+

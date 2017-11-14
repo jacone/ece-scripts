@@ -1,0 +1,114 @@
+#! /usr/bin/env bash
+
+#          version: $Revision: #1 $ $Date: 2011/02/18 $
+#           author: mogsie@vizrt.com
+
+### BEGIN INIT INFO
+# Provides:          vosa
+# Required-Start:    $remote_fs $network $syslog
+# Required-Stop:     $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Vizrt Online Components
+### END INIT INFO
+
+#################################################################
+# Usage:
+# * copy this script to /etc/init.d/vosa
+# 
+# * copy its configuration file to /etc/default/vosa (or
+# * /etc/conf.d/vosa on Gentoo based disitributions)
+#
+# * make sure it's executable, chmod +x /etc/init.d/vosa
+#
+# * add it to the desired runlevels. On Debian based systems this
+#  would be: update-rc.d vosa defaults
+#######################################################################
+
+if [ $(whoami) != "root" ] ; then
+    echo "Sorry, you must be root to run $0"
+    exit 1
+fi
+
+#######################################################################
+# Default values
+#######################################################################
+dir_list="
+/var/run/vizrt/vosa
+"
+
+vosa_instance_list=
+for a in /etc/vizrt/vosa/enabled.d/* ; do
+  if [ -L "$a" -a -r "$a" ] ; then
+    vosa_instance_list="$vosa_instance_list $(basename "$a")"
+  fi
+done
+
+vosa_script=/usr/bin/vosa
+
+# The values above may be overidden a file named the same as this
+# init.d script. This init.d configuration must also hold the
+# variables controlling which vosa instances to start. The list of
+# locations per default caters (at least) for Debian, RedHat & Gentoo
+# based systems:
+conf_file_location_list="
+/etc/default
+/etc/conf.d
+/etc/sysconfig
+"
+
+function read_conf_file()
+{
+    for el in $conf_file_location_list; do
+        if [ -r $el/`basename $0` ]; then
+            source $el/`basename $0`
+            found_conf=1
+            break
+        fi
+    done
+
+#    if [ -z $found_conf ]; then
+#        echo "Couldn't find configuration for $0, exiting :-("
+#        exit 1
+#    fi
+}
+
+function ensure_dirs_are_ok()
+{
+    for el in $dir_list; do
+        if [ ! -d $el ]; then
+            mkdir -p $el
+        fi
+# don't change owner; root is fine...
+#        chown --changes -R $vosa_unix_user:$vosa_unix_group $el
+    done
+}
+
+function ensure_vosa_script_is_ok()
+{
+    if [ ! -r $vosa_script ]; then
+        echo "Couldn't read $vosa_script"
+        exit 1
+    elif [ ! -x $vosa_script ]; then
+        echo "$vosa_script needs to be executable (do: chmod +x $vosa_script)"
+        exit 1
+    fi
+    
+}
+
+function execute_command()
+{
+    for el in $vosa_instance_list; do
+        $vosa_script -i $el $1
+    done
+}
+
+if [ $1 ]; then
+    # todo: whitelist to start, stop, status.
+    read_conf_file
+    ensure_vosa_script_is_ok
+    ensure_dirs_are_ok
+    execute_command $1
+else
+    echo "Usage: `basename $0` <start|stop|status>"
+fi

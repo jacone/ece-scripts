@@ -1,0 +1,71 @@
+/* Varnish configuration for Escenic Content Engine              -*- java -*- */
+
+/* IPs that are allowed to access the administrative pages/webapps. */
+acl privileged_ip_list {
+  /* <%% privileged_ip_list.each do |ip| %> */
+<% privileged_ip_list.each do |ip| %>
+	"<%= ip %>";
+<% end %>
+	"localhost";
+}
+
+/* The IP of the mobilize/Mobilize server */
+acl mobilize {
+  "<%= mobilize_vip %>";
+}
+
+/* Our web server for serving static content */
+backend static {
+  .host = "localhost";
+  .port = "81";
+}
+
+backend ece {
+  .host = "localhost";
+  .port = "8080";
+}
+
+
+sub vcl_recv {
+  if (!client.ip ~ privileged_ip_list &&
+      (req.url ~ "^/escenic" ||
+       req.url ~ "^/studio" ||
+       req.url ~ "^/munin" ||
+       req.url ~ "^/webservice" ||
+       req.url ~ "^/indexer-webservice" ||
+       req.url ~ "^/escenic-admin")) {
+     error 405 "Not allowed.";
+  }
+
+  /* Only Mobilize is allowed to access the /binary context
+   * which contains all the full quality video files. */
+  if (!client.ip ~ mobilize && req.url ~ "^/binary") {
+    error 405 "Not allowed.";
+  }
+
+  set req.backend = ece;
+
+	/* NIE does not need sessions on their website */
+  remove req.http.Cookie;
+	
+  
+}
+
+/* Called when content is fetched from the backend. */
+sub vcl_fetch {
+	/* NIE does not need sessions on their website */
+  remove beresp.http.Set-Cookie;
+}
+
+sub vcl_deliver {
+  /* Adds debug header to the result so that we can easily see if a
+   * URL has been fetched from cache or not.
+   */
+  if (obj.hits > 0) {
+    set resp.http.X-Cache = "HIT #" + obj.hits;
+  }
+  else {
+    set resp.http.X-Cache = "MISS";
+  }
+  set resp.http.X-Cache-Backend = req.backend;
+}

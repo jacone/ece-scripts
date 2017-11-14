@@ -1,0 +1,15 @@
+blockdiag {
+  orientation = "portrait";
+
+  browser [shape = "actor"];
+  browser -> video-widget [label="gets"];
+  content-engine [label="content-engine", color="orange"];
+  adactus-control [label="vmeo-controller", color="green"];
+  adactus-streaming [label="vmeo-streaming", color="cyan"];
+  
+  video-widget [label="video-widget", color="brown"];
+  video-widget -> cache-server -> content-engine -> adactus-control [label="gets XML"];
+  browser -> adactus-streaming [label="streams"];
+
+  
+}

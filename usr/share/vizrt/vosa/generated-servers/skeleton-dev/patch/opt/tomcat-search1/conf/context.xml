@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Context>
+  <WatchedResource>WEB-INF/web.xml</WatchedResource>
+  <ResourceLink
+      global="jdbc/eae-logger/logger"
+      name="jdbc/eae-logger/logger"
+      type="javax.sql.DataSource"
+  />
+  <ResourceLink
+      global="jdbc/eae-qs/qs"
+      name="jdbc/eae-qs/qs"
+      type="javax.sql.DataSource"
+  />
+  <Environment
+      name="escenic/solr-base-uri"
+      value="http://localhost:8180/solr/"
+      type="java.lang.String"
+      override="false"
+  />
+  <Environment
+      name="escenic/indexer-webservice"
+      value="http://localhost:8080/indexer-webservice/index/"
+      type="java.lang.String"
+      override="false"
+  />
+  <Environment
+      name="escenic/index-update-uri"
+      value="http://localhost:8180/solr/update/"
+      type="java.lang.String"
+      override="false"
+  />
+  <Environment
+      name="escenic/head-tail-storage-file"
+      value="/var/lib/escenic/engine/head-tail.index"
+      type="java.lang.String"
+      override="false"
+  />
+  <Environment
+      name="escenic/failing-documents-storage-file"
+      value="/var/lib/escenic/engine/failures.index"
+      type="java.lang.String"
+      override="false"
+  />
+</Context>

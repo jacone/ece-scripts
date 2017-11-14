@@ -1,0 +1,74 @@
+############################################
+# Specifies the location of the web service that Content Studio connects to.
+# In a default installation you do not need to specify this  property, as 
+# Content Studio will automatically look for the web service on the host 
+# and port where the Content Studio webapp itself is located.
+#
+# You therefore only need to specify this property if the web service has
+# been explicitly moved to a different host and/or port than the Content Studio
+# webapp.
+#
+# The web service URL must end with "index.xml".
+#
+############################################
+# property.com.escenic.client.webservice.url=http://<host>:<port>/webservice/index.xml
+
+############################################
+# These are the locations studio will put its cache directory in.
+#
+# The possible values include: 
+# - any absolute path (relative paths will be ignored). 
+# - the string java.io.tmpdir - in which case the user's temp directory will be used. 
+# - the string user.home - in which case the user's home directory will be used. 
+# - nothing - in which case the roaming profile will be used.
+#
+# Note that in properties files, backslashes must be escaped as follows: windowsvista=c:\\temp
+#
+############################################
+property.com.escenic.studio.cache.directory.windowsvista=java.io.tmpdir 
+property.com.escenic.studio.cache.directory.windowsxp=java.io.tmpdir 
+property.com.escenic.studio.cache.directory.macosx=java.io.tmpdir 
+property.com.escenic.studio.cache.directory.linux=java.io.tmpdir
+
+############################################
+# These are the fonts Content Studio will use by default. If the font name is not set and the system default font does not support
+# the desired language then Content Studio will try to find an arbitrary font based on Regional Settings.
+#
+# To specify the font, you may input Font Face Name or Font Family Name. We would recommend you to use Font Family Names.
+# For example: 'Verdana Bold', 'Verdana Bold Italic', 'Verdana Italic' are the Font Face Names and 'Verdana' is the Font Family Name of those Font Face Names.
+#
+# Note that if your specified font name has space between words, please use double quote(") as given in the example for Windows Vista.
+############################################
+
+#property.com.escenic.studio.font.windowsvista="Arial Unicode MS"
+#property.com.escenic.studio.font.windowsxp=
+#property.com.escenic.studio.font.macosx=
+#property.com.escenic.studio.font.linux=
+
+############################################
+# Uncomment the following line to enable the experimental pack200 support.
+#
+# Using this property will reduce the download size of Content Studio to one fifth of the uncompressed version.
+#
+# See also http://java.sun.com/javase/6/docs/technotes/guides/jweb/tools/pack200.html
+############################################
+# property.packEnabled=true 
+
+#######################################
+# Additional parameters for the java vm when launching Content Studio
+#
+# Default:
+# vmargs=-Xms128m -Xmx256m
+# Example:
+# vmargs=-Xms128m -Xmx512m
+######################################
+# vmargs=-Xms128m -Xmx512m
+
+############################################
+# Set the user time zone to content studio.
+#
+# Using this property content studio will show the given timezone.
+# 
+# Example: property.user.timezone=America/Vancouver
+############################################
+# property.user.timezone=America/Vancouver

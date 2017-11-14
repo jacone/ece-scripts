@@ -1,0 +1,400 @@
+* Development Process
+
+This chapter tells you how to install and set up your development
+environment, and then describes how you can use the
+tools in the environment to carry out everyday development tasks.
+
+The main components of the VOSA development environment are:
+
+ - Apache Subversion :: All your project code is stored here, under strict
+                 version control.
+ - Apache Maven :: Apache Maven provides dependency management and
+                   controls the SW build process.
+ - IntelliJ IDEA Ultimate :: Your editor and coding environment.
+ - VirtualBox :: Lets you run a complete
+                 copy of your production site in a virtual
+                 machine on your PC, making it easy to test your code changes
+                 as you make them.
+ - HipChat :: A chat room service that you can use to communicate with
+              other members of your project, stakeholders in the
+              project (customers, users and so on) and Vizrt support
+              staff. The chat room for your project also has a special
+              member called Guru. Guru is a robot who will do various
+              jobs for you such as building and deploying new versions
+              of the site.
+ - JIRA :: A bug tracking service that is used to track all work done
+           in the project. All changes to be made are registered as
+           change requests in JIRA, and Subversion will only allow you
+           to check in changes that have a valid JIRA ticket number.
+
+** Installation
+
+You need to install the following items on your PC or Mac:
+
+ - The Oracle Java Development Kit, version 6 or 7. You can get this
+   from [[http://www.oracle.com/technetwork/java/javase/downloads/jdk6u37-downloads-1859587.html]] 
+   and [[http://www.oracle.com/technetwork/java/javase/downloads/java-se-jdk-7-download-432154.html]] 
+ - Apache Subversion client software. You can get this from
+   [[http://subversion.apache.org/packages.html]] (or on Linux you can
+   most likely install it using your package manager).
+ - Apache Maven version 3. You can get this from
+   [[http://maven.apache.org/download.html]]  (or on Linux you can
+   most likely install it using your package manager).
+ - IntelliJ IDEA Ultimate, version 11.x. You can download this from
+   [[http://www.jetbrains.com/idea/download/]]. Be sure to download the
+   Ultimate version, which is licensed software. Depending on the
+   licensing arrangement at your site you may need to enter a license
+   number after installation - talk to your project manager for more
+   information. Note that version 11.x is required: earlier versions of IntelliJ IDEA do not
+   contain all the functions required by the VOSA development process
+   and will not work properly.
+ - Oracle VirtualBox. You can get this from [[https://www.virtualbox.org/wiki/Downloads]]
+   (or on Linux you can most likely install it using your package manager). You 
+   can use another virtual machine hypervisor such as VMWare if you prefer, but this
+   documentation assumes you are using VirtualBox.
+
+During the IntelliJ IDEA installation process you are allowed to
+choose which plug-ins to activate. You should activate at least the
+following plug-ins (although you may find you have use for others):
+
+ - Maven integration plug-in
+ - Subversion integration plug-in
+
+All of the above products have their own installation
+procedures. Follow the relevant procedures for your operating system,
+and make sure they are correctly installed before continuing with the
+set-up of your development environment.
+
+** Set-up
+
+Setting up your development environment involves:
+
+ - Configuring the SW you have installed
+ - Obtaining copies of the code and systems you are going to work on
+ - Getting access to the project infrastructure (HipChat, Jira and so on) 
+
+*** Set up your local test system
+
+You will have your own test copy of the site you are working on. It is a 
+complete working copy of the production server and runs in a virtual machine
+on your PC. It is supplied as an Ubuntu Enterprise Cloud Image, modified to boot 
+under almost any hypervisor (VirtualBox, for example).
+
+The supplied image consists of an Ubuntu server OS, with the following SW installed 
+and preconfigured:
+
+- Java
+- Escenic Content Engine
+- Varnish cache (like the production server)
+- Memcached (like the production server)
+- Solr running in a separate Java VM (like the production server)
+- A publication and .ear file from your project
+
+The system is configured with two virtual network cards (one for outbound NAT traffic
+and the other for inbound traffic), and has remote debugging enabled on port 5005.
+
+Click on this link to download the virtual machine image:
+
+[[<%= trail_dev_image_uri %>]]
+
+When the file has finished downloading, you can open it with your chosen
+hypervisor. If you are using VirtualBox then the procedure for
+installing the image is as follows:
+
+1. Start VirtualBox and open the downloaded <%= trail_dev_image_name %> file.
+
+2. VirtualBox recognizes the format and displays an import dialog. Click *Import*.
+
+3. A license agreement dialog is displayed. Click *Agree* to continue.
+
+4. When the image file has been imported, the VirtualBox Manager window is displayed, 
+   and the imported image is displayed in a list. Select the image and click on
+   *Settings*. 
+   
+5. The settings page displays various parameters that you can use to configure the 
+   virtual machine. Unless you know that you have specific changes that you want to make regarding
+   memory allocation, number of CPUs etc., the default settings should be good enough
+   so you can just click *OK* to accept them.
+
+6. Make sure your image is still selected and click *Start* to start the virtual machine.
+
+A terminal window is displayed showing the virtual machine boot-up messages. When the boot sequence 
+has finished, the terminal window will contain an information page starting with the
+following welcome message:
+
+#+BEGIN_SRC default
+Welcome to the <%= trail_dev_host_name %> development environment
+#+END_SRC
+
+Below this welcome messages are the IP addresses used by the virtual
+machine and the user name/password combinations you can use to log in
+to the system. 
+
+In order to be able to use the *<%= trail_dev_host_name %>* 
+URLs, you need to add the host name *<%= trail_dev_host_name %>* to 
+your computer's =hosts= file. To do this:
+
+1. Open your hosts file in a text editor. On a Windows PC, you will find the
+   hosts file at =C:\Windows\System32\drivers\etc\hosts=. On a Mac or Linux
+   machine you will find it at =/etc/hosts=.
+2. Add the following line to the file:
+   #+BEGIN_SRC default
+   <ip-address> <%= trail_dev_host_name %>
+   #+END_SRC
+   where =<ip-address>= is the =eth1= IP address listed on the virtual machine's welcome page.
+3. Save your changes.
+
+Your test system is now up and running. You should be able to verify your system by opening a browser 
+and navigating to [[http://<%= trail_dev_host_name %>:8080/escenic-admin/status.jsp?tests=all]].
+
+*** Verify available services and publications
+
+- With the image runing you should now be able to access the following services:
+|---------------------+---------------------------------------------------------------|
+| Service             | URL                                                           |
+|---------------------+---------------------------------------------------------------|
+| Escenic Admin       | http://<%= trail_customer_acronym %>-dev:8080/escenic-admin   |
+|---------------------+---------------------------------------------------------------|
+| Web Studio          | http://<%= trail_customer_acronym %>-dev:8080/escenic         |
+|---------------------+---------------------------------------------------------------|
+| Content Studio      | http://<%= trail_customer_acronym %>-dev:8080/studio          |
+|---------------------+---------------------------------------------------------------|
+| Solr                | http://<%= trail_customer_acronym %>-dev:8180/solr            |
+|---------------------+---------------------------------------------------------------|
+
+You should also be able to access the following publications:
+
+|--------------------+------------------------------------+-----------------------------------------|
+| Publication        | username / password                | URL                                     |
+|--------------------+------------------------------------+-----------------------------------------|
+| <publication-name> | <publication-name>\_admin / admin  | [[http://local.<publication-name>.com]] |
+|--------------------+------------------------------------+-----------------------------------------|
+
+
+*** Configure Maven
+
+You need to add a reference to the Vizrt software repository to your
+Maven settings files. To do this:
+
+1. Open the Maven settings file for editing. On Windows you will find
+   it at =??=. On  Mac and Linux you will find it at
+   =/home/<your-user>/.m2/settings.xml=.
+2. Add a repository definition like the one shown below to the file:
+   #+BEGIN_SRC xml
+   <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                         http://maven.apache.org/xsd/settings-1.0.0.xsd">
+     <profiles>
+       <profile>
+         <id>default</id>
+         <activation>
+           <activeByDefault>true</activeByDefault>
+         </activation>
+           <repositories>
+             <repository>
+             <id>escenic-repo</id>
+             <name>Oslo Releases</name>
+             <url>http://repo.dev.escenic.com/content/groups/trunk</url>
+             <layout>default</layout>
+           </repository>
+         </repositories>
+       </profile>
+     </profiles>
+   </settings>
+   #+END_SRC
+   (The above example shows the minimum content required for <%= trail_dev_project_name %> to 
+   work. Your =settings.xml= may of course contain other settings. For a complete description of 
+   how to use =settings.xml=, see http://maven.apache.org/settings.html.)
+   TODO Is the above example correct?
+3. Save your changes.
+  
+*** Check out your project
+
+To check out your project:
+
+1. Start Intellij.
+2. Click on the *Check out from Version Control* link.
+3. If a list of version control systems is displayed, select Subversion.
+4. Click on the + icon to add a new repository.
+5. Paste this:
+   #+BEGIN_SRC default
+   https://vizrtcustomers.jira.com/svn/<%= trail_dev_project_name %>
+   #+END_SRC
+   into the displayed dialog, and click on *OK*.
+6. Select the repository you have added to the list and select *Checkout*.
+7. Choose/create a destination folder for the project and click *OK* three times.
+8. When asked if you want to create an IntelliJ project for the source files, select 
+   *No*.
+
+*** Set up your project
+
+To set up your project:
+
+1. Click on the *Open project* link.
+2. In the *Open Project* dialog, open the project's =trunk= folder (or one of its =branches/n.n=
+   folders if that is where you are going to work).
+3. Select the =pom.xml= file in the folder and click *OK*.
+4. Select *File* > *Settings...*.
+5. In the displayed *Settings* dialog, select *Maven* > *Importing*.
+6. Make sure that the *Import Maven projects automatically* option is checked and click *OK*.
+7. Select *Tools* > *Deployment* > *Configuration*.
+8. In the displayed *Deployment* dialog, click on the + icon.
+9. Enter a name for your deployment set-up in the *Name* field,  *SFTP* in the *Type* field and 
+   click on *OK*.
+10. On the *Connections* tab of the displayed form, enter *<%= trail_dev_host_name %>* in 
+    the *SFTP Host* field, *escenic* in the *User name* field and the corresponding password 
+    in the *Password* field.
+11. Click on *Test SFTP Connection...* to check you have entered the correct login credentials.
+12. On the form's *Mappings* tab, enter the following two mappings:
+
+    | Local path                                                                  | Deployment path                                                             |
+    |-----------------------------------------------------------------------------+-----------------------------------------------------------------------------|
+    | /<path-from-root>/publications/shared-war/src/main/webapp/template/         | /opt/tomcat-engine1/webapps-<publication-name>/<publication-name>/template/ |
+    | /<path-from-root>/publications/<publication-name>/src/main/webapp/template/ | /opt/tomcat-engine1/webapps-<publication-name>/<publication-name>/template/ |
+
+13. Click *OK*.
+14. Select *Tools* > *Deployment* > *Automatic upload*.
+
+*** Test automatic deployment
+
+Any changes you make to your project should now be automatically deployed to the correct location 
+on your test server. To test that this is actually the case:
+
+1. Display your test server's file system by selecting *Tools* > *Deployment* > *Browse Remote Host*.
+2. Navigate down the displayed tree to show the contents of the =/opt/tomcat-engine1/webapps-<publication-name>/<publication-name>/template/widgets= folder.
+   (=/opt/tomcat-engine1/webapps-<publication-name>/<publication-name>/template/= and all its children should be highlighted in green. If this is not the case,
+   go back and and check that you entered the deployment path correctly in the *Deployment* dialog.)
+3. In your local code tree, navigate to publications/<publication-name>/src/main/webapp/template/widgets/dummy.
+4. Create a file (any name) in this folder. The dummy folder and the file you have created should immediately be duplicated in the deployment tree.  If this is not the case,
+   go back and and check that you entered the correct local paths in the *Deployment* dialog.
+5. Delete the test file you created. It should also disappear from the deployment tree.
+
+
+** Procedures
+
+You have now installed and configured all the local components of your development
+environment. However, your development environment consists of many other systems
+in your local network and on the Internet, and also includes the people you will be working
+with. This section provides:
+
+ - An overview of how all these systems and people fit together
+ - Some suggested procedures for making the best use of your environment
+
+*** Change management
+
+VOSA aims to provide a development environment that is organized but flexible
+and above all *transparent*. It should be easy for any interested party to find
+out what is going on at any time:
+
+ - What tasks have been carried out, what tasks are in progress, what
+   tasks are planned.
+ - Who is involved in carrying out the tasks.
+ - Why the tasks are being carried out (what requirements they are intended to satisfy).
+ - Where the task is in the development cycle.
+
+The environment is designed to support agile development methodologies such as
+[[http://en.wikipedia.org/wiki/Scrum_(development)][Scrum]] and is centered around a web-based bug-tracking and change
+management system called *Jira*. Every VOSA project
+has a corresponding Jira project at [[https://vizrtcustomers.jira.com]]. All the work
+to be carried out in the VOSA project must be registered as *issues* in this Jira project.
+
+Jira supports a hierarchy of issues so that high level requirements (called *epics* in 
+Scrum terminology) can be broken down into smaller requirements (*stories*) and the individual
+development tasks that you will actually work with. Jira tracks the progress of these
+tasks (plus bug correction tasks, which are also registered as issues) through a lifecycle
+of development work, testing, error correction and release. It keeps track of who is working
+on the tasks and mantains a log of all code changes associated with them, plus comments, notes
+and discussions.
+
+Jira is a large and very powerful change management system that can be used in many different
+ways. You will need to find your way around at least some parts of it, and you are recommended 
+to make use of its help facilities and documentation to do so. As a VOSA developer, 
+however, the most important points you need to understand are:
+
+ - Jira is where your work comes from :: If you haven't got the number of a Jira issue describing
+   the work you are doing, then you should not be writing or modifying any code.
+ - Jira needs to know how you're getting on :: When you are satisfied enough with a change to
+   check it in to Subversion, then you must include the issue number in your check-in comment.
+   The check-in is then recorded in the issue. Add notes and comments to the issue as you go
+   along so it contains a complete record of decisisons and changes made along the way. When
+   you are finished with the task, record the fact in Jira by *resolving*??  the issue.
+
+You can access your Jira project(s) from:
+
+[[http://start.vizrtsaas.com/<%= trail_dev_project_name %>]]
+
+*** Version control
+
+All code (JSP, HTML, XML, Java, Javascript, CSS etc.), documentation and other resources (images, videos,
+sound, configuration files) in a VOSA project is stored in a Subversion repository. The code
+you work with on your machine is only a copy of the code stored in Subversion, and you cannot
+build or deploy your changes for others to see until you have checked them back in to Subversion.
+
+Subversion is a very widely-used version control system and there are plenty of resources
+available on the Internet for learning how to use it. The Subversion client you have
+installed only has a command line user interface. If you are not comfortable with using
+that, there are [[http://en.wikipedia.org/wiki/Comparison_of_Subversion_clients][many]] graphical front ends available for it. In
+addition, most of the simple everyday operations can be carried out
+
+using IntelliJ's built-in Subversion support.
+
+Note that VOSA's Subversion server is set up to prevent you checking in any changes 
+without a Jira issue number in your check-in comment.
+
+
+*** TODO Communicating with your colleagues
+
+(about using HipChat)
+
+
+*** TODO Development
+
+The <%= trail_dev_project_name %> publication(s) is/are made using the *Escenic Widget Framework*. This means that
+all publication layout and functionality is assembled from *widgets*. A widget is a package of JSP, CSS and graphics files 
+that together provide a web site component. A component may be primarily graphical (such as the =storyContent= widget that 
+governs the layout of a story in a publication), primarily functional (such as the =webAnalytics= widget) or a combination
+of the two (such as the =navigation= widget).
+
+Escenic Widget Framework is supplied with a comprehensive set of ready-made widgets from which web site designers can 
+construct web sites using a point and click interface in *Content Studio*, Vizrt's web site editor. The widgets can also
+be customized using this interface, so a wide range of different web sites can be constructed without ever needing to write
+any JSP, HTML or CSS code.
+
+If the standard widgets do not provide all the functionality you need you can extend the Widget Framework
+in two ways:
+
+ - By adding widgets of your own
+ - By customizing existing widgets
+
+This manual does not cover the details of Widget Framework development, since this is covered elsewhere 
+([[http://documentation.vizrt.com/widget-framework-2.0.html]]).
+
+The development environment you have set up is designed to support and simplify the process of extending
+the standard widgets supplied with the Widget Framework. The =publications/<publication-name>/src/main/webapp/template/= 
+tree is a *customization layer* that you can use to store any modifications you want to make to the standard widgets
+in the =publications/shared-war/src/main/webapp/template/= tree. During the application build process,
+the files in your customization layer are merged with the standard widgets to create a customized widget
+set for deployment.
+
+The deployment mappings you have set up mimic this process: any changes you make in 
+=publications/<publication-name>/src/main/webapp/template/= are instantly copied to your development image. T
+his means you can instantly test all changes you've made by using the browser to request the appropriate page from the
+publication on your development image.
+
+**** TODO Customizing a widget
+
+**** TODO Creating a new widget
+
+*** TODO Building and deployment
+
+(about using guru to do it for you)
+
+** TODO Jira
+
+** TODO Source code repository
+
+** TODO The builder
+
+
+   

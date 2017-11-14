@@ -1,0 +1,48 @@
+###############################################################################
+# Agreement Manager
+###############################################################################
+# The Agreement Manager is used to hook in Agreements, as defined in the
+# Escenic API Programming Guide, and described in an article on the Escenic
+# Technet.
+#
+# An Agreement is typically used to restrict access to content on a
+# per-section or per-article basis.
+###############################################################################
+# 
+# IMPORTANT:
+#   If a section names an agreement which isn't defined by the agreement
+#   manager, then Escenic Content Engine will render HTTP 500 Internal
+#   Server Errors, since this is a configuration error, either by the system
+#   administrator, or the section administrator.
+#
+###############################################################################
+
+
+
+###############################################################################
+# Agreement Partners
+###############################################################################
+# To create an Agreement Partner, see the API Programming Guide, or the
+# Technet.  An Agreement Partner must implement certain interfaces.
+#
+# Each agreement partner must be defined here in order for them to be used.
+# The name given here must be matched in the AgreementInfo field of the
+# section.
+#
+# Example:
+#   agreementPartner.basic=/agreements/BasicAuthenticationAgreement
+#
+# The section administrator might put the text "basic" in the agreement-info
+# field, to invoke this agreement whenever any content from that section
+# is to be used.
+#
+# Example:
+#   agreementPartner.sports=/com/customer/agreements/SportsAgreement
+#
+# In both cases, the value must be a valid component in the Nursery.
+#
+# Default:
+#    By default, no agreements are defined.
+###############################################################################
+
+

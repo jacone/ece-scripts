@@ -1,0 +1,53 @@
+tomcat_base=\"/opt/tomcat-engine1\"
+tomcat_home=\"/opt/tomcat\"
+appserver_port=\"8080\"
+deploy_webapp_white_list=\"$main_instance_deploy_white_list\"
+
+#########################################################################
+# JVM related (the Java Virtual Machine)
+#########################################################################
+
+#########################################################################
+# The minimum and maximum heap sizes for the Java process
+#########################################################################
+min_heap_size=1024m
+max_heap_size=1024m
+
+#########################################################################
+# The permgen size is the amount of memory the JVM sets aside to class
+# defintions. If you are experiencing constant OutOfMemory
+# exceptions/errors and are using EAR deployment, you may want to
+# increase these.
+#########################################################################
+min_permgen_size=128m
+max_permgen_size=128m
+
+enable_remote_debugging=1
+
+ece_environment=dev
+
+builder_http_user=$builder_http_user
+builder_http_password=$builder_http_password
+
+#########################################################################
+# Settings related to the JVM garbage collection, don't touch these if
+# you're not sure of what you're doing and have tested your changes
+# properly. Note that ece takes care of the GC logging, so you don't
+# have to cater for that here.
+#########################################################################
+jvm_gc_settings=\"
+-XX:+CMSClassUnloadingEnabled
+-XX:+CMSIncrementalPacing
+-XX:+CMSPermGenSweepingEnabled
+-XX:+ExplicitGCInvokesConcurrent
+-XX:+UseCMSInitiatingOccupancyOnly
+-XX:+UseConcMarkSweepGC
+-XX:CMSInitiatingOccupancyFraction=65
+-XX:InitialCodeCacheSize=50m
+-XX:MaxNewSize=256m
+-XX:NewSize=256m
+-XX:ParallelGCThreads=1
+-XX:ReservedCodeCacheSize=50m
+-XX:SurvivorRatio=1
+\"
+

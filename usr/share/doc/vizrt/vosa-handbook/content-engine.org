@@ -1,0 +1,22 @@
+* Content Engine
+We differentiate between Escenic Content Engines that are presentation
+servers and the ones that are publication servers.
+
+Architecturally, these look the same (strictly speaking, the
+publication servers don't need the memory cache, but for simplicity of
+uniformity, we install memcached on the publication servers too):
+
+[[file:./graphics/content-engine.svg][./graphics/content-engine.svg]]
+
+** Presentation Server
+The presentation is an ECE which has the publication(s) templates and
+typically doesn't have the Content Studio and Web Studio web
+applications (~studio~ and ~escenic~ respectively).
+
+** Publication Server
+A publication is an ECE which doesn't have the publication(s)
+templates and serves the Content Studio and Web Studio web
+applications to the editorial staff. 
+
+The publication server is often referred to as "the editorial server"
+and sometimes "the studio server".

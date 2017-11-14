@@ -1,0 +1,19 @@
+#!/bin/bash -e
+
+if [ "$METHOD" = loopback ]; then
+    exit 0
+fi
+
+# Only run from ifup.
+if [ "$MODE" != start ]; then
+    exit 0
+fi
+
+for a in /var/lib/ece-install/*.trail ; do
+  if [ -r "$a" ] ; then
+    eval "$(< "$a")"
+  fi
+done
+
+eval "echo \"$(</etc/issue.template)\"" 2> /dev/null > /etc/issue
+

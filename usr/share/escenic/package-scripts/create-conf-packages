@@ -1,0 +1,179 @@
+#! /usr/bin/env bash
+
+# script for creating DEB and RPM packages of the various machine
+# instances as found in a directory called "server-admin" inside the
+# project dir.
+#
+# create-conf-packages \
+#  -s <projet dir> \
+#  -c <customer> \
+#  -h <habitat> \
+#  -r <version> \
+#  -e <email of package maintainer> \
+#  -n <name of package maintainer>
+#
+# Example usage:
+# create-conf-packages \
+#   -s ~/src/my-project \
+#   -c my-customer \
+#   -h staging \
+#   -r 2.4 \
+#   -e my@email.com \
+#   -n "Joe Doe"
+
+build_dir=/tmp/$(basename $0)-$(date --iso)
+package_name=escenic-content-engine-installer
+package_version=$(date +%Y-%m-%d.%H%M%S)
+default_maintainer_name="Torstein Krause Johansen"
+default_maintainer_email=torstein@escenic.com
+server_admin_dir=~/src/nie/server-admin
+customer=nie
+habitat=prod
+
+function clean_up() {
+  rm -rf $build_dir
+}
+
+function list_packages_that_can_be_built() {
+  declare -F | grep set_up | cut -d'_' -f3-
+}
+
+function get_user_options() {
+  while getopts ":c:h:r:e:s:n:" opt; do
+    case $opt in
+      s)
+        server_admin_dir=${OPTARG}/server-admin
+        ;;
+      h)
+        habitat=${OPTARG}
+        ;;
+      c)
+        customer=${OPTARG}
+        ;;
+      e)
+        maintainer_email=${OPTARG}
+        ;;
+      n)
+        maintainer_name=${OPTARG}
+        ;;
+      r)
+        package_version=${OPTARG}
+        ;;
+      p)
+        package_name=${OPTARG}
+        ;;
+      \?)
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+      :)
+        echo "Option -$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+    esac
+  done
+}
+
+
+## $1 the instance name
+function create_conf_package() {
+  local conf_package_build_dir=$build_dir/$1
+  rm -rf $conf_package_build_dir
+  local debian_dir=$conf_package_build_dir/DEBIAN
+  mkdir -p $debian_dir
+
+  # first the common files, when/if we get machine roles, we can do
+  # this here as well.
+  for el in \
+    $server_admin_dir/common \
+    $server_admin_dir/$1 \
+    ; do
+    (
+      cd $el
+      cp -r * $conf_package_build_dir/ 2>/dev/null
+    )
+
+  done
+  
+  find $conf_package_build_dir -type d -name ".svn" | xargs rm -rf
+
+  # create package descriptor
+  local package_name=${customer}-${habitat}-${1}-conf
+  local file=$conf_package_build_dir/DEBIAN/control
+  cat > $file <<EOF
+Package: ${package_name}
+Version: ${package_version}
+Section: base
+Priority: optional
+Architecture: all
+Maintainer: $(get_name) <$(get_name)>
+Description: Server Configuration for ${1}
+EOF
+
+  # create the package
+  if [ ! -x /usr/bin/dpkg-deb ]; then
+    echo "You must have dpkg-deb installed :-("
+    exit 1
+  fi
+  if [ ! -x /usr/bin/fakeroot ]; then
+    echo "You must have fakeroot installed :-("
+    exit 1
+  fi
+
+  fakeroot dpkg-deb --build $conf_package_build_dir 2>&1 > /dev/null
+  mv ${conf_package_build_dir}.deb \
+    $conf_package_build_dir/${package_name}-${package_version}.deb
+  
+  if [[ -x /usr/bin/alien && -x /usr/bin/fakeroot ]]; then
+    (
+      cd $conf_package_build_dir
+      fakeroot alien --keep-version --to-rpm --scripts \
+        ${package_name}-${package_version}.deb \
+        2>&1 > /dev/null
+    )
+  else
+    echo "You must have 'alien' and 'fakeroot' installed to create RPMs"
+    exit 1
+  fi
+}
+
+function get_name() {
+  echo ${maintainer_name-$default_maintainer_name}
+}
+
+function get_email() {
+  echo ${maintainer_email-$default_maintainer_email}
+}
+
+function create_conf_packages() {
+  if [ ! -d $server_admin_dir ]; then
+    echo "The server-admin:" $server_admin_dir " doesn't exist"
+    exit 1
+  fi
+
+  local black_list=".svn common $(basename $server_admin_dir)"
+  
+  for el in $(find $server_admin_dir -maxdepth 1 -type d); do
+    local dir=$(basename $el)
+    local skip=0
+    for ele in $black_list; do
+      if [[ $dir == $ele ]]; then
+        skip=1
+      fi
+    done
+    if [ $skip -eq 1 ]; then
+      skip=0
+      continue
+    fi
+    create_conf_package $dir
+  done
+}
+
+function print_report() {
+  echo "The following packages are now available:"
+  find $build_dir -type f | egrep "rpm$|deb$"
+}
+
+get_user_options "$@"
+create_conf_packages
+print_report

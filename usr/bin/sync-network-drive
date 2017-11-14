@@ -1,0 +1,198 @@
+#! /usr/bin/env bash
+
+# Script made for syncing the NFS exports between the serving
+# hosts. The script ensures that there is only one instance of it
+# running and thus that two simultaneous runs it will not cause
+# corruption of data.
+#
+#
+# Example usage with source (-s) and target (-t):
+#
+# $ sync-network-drive \
+#   -s remote-server:/var/lib \
+#   -t /var/backups/remote-server
+#
+# The full path on the remote server is replicated locally here, so
+# after this command, you'll have remote-server's /var/lib directory
+# under your local directory /var/backups/remote-server/var/lib And
+# one last thing: trailing slashes are not needed
+
+log=/var/log/escenic/$(basename $0).log
+
+function bootstrap_thyself() {
+  # first, try to be nice, then check the standard location
+  local dir=$(dirname $0)/../share/escenic/ece-scripts
+  if [ ! -d $dir  ]; then
+    dir=/usr/share/escenic/ece-scripts
+  fi
+
+  for el in common-bashing.sh common-io.sh; do
+    source $dir/$el 2>/dev/null || {
+      echo "$(basename $0): Could not load the library $el," \
+        "and I can't live without it :-(" | fmt
+      exit 1
+    }
+  done
+}
+
+bootstrap_thyself
+
+tmp_known_hosts_file=$(mktemp)
+
+rsync_opts="
+--recursive
+--links
+--perms
+--group
+--owner
+--compress
+--itemize-changes
+--ignore-times
+--checksum
+--cvs-exclude
+"
+rsync_additional_outgoing_opts="
+--dry-run
+--verbose
+"
+# the backslashes need to be here
+rsync_ssh_opts="\
+-o BatchMode=yes \
+-o UserKnownHostsFile=${tmp_known_hosts_file} \
+-o StrictHostKeyChecking=no \
+-p 22 \
+"
+
+outgoing=0
+verbose=0
+
+function ensure_src_is_sane() {
+  # checking that the src is <host>:<dir>
+  if [[ $(dirname $(echo "$src" | cut -d':' -f2 )) == /** ]]; then
+    return
+  else
+    print "Source $src is insane, should be <host>:<absolute dir>"
+    remove_lock
+    tidy_up
+    exit 1
+  fi
+}
+
+function ensure_target_dir_is_there() {
+  mkdir -p $target_dir || (echo "failed creating target dir"; exit 1 )
+
+  if [ ! -w $target_dir ]; then
+    print $USER "cannot write to $target_dir :-("
+    remove_lock
+    tidy_up
+    exit 1
+  fi
+}
+
+function sync_it() {
+  if [ $outgoing -eq 1 ]; then
+    rsync_opts=${rsync_opts}" "${rsync_additional_outgoing_opts}
+  fi
+
+  if [ $verbose -eq 1 ]; then
+    rsync_opts=${rsync_opts}" --verbose "
+  fi
+
+  print "Sync on $HOSTNAME started @ $(stat -c %y $lock_file)" \
+    "${src} -> ${target_dir}"
+  run rsync $rsync_opts \
+    -e "ssh $rsync_ssh_opts" \
+    $src/ \
+    $target_dir/
+}
+
+function tidy_up() {
+  run rm $tmp_known_hosts_file
+}
+
+function print_report() {
+  local now=$(date +%s)
+  local started=$(stat -c %Y $lock_file)
+  local seconds=$(( now - started ))
+  local days=$(( seconds / ( 60 * 60 * 24 ) ))
+  local seconds_left=$(( seconds - ( $days * 60 * 60 * 24 ) ))
+  local hours=$(( seconds_left / ( 60 * 60 ) ))
+  local seconds_left=$(( seconds_left - ( $hours * 60 * 60 ) ))
+  local minutes=$(( seconds_left / 60 ))
+  local seconds_left=$(( seconds_left - $minutes * 60 ))
+  
+  print "Hi! $src has now been synced to $target_dir"
+  print "It took" ${days}d ${hours}h ${minutes}m ${seconds_left}s
+
+}
+
+function get_user_options() {
+  while getopts ":s:t:ov" opt; do
+    case $opt in
+      s)
+        src=${OPTARG}
+        ;;
+      t)
+        target_dir_root=${OPTARG}
+        
+        if [[ $target_dir_root  == "/" ]]; then
+          target_dir_root=""
+        fi
+        
+        target_dir=${target_dir_root}$(echo $src | cut -d":" -f2)
+        ;;
+      o)
+        outgoing=1
+        ;;
+      v)
+        verbose=1
+        ;;
+      \?)
+        print "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+      :)
+        print "Option -$OPTARG requires an argument." >&2
+        exit 1
+        ;;
+      *)
+        print "Command is $OPTARG"
+        exit 0
+    esac
+  done
+}
+
+function ensure_user_options_are_ok() {
+  if [ -z "${src}" ]; then
+    cat <<EOF 
+You must specify a source with -s <host>:<dir>, e.g.:
+$(basename $0) -s app1:/var/log -t /var/backups/app1
+EOF
+
+tidy_up
+exit 1
+  fi
+  
+  if [ -z "${target_dir}" ]; then
+    cat <<EOF
+You must specify a local target directorywith -t <target dir>, e.g.:
+$(basename $0) -s app1:/var/log -t /var/backups/app1
+EOF
+
+tidy_up
+exit 1
+  fi
+
+}
+
+get_user_options $@
+ensure_user_options_are_ok
+create_pid
+create_lock
+ensure_src_is_sane
+ensure_target_dir_is_there
+sync_it
+print_report
+remove_lock
+tidy_up
+remove_pid

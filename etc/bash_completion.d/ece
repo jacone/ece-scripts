@@ -1,40 +1,129 @@
-# auto completion for the /usr/bin/ece command.
-_ece_commands()
+# auto completion for the /usr/bin/ece command.       Emacs: -*- sh -*- mode
+
+_get_sub_commands_for_ece() {
+  cat <<EOF
+      applog
+      assemble
+      backup
+      clean
+      deploy
+      edit
+      flush
+      help
+      info
+      kill
+      list-deployments
+      list-instances
+      list-logs
+      list-publications
+      log
+      outlog
+      package
+      remove-old-log-files
+      repackage
+      restart start
+      status
+      stop
+      threaddump
+      top
+      update
+      versions
+EOF
+
+  # Dynamic lookup of available sub commands for /usr/bin/ece
+  (
+    local cmd_dir=/usr/share/escenic/ece-scripts/ece.d
+    if [ ! -d "${cmd_dir}" ]; then
+      return
+    fi
+
+    for el in "${cmd_dir}"/*.sh; do
+      source "${el}"
+    done
+    declare -F |
+      awk '{print $3}' |
+      sed -n 's#^cmd_##p' |
+      sed 's#_#-#g'
+  )
+}
+
+_get_completions_for_ece_command()
 {
     local cur=${COMP_WORDS[COMP_CWORD]}
     local prev=${COMP_WORDS[COMP_CWORD-1]}
 
-    commands="applog assemble clean deploy help kill log outlog restart start status stop threaddump update versions"
-    resources="content-type feature layout layout-group image-version menu"
+    commands=$(_get_sub_commands_for_ece)
+
+    options="-i --instance -p --publication -r --publication-resource
+             -t --type -u --user -w --password"
+    resources="content-type feature layout layout-group image-version menu
+               section-feed security root-section-parameters"
     types="engine search analysis rmi-hub"
 
     # default completions is the list of commands
-    completions=$commands
-
-    long_options="--help"
-
-    # TODO make educated guesses on these.
-    instances=""
-    publications=""
+    completions=$commands" "$options
 
     case "$prev" in
-        -t)
+        backup)
+            exclude_list="
+              --exclude-binaries
+              --exclude-solr
+              --exclude-init
+              --exclude-conf
+              --exclude-db  
+              --exclude-state
+              --exclude-multimedia
+            "
+            completions="$exclude_list $commands"
+            ;;
+        deploy|repackage)
+            completions="--file --uri $commands"
+            ;;
+        -t|--type)
             completions=$types
             ;;
-        -i)
-            completions=$instances
+        -i|--instance)
+            completions=$(ece -q list-instances)
             ;;
-        -p)
-            completions=$publications
+        -p|--publication)
+            local file=/usr/share/escenic/ece-scripts/common-ece.sh
+            if [ -r $file ]; then
+              source $file
+              completions=$(get_publication_list)
+            else
+              completions=""
+            fi
             ;;
-        -r)
+        -r|--publication-resource)
             completions=$resources
             ;;
+        *)
+          if [[ "${prev}" != "$1" ]]; then
+            completions=${completions}" "$(get_completions_for_cmd "${prev}")
+          fi
+        #   ;;
     esac
   
     COMPREPLY=( $(compgen -W "$completions" -- $cur) )
 }
 
-complete -F _ece_commands ece
+## $1 :: cmd name
+get_completions_for_cmd() {
+  local cmd=$1
+  local cmd_completion_function=complete_${cmd//-/_}
 
+  local cmd_dir=/usr/share/escenic/ece-scripts/ece.d
+  if [ ! -d "${cmd_dir}" ]; then
+    return
+  fi
 
+  for el in "${cmd_dir}"/*.sh; do
+    source "${el}" 2>/dev/null
+  done
+
+  declare -F |
+    grep -q -w "${cmd_completion_function}" &&
+    "${cmd_completion_function}"
+}
+
+complete -F _get_completions_for_ece_command ece

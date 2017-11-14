@@ -1,320 +1,1379 @@
-Welcome to the /usr/sbin/ece-install Guide
 
-* Supported operating systems
-For the best experience, run this script on Debian Squeeze (or newer),
-the latest Ubuntu LTS or most other Debian based operating systems,
-but it should work without any problems on any Unix like system that
-has a recent version of BASH.
+#+TITLE: Escenic Installer User Guide
+#+AUTHOR: Escenic Cloud Team
+#+OPTIONS: H:6 num:5 toc:2
 
-*** Debian based operating systems
-If running on a Debian based operating system, ece-install will take
-care of installing all required third party software, such as database
-& caching server.
+* NAME
+ece-install - command for installing any server in a single- or
+multi-server environment, with or without Escenic software.
 
-*** Other GNU/Linux and Unix systems 
-If you're installing on another Linux or Unix system, you must first
-make sure that these 3rd party components are installed. ece-install
-will tell you which ones it cannot find and tell you to install these,
-so you can simply run it to find out which ones you need.
+* SYNOPSIS
+ece-install [[[-f|--file conf-file]]] [[[-V|--version]]] [[[-v|--verbose]]]
 
-You may also look inside the ece-install script for all calls to the
-'assert\_pre\_prequesite' method and you'll get a list of the binaries
-ece-install assumes are present.
+* OPTIONS
+** -f|--file conf-file
+Instructs *ece-install* to read configuration data from the specified
+file. This can either be a `.conf` or `.yaml` file.
 
-* A note on running ece-install on non-GNU/Linux systems
-Please note, it's assumed that the OS uses GNU's tools, i.e. find, cp
-& tar. If you're running a system which has a different set of core
-tools, such as any of the BSDs (including Mac OS X) or Solaris, make
-sure that GNU's tools take precedence in the command PATH offered to
-ece-install.
+** -v|--verbose
+Requests verbose output from *ece-install*.
 
-* Downloading the ece-install script
-The ece-install script can be downloaded from:
-https://raw.github.com/skybert/ece-scripts/master/usr/sbin/ece-install
-or be downloaded together with the other ece-scripts using git:
-#+BEGIN_SRC sh
-$ git clone git@github.com:skybert/ece-scripts.git
-#+END_SRC
+** -V|--version
+Prints the version of *ece-install*
 
-* Running the ece-install script
-You must run the script as the root user.  If you start the script as
-a regular user, it will complain:
-#+BEGIN_SRC sh
+
+* DESCRIPTION
+The Escenic Content Engine Installer, *ece-install*  is a command line
+utility for installing the Escenic Content Engine. In addition to
+installing the Content Engine itself, *ece-install* also automates the
+installation and configuration of other commonly-used components of
+Escenic-based sites, such as:
+
+ - Java
+ - Tomcat application server
+ - MariaDB/MySQL/Percona database server
+ - Varnish cache server
+ - Icinga & Munin monitoring server
+ - NFS server and clients
+ - Memcached distributed memory cache
+
+You can use *ece-install* to install The Content Engine and related
+components on a wide range of GNU Linux distributions and UNIX or
+UNIX-like operating systems, but the level of support varies between
+platforms. On a fully-supported operating system (for example Debian 6.0),
+*ece-install* can both install and configure all required
+components, so that the entire process is reduced to a simple sequence
+of *ece-install* commands.
+
+On less well-supported platforms, *ece-install* may not be able to
+automatically install some third-party components. You will then need to
+manually install some components. However, the process is very
+straightforward, since *ece-install* tells you which components you
+need to install manually, and it still handles the configuration of
+these components for you.
+
+** Supported Operating Systems
+| Operating system            | Status                       |
+|-----------------------------+------------------------------|
+| Debian 8.7 (jessie)         | Everything is 100% automatic |
+| Ubuntu LTS 16.04            | Everything is 100% automatic |
+| RedHat Enterprise Linux 7.3 | Everything is 100% automatic |
+| CentOS 7.3                  | Everything is 100% automatic |
+
+Other Unix operating systems may work, given that the required
+binaries (=curl=, =varnishd=, =mysqld=++) are already available in
+PATH and that the configuration files exist in familiar
+locations. However this is untested. YMMV.
+
+** Requirements
+Whichever operating system(s) you will be installing on, you must ensure
+that the following requirements are met:
+
+ - Sufficient memory :: The precise amount of memory required by
+      *ece-install* depends on what components are to be installed. To
+      successfully install a complete software stack on one machine,
+      you need at least 3GB of RAM. If you are installing on a
+      virtual machine it is important to remember this requirement
+      when creating the virtual machine.
+
+ - Internet connection :: *ece-install* needs an Internet
+      connection. Ideally it should be a fast connection, since it
+      will need to download several hundred megabytes of data.
+
+ - Firewall rules :: Your firewall settings must allow  *ece-install*
+                     to make outgoing connections from the machine on
+                     which it is running to the following ports:
+    - 80 (standard HTTP)
+    - 443 (HTTPS)
+
+****** On non-GNU/Linux systems
+*ece-install* relies on the GNU versions of various tools such as *find*, *cp*
+and *tar*. If you use *ece-install* on any system which provides different
+versions of these tools by default, then you must make sure that:
+
+- The GNU tools are installed on the system
+- That the GNU tools take precedence in the command PATH offered
+  to *ece-install*.
+
+Platforms on which you will need to do this include:
+
+ - Any BSD-based system (including Mac OS X)
+ - Solaris
+
+
+* Using ece-install
+The various software components required to run an Escenic-powered web
+site are usually installed on a cluster of servers, with different
+components installed on each server according to the
+function it will perform. The set of components installed on a
+particular server is called its *profile*.
+
+The overall procedure for installing Escenic on a cluster of machines
+is as follows:
+
+ - Determine the profile of each server in the cluster. For
+    descriptions of all available profiles, see Server Profiles.
+ - For each server:
+    * Log on to the server.
+    * Install the *ece-install* command (see Get ece-install).
+    * Become the root user (see Become Root).
+    * Create an *ece-install* configuration file (see Create a
+       Configuration File).
+    * Run the *ece-install* command, specifying the appropriate
+      profile (see Run ece-install).
+
+** <<<Get ece-install>>>
+On Debian based systems, such as Ubuntu, you can use the [[http://apt.escenic.com][Escenic APT
+repository]] and install the package *escenic-content-engine-installer*
+to get the *ece-install* command.
+
+On RedHat based systems, such as CentOS, you can use the RPMs
+available from http://yum.escenic.com/rpm and install the RPM
+*escenic-common-scripts* and *escenic-content-engine-installer* to
+get the *ece-install* command.
+
+If you have any problems installing using the DEB or RPM packages, or
+if you're system is neither Debian nor RedHat based, you can also
+download a ZIP archive of all the *ece-scripts*, which *ece-install*
+is a part of, here:
+https://github.com/escenic/ece-scripts/zipball/master
+
+** <<<Become Root>>>
+You must be the root user to run *ece-install*. If you try to run it as
+an ordinary user, it will complain:
+#+BEGIN_SRC text
 [ece-install] You must be root when running ece-install
 #+END_SRC
-To become root on Ubuntu based systems and Mac OS X, do:
-#+BEGIN_SRC sh
-   $ sudo su
+
+To become root on Ubuntu-based systems and Mac OS X, enter:
+#+BEGIN_SRC text
+$ sudo su
 #+END_SRC
-On all other Unix like system, do:
-#+BEGIN_SRC sh
-   $ su
+
+On all other UNIX-like system, enter:
+#+BEGIN_SRC text
+$ su -
 #+END_SRC
-* Available server profiles
-When starting the script, it will ask you which server profile you
-want to install:
-#+BEGIN_SRC sh
-Hi, which server profile do you wish to install?
 
-Select 1-7 and press ENTER
+#+BEGIN_QUOTE
+Note that using *sudo* to run *ece-install* (that is, entering  "*sudo
+ece-install*") may not work. You should actually become the root user
+before running *ece-install*.
+#+END_QUOTE
 
-  1 - The full stack on one host. Suitable for development and
-      test environments (cache, ECE, assembly host & database).
-  2 - Editorial (publication) server (ECE, assembly host).
-  3 - Presentation server (ECE, memcached).
-  4 - Database server.
-  5 - Cache server (cache & web server).
-  6 - RMI hub.
-  7 - Standalone search instance (solr + indexer-webapp).
-  8 - Install Widget Framework. This will also set up a WF based 
-      publication for you (repo.escenic.com user/pass required).
+** <<<Create a Configuration File>>>
+*ece-install* can use configuration files in either =.conf= (old) or
+*=.yaml= (new) format. This manual describes first and foremost the
+*YAML format.
+
+*ece-install.yaml*. may contain a large number of configuration
+parameters, but the minimum requirement is that it contains:
+
+ * A user name and password for downloading software from Escenic.
+ * A profile to install
+
+For example:
+#+BEGIN_SRC yaml
+credentials:
+  - site: maven.escenic.com
+    user: foo
+    password: bar
+  - site: apt.escenic.com
+    user: foo
+    password: bar
+profiles:
+  editor:
+    install: yes
 #+END_SRC
-** Common for editorial, presentation and search instances
-- Sun Java 6
-- Apache Tomcat application server:
-  * Compression of textual content (previously, this was typically set
-    up with Apache and its mod\_deflate module).
-  * pooling set up tweaked for high read/write performance.
-  * proper logging configuration directing solr messages to its own log.
-  * routing information in the cookies
-  * access log
 
-- APR, native library for optimal Tomcat I/O performance
-- Escenic Assembly environment
-- Database driver
+Depending on what components you are installing on the server, you may
+need to include other configuration parameters in the file. In most
+cases, however, parameters have default settings that enable
+*ece-install* to complete installation with very few settings.
 
-- Compression of content (what was previously accomplished with
-  Apache/mod\_deflate) 
+** <<<Run ece-install>>>
+To run *ece-install*, enter:
+#+BEGIN_SRC text
+# ece-install <options>
+#+END_SRC
 
-** 1 - Full stack on one host
-This profile is suitable for developers and admins wanting to set up a
-test environment. It will install the full stack including caching
-server, application server, ECE, assembly host, database, Widget
-Framework, as well as creating a publication for you.
+*ece-install* writes a log file located at
+*/var/log/escenic/ece-install.log*. All output generated by all the commands
+it executes is written to this file. You can use *tail* to keep an eye
+on what is being written to the log.
 
-For further details on each of the different server components, see
-the different profile descriptions bellow.
+*ece-install* tries to "fail fast", exiting as soon as it detects an
+error and reporting the failure. For example:
+#+BEGIN_SRC text
+[ece-install-1] The command [cd /not/there] FAILED, exiting :-(
+[ece-install-1] See /var/log/escenic/ece-install.log for further details.
+#+END_SRC
+
+If you run into problems and the log file does not provide enough
+clues about what is going wrong, the best debugging method is to run
+the BASH interpreter with the -x flag:
+#+BEGIN_SRC text
+# bash -x ece-install
+#+END_SRC
+
+Doing this lets you see everything that BASH does while executing the
+command - how wild card variables are  expanded and so on.
+
+*ece-install* displays a series of progress messages during the
+installation process. you can redirect standard output to a log file
+for easy reading of these messages later:
+#+BEGIN_SRC text
+# bash ece-install > ece-install.out
+#+END_SRC
+
+If you are logged into the host via SSH, you can make it possible to
+log out and leave *ece-install* running in the background by adding
+*nohup* at the start of the command and an ampersand at the end, as follows:
+#+BEGIN_SRC text
+# nohup bash ece-install > ece-install.out &
+#+END_SRC
+
+****** After Installing
+When installation is completed an information message is
+displayed. This contains important information about what you
+should do next, plus references to where you can find useful
+information, so you should read it carefully.
+
+You should now set a password for the user *escenic* (which has been
+created for you by *ece-install*). To do this enter:
+
+#+BEGIN_SRC text
+# passwd escenic
+#+END_SRC
+
+The *escenic* user is the user you will need to use for most
+escenic-related purposes.
+
+** Preventing accidental execution of ece-install
+You can ensure that *ece-install* is not executed accidentally by
+creating a *lock file*. Simply create a file with this path:
+#+BEGIN_SRC text
+/var/run/escenic/ece-install.lock
+#+END_SRC
+
+If this file is present then *ece-install* will fail fast as follows:
+#+BEGIN_SRC text
+/var/run/escenic/ece-install.lock exists, I'll exit.
+#+END_SRC
+
+The lock file does not need to contain anything, it just needs to exist.
+
+* <<<Server Profiles>>>
+
+*ece-install* installs *profiles*. A profile is a pre-defined set of
+software components that enables a host computer to play a specific
+role in an Escenic installation.
+
+The profile to be installed by *ece-install* is determined by setting
+one of the following parameters in *ece-install.conf*:
+
+- *profiles: editor* :: Installs all the components that need to
+     be installed to create an Escenic *editorial server*.
+- *profiles: presentation* :: Installs all the components that
+     need to be installed to create an Escenic *presentation server*.
+- *profiles: db* :: Installs a Database Server.
+- *profiles: cache* :: Installs a Cache Server.
+- *profiles: search* :: Installs a Search Server.
+- *profiles: publication* :: Creates an Escenic publication.
+- *profiles: all* :: Installs all of the above on one host
+     machine.
+- *profiles: restorebackup* :: Restores a backup created with *ece*.
+- *profiles: analysis* :: Installs and configures an Escenic Analysis Engine.
+- *profiles: nfs* :: Installs an NFS server.
+- *profiles: nfs* :: Installs an NFS client.
+- *profiles: vip* :: Installs virtual IP (VIP) providers.
+
+There are a number of common components that are included in all or
+most of the profiles. These are described below.
+
+** <<<profiles: editor>>>
+To use this profile add:
+#+begin_src yaml
+profiles:
+  editor:
+    create: true
+#+end_src
+
+to your *ece-install.yaml* file.
+
+This profile contains all the components that need to be installed to
+create an Escenic *editorial server*. An editorial server (sometimes
+also called a publication server) hosts a Content Engine used for editorial
+purposes (primarily Content Studio sessions).
+
+** <<<profiles: presentation>>>
+To use this profile, add:
+#+begin_src yaml
+profiles:
+  presentation:
+    create: true
+#+end_src
+
+to your *ece-install.yaml* file.
+
+This profile contains all the components that need to be installed to
+create an Escenic *presentation server*. A presentation server hosts a
+Content Engine used for serving publications to web site
+users. Differences between this and an editorial server include:
+
+ * Only the Escenic administration web-app *escenic-admin* and publications are
+   deployed. Other editorial web-apps such as Web Studio are not
+   required.
+ * Memcached, the distributed memory cache is installed.
+
+** <<<profiles: db>>>
+To use this profile, add:
+
+#+begin_src yaml
+profiles:
+  db:
+    create: true
+#+end_src
+
+to your *ece-install.yaml* file.
+
+When this profile is used on a supported version of Debian, Ubuntu,
+CentOS or RedHat, *ece-install* installs will install all the
+components needed to create an Escenic database, based on the MariaDB
+fork of MySQL or the Percona distribution of MySQL.
+
+The default is to install MariaDB.
+
+Furthermore, this profile contains all the Escenic components needed
+on a database server plus the correct database schema for the Content
+Engine version and plug-in versions you are installing.
+
+If an Escenic database has already been installed on the machine, then
+*ece-install* will fail and display an information message:
+
+#+BEGIN_SRC text
+[ece-install] Setting up the ECE database schema ...
+  ERROR 1007 (HY000) at line 1: Can't create database 'ece5db';
+  database exists
+  ERROR 1050 (42S01) at line 2: Table 'DBChangeLog' already
+  exists
+[ece-install] running tables FAILED, exiting :-(
+#+END_SRC
+
+If you actually want to re-install the database you can do so by
+adding this setting to *ece-install.yaml* before you run *ece-install*:
+
+#+BEGIN_SRC yaml
+profiles:
+  db:
+    install: true
+    drop_old_db_first: true
+#+END_SRC
+
+Given that *mysqld* is installed, this profile will download all the
+Escenic components that you have defined in the configuration file and
+install the ECE database schema based from the SQL files contained
+inside the individual packages.
+
+*** Master & slave setup
+You can easily use *ece-install* to set up master and slave databases
+on different hosts.
+
+First create the master database using these *ece-install.yaml* settings:
+#+BEGIN_SRC yaml
+profiles:
+  db:
+    install: true
+    master: true
+    replication: true
+#+END_SRC
+
+When you run *ece-install* with these settings, the output log
+messages will include information that you need for creating the slave
+database:
+#+BEGIN_SRC text
+[ece-install-35] - DB is now set up on localhost:3306
+[ece-install-35] - ece-install.conf for slave:
+                   fai_db_master_log_file=mysql-bin.000013
+[ece-install-35] - ece-install.conf for slave:
+                   fai_db_master_log_position=106
+#+END_SRC
+
+On the slave database host you can then use these values in your
+*ece-install.yaml* file as follows:
+#+BEGIN_SRC yaml
+profiles:
+  db:
+    install: true
+    master: false
+    replication: true
+    master_host: "my-db-master"
+    master_log_file: "mysql-bin.000013"
+    master_log_position: "106"
+#+END_SRC
+
+*ece-install* uses internal defaults to create a replication user and
+credentials. You can override these defaults by setting additional
+parameters in *ece-install.conf*. For details, see [[Overview of All FAI
+Parameters]].
+
+** <<<profiles: cache>>>
+To use this profile, add:
+
+#+begin_src yaml
+profiles:
+  cache:
+    install: true
+#+end_src
 
 
-** 2 - Editorial server (publication server)
+to your *ece-install.yaml* file.
 
+When this profile is used on a supported version of Debian or Ubuntu,
+*ece-install* installs the latest Varnish caching server from the
+official distro repositories.
 
-** 3 - Presentation server
-This will set up a typical presentation server:
-- Memcached, distributed memory cache
-- Escenic Assembly environment (which may be removed after the
-  installation). 
-- Deployment setup to only deploy escenic-admin and the
-  publication(s).
+Once Varnish is installed, *ece-install* configures it to suit the
+typical requirements of an Escenic site:
 
-** 4 - Database server
-If ece-install is run on a support version of Debian or Ubuntu, this
-will install the excellent Percona distribution of MySQL with their
-set of high performance patches.
+ * Sets up the cache server on port 80
+ * Creates an access control list (ACL) of IP addresses allowed to access
+   privileged web applications such as */escenic-admin*, */escenic* and
+   */webservice*. If you are running *ece-install* in an SSH session,
+   then it includes the IP address from which you connected in the ACL
+   so that you can access these applications without needing to
+   manually edit the ACL or disable security.
+ * Sets up sticky sessions/session binding
+ * Sets up a back-end cluster for balancing web site requests to the
+   cache server.
+ * Sets up configuration that strips cookies from static  resources,
+   such as CSS files, JS files and images.
+ * Installs the *nginx* web server for serving static content and
+   configures Varnish accordingly. This is particularly useful for
+   installations where VME Online servers need to access content.
 
-If not, MySQL or Percona must be installed in advance.
-
-Given that the mysqld is install, this profile will download all the
-Escenic components and install the ECE database schema based from the
-SQL files contained inside the distribution bundles. To accomplish
-this, the script will make a call to drop-and-create-ecedb in the same
-directory as the ece-intall script itself.
-
-If you wish to change the DB's host, user or password, you must update
-the drop-and-create-ecedb script prior to running ece-install. 
-
-** 5 - Cache server
-If ece-install is run on a support version of Debian or Ubuntu, it
-will install the latest Varnish 3.0 caching server from the Varnish
-APT repository.
-
-If ece-install is run on a different platform, the admin must install
-Varnish 3.x prior to running ece-install.
-
-The script will configure Varnish for a typical Escenic site:
-- will set up an access control lists of IPs which may access the
-  privileged web applications such as /escenic-admin, /escenic and
-  /webservice.
-
-  ece-install will also add the host from which you connect, making
-  sure that if you've SSH-ed into the server to conduct the install,
-  you'll automatically be included in the "staff" ACL and can access
-  all the web applications without editing these ACLs (or disabling
-  security as many does).
-
-- will set up sticky sessions/session binding
-- will set up a backend cluster and allow the user to enter the
-  different backend servers that will serve the web site.
-- will set up configuration to strip away cookies from static
-  resources, such as CSS, JS and pictures.
-
+#+BEGIN_COMMENT
 TBD:
-- If run on a Linux platform, the script will tweak the kernel
+- If run on a Linux platform, the command will tweak the kernel
   parameters for optimal TCP handling for a web facing server.
-- Will install the nginx web server for serving static content and
-  will configure Varnish accordingly. This will be very useful for
-  Adactus servers wanting to pull content from your ECEs.
+- let the /munin run through on port 80, requiring the connecting IPs
+  to be in the staff network ACL, defined in the Varnish
+  configuration.
+#+END_COMMENT
 
-** 8 - Install Widget Framework
-You'll need a user name and password for accessing the
-repo.escenic.com Maven repository. You should get these credentials
-when you bought Widget Framework. If you for some reason do not have
-these, please contact support@escenic.com. 
+** <<<profiles: search>>>
+To use this profile, add
 
-If you don't have these ready in your .escenicrc, ece-install will
-complain:
-#+BEGIN_SRC sh
-[ece-install] Be sure to set wf_user and wf_password in /root/.escenicrc
-[ece-install] If you don't have these, please contact support@escenic.com
+#+begin_src yaml
+profiles:
+  search:
+    install: true
+#+end_src
+
+
+to your *ece-install.yaml* file.
+
+This profile installs a standalone Solr instance and an app server
+with the Escenic *indexer* web app.
+
+** <<<profiles: publications>>>
+To use this profile, add
+
+#+begin_src yaml
+profiles:
+  publications:
+    - name: mypub
+      create: true
+#+end_src
+
+
+to your *ece-install.yaml* file.
+
+This profile creates a publication for you. It should be used on a
+machine where you have already installed either an editorial or
+presentation profile.
+
+*ece-install* will create publications of all the publication WAR
+files in your EAR file if you also
+define domain (and optionally, aliases):
+#+BEGIN_SRC yaml
+profiles:
+  publications:
+    - name: stoppok
+      domain: stoppok.example.com
+      aliases:
+        - s.exampel.com
+        - o.exampel.com
+      ear: /tmp/stoppok-rev6195-2012-12-04_1134.ear
+    - name: helden
+      domain: helden.example.com
+      ear: /tmp/stoppok-rev6195-2012-12-04_1134.ear
 #+END_SRC
-** 9 - Create Publication
-This profile will create a publication for you, only asking you the
-name of the publication and which ECE instance to use for its
-creation.
 
-This installation profile will base the publication on the Widget
-Framework if its present on the system, if not, ECE's clean demo WAR
-is used as a basis.  
-* Full Automatic Install (FAI)
-The ece-install script has support for doing a full automatic install
-(FAI).
+See [[Overview of All Configuration Parameters]] for further details on the format
+of the domain mapping list.
 
-The ece-install script understands for the following settings in the
-$HOME/.ece-install.conf file of the root user:
+** <<<profiles: restore>>>
+To use this profile, add:
 
-|--------------------------------+------------------+-----------------------------------------------|
-| Parameter                      |          Default | Description                                   |
-|--------------------------------+------------------+-----------------------------------------------|
-| fai\_all\_install              |                0 | Install all components on your server.        |
-| fai\_cache\_install            |                0 | Install cache server profile                  |
-| fai\_cache\_backends           | ${HOSTNAME}:8080 | Space separated, e.g. "app1:8080 app2:8080"   |
-| fai\_db\_install               |                0 | Install db profile                            |
-| fai\_db\_host                  |        $HOSTNAME | Useful for editor & presentation profiles     |
-| fai\_db\_port                  |             3306 | Useful for editor & presentation profiles     |
-| fai\_editor\_install           |                0 | Install the editorial profile                 |
-| fai\_editor\_name              |          editor1 | Name of the editor instance                   |
-| fai\_editor\_port              |             8080 | HTTP port of the editor instance              |
-| fai\_editor\_shutdown          |             8005 | Shutdown port of the editor instance          |
-| fai\_enabled                   |                0 | Whether or not to run ece-install in FAI mode |
-| fai\_presentation\_install     |                0 | Install the presentation server profile       |
-| fai\_presentation\_name        |             web1 | Name of the presentation server instance      |
-| fai\_presentation\_port        |             8080 | HTTP port of the presentation server instance |
-| fai\_presentation\_shutdown    |             8005 | Shutdown port of the presentation instance    |
-| fai\_publication\_create       |                0 | Create a new publication                      |
-| fai\_publication\_name         |            mypub | Name of the publication                       |
-| fai\_publication\_use_instance |             dev1 | Name of local instance to use for creation    |
-| fai\_rmi\_install              |                0 | Install RMI hub profile                       |
-| fai\_search\_name              |          search1 | Name of the search instance                   |
-| fai\_search\_port              |             8080 | HTTP port of the search instance              |
-| fai\_search\_shutdown          |             8005 | Shutdown port of the search instance          |
-| fai\_wf\_install               |                0 | Install Widget Framework profile              |
-|--------------------------------+------------------+-----------------------------------------------|
+#+begin_src yaml
+profiles:
+  restore:
+    from_file: /var/backups/backup.tar.gz
+#+end_src
 
-As you've probably have guessed, 0 means "false" and 1 means "true" :-)
+to your *ece-install.yaml* file.
 
+Unlike all the other profiles, this profile does not install anything
+or create anything new. Instead, it restores a backup you have
+previously created using the *ece* command - like this, for example:
+#+BEGIN_SRC text
+$ ece -i <instance> backup
+#+END_SRC
+
+Exactly what such a backup contains depends on:
+
+ * What was present on the host machine where the backup was created
+ * What options were specified when the backup was created.
+
+It may, however, contain:
+
+ * The Escenic software components (Content Engine etc.) installed on the host.
+ * Content Engine, cache and web server configuration data.
+ * A database dump.
+ * An Escenic multimedia archive (images, video files and so on).
+
+You can use this profile in two ways:
+
+ * To restore a host to an earlier state.
+ * To install a copy of some other installation on a "clean" host.
+
+In order to use this profile you have to set some additional
+parameters in *ece-install.conf* in order to specify the location of
+the backup file you want to restore and the specific items you want to
+restore from the file.
+
+The parameters you can use together with *profiles: restore*
+to specify what you want to restore are:
+
+#+begin_src yaml
+profiles:
+  restore:
+    # The *.tar* file produced by *ece -i <instance> backup*. Default is "".
+    from_file:
+    from_backup: true
+
+    # Restore the Solr and Content Engine data files. Default is false.
+    data_files: true
+
+    # Restore the Escenic and Apache Tomcat software. Default is false.
+    software_binaries: true
+
+    # Install the database server and restore its. Default false
+    db: true
+
+    # Restore the Solr and content Engine configuration files. Default is  false
+    configuration: true
+#+end_src
+
+
+*ece-install* can also remove unwanted files from an existing
+installation prior to restoring from a backup. You can specify the
+files you would like to remove using the following parameters:
+
+#+begin_src yaml
+profiles:
+  restore:
+    # Remove the solr data/state files. Default is false.
+    pre_wipe_solr: true
+    # Remove all log files. Default is false.
+    pre_wipe_logs: true
+    # Remove the cache files. Default is false.
+    pre_wipe_cache: true
+    # Remove the crash files. Default is false.
+    pre_wipe_crash: true
+
+    # Remove all of the above
+    pre_wipe_all: true
+#+end_src
+
+*** Data security
+You must be careful when restoring backups that you don't
+inadvertently restore the backup over a system that actually contains
+valuable data. *ece-install* incorporates some safeguards, but
+ultimately cannot prevent you from making such mistakes.
+
+If you try to restore the DB and the ECE schema already exists, the
+restore will fail as follows:
+#+BEGIN_SRC text
+[ece-install-8] Restoring the database contents on ubiquitous ...
+[ece-install-24] Selecting the most recent database dump
+  ece5db-2011-10-10.sql.gz
+  ERROR 1007 (HY000) at line 1: Can't create database 'ece5db';
+  database exists
+  ERROR 1050 (42S01) at line 25: Table
+  '`ece5db`.`AccessControlList`' already exists
+[ece-install-24] The command [restoring from
+  /var/backups/escenic/ece5db-2011-10-10.sql.gz] FAILED,
+  exiting :-(
+[ece-install-24] See /var/log/escenic/ece-install.log for further
+  details.
+#+END_SRC
+
+** <<<profiles: analysis>>>
+To use this profile, add:
+
+#+begin_src yaml
+profiles:
+  analysis:
+    create: true
+#+end_src
+
+to your *ece-install.yaml* file.
+
+This profile installs the Escenic Analysis Engine, and configures it
+for production use with a sensible set of defaults.
+
+The Analysis Engine uses a database to store statistics. You must not
+use the same database as is used by the Content Engine for storing
+publication contents.
+
+** <<<fai\_nfs\_server\_install>>>
+To use this profile, add *fai\_nfs\_server\_install=1* to your
+*ece-install.conf* file.
+
+This profile installs an NFS server.
+
+This feature is not yet supported with YAML configuration files.
+
+** <<<fai\_nfs\_client\_install>>>
+To use this profile, add *fai\_nfs\_client\_install=1* to your
+*ece-install.conf* file.
+
+This profile installs an NFS client, creates the client mount points
+and mounts them on the host. Per default, all network drives are
+mount under */mnt*.
+
+The following example shows the ece-install.conf settings required to
+mount the Escenic multimedia archive on the NFS server:
+#+BEGIN_SRC conf
+fai_nfs_client_install=1
+fai_nfs_server_address=192.168.1.200
+fai_nfs_export_list="/var/exports/multimedia"
+#+END_SRC
+
+This feature is not yet supported with YAML configuration files.
+
+** <<<fai\_vip\_install>>>
+[[file:images/nfs-vip.png]]
+
+To use this profile, add *fai\_vip\_install=1* to your
+*ece-install.conf* file.
+
+This profile is usually used in combination with one of the other
+*ece-install* profiles. It makes a host capable of providing the
+services it offers on specified virtual IP addresses (VIPs). This
+makes it possible to provide fail-over for all single points of
+failure ([[http://en.wikipedia.org/wiki/Single_point_of_failure][SPOFs)]] in your installation, such as the file server or
+database.
+
+You might, for example, in order to provide a robust file
+server, install both an NFS server and a VIP provider on two hosts:
+
+ *  The primary NFS server that provides the normal service on one host
+ *  The secondary NFS server that takes over if the primary one fails
+    on the other.
+
+Installing VIP providers with the *fai\_vip\_install* profile
+allows both servers to be accessed via the same virtual IP address, so
+that a fail-over is invisible to users of the service.
+
+The following *ece-install.conf* settings installs an NFS server and
+configures two VIP providers:
+
+ * The primary node (this host) at 192.168.1.112
+ * The secondary node at 192.168.1.111
+
+Both providers are configured to expose the NFS service on the VIP
+192.168.1.200.
+
+#+BEGIN_SRC conf
+# install the NFS server
+fai_nfs_server_install=1
+fai_nfs_export_list="/var/exports/multimedia"
+fai_nfs_allowed_client_network="192.168.1.0/255.255.255.0"
+
+# install the VIP provider, primary node
+fai_vip_install=1
+fai_vip_service_list="nfs-kernel-server"
+fai_vip_primary_node_name=ubiquitous
+fai_vip_primary_node_ip=192.168.1.112
+fai_vip_primary_node_auth_key=d41d8cd98f00b204e9800998ecf8427e
+fai_vip_secondary_node_name=ubiquitous-lts
+fai_vip_secondary_node_ip=192.168.1.111
+fai_vip_address=192.168.1.200
+fai_vip_sibling_ip=$fai_vip_secondary_node_ip
+#+END_SRC
+
+The setting *fai\_vip\_sibling\_ip*$fai\_vip\_secondary\_node\_ip* says that
+the secondary node is this node's sibling, and therefore implicitly
+defines this node as the primary node.
+
+The secondary node can therefore be defined using an almost identical
+configuration - only *fai\_vip\_sibling\_ip* needs to be set differently:
+#+BEGIN_SRC conf
+fai_vip_sibling_ip=$fai_vip_primary_node_ip
+#+END_SRC
+
+The *fai\_vip\_primary\_node\_auth\_key* setting is optional. If you do not
+set it, ece-install will generate it for you. However, you will then have to
+add the generated key to *ece-install.conf* when installing the secondary
+node.
+
+You can generate the key as follows:
+#+BEGIN_SRC sh
+$ dd if=/dev/urandom bs=512 count=1 | \\
+    openssl md5 | \\
+    cut -d' ' -f2
+#+END_SRC
+
+** Installing from EARs instead of Binaries
+It is possible to get *ece-install* to use a supplied EAR and
+configuration archive instead of using the files provided with the
+Escenic Content Engine and plugins.
+
+The EAR to provide is the one you generate with:
+#+BEGIN_SRC text
+$ ece -i <instance> assemble
+#+END_SRC
+Normally, the EAR will then be available in:
+#+BEGIN_SRC conf
+/var/cache/escenic/engine.ear
+#+END_SRC
+
+The configuration bundle must contain:
+#+BEGIN_SRC text
+engine/security
+engine/siteconfig/bootstrap-skeleton
+engine/siteconfig/config-skeleton
+assemblytool/plugins/<plugin>/siteconfig
+#+END_SRC
+
+and optionally also:
+#+BEGIN_SRC text
+engine/solr/conf
+#+END_SRC
+
+A simple way to create this bundle, is to use a server which has the
+assembly environment set up and then do:
+
+#+BEGIN_SRC text
+$ cd /opt/escenic
+$ tar czf /tmp/config-skeleton.tar.gz \\
+  engine/security \\
+  engine/siteconfig/config-skeleton \\
+  engine/solr/conf \\
+  engine/siteconfig/bootstrap-skeleton
+#+END_SRC
+
+*/tmp/nursery-skeleton-solr-and-security.tar.gz* should now have everything
+you need. You can now configure your FAI installation to use these by,
+e.g.:
+
+#+BEGIN_SRC conf
+fai_presentation_ear=/tmp/engine.ear
+fai_presentation_conf_archive=/tmp/config-skeleton.tar.gz
+#+END_SRC
+
+Corresponding configuration options are available for the other server
+profiles, see the table below.
+
+The inclusion of the engine/solr directory makes it easy for users to
+provide their own, optimised Solr configuration. In this context, also
+note that a post install hook, *set\_up\_solr.postinst*, is available.
+
+If you want the EAR file to dictate the production environment, set up
+the build environment to create a file META-INF/distributions.txt in
+your EAR, and put the maven coordinates needed by the run-time in it.
+This will tell ece-install what files to download.
+
+#+BEGIN_SRC text
+com.escenic:engine-dist:zip:bin:5.5.2.123456
+com.escenic.plugins.someplugin:someplugin-dist:zip:1.2.134
+#+END_SRC
+
+In your ece-install.conf file, specify *fai_maven_repositories* as a
+whitespace separated list of repositories that may hold these artifacts,
+and ece-install will try each repository in order to download the
+arifacts.
+
+#+BEGIN_SRC conf
+fai_maven_repositories="
+  http://example.org/nexus/content/groups/trunk
+  http://builder:secretpassword@mybuildserver.internal/trunk
+"
+#+END_SRC
+
+If you wish to provide Nursery configuration for the plugins, you
+simply put them in engine/siteconfig/config-skeleton inside your
+tarball, together with the other Nursery configuration files.
+
+The *fai\_presentation\_conf\_archive* and *fai\_presentation\_ear* variables
+both accept the following types of value (here using the value of
+*fai\_presentation\_ear* as an example):
+- *http://build.server/stable/engine-mysite.com-1.2.3.ear*
+- *https://build.server/stable/engine-mysite.com-1.2.3.ear*
+- *file:///var/lib/build/stable/engine-mysite.com-1.2.3.ear*
+- */var/lib/build/stable/engine-mysite.com-1.2.3.ear*
+
+** Setting up virtual hosts
+Setting up virtual host definitions in the application server makes a
+some things easier, such as ECE plugins which set cookies based on
+information they get from the app server.
+
+ece-install can set up the virtual hosts configuration for Tomcat
+application servers if the profile is *editor*, *all* or
+*presentation*.
+
+To use this feature, you must define one domain for each publication
+in the following FAI parameter:
+#+BEGIN_SRC yaml
+profiles:
+  publications:
+    - name: firepub
+      domain: fire.escenic.com
+    - name: ildpub
+      domain: ild.escenic.com
+      aliases:
+        - feuer.example.com
+        - fuego.example.com
+#+END_SRC
+
+This will produce the following stanzas in *server.xml*:
+
+#+BEGIN_SRC nxml
+<Host
+  name="fire.escenic.com"
+  appBase="webapps-fire"
+  autoDeploy="false">
+  <Context displayName="fire.escenic.com"
+           docBase="firepub"
+           path=""
+  />
+</Host>
+<Host
+  name="ild.escenic.com"
+  appBase="webapps-ildpub"
+  autoDeploy="false">
+  <Alias>feuer.escenic.com</Alias>
+  <Alias>fuego.escenic.com</Alias>
+  <Context displayName="ild.escenic.com"
+           docBase="ildpub"
+           path=""
+  />
+</Host>
+#+END_SRC
+If you wish to provide Nursery configuration for the plugins, you
+simply put them in engine/siteconfig/config-skeleton inside your
+tarball, together with the other Nursery configuration files.
+
+The *fai\_presentation\_conf\_archive* and *fai\_presentation\_ear* variables
+both accept the following types of value (here using the value of
+*fai\_presentation\_ear* as an example):
+- *http://build.server/stable/engine-mysite.com-1.2.3.ear*
+- *https://build.server/stable/engine-mysite.com-1.2.3.ear*
+- *file:///var/lib/build/stable/engine-mysite.com-1.2.3.ear*
+- */var/lib/build/stable/engine-mysite.com-1.2.3.ear*
+
+** Setting up virtual hosts
+Setting up virtual host definitions in the application server makes a
+some things easier, such as ECE plugins which set cookies based on
+information they get from the app server.
+
+ece-install can set up the virtual hosts configuration for Tomcat
+application servers if the profile is *editor*, *all* or
+*presentation*.
+
+To use this feature, you must define one domain for each publication
+in the following FAI parameter:
+#+BEGIN_SRC yaml
+profiles:
+  publications:
+    - name: firepub
+      domain: fire.escenic.com
+    - name: ildpub
+      domain: ild.escenic.com
+      aliases:
+        - feuer.example.com
+        - fuego.example.com
+#+END_SRC
+
+This will produce the following stanzas in *server.xml*:
+
+#+BEGIN_SRC nxml
+<Host
+  name="fire.escenic.com"
+  appBase="webapps-fire"
+  autoDeploy="false">
+  <Context displayName="fire.escenic.com"
+           docBase="firepub"
+           path=""
+  />
+</Host>
+<Host
+  name="ild.escenic.com"
+  appBase="webapps-ildpub"
+  autoDeploy="false">
+  <Alias>feuer.escenic.com</Alias>
+  <Alias>fuego.escenic.com</Alias>
+  <Context displayName="ild.escenic.com"
+           docBase="ildpub"
+           path=""
+  />
+</Host>
+#+END_SRC
+
+*** Having WAR files with a different name than the publication
+Nine out of ten times (probably a lot more too), the WAR file matches
+the name of the publication, e.g. if your publication is called
+*sports*, your WAR is called *sports.war*.
+
+However, if you for some reason have a WAR with a different name, you
+can add this as an addition to the first element of the
+*fai\_publication\_domain\_mapping\_list* entry:
+#+BEGIN_SRC text
+fai_publication_domain_mapping_list="
+  firepub,fire.war#fire.escenic.com
+"
+#+END_SRC
+
+Now, the *appBase* and *docBase* values will become *webapps-fire* and
+*fire* respectively.
+
+*** Host name aliases
+As you can see, there's a third optional option to the
+*fai\_publication\_domain\_mapping\_list* which can be specified as a
+comma separated list of host aliases to be added to the app server host
+configuration.
+
+Furthermore, if these host names are  not resolvable to your local
+host (neither localhost or the IP of your $HOSTNAME), ece-install will
+add entries for these domains to the machine's */etc/hosts* file:
+#+BEGIN_SRC conf
+# added by ece-install @ Wed Feb  8 19:21:49 CST 2012
+127.0.1.1 fire.escenic.com
+
+# added by ece-install @ Wed Feb  8 19:21:51 CST 2012
+127.0.1.1 ild.escenic.com
+#+END_SRC
+
+If you do not want ece-install to touch your */etc/hosts*, you can set
+*fai\_keep\_off\_etc\_hosts=1* in your *ece-install.conf*.
+
+** Overview of All Configuration Parameters
+The *ece-install* command understands the following settings in
+the *ece-install.yaml*:
+
+#+include: "ece-install-conf-reference.org"
+
+** Example Configurations
+Here are a few simple example configurations, you can find more under
+*/usr/share/doc/escenic/examples* if you've got the
+*escenic-content-engine-installer* package installed.
+
+****** Install an Editorial Server and Create a Publication
 To automatically install an editorial server and create a publication
-called "jollygood", the minimal configuration in .ece-install.conf
-would be:
+called "jollygood", run *ece-install* with the following settings:
 
-#+BEGIN_SRC sh
-fai_enabled=1
-fai_editor_install=1
-fai_publication_create=1
-fai_publication_name=jollygood
+#+BEGIN_SRC yaml
+profiles:
+  editor:
+    install: true
+  publications:
+    - name: jollygood
+      create: true
 #+END_SRC
 
-When FAI is enabled, ece-install will report:
-#+BEGIN_SRC sh
-[ece-install] Full Automatic Install (FAI) enabled.
-[ece-install] All user input will be read from /root/.ece-install.conf
+****** Install Two Presentation Servers On a Single Host
+To install two presentation servers called *engine1* and
+*engine2* on the same host,  first run *ece-install* with the following settings:
+#+BEGIN_SRC yaml
+profiles:
+  presentation:
+    install: true
 #+END_SRC
 
-* Running more than one installation process
-If the script believes there's already an ece-intall process running,
+Then run it a second time with the following settings:
+#+BEGIN_SRC yaml
+profiles:
+  presentation:
+    install: true
+    name: engine2
+    port: 8081
+    shutdown: 8105
+#+END_SRC
+More parameters are required the second time. On the first run,
+defaults could be used, but the second time you need to override the
+defaults to ensure that the second server gets different values.
+
+* Running More Than One Installation Process
+If the command believes there's already an ece-intall process running,
 it will abort:
-#+BEGIN_SRC sh
-[ece-install] There's already one ece-install process running. If you believe
-[ece-install] this is wrong, e.g. if a previous run of ece-install was aborted
-[ece-install] before it completed, you may delete /var/run/ece-install.pid and
-[ece-install] run ece-install again.
+#+BEGIN_SRC text
+There's already one ece-install process running. If you believe
+this is wrong, e.g. if a previous run of ece-install was aborted
+before it completed, you may delete /var/run/ece-install.pid and
+run ece-install again.
 #+END_SRC
 
-* Re-running ece-install
-Although the initial thought behind ece-install, is to run it on a
-clean system to get up and running as soon as possible. However, you
-may want to re-run ece-install on the same host, for instance to add
-another instance of ECE, set up Widget Framework or create another
+* Re-running ece-install (and How To Speed It Up)
+The initial thought behind ece-install, is to run it on a clean system
+to get up and running as soon as possible. However, you may want to
+re-run ece-install on the same host, for instance to add another
+instance of ECE, set up Widget Framework or create another
 publication.
 
-ece-install has a number of features which will try to minimise the
-time it takes to run it on consecutive runs. If running on Debian
-based systems, it will check if you already have installed
-pre-requisite 3rd party libraries and only if any are missing will it
-ask the package manager to fetch it.
+*ece-install* has a number of features which will try to minimise the
+time it takes to run it on consecutive runs. For instance, it will
+check if you already have installed pre-requisite 3rd party libraries
+and only if any are missing will it ask the package manager to fetch
+it.
 
-Likewise, ece-install will see if the Escenic artifacts or application
-server that you need are already present in the /tmp/ece-downloads
-folder, and only download the missing ones (if any).
+Likewise, *ece-install* will see if the Escenic artifacts or
+application server that you need are already present in
+the */var/cache/escenic/ece-install* folder, and only download the
+missing ones (if any).
 
 To get a list of the artifacts it'll pull from
 http://technet.escenic.com and http://tomcat.apache.org search for the
-following variables:
-- technet\_download\_list
-- wf\_download\_list
-- tomcat\_download
+following variables inside */usr/sbin/ece-install*:
+- *technet\_download\_list*
+- *wf\_download\_list*
+- *tomcat\_download*
 
-* Overview of file paths used by the ece-install script
+Two other ways of speeding up the installation is (of course) to use
+the backup/restore feature or install from a EAR and configuration
+bundle, see the FAI section.
+
+* Using a Custom Configuration File for ece-install
+You can specify a different configuration by using the -f parameter:
+#+BEGIN_SRC text
+# ece-install -f ece-install-presentation-server.yaml
+#+END_SRC
+
+* Overview of File Paths Used by the ece-install command
 There are of course other paths involved when setting up your system,
 but these should be the most interesting ones.
 
-|---------------------------------------------+------------------------------------------------------------------|
-| Path                                        | Explanation                                                      |
-|---------------------------------------------+------------------------------------------------------------------|
-| /etc/apt/sources.list.d/escenic.list        | 3rd party APT repositories added by ece-install *)               |
-| /etc/default/ece                            | The configuration file for the ece init.d script                 |
-| /etc/escenic/ece-<instance>.conf            | Instance specific settings for /usr/bin/ece                      |
-| /etc/escenic/ece.conf                       | Common ece.conf file for /usr/bin/ece                            |
-| /etc/escenic/engine/common                  | Common Nursery configuration layer                               |
-| /etc/escenic/engine/common/security         | Common security configuration for all ECE instances.             |
-| /etc/escenic/engine/common/trace.properties | Log4j configuration, produces instance specific log files.       |
-| /etc/escenic/engine/instance/<instance>     | Instance specific Nursery configuration                          |
-| /etc/escenic/solr                           | ECE specific Solr configuration                                  |
-| /etc/init.d/mysql[d]                        | For starting and stopping MySQL/Percona                          |
-| /etc/init.d/varnish                         | For starting and stopping Varnish                                |
-| /etc/intit.d/ece                            | The init.d script managing _all_ the ECE instances on your host. |
-| /etc/varnish/default.vcl                    | The Varnish configuration                                        |
-| /opt/escenic                                | All ECE components can be found here                             |
-| /opt/escenic/assemblytool                   | The assembly tool                                                |
-| /opt/escenic/assemblytool/plugins           | Contains symlinks to all plugins in /opt/escenic                 |
-| /opt/escenic/engine                         | Symlink pointing to the current ECE                              |
-| /opt/tomcat                                 | Symlink pointing to the install Apache Tomcat (catalina\_home)   |
-| /opt/tomcat-<instance>                      | Instance specific Tomcat files (catalina\_base)                  |
-| /usr/bin/ece                                | Script for operating all ECE instances + RMI hub and EAE         |
-| /usr/sbin/drop-and-create-ecedb             | DB script used by the ece-install script                         |
-| /usr/sbin/ece-install                       | The installation script described in this guide                  |
-| /var/log/escenic/<type>-<instance>.log      | The instance's log4j  log                                        |
-| /var/log/escenic/<type>-<instance>.out      | The instance system out log                                      |
-| /var/log/escenic/solr.<date>.log            | The Solr log (not in standard out!)                              |
-| /var/run/escenic/<type>-<instance>.pid      | The instance's  PID file                                         |
-|---------------------------------------------+------------------------------------------------------------------|
+- */etc/apt/sources.list.d/escenic.list* :: 3rd party APT repositories
+     added by ece-install *)
+
+- */etc/default/ece* :: The configuration file for the ece init.d
+     script.
+
+- */etc/escenic/ece-<instance>.conf* :: Instance specific settings
+     for */usr/bin/ece*
+
+- */etc/escenic/ece.conf* :: Common ece.conf file for */usr/bin/ece*
+
+- */etc/escenic/engine/common* :: Common Nursery configuration layer
+
+- */etc/escenic/engine/common/security* :: Common security
+     configuration for all ECE instances.
+
+- */etc/escenic/engine/common/trace.properties* :: Log4j
+     configuration, produces instance specific log files.
+
+- */etc/escenic/engine/instance/<instance>* :: Instance specific
+     Nursery configuration
+
+- */etc/escenic/solr* :: ECE specific Solr configuration
+
+- */etc/init.d/mysql[d]* :: For starting and stopping MariaDB/MySQL/Percona
+
+- */etc/init.d/varnish* :: For starting and stopping Varnish
+
+- */etc/intit.d/ece* :: The init.d script managing \_all\_ the ECE
+     instances on your host.
+
+- */etc/varnish/default.vcl* :: The Varnish configuration
+
+- */opt/escenic* :: All ECE components can be found here
+
+- */opt/escenic/assemblytool* :: The assembly tool
+
+- */opt/escenic/assemblytool/plugins* :: Contains symlinks to all
+     plugins in */opt/escenic*
+
+- */opt/escenic/engine* :: Symlink pointing to the current ECE
+
+- */opt/tomcat* :: Symlink pointing to the install Apache Tomcat
+                   (*catalina\_home*)
+
+- */opt/tomcat-<instance>* :: Instance specific Tomcat files
+     (*catalina\_base*)
+
+- */usr/bin/ece* :: Command for operating all ECE instances + RMI hub
+                    and EAE
+
+- */usr/sbin/ece-install* :: The installation command described in this
+     guide
+
+- */var/log/escenic/<type>-<instance>.log* :: The instance's log4j log
+
+- */var/log/escenic/<type>-<instance>.out* :: The instance system out
+     log
+
+- */var/log/escenic/solr.<date>.log* :: The Solr log (not in standard
+     out!)
+
+- */var/run/escenic/<type>-<instance>.pid* :: The instance's PID file
 
 *) Applies only to Debian based systems.
 
-* Uninstalling everything that the ece-install set up
-WARNING: this is potentially dangerous as some of these components may
-be used by other pieces of software you have running on your
-host. However, this may be useful if you're installing a clean
-environment and want to e.g. undo your previous install to install a
-different profile.
+* Overriding the Escenic directories
+All of the Escenic specific directories may be overwritten in
+=ece-install.conf=. Here's an example of changing all the paths possible
+with the same suffix.
 
-Open the ece-install script and look for the "un\_install\_ece"
-function, it has copy and pastable commands for undoing most/all
-things set up by the script.
+#+BEGIN_SRC conf
+dir_suffix=escenic-parallel
+escenic_root_dir=/opt/${dir_suffix}
+escenic_conf_dir=/etc/${dir_suffix}
+escenic_log_dir=/var/log/${dir_suffix}
+escenic_data_dir=/var/lib/${dir_suffix}
+escenic_run_dir=/var/run/${dir_suffix}
+escenic_backups_dir=/var/backups/${dir_suffix}
+escenic_spool_dir=/var/spool/${dir_suffix}
+escenic_cache_dir=/var/cache/${dir_suffix}
+escenic_crash_dir=/var/crash/${dir_suffix}
+appserver_parent_dir=/opt
+#+END_SRC
+
+Note, this is only needed if you are running two completely separate
+environments on the same host. A use case is if you're setting up a
+test environment and want to separate stacks of Escenic Content Engine
+and plugins. Another usecase is if you want to test out a new minor
+version of ECE, e.g. you're currently running 5.4, but want to try
+out 5.5 in parallel on the same boxes.
+
+This feature is currently only available through the use of
+=.conf= configuration files.
+
+* Extending ece-install by Writing Hooks
+ece-install  has a number of hooks on which you can hook on your own
+scripts. The scripts are to reside in $HOME/ece-conf.d/ and have names
+inspired by Debian's package scripts:
+
+#+BEGIN_SRC text
+<hook name>.<phase>
+#+END_SRC
+
+e.g.:
+
+#+BEGIN_SRC text
+install_analysis_server.preinst
+#+END_SRC
+
+Will be run before the body of the hook, just the corresponding
+*.postinst* hook will be run after.
+
+** Accessing ece-install variables
+Before running the hook, ece-install will make all its local variables
+available in */var/run/escenic/ece-install.env*, which can then be
+used by the hook scripts.
+
+** Example hook
+Here is an example hook which will be run after the EAE is installed.
+
+#+BEGIN_SRC sh
+# Put this in your
+# $HOME/ece-install.d/install_analysis_server.postinst
+
+# read ece-install's current variables
+source /var/run/escenic/ece-install.env
+
+# do something useful
+echo "Hello from $0, EAE is installed in ${tomcat_base}" \\
+  > /tmp/hello.txt
+#+END_SRC
+
+** Available hooks
+Currently, the following hooks are available:
+
+#+BEGIN_SRC text
+install_analysis_server.preinst
+install_analysis_server.postinst
+set_up_solr.preinst
+set_up_solr.postinst
+#+END_SRC
+
+* GOALS & DESIGN CHOICES
+If you are a power user of *ece-install*, if you're just curious or
+indeed wish to extend it, you will find it interesting to read this
+section explaining some of its goals and design choices.
+
+** As few prerequisites as possible
+The only pre-requisite should be having a Debian or RedHat based
+machine with a good internet connection set up, as well
+as *ece-install* itself and an *ece-install.conf* configuration file
+of course. No other prerequisite is needed. No Java, no app server, no
+database, no nothing.
+
+** Run on the latest stable releases of Debian, Ubuntu and RedHat
+It should run on the latest stable release of Debian, Ubuntu LTS and
+RedHat.
+
+This applies for instance not features only found in BASH 4.x as this
+wasn't available in the latest RedHat/CentOS version when the bulk
+of *ece-install* was written.
+
+Another implications, is the *ece-install* cannot depend on (newer)
+software packages that only exist in e.g. the regular Ubuntu release,
+Fedora or Debian testing.
+
+** Make it possible to run ece-install on other UNIX systems too
+Whenever possible, do not assume the system to be Linux, making it
+possible to use it on other unices like FreeBSD, Solaris and OSX too.
+
+** Require as little input as possible
+An important design goal is to install a system with so many best
+practises applied as possible. Hence, *ece-install* goes to great
+lengths to provide sane defaults that will work for most
+users.
+
+However, there will always be cases were the defaults are not
+sufficient and this is where the myriad of *fai_* configuration
+options have arisen.
+
+** Production ready
+A lot of choices in *ece-install* are made to ensure that
+an *ece-install*-ed machine is production ready, or at the very least
+production "like" (for instance if the machine has too little memory,
+there's no way it'll be production "ready", although it will still be
+set up "like" production).
+
+This means for instance that the application server configuration is
+way more advanced than what you'll find on a regular developer's or
+test system, the same goes for the cache configuration, the JVM
+parameters, the logging configuration, the monitoring setup and many,
+many more things. They are all set up to be ready to go into
+production.
+
+This drive has also another purpose, namely to educate everyone
+involved with the site development, including template & Java
+developers, of the different components that a production environment
+are comprised of. We believe that by having components like monitoring
+and caching servers in place from day one on all systems (also the
+developer's machine and the test servers), the finished web site will
+reach a successful production state faster and more reliably.
+
+** Fail as fast as possible
+Great heed has been taken to detect errors as fast as possible and
+bail out with a detailed stack trace of where the error occured.
+
+One of the implications of this, is that all commands are executed
+within a wrapper (called *run*), which checks the return code of the
+called command and makes *ece-install* fail if any of its called
+commands failed. Both standard out and error are logged
+to */var/log/escenic/ece-install.log* and a stack trace is provided to
+aid the error hunting.
+
+** Take care of the user
+Take care of the user: speak clear English in full sentences when
+giving feedback. Write technical details to the log and keep the user
+feedback in standard out as "pleasant" as possible.
+
+** Safe to re-run
+All *ece-install* modules have been written to ensure that it's safe
+to re-run *ece-install* with the same *ece-install.conf*
+file. Anything which may harm your data (that being two things: the
+database data files and the ECE multimedia archive (the Solr index can
+be re-generated, so that's not protected in the same way)) will not
+be run with a second run of *ece-install*.
+
+For the cases were the user really wants this (like wiping out a
+database when re-running an integration test), options are provided
+to override the default behaviour.
+
+** Modularisation
+The command consists of around 20 modules, 5 common libraries and the
+main executable:
+- /usr/sbin/ece-install :: Responsible for parsing of arguments and
+                 configuration and sending the request off to the
+                 right sub module(s).
+- /usr/share/escenic/ece-scripts/ece-install.d/* :: Roughly speaking,
+     there exists one module per *ece-install* profile, but more
+     precisely, this division follows along the lines of the
+     technology involved. For instance, all database related code
+     resides in *database.sh*, even though there are three profiles
+     that deal with databases (fai_all_install=1,
+     fai_restore_from_backup=1 and fai_db_install)
+- /usr/share/escenic/ece-scripts/common-*.sh :: common libraries with
+     code shared between the different ece-scripts commands (such
+     as *ece*, *system-info*, *ece-build* & *vosa*).
+
+** Interactive and automatic installations
+*ece-install* started out as a purely interactive command, where the
+user was prompted for all the choices on what to install (most of
+which he/she could just hit ENTER to complete). Once this the
+interactive command was shown to customers and Escenic employees, the
+need for a fully automatic version became apparent and *ece-install*
+got the *fai_enabled* parameter to make the switch. After the a number
+of years, we saw however, that pretty much everyone ran *ece-install*
+in its fully automatic mode, so in March 2017, we removed the
+interactive mode, making the *fai_enabled* parameter obsolete.
+
+For this reason, the *ece-install.conf* options which have a *fai_*
+prefix only applies when running *ece-install* in non-interactive
+mode, whereas the ones without any such prefix (like *technet\_user*
+and *technet\_download\_list*) applies to both ways of
+running *ece-install*.
+
+As the complexity of *ece-install* and its profiles have grown, some
+of the profiles have not been implemented for the interactive mode.
+
+The term "fully automatic install" (FAI) is inspired by
+http://fai-project.org
 
 
-* Example Output
-Below is an example output of running ece-install, installing the
-all-in-one profile.
+** Possible to run ece-install from anywhere
+For easy testing and flexible deployment, it should be possible to
+run *ece-install* from a checked out or extracted copy of the source
+code. This means that no absolute paths to the *ece-install* and
+common modules should be assumed when extending the command.
 
-#+INCLUDE: "/tmp/ece-install.out" src text
+* HISTORY
+Installing a full Escenic production environment has historically
+taken at least a week, with another few to tune all the settings for
+high performance. In the middle of 2011, Torstein Krause Johansen set
+out to remedy this and created *ece-install* as a personal side
+project.
 
+In February 2012, he joined the Escenic Online SaaS team and was allowed
+to work on *ece-install* full time. The command has since then been
+used to install several full scale production environments, as well as
+being used for full scale automatic integration tests, development
+machines, test servers and staging environments. *ece-install* is now
+the preferred way of installing new Escenic systems.
+
+From February 2013, it has been maintained by Erik Mogensen.
+
+* BUGS
+Report any bugs found on https://github.com/escenic/ece-scripts/issues.
+and be sure to check
+https://github.com/escenic/ece-scripts/known-issues.org before
+using *ece-install*.
+
+* SEE ALSO
+[[varnishd]], [[vcl]], [[nginx]], [[memcached]], [[java]], [[lighthttpd]], [[munin]], [[icinga]],
+[[heartbeat]], [[haproxy]], [[mysqld]]
+
+* AUTHOR
+Torstein Krause Johansen, Erik Mogsensen
+
+* COPYRIGHT
+Copyright 2011-2017 Escenic
+
+Licensed under the Apache License, Version 2.0, see
+https://github.com/escenic/ece-scripts/COPYING for further details.

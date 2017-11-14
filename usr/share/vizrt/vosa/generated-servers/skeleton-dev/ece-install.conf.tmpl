@@ -1,0 +1,69 @@
+# technet credentials
+technet_user=$technet_user
+technet_password=$technet_password
+
+# technet download list
+technet_download_list=\"$technet_download_list\"
+
+# TODO - not sure if these are needed
+nop=
+wf_download_list=
+
+# add tomcat instance for search + analysis engine
+fai_search_install=1
+fai_search_port=8180
+fai_search_shutdown=8105
+fai_search_redirect=8143
+fai_search_name=search1
+fai_search_indexer_ws_uri=http://localhost:8080/indexer-webservice/index/
+fai_search_ear=$project_ear
+fai_search_for_editor=0
+fai_search_host=localhost
+fai_search_stop_and_clear=1
+
+# install analysis engine on the search instance 
+fai_analysis_install=1
+fai_analysis_port=\$fai_search_port
+fai_analysis_shutdown=\$fai_search_shutdown
+fai_analysis_redirect=\$fai_search_redirect
+fai_analysis_name=\$fai_search_name
+
+# add the db schema for analysis engine
+fai_analysis_db_install=1
+fai_analysis_db_schema=analysisdb
+fai_analysis_db_user=analysisdbuser
+fai_analysis_db_password=$analysis_db_password
+
+# do not setup the db as content will be recovered from .tar package
+fai_db_install=1
+
+# create the publications
+fai_publication_create=1
+fai_publication_war_remove_file_list=\"
+ META-INF/escenic/publication-resources/escenic/plugin/menu
+ META-INF/escenic/publication-resources/0/escenic/section-parameter
+ META-INF/escenic/resources/escenic/content
+\"
+
+# restore content from .tar package
+fai_restore_from_backup=0
+fai_db_drop_old_db_first=0
+fai_restore_db=0
+
+# install the cache profile
+fai_cache_install=1
+
+# skip monitoring
+fai_monitoring_node_nagios_skip=1
+fai_monitoring_node_munin_skip=1
+
+# configure the presentation profile
+fai_builder_http_user=$builder_http_user
+fai_builder_http_password=$builder_http_password
+fai_presentation_install=1
+fai_publication_environment=dev
+fai_presentation_ear=$project_ear
+fai_publication_ear=$project_ear
+fai_presentation_name=engine1
+fai_publication_domain_mapping_list=\"$publication_domain_mapping_list\"
+fai_presentation_deploy_white_list=\"$main_instance_deploy_white_list\"

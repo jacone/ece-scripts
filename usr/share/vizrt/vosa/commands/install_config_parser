@@ -1,0 +1,82 @@
+# bash functions common to the vosa commands
+# e.g. parsing a config file
+
+install_config_ip_address=
+install_config_original_image=/var/lib/vizrt/vosa/uec-images/current/disk.img
+install_config_kernel=/var/lib/vizrt/vosa/uec-images/current/vmlinuz
+install_config_initrd=/var/lib/vizrt/vosa/uec-images/current/initrd
+install_config_initial_disk_size=
+install_config_macaddr=
+install_config_netmask=
+install_config_gateway=
+install_config_timezone=
+install_config_user_data=
+install_config_mirror=mirror://mirrors.ubuntu.com/mirrors.txt
+install_config_proxy=
+
+
+function install_config_ip_address() {
+  install_config_ip_address=$1
+}
+
+function install_config_original_image() {
+  install_config_original_image=$1
+}
+
+function install_config_kernel() {
+  install_config_kernel=$1
+}
+
+function install_config_initrd() {
+  install_config_initrd=$1
+}
+
+function install_config_initial_disk_size() {
+  install_config_initial_disk_size=$1
+}
+
+function install_config_macaddr() {
+  install_config_macaddr=$1
+}
+
+function install_config_netmask() {
+  install_config_netmask=$1
+}
+
+function install_config_gateway() {
+  install_config_gateway=$1
+}
+
+function install_config_timezone() {
+  install_config_timezone=$1
+}
+
+function install_config_user_data() {
+  install_config_user_data=$1
+}
+
+function install_config_mirror() {
+  install_config_mirror=$1
+}
+
+function install_config_proxy() {
+  install_config_proxy=$1
+}
+
+# Handle arrays
+
+declare -a install_config_ssh_keys
+declare -a install_config_overlay
+declare -a install_config_postinstall
+
+function install_config_ssh_keys() {
+  install_config_ssh_keys=( "${install_config_ssh_keys[@]}" "$1" )
+}
+
+function install_config_overlay() {
+  install_config_overlay=( "${install_config_overlay[@]}" "$1" )
+}
+
+function install_config_postinstall() {
+  install_config_postinstall=( "${install_config_postinstall[@]}" "$1" )
+}

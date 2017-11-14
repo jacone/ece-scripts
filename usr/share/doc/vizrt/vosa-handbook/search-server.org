@@ -1,0 +1,43 @@
+* Search Server
+A search server is an application server only running the ~solr~ and
+~indexer-webapp~ web applications. It's highly recommendable to run
+these web applications on a dedicated JVM as their behaviour with
+regards to object creation, connections and garbage collection is
+highly different from that of a publication or presentation server.
+
+** Changing the search server used by Content Studio.
+
+When updating the search server, you might want to reconfigure the
+ECE instance(s) that use the search server you're updating to allow Content Studio instances to search. To do
+this, you can use the Component Browser in the escenic-admin
+interface.
+
+For instance, let's say you're upgrading the Content Studio search server for
+<%= trail_editor_host %> and want it to temporarily use
+<%= trail_import_host %>'s search instance.
+
+First, go to:
+http://<%= trail_editor_host %>.<%= trail_network_name %>:<%= trail_editor_port %>/escenic-admin/browser/Global/com/escenic/webservice/search/DelegatingSearchEngine?property=solrURI
+
+Then, change the value from:
+#+BEGIN_SRC conf
+http://localhost:8081/solr/select	  
+#+END_SRC
+
+to
+
+#+BEGIN_SRC conf
+http://<%= trail_import_host %>:8081/solr/select	  
+#+END_SRC
+
+** Changing the search server used by the website.
+The following configuration points influence the search behavior in the website:
+- Site Search (Widget Framework): com.escenic.framework.search.solr.SolrHttpClient
+- Site Search (Widget Framework): com.escenic.framework.search.solr.SolrSearchEngine
+- Site Search (DEPRECATED): com.escenic.lucy.LucySearchEngine  
+
+** Changing the search server used for web studio person search 
+For some strange reason the web studio person search has a unique configuration for the search server:
+- escenic/solr-base-uri environment variable in context.xml (also used by indexer webapp)
+
+

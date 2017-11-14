@@ -1,0 +1,11 @@
+#!/bin/bash -e
+
+echo "--- START : post install hook - deploy configuration ---"
+
+# fetch latest .deb package from url
+ssh -F \$2/ssh.conf root@guest 'wget --http-user=$builder_http_user --http-password=$builder_http_password --quiet --inet4-only $conf_package_deb -O conf.deb'
+
+# apply .deb package and force overwrites
+ssh -F \$2/ssh.conf root@guest 'dpkg -i --force-confnew conf.deb'
+
+echo "--- END : post install hook - deploy configuration ---"

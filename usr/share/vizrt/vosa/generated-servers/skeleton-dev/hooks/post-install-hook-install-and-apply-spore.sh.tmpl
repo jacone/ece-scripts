@@ -1,0 +1,20 @@
+#!/bin/bash -e
+
+echo "--- START : post install hook - install and apply spore ---"
+
+# import spores.key
+ssh -F \$2/ssh.conf root@guest 'curl http://apt.escenic.com/spores.key | gpg --import'
+
+# install spore
+ssh -F \$2/ssh.conf root@guest 'apt-get install spore'
+
+# generate spore conf file
+ssh -F \$2/ssh.conf root@guest 'echo \"spore_uri=$spore_package\" > /etc/spore-cronjob.conf'
+ssh -F \$2/ssh.conf root@guest 'echo \"http_user=$builder_http_user\" >> /etc/spore-cronjob.conf'
+ssh -F \$2/ssh.conf root@guest 'echo \"http_passwd=$builder_http_password\" >> /etc/spore-cronjob.conf'
+ssh -F \$2/ssh.conf root@guest 'echo \"spore_signee=$spore_signee\" >> /etc/spore-cronjob.conf'
+
+# apply spore
+ssh -F \$2/ssh.conf root@guest 'spore-download-and-apply'
+
+echo "--- END : post install hook - install and apply spore ---"

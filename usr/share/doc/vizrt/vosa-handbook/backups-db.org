@@ -1,0 +1,11 @@
+** DB backups
+Daily backups of the DB is made on <%= trail_db_daily_backup_host %>
+by the way of the cron script:
+#+BEGIN_SRC text
+/etc/cron.daily/<%= trail_db_schema %>-backup  
+#+END_SRC
+
+All the DB backups are put in:
+#+BEGIN_SRC text
+<%= trail_db_daily_backup_host %>:<%= trail_db_backup_dir %>
+#+END_SRC

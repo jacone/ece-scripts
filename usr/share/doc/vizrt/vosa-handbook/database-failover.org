@@ -1,0 +1,10 @@
+** Failing over the master DB
+If <%= trail_db_master_host %> goes down and you don't get it up again, you
+must change <%= trail_db_slave_host %> to become the master DB.
+
+*** Changes to the DB on <%= trail_db_slave_host %>
+
+*** Changing the VIP
+
+*** Changing the master back to <%= trail_db_master_host %>
+ 

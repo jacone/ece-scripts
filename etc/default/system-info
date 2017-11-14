@@ -1,0 +1,3 @@
+# If you have blockdiag installed, but don't want system-info to
+# generate diagrams, uncomment the following line:
+# do_not_generate_diagram=1

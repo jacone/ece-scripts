@@ -1,0 +1,40 @@
+** Changing the DB Virtual IP
+
+In your habitat, DB clients, such as the ECEs, use the database using
+the <%= trail_db_vip_host %> virtual IP (VIP). Whenever you change the master,
+as described in [[Changing the Master DB]], you must also change the VIP
+that the clients of the DB use.
+
+We have deliberately _not_ set this up as an automatic failover using
+[[http://linux-ha.org][Heartbeat]] as we want DB failover to be a conscious matter.
+
+*** Take down the existing VIP
+If <%= trail_db_master_host %> is still up, log on to it and take down its
+VIP:
+#+BEGIN_SRC text
+$ ssh root@<%= trail_db_master_host %>
+# ifconfig <%= trail_db_vip_interface %> down
+#+END_SRC
+
+*** Set up the VIP interface on <%= trail_db_slave_host %>
+You're now ready to set up the VIP on <%= trail_db_slave_host %>. You may want
+to ensure that there's no one acclaiming the IP, do:
+#+BEGIN_SRC text
+$ ping <%= trail_db_vip_host %>
+#+END_SRC
+
+If no one answers, you can go ahead and set it up:
+#+BEGIN_SRC text
+$ ssh root@<%= trail_db_slave_host %>
+# ifconfig eth0:0 <%= trail_db_vip_ip %> up
+#+END_SRC
+
+Pinging <%= trail_db_vip_host %> should now yield <%= trail_db_vip_ip %> again,
+and the answer should come frmo <%= trail_db_slave_host %>:
+#+BEGIN_SRC text
+$ ping <%= trail_db_vip_host %>
+PING <%= trail_db_vip_host %> (<%= trail_db_vip_ip %>) 56(84) bytes of data.
+64 bytes from <%= trail_db_vip_ip %>: icmp_req=1 ttl=249 time=1.18 ms
+#+END_SRC
+
+

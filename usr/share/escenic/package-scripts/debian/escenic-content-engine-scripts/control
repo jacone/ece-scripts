@@ -1,0 +1,16 @@
+Package: escenic-content-engine-scripts
+Version: VERSION
+Depends: escenic-common-scripts (>= VERSION), libxml2-utils
+Section: base
+Priority: optional
+Architecture: all
+Maintainer: MAINTAINER_NAME <MAINTAINER_EMAIL>
+Description: Scripts for operating the Escenic Content Engine.
+  Included in this packages are scripts for operating the Escenic
+  Content Engine, Escenic Analysis Engine, Search servers (solr +
+  indexer-webapp), BASH completion of all commands as well as init.d
+  scripts.
+  .
+  See the documentation in /usr/share/doc/escenic/ for further
+  details.
+

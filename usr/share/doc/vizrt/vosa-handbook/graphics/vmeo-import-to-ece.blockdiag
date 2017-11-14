@@ -1,0 +1,17 @@
+blockdiag {
+  orientation = "landscape";
+
+  content-engine [label="content-engine", color="orange"];
+  video-widget [label="video-widget", color="brown"];
+  
+  video.xml [label="video.xml"];
+  key-frames [label="key-frames"];
+  adactus-control [label="vmeo-controller", color="green"];
+  
+  content-engine -> video.xml [label="imports"];
+  video.xml -> adactus-control;
+  
+  content-engine -> key-frames [label="imports"];
+  key-frames -> adactus-control [label="gets"];
+  content-engine -> video-widget [label="renders"];
+}

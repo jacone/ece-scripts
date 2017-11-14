@@ -1,0 +1,31 @@
+##############################################################################
+# CONTENT MANAGER
+##############################################################################
+# Defines which connector to use for new and updated connectors
+##############################################################################
+
+
+
+
+##############################################################################
+# READCONNECTOR AND UPDATECONNECTOR
+##############################################################################
+# All database access is channeled through these two connectors.  The
+# readConnector and updateConnector properties are actually two other
+# components, and they are typically configured by themselves.
+# 
+# To configure the database, change the configuration of the target components.
+#
+# Example:
+#   readConnector=/neo/io/connector/Oracle03Read
+#   updateConnector=/neo/io/connector/Oracle03Update
+#
+#   readConnector=/connector/ReadConnector
+#   updateConnector=/connector/UpdateConnector
+#
+# By default, the connectors are the /neo/io/connector/SimpleDBPool connectors.
+##############################################################################
+
+# readConnector=/connector/ReadConnector
+# updateConnector=/connector/UpdateConnector
+

@@ -1,0 +1,12 @@
+Package: escenic-common-scripts
+Version: VERSION
+Section: base
+Priority: optional
+Architecture: all
+Maintainer: MAINTAINER_NAME <MAINTAINER_EMAIL>
+Description: Common scripts used by the various Escenic and Vizrt
+  script packages.
+  .
+  See the documentation in /usr/share/doc/escenic/ for further
+  details.
+

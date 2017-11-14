@@ -1,0 +1,52 @@
+###################################################################
+# POOL REMOVE SERVICE                      
+###################################################################
+# The pool remove service goes through the pools every night
+# and removes pool-entries if the pool has become too big.
+# 
+# This service is enabled by default, and should be disabled in 
+# multiple-server installations.
+
+
+
+###################################################################
+# ENABLED
+###################################################################
+# Enables or disables the pool remove service.
+#
+# Default value: true
+#
+# Example:
+#   serviceEnabled=false
+###################################################################
+# serviceEnabled=true
+
+###################################################################
+# DEFAULT LIMIT
+###################################################################
+# This is the limit when PoolRemoveService will kick in for a pool.
+# If there is more than this number of articles in the pool, 
+# articles will be removed from the pool. This value may be overridden
+# for individual publications by using the feature "pool.limit=xxx" in
+# features.properties.
+#
+# Default value: 200
+#
+# Example:
+#   defaultLimit=100
+###################################################################
+# defaultLimit=200
+
+###################################################################
+# POOL REMOVE POLICY
+###################################################################
+# It is possible to plug in different policies for which articles
+# should be removed from the pool.
+#
+# Default value: /neo/xredsys/services/DefaultPoolRemovePolicy
+#
+# Example:
+#   policy=/neo/xredsys/services/DefaultPoolRemovePolicy
+###################################################################
+# policy=/neo/xredsys/services/DefaultPoolRemovePolicy
+

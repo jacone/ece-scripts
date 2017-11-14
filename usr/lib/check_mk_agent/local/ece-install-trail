@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# check_mk checks for the trail files left by ece-install.
+
+# Trail files contain interesting things which might be useful to monitor,
+# including virtual hosts, port numbers and so on that "have been installed"
+# on this host (and therefore should be useful to monitor.
+#
+# trail_virtual_host_something=www.mypublication.com:8080
+# trail_virtual_host_somethingelse=www.somethingelse.com:8081
+# trail_presentation_port=1234
+# trail_editorial_port=1235
+
+critical=900
+warning=700
+
+function check_trail() {
+  for el in /var/lib/escenic/ece-install/*.trail /var/lib/ece-install/*.trail ; do
+    [ -r "$el" ] || continue;
+    vars=$(diff <(set -a; unset _; env) <(set -a; unset _;source $el; env) | grep '^>' | sed -e s/^..// -e s/=.*//)
+    source $el
+    for var in $vars ; do
+      if [[ $var =~ ^.*_port$ ]] ; then
+        local name=${var#trail_}
+        name=${name%_port}
+        check_port_listening $name ${!var}
+        check_port_status $name ${!var}
+      fi
+      unset $var
+    done
+  done
+}
+
+function check_port_listening() { # foo 4040
+  local name=$1
+  local port=$2
+  local listening=$(sudo -n lsof -s TCP:LISTEN -i 4:$port -i 6:$port -n | tail -n +2 | wc -l)
+  if [ $listening -eq 0 ] ; then
+    echo "2 port_${name}_${port}_listen - CRITICAL: not listening on $name port $port"
+    return;
+  fi
+
+  echo "0 port_${name}_${port}_listen - OK: listening on $name port $port."
+}
+
+function check_port_status() { # foo 4040
+  local name=$1
+  local port=$2
+  local established=$(sudo -n lsof -s TCP:ESTABLISHED -i 4:$port -i 6:$port -n | tail -n +2 | wc -l)
+  if [ $established -gt $critical ] ; then
+    echo "2 port_${name}_${port}_established - CRITICAL: $established established connections to on $name port $port"
+    return;
+  fi
+
+  if [ $established -gt $warning ] ; then
+    echo "1 port_${name}_${port}_established - WARNING: $established established connections to on $name port $port"
+    return;
+  fi
+
+  echo "0 port_${name}_${port}_established - OK: $established established connections to on $name port $port"
+}
+
+# TODO: make thresholds different based on the type of port (e.g. editorial
+#  port vs presentation port vs caching port).
+
+# TODO: monitor the number of SYN_RECV and verify that it's a low number,
+# an early warning of slowness in the system.
+
+# TODO: monitor virtual hosts are accessible using the host names and port
+# numbers provided in the .trail files
+
+check_trail
